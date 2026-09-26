@@ -36,7 +36,13 @@
       <h2>Пунктови</h2>
       <span id="pointStatus">Учитавање...</span>
     </div>
-    <p class="hint">Изабери пункт на мапи или отвори листу пунктова.</p>
+    <p class="hint">Унеси адресу — наћи ћемо ти најближи пункт.</p>
+
+    <div class="point-search">
+      <input id="pointSearch" type="search" placeholder="Унеси адресу или место..." autocomplete="street-address">
+      <button id="searchPoint" class="btn primary" type="button">Пронађи пункт</button>
+    </div>
+    <div id="searchResult" class="search-result hidden" aria-live="polite"></div>
 
     <div class="point-list-toggle">
       <button id="togglePoints" class="btn secondary full" type="button">☰ Листа пунктова</button>
