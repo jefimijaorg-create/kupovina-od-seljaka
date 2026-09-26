@@ -1,24 +1,56 @@
 <!doctype html>
 <html lang="sr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Потврда поруџбине</title><link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Потврда поруџбине — Од села до града</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body data-page="confirm">
-<header class="top"><a href="index.html" class="logo">Од села до града</a><a href="mapa.html" class="back">← Избор места</a></header>
+<header class="top">
+  <a href="index.html" class="logo">Од села до града</a>
+  <a href="mapa.html" class="back">← Преузимање</a>
+</header>
+
 <main class="container">
-<section class="hero small"><span>КОРАК 3 ОД 3</span><h1>Подаци за поруџбину</h1><p id="deliverySummary"></p></section>
-<section class="card"><h2>Твоји подаци</h2>
-<form id="orderForm">
-<label>Име и презиме<input name="name" required autocomplete="name"></label>
-<label>Телефон<input name="phone" required autocomplete="tel"></label>
-<label>Напомена<textarea name="note" rows="3" placeholder="Нешто важно за поруџбину?"></textarea></label>
-<div id="orderItems" class="order-items"></div>
-<button class="btn primary full" type="submit">Потврди поруџбину</button>
-</form>
-<div id="result" class="result hidden"></div>
-</section>
+  <section class="hero small">
+    <span>КОРАК 3 ОД 3</span>
+    <h1>Твоја поруџбина</h1>
+    <p>Провери поруџбину, остави податке и потврди.</p>
+  </section>
+
+  <section class="card order-summary">
+    <h2>Производи</h2>
+    <div id="orderItems" class="order-items"></div>
+    <div class="total-row">
+      <span>УКУПНО</span>
+      <strong id="orderTotal">0 RSD</strong>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Преузимање</h2>
+    <div id="deliverySummary" class="delivery-summary"></div>
+  </section>
+
+  <section class="card">
+    <h2>Твоји подаци</h2>
+    <form id="orderForm">
+      <label>Име и презиме
+        <input name="name" required autocomplete="name">
+      </label>
+      <label>Телефон
+        <input name="phone" required autocomplete="tel" inputmode="tel">
+      </label>
+      <label>Напомена
+        <textarea name="note" rows="3" placeholder="Нешто важно за поруџбину?"></textarea>
+      </label>
+      <button class="btn primary full" type="submit">Потврди поруџбину</button>
+    </form>
+    <div id="result" class="result hidden"></div>
+  </section>
 </main>
+
 <script src="app.js"></script>
 </body>
 </html>
