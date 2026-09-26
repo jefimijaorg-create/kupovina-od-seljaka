@@ -40,7 +40,9 @@ function add(p,variant=null){
 function updateHomeContinue(){
   const b=document.getElementById('homeContinue');
   if(!b)return;
-  b.disabled=cartQty()===0;
+  const qty=cartQty();
+  b.disabled=qty===0;
+  b.textContent=qty ? 'Изабери место преузимања →' : 'Изабери место преузимања';
   b.onclick=()=>{if(cartQty())location.href='mapa.html'};
 }
 
