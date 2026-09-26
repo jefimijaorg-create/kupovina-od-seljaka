@@ -1,45 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Куповина од сељака</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background: #f5f1e8;
-      color: #2d2d2d;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    main {
-      width: min(720px, 92%);
-      padding: 48px 28px;
-      text-align: center;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.08);
-    }
-    h1 { margin: 0 0 14px; font-size: clamp(32px, 7vw, 56px); }
-    p { margin: 0; font-size: 20px; line-height: 1.5; }
-    .status {
-      margin-top: 28px;
-      padding: 14px 18px;
-      border-radius: 12px;
-      background: #f0eee7;
-      font-size: 15px;
-    }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Куповина од сељака</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <main>
-    <h1>Куповина од сељака</h1>
-    <p>Домаћи производи директно од газдинстава до купаца.</p>
-    <div class="status">Прва страница је постављена. Следеће повезујемо са Supabase базом.</div>
-  </main>
+<body data-page="home">
+<header class="top"><a href="index.html" class="logo">Од села до града</a><a href="mapa.html" class="cart-link">Колица <b id="cartCount">0</b></a></header>
+<main class="container">
+<section class="hero"><span>ДОМАЋЕ • ДИРЕКТНО • ПО ДОГОВОРУ</span><h1>Куповина од сељака</h1><p>Изабери производе, затим место преузимања и пошаљи поруџбину.</p></section>
+<section><div class="section-head"><h2>Производи</h2><span id="productStatus">Учитавање...</span></div><div id="products" class="products"></div></section>
+<div class="bottom-action"><a href="mapa.html" class="btn primary">Настави → избор места</a></div>
+</main>
+<script src="app.js"></script>
 </body>
 </html>
