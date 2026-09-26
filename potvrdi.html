@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Потврда поруџбине</title><link rel="stylesheet" href="style.css">
+</head>
+<body data-page="confirm">
+<header class="top"><a href="index.html" class="logo">Од села до града</a><a href="mapa.html" class="back">← Избор места</a></header>
+<main class="container">
+<section class="hero small"><span>КОРАК 3 ОД 3</span><h1>Подаци за поруџбину</h1><p id="deliverySummary"></p></section>
+<section class="card"><h2>Твоји подаци</h2>
+<form id="orderForm">
+<label>Име и презиме<input name="name" required autocomplete="name"></label>
+<label>Телефон<input name="phone" required autocomplete="tel"></label>
+<label>Напомена<textarea name="note" rows="3" placeholder="Нешто важно за поруџбину?"></textarea></label>
+<div id="orderItems" class="order-items"></div>
+<button class="btn primary full" type="submit">Потврди поруџбину</button>
+</form>
+<div id="result" class="result hidden"></div>
+</section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
