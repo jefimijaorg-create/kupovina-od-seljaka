@@ -134,3 +134,5 @@ textarea{resize:vertical}
  .point-search{display:grid;grid-template-columns:1fr auto}
  .point-search .btn{padding-left:14px;padding-right:14px}
 }
+
+.variant-label{display:block;margin:10px 0 0;font-size:13px;font-weight:700}.variant-select{width:100%;margin-top:5px;padding:10px 12px;border:1px solid #d8ddd4;border-radius:10px;background:#fff;font:inherit}.variant-select:focus{outline:2px solid #b9cfad;outline-offset:1px}
