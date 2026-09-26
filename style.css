@@ -79,8 +79,17 @@ textarea{resize:vertical}
 .result{margin-top:16px;padding:16px;border-radius:12px;background:#edf4e9;display:grid;gap:5px}
 .hidden{display:none}
 @media(max-width:850px){
-  .products{grid-template-columns:repeat(2,1fr)}
-  .points{grid-template-columns:repeat(2,1fr)}
+  .container{width:min(92%,820px)}
+  .products{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .points{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero{padding:36px 0 8px}
+  .hero h1{font-size:clamp(36px,6vw,48px)}
+  .product{padding:14px}
+  .product img{height:170px}
+  .product h3{font-size:17px}
+  .product .meta{font-size:13px}
+  .product-bottom{gap:8px}
+  .add-btn{padding:10px 13px}
 }
 @media(max-width:650px){
   .top{height:58px;padding:0 14px}
@@ -121,7 +130,6 @@ textarea{resize:vertical}
 .point-list-toggle{margin:10px 0 14px;max-width:320px}
 .points-panel{margin-bottom:14px}
 .points-panel.hidden{display:none}
-
 .point-search{display:flex;gap:8px;align-items:stretch;margin:12px 0 10px}
 .point-search input{margin:0;flex:1;min-width:0}
 .point-search .btn{white-space:nowrap}
@@ -130,19 +138,23 @@ textarea{resize:vertical}
 .search-result span{font-size:11px;color:#60735a;text-transform:uppercase;font-weight:800}
 .search-result strong{font-size:16px;margin:3px 0}
 .search-result small{color:#62675f}
-@media(max-width:650px){
- .point-search{display:grid;grid-template-columns:1fr auto}
- .point-search .btn{padding-left:14px;padding-right:14px}
-}
-
-.variant-label{display:block;margin:10px 0 0;font-size:13px;font-weight:700}.variant-select{width:100%;margin-top:5px;padding:10px 12px;border:1px solid #d8ddd4;border-radius:10px;background:#fff;font:inherit}.variant-select:focus{outline:2px solid #b9cfad;outline-offset:1px}
-
-.product-filter{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:0;scrollbar-width:none}.product-filter::-webkit-scrollbar{display:none}.filter-btn{border:1px solid #d8ddd4;background:#fff;border-radius:999px;padding:9px 14px;white-space:nowrap;font:inherit;font-weight:700;cursor:pointer}.filter-btn.active{background:#e8f0e3;border-color:#b9cdb0}.product-group{margin:0 0 26px}.product-group-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px}.product-group-title h3{margin:0;font-size:20px}.product-group-title span{font-size:12px;color:#687064;background:#f1f3ef;border-radius:999px;padding:4px 9px}.products-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}@media(max-width:700px){.products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}@media(max-width:390px){.products-group-grid{grid-template-columns:1fr}}
-
-/* Mobilni: lista proizvoda; desktop: grid */
+@media(max-width:650px){.point-search{display:grid;grid-template-columns:1fr auto}.point-search .btn{padding-left:14px;padding-right:14px}}
+.variant-label{display:block;margin:10px 0 0;font-size:13px;font-weight:700}
+.variant-select{width:100%;margin-top:5px;padding:10px 12px;border:1px solid #d8ddd4;border-radius:10px;background:#fff;font:inherit}
+.variant-select:focus{outline:2px solid #b9cfad;outline-offset:1px}
+.product-filter{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:0;scrollbar-width:none}
+.product-filter::-webkit-scrollbar{display:none}
+.filter-btn{border:1px solid #d8ddd4;background:#fff;border-radius:999px;padding:9px 14px;white-space:nowrap;font:inherit;font-weight:700;cursor:pointer}
+.filter-btn.active{background:#e8f0e3;border-color:#b9cdb0}
+.product-group{margin:0 0 26px}
+.product-group-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px}
+.product-group-title h3{margin:0;font-size:20px}
+.product-group-title span{font-size:12px;color:#687064;background:#f1f3ef;border-radius:999px;padding:4px 9px}
+.products-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:850px) and (min-width:651px){.products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media(max-width:700px){.products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media(max-width:390px){.products-group-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.products-group-grid{display:flex;flex-direction:column;gap:8px}.products-group-grid .product{display:grid;grid-template-columns:72px 1fr auto;grid-template-areas:"image info action" "image variant action";align-items:center;gap:8px 12px;padding:10px}.products-group-grid .product>img{grid-area:image;width:72px;height:72px;object-fit:cover;border-radius:10px}.products-group-grid .product>h3{grid-area:info;margin:0}.products-group-grid .product>.meta,.products-group-grid .product>.producer{display:none}.products-group-grid .product>.variant-label{grid-area:variant;margin:0}.products-group-grid .product>.product-bottom{grid-area:action;display:flex;flex-direction:column;align-items:flex-end;gap:6px}.products-group-grid .product>.product-bottom .unit{display:none}.products-group-grid .product>.product-bottom .price{font-size:15px}}
 @media(min-width:701px){.products-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
-
-/* Fino povezivanje uvoda, dostave i proizvoda */
 .hero + .delivery-banner + section{margin-top:0}
 @media(max-width:650px){.hero + .delivery-banner + section .section-head h2{margin-top:2px;margin-bottom:8px}}
