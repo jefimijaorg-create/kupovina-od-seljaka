@@ -121,3 +121,16 @@ textarea{resize:vertical}
 .point-list-toggle{margin:10px 0 14px;max-width:320px}
 .points-panel{margin-bottom:14px}
 .points-panel.hidden{display:none}
+
+.point-search{display:flex;gap:8px;align-items:stretch;margin:12px 0 10px}
+.point-search input{margin:0;flex:1;min-width:0}
+.point-search .btn{white-space:nowrap}
+.search-result{background:#edf4e9;border:1px solid #cbdcc4;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.search-result span,.search-result strong,.search-result small{display:block}
+.search-result span{font-size:11px;color:#60735a;text-transform:uppercase;font-weight:800}
+.search-result strong{font-size:16px;margin:3px 0}
+.search-result small{color:#62675f}
+@media(max-width:650px){
+ .point-search{display:grid;grid-template-columns:1fr auto}
+ .point-search .btn{padding-left:14px;padding-right:14px}
+}
