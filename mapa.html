@@ -36,8 +36,15 @@
       <h2>Пунктови</h2>
       <span id="pointStatus">Учитавање...</span>
     </div>
-    <p class="hint">Листа је прва. Додирни пункт да видиш место на мапи и детаље.</p>
-    <div id="points" class="points"></div>
+    <p class="hint">Изабери пункт на мапи или отвори листу пунктова.</p>
+
+    <div class="point-list-toggle">
+      <button id="togglePoints" class="btn secondary full" type="button">☰ Листа пунктова</button>
+    </div>
+
+    <div id="pointsPanel" class="points-panel hidden">
+      <div id="points" class="points"></div>
+    </div>
 
     <div class="map-wrap">
       <div id="map" class="map"></div>
