@@ -119,6 +119,17 @@ async function renderPoints(){
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(pickupMap);
 
     pickupMarkers={};
+
+    const toggle=document.getElementById('togglePoints');
+    const panel=document.getElementById('pointsPanel');
+    if(toggle&&panel){
+      toggle.onclick=()=>{
+        const open=!panel.classList.contains('hidden');
+        panel.classList.toggle('hidden',open);
+        toggle.textContent=open?'☰ Листа пунктова':'✕ Затвори листу';
+      };
+    }
+
     active.forEach(p=>{
       const lat=Number(p.latitude),lng=Number(p.longitude);
       if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
