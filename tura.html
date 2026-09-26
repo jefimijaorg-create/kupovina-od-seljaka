@@ -16,7 +16,7 @@ select,input[type=number]{border:1px solid #d8d0c2;border-radius:8px;padding:8px
 .status{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}.ok{background:#e8f1e4;color:#496a3f}.warn{background:#f8edd7;color:#8a641d}.muted{background:#eeeae2;color:#777}
 .money{font-weight:800;white-space:nowrap}.due{color:#9a4b32}.paid{color:#496a3f}.right{text-align:right}.center{text-align:center}.save-row{white-space:nowrap}
 .pay-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px 18px}.pay-card{border:1px solid #e4ded2;border-radius:14px;padding:15px;background:#fff}.pay-card h3{margin:0 0 10px}.pay-line{display:flex;justify-content:space-between;gap:10px;margin:7px 0}.pay-total{border-top:1px solid #eee8dd;margin-top:10px;padding-top:10px;font-weight:800;font-size:18px}.loading,.error{padding:25px;color:#777}.error{color:#9a3d32}
-.note{padding:12px 18px;background:#fffbe9;border-top:1px solid #eee8dd;color:#71684e;font-size:13px;line-height:1.45}
+.note{padding:12px 18px;background:#fffbe9;border-top:1px solid #eee8dd;color:#71684e;font-size:13px;line-height:1.45}.tabs{display:flex;gap:7px;overflow-x:auto;padding:10px 18px;border-bottom:1px solid #eee8dd;background:#faf8f3}.tab{border:1px solid #ddd6c9;background:#fff;border-radius:999px;padding:9px 13px;font:inherit;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer}.tab.active{background:#e8f1e4;border-color:#b9cdb0;color:#496a3f}tr.row-hidden{display:none}
 @media(max-width:900px){.summary{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.tour-page{width:94%;padding-top:16px}.tour-head{align-items:start;flex-direction:column}.tour-head h1{font-size:25px}.summary{grid-template-columns:repeat(2,1fr)}.pay-grid{grid-template-columns:1fr}.toolbar{align-items:stretch;flex-direction:column}th,td{padding:9px 8px}select,input[type=number]{min-width:110px}}
 </style>
 </head>
@@ -35,13 +35,13 @@ select,input[type=number]{border:1px solid #d8d0c2;border-radius:8px;padding:8px
 
   <section class="panel">
     <h2>1. Поруџбине и додела газдинству</h2>
-    <div class="toolbar"><small>Свака ставка може посебно да се додели газдинству. Сачувај промену на само тој ставци.</small><button class="btn secondary" id="refreshBtn">Освежи</button></div>
+    <div class="toolbar"><small>Свака ставка може посебно да се додели газдинству. Сачувај промену на само тој ставци.</small><button class="btn secondary" id="refreshBtn">Освежи</button></div><div class="tabs" id="orderTabs"><button class="tab active" data-filter="all">Све</button><button class="tab" data-filter="unassigned">Није додељено</button><button class="tab" data-filter="assigned">Додељено</button></div>
     <div id="orders" class="loading">Учитавање...</div>
   </section>
 
   <section class="panel">
     <h2>2. Преузимање и испорука</h2>
-    <div class="toolbar"><small>Унеси стварно преузету и испоручену количину. Дуг се рачуна само за стварно преузету количину.</small><span id="saveMsg"></span></div>
+    <div class="toolbar"><small>Унеси стварно преузету и испоручену количину. Дуг се рачуна само за стварно преузету количину.</small><span id="saveMsg"></span></div><div class="tabs" id="pickupTabs"><button class="tab active" data-filter="all">Све</button><button class="tab" data-filter="not-picked">Није преузето</button><button class="tab" data-filter="picked">Преузето</button><button class="tab" data-filter="delivered">Испоручено</button></div>
     <div id="pickup" class="loading">Учитавање...</div>
   </section>
 
@@ -85,8 +85,8 @@ function renderSummary(){
     ['Дуг',money(due),'за преузето']
   ].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+(x[2]?' · '+x[2]:'')+'</span></div>').join('');
 }
-function renderOrders(){
-  const html=state.rows.map(r=>'<tr>'+
+let orderFilter='all',pickupFilter='all';function applyFilters(){document.querySelectorAll('#orders tr[data-assigned]').forEach(tr=>{const f=orderFilter;tr.classList.toggle('row-hidden',f==='unassigned'?tr.dataset.assigned!=='0':f==='assigned'?tr.dataset.assigned!=='1':false)});document.querySelectorAll('#pickup tr[data-pickup]').forEach(tr=>{const f=pickupFilter;tr.classList.toggle('row-hidden',f==='not-picked'?tr.dataset.pickup!=='not-picked':f==='picked'?tr.dataset.pickup!=='picked':f==='delivered'?tr.dataset.pickup!=='delivered':false)})}function renderOrders(){
+  const html=state.rows.map(r=>'<tr data-assigned="'+(r.gazdinstvo_id?'1':'0')+'">'+
     '<td>#'+r.id+'</td>'+
     '<td><b>'+esc(r.recipient_name||'Непознат')+'</b></td>'+
     '<td>'+esc(r.proizvod)+'<br><small>'+qty(r.total_quantity)+' '+esc(r.quantity_unit)+'</small></td>'+
@@ -99,7 +99,7 @@ function renderOrders(){
 function renderPickup(){
   const html=state.rows.map(r=>{
     const total=Number(r.total_quantity||0), p=Number(r.preuzeta_kolicina||0), d=Number(r.isporucena_kolicina||0);
-    return '<tr>'+
+    const pf=d>=total&&total>0?'delivered':p>0?'picked':'not-picked';return '<tr data-pickup="'+pf+'">'+
       '<td>#'+r.id+'</td><td><b>'+esc(r.recipient_name||'Непознат')+'</b></td><td>'+esc(r.proizvod)+'</td>'+
       '<td>'+qty(total)+' '+esc(r.quantity_unit)+'</td>'+
       '<td><input type="number" min="0" max="'+total+'" step="0.01" value="'+p+'" class="picked-input" data-id="'+r.id+'"></td>'+
@@ -136,9 +136,9 @@ async function load(){
   state.payouts=await api('producer_payouts?tura_id=eq.'+state.tour.id+'&select=id,producer_id,total_amount,is_paid');
   document.getElementById('title').textContent=state.tour.naziv;
   document.getElementById('status').innerHTML='<span class="status ok">'+esc(state.tour.status)+'</span> · '+new Date(state.tour.datum+'T00:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'});
-  renderSummary();renderOrders();renderPickup();renderPayouts();
+  renderSummary();renderOrders();renderPickup();renderPayouts();applyFilters();
 }
-document.addEventListener('click',async e=>{
+document.addEventListener('click',async e=>{const ot=e.target.closest('#orderTabs .tab');if(ot){orderFilter=ot.dataset.filter;document.querySelectorAll('#orderTabs .tab').forEach(x=>x.classList.toggle('active',x===ot));applyFilters();return}const pt=e.target.closest('#pickupTabs .tab');if(pt){pickupFilter=pt.dataset.filter;document.querySelectorAll('#pickupTabs .tab').forEach(x=>x.classList.toggle('active',x===pt));applyFilters();return}
   const farmBtn=e.target.closest('.save-farm');
   if(farmBtn){
     const id=Number(farmBtn.dataset.id), sel=document.querySelector('.farm-select[data-id="'+id+'"]'), farm=sel.value?Number(sel.value):null;
