@@ -82,60 +82,79 @@ async function renderProducts(){
     const ps=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');
     const vs=await api('product_variants?select=id,product_id,name,price,is_active&is_active=eq.true&limit=100');
     const variantsByProduct={};
-    vs.forEach(v=>{
-      (variantsByProduct[v.product_id]??=[]).push(v);
-    });
+    vs.forEach(v=>(variantsByProduct[v.product_id]??=[]).push(v));
 
-    box.innerHTML=ps.map(p=>{
-      const variants=variantsByProduct[p.id]||[];
-      const variantSelect=variants.length
-        ? '<label class="variant-label">Паковање<select class="variant-select" data-variant-for="'+esc(p.id)+'">'+
-            variants.map(v=>'<option value="'+esc(v.id)+'">'+esc(v.name)+' — '+money(v.price)+'</option>').join('')+
-          '</select></label>'
-        : '';
-      const displayPrice=variants.length?variants[0].price:p.price;
-      return `
-      <article class="product">
-        ${p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy">':''}
-        <h3>${esc(p.name||'Производ')}</h3>
-        ${p.description?'<div class="meta">'+esc(p.description)+'</div>':''}
-        ${p.producer_name?'<div class="producer">'+esc(p.producer_name)+'</div>':''}
-        ${variantSelect}
-        <div class="product-bottom">
-          <div>
-            <div class="price">${money(displayPrice)}</div>
-            <div class="unit">${esc(p.unit||'ком')}</div>
-          </div>
-          <button class="btn primary add-btn" data-add="${esc(p.id)}" type="button">Додај</button>
-        </div>
-      </article>`;
-    }).join('');
-
-    box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
-      const p=ps.find(x=>String(x.id)===b.dataset.add);
-      if(!p)return;
-      const variants=variantsByProduct[p.id]||[];
-      const select=box.querySelector('[data-variant-for="'+p.id+'"]');
-      const variant=variants.find(v=>String(v.id)===String(select?.value))||null;
-      add(p,variant);
-    });
-
-    box.querySelectorAll('.variant-select').forEach(select=>select.addEventListener('change',()=>{
-      const p=ps.find(x=>String(x.id)===select.dataset.variantFor);
-      const v=(variantsByProduct[p.id]||[]).find(x=>String(x.id)===String(select.value));
-      const card=select.closest('.product');
-      const price=card?.querySelector('.price');
-      if(price&&v)price.textContent=money(v.price);
-    }));
-
-    const s=document.getElementById('productStatus');
-    if(s)s.textContent=ps.length+' производа';
+    const categories=[...new Set(ps.map(p=>String(p.category||'Остало').trim()||'Остало'))];
+    const filter=document.getElementById('productFilter');
+    if(filter){
+      filter.innerHTML='<button type="button" class="filter-btn active" data-filter="all">Све</button>'+
+        categories.map(c=>'<button type="button" class="filter-btn" data-filter="'+esc(c)+'">'+esc(c)+'</button>').join('');
+      filter.querySelectorAll('.filter-btn').forEach(b=>b.onclick=()=>{
+        filter.querySelectorAll('.filter-btn').forEach(x=>x.classList.toggle('active',x===b));
+        renderProductGroups(ps,variantsByProduct,b.dataset.filter);
+      });
+    }
+    renderProductGroups(ps,variantsByProduct,'all');
   }catch(e){
     const s=document.getElementById('productStatus');
     if(s)s.textContent='Грешка при учитавању';
     box.innerHTML='<div class="card"><b>Производи тренутно нису доступни.</b></div>';
     console.error(e);
   }
+}
+
+function renderProductGroups(ps,variantsByProduct,filter='all'){
+  const box=document.getElementById('products');
+  const groups={};
+  ps.filter(p=>filter==='all'||String(p.category||'Остало')===filter).forEach(p=>{
+    const cat=String(p.category||'Остало').trim()||'Остало';
+    (groups[cat]??=[]).push(p);
+  });
+
+  box.innerHTML=Object.entries(groups).map(([cat,items])=>`
+    <section class="product-group">
+      <div class="product-group-title"><h3>${esc(cat)}</h3><span>${items.length}</span></div>
+      <div class="products-group-grid">
+        ${items.map(p=>{
+          const variants=variantsByProduct[p.id]||[];
+          const variantSelect=variants.length
+            ? '<label class="variant-label">Паковање<select class="variant-select" data-variant-for="'+esc(p.id)+'">'+
+                variants.map(v=>'<option value="'+esc(v.id)+'">'+esc(v.name)+' — '+money(v.price)+'</option>').join('')+
+              '</select></label>'
+            : '';
+          const displayPrice=variants.length?variants[0].price:p.price;
+          return `
+          <article class="product">
+            ${p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy">':''}
+            <h3>${esc(p.name||'Производ')}</h3>
+            ${p.description?'<div class="meta">'+esc(p.description)+'</div>':''}
+            ${p.producer_name?'<div class="producer">'+esc(p.producer_name)+'</div>':''}
+            ${variantSelect}
+            <div class="product-bottom">
+              <div><div class="price">${money(displayPrice)}</div><div class="unit">${esc(p.unit||'ком')}</div></div>
+              <button class="btn primary add-btn" data-add="${esc(p.id)}" type="button">Додај</button>
+            </div>
+          </article>`;
+        }).join('')}
+      </div>
+    </section>`).join('');
+
+  box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
+    const p=ps.find(x=>String(x.id)===b.dataset.add);
+    if(!p)return;
+    const variants=variantsByProduct[p.id]||[];
+    const select=box.querySelector('[data-variant-for="'+p.id+'"]');
+    const variant=variants.find(v=>String(v.id)===String(select?.value))||null;
+    add(p,variant);
+  });
+  box.querySelectorAll('.variant-select').forEach(select=>select.onchange=()=>{
+    const p=ps.find(x=>String(x.id)===select.dataset.variantFor);
+    const v=(variantsByProduct[p.id]||[]).find(x=>String(x.id)===String(select.value));
+    const price=select.closest('.product')?.querySelector('.price');
+    if(price&&v)price.textContent=money(v.price);
+  });
+  const s=document.getElementById('productStatus');
+  if(s)s.textContent=ps.filter(p=>filter==='all'||String(p.category||'Остало')===filter).length+' производа';
 }
 
 let pickupMap=null;
