@@ -10,6 +10,19 @@ function cartCount(){const e=document.getElementById('cartCount');if(e)e.textCon
 function add(p){const x=state.cart.find(i=>i.id===p.id);if(x)x.qty++;else state.cart.push({id:p.id,name:p.name,price:Number(p.price)||0,unit:p.unit||'kom',qty:1});save();cartCount();renderProducts()}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+async function renderNextDelivery(){
+  const title=document.getElementById('deliveryTitle'),info=document.getElementById('deliveryInfo');
+  if(!title)return;
+  try{
+    const rows=await api('ture?select=id,naziv,datum,status,kapacitet&status=in.(open,scheduled)&datum=gte.'+new Date().toISOString().slice(0,10)+'&order=datum.asc,id.desc&limit=1');
+    if(!rows.length){title.textContent='Нема заказане следеће доставе';if(info)info.textContent='';return}
+    const t=rows[0],d=new Date(t.datum+'T12:00:00');
+    const date=d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'});
+    title.textContent=date;
+    if(info)info.textContent=(t.naziv||'Следећа тура')+' • поруџбине су отворене';
+  }catch(e){title.textContent='Следећа достава';if(info)info.textContent='Провера података...';console.error(e)}
+}
+
 async function renderProducts(){
   const box=document.getElementById('products');if(!box)return;
   try{
@@ -18,26 +31,12 @@ async function renderProducts(){
     box.innerHTML=ps.map(p=>{
       const stock=Number(p.stock);
       const stockText=stock>0?'Доступно: '+stock+' '+esc(p.unit||'ком'):'Количина се договара';
-      return '<article class="product">'+
-        (p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:12px">':'')+
-        '<h3>'+esc(p.name||'Производ')+'</h3>'+
-        '<div class="meta">'+esc(p.description||p.producer_name||p.unit||'Домаћи производ')+'</div>'+
-        '<div class="price">'+money(p.price)+'</div>'+
-        '<div class="meta">'+stockText+(p.has_variants?' • више варијанти':'')+'</div>'+
-        '<button class="btn primary" data-add="'+esc(p.id)+'">Додај</button>'+
-      '</article>';
+      return '<article class="product">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:12px">':'')+
+      '<h3>'+esc(p.name||'Производ')+'</h3><div class="meta">'+esc(p.description||p.producer_name||p.unit||'Домаћи производ')+'</div><div class="price">'+money(p.price)+'</div><div class="meta">'+stockText+(p.has_variants?' • више варијанти':'')+'</div><button class="btn primary" data-add="'+esc(p.id)+'">Додај</button></article>';
     }).join('');
-    box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
-      const p=ps.find(x=>String(x.id)===b.dataset.add);
-      if(p)add(p);
-    });
-    const status=document.getElementById('productStatus');
-    if(status)status.textContent=ps.length+' производа из Supabase-а';
-  }catch(e){
-    const status=document.getElementById('productStatus');if(status)status.textContent='Грешка при учитавању';
-    box.innerHTML='<div class="card"><b>Производи тренутно нису доступни.</b><p>Провери везу са Supabase базом.</p></div>';
-    console.error('Supabase products:',e);
-  }
+    box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const p=ps.find(x=>String(x.id)===b.dataset.add);if(p)add(p)});
+    const status=document.getElementById('productStatus');if(status)status.textContent=ps.length+' производа из Supabase-а';
+  }catch(e){const status=document.getElementById('productStatus');if(status)status.textContent='Грешка при учитавању';box.innerHTML='<div class="card"><b>Производи тренутно нису доступни.</b><p>Провери везу са Supabase базом.</p></div>';console.error(e)}
 }
 
 async function renderPoints(){
@@ -47,32 +46,13 @@ async function renderPoints(){
     box.innerHTML=ps.map(p=>'<button class="point '+(state.point?.id==p.id?'active':'')+'" data-id="'+p.id+'"><strong>'+esc(p.name||p.naziv||p.address||'Пункт')+'</strong><small>'+esc(p.address||p.adresa||'')+'</small></button>').join('');
     box.querySelectorAll('.point').forEach(b=>b.onclick=()=>{state.point=ps.find(p=>String(p.id)===b.dataset.id);save();renderPoints();updateContinue()});
     document.getElementById('pointStatus').textContent=ps.length+' понуђених пунктова';
-    if(window.L){
-      const map=L.map('map').setView([44.78,20.45],11);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-      ps.forEach(p=>{const lat=Number(p.latitude),lng=Number(p.longitude);if(Number.isFinite(lat)&&Number.isFinite(lng))L.marker([lat,lng]).addTo(map).bindPopup(esc(p.name||p.address||'Пункт'));});
-    }
-  }catch(e){
-    document.getElementById('pointStatus').textContent='Пунктови се још повезују';
-    box.innerHTML='<div class="card">Нема учитаних пунктова.</div>';
-  }
+    if(window.L){const map=L.map('map').setView([44.78,20.45],11);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);ps.forEach(p=>{const lat=Number(p.latitude),lng=Number(p.longitude);if(Number.isFinite(lat)&&Number.isFinite(lng))L.marker([lat,lng]).addTo(map).bindPopup(esc(p.name||p.address||'Пункт'));});}
+  }catch(e){document.getElementById('pointStatus').textContent='Пунктови се још повезују';box.innerHTML='<div class="card">Нема учитаних пунктова.</div>'}
 }
 function updateContinue(){const b=document.getElementById('continue');if(b)b.disabled=!state.point||!state.cart.length}
-function initMap(){
-  document.querySelectorAll('.delivery').forEach(b=>b.onclick=()=>{state.delivery=b.dataset.method;save();document.querySelectorAll('.delivery').forEach(x=>x.classList.remove('active'));b.classList.add('active')});
-  const b=document.getElementById('continue');if(b)b.onclick=()=>location.href='potvrdi.html';
-  renderPoints();updateContinue();cartCount();
-}
-function initConfirm(){
-  const summary=document.getElementById('deliverySummary');
-  if(summary)summary.textContent=(state.delivery==='punkt'?'Преузимање на пункту: ':'Преузимање по договору: ')+(state.point?.name||state.point?.address||'изабрано место');
-  const items=document.getElementById('orderItems');
-  if(items)items.innerHTML=state.cart.length?state.cart.map(i=>'<div class="order-row"><span>'+esc(i.name)+' × '+i.qty+'</span><b>'+money(i.price*i.qty)+'</b></div>').join(''):'Нема производа.';
-  const f=document.getElementById('orderForm');
-  if(f)f.onsubmit=async e=>{e.preventDefault();const d=new FormData(f);const result=document.getElementById('result');result.classList.remove('hidden');result.textContent='Провера поруџбине...';try{const customer={ime:d.get('name'),telefon:d.get('phone')};localStorage.setItem('lastOrder',JSON.stringify({customer,state}));result.textContent='Поруџбина је припремљена. Следећи корак је упис у табеле поруџбине.';}catch(err){result.textContent='Дошло је до грешке: '+err.message}};
-  cartCount();
-}
+function initMap(){document.querySelectorAll('.delivery').forEach(b=>b.onclick=()=>{state.delivery=b.dataset.method;save();document.querySelectorAll('.delivery').forEach(x=>x.classList.remove('active'));b.classList.add('active')});const b=document.getElementById('continue');if(b)b.onclick=()=>location.href='potvrdi.html';renderPoints();updateContinue();cartCount()}
+function initConfirm(){const summary=document.getElementById('deliverySummary');if(summary)summary.textContent=(state.delivery==='punkt'?'Преузимање на пункту: ':'Преузимање по договору: ')+(state.point?.name||state.point?.address||'изабрано место');const items=document.getElementById('orderItems');if(items)items.innerHTML=state.cart.length?state.cart.map(i=>'<div class="order-row"><span>'+esc(i.name)+' × '+i.qty+'</span><b>'+money(i.price*i.qty)+'</b></div>').join(''):'Нема производа.';const f=document.getElementById('orderForm');if(f)f.onsubmit=async e=>{e.preventDefault();const d=new FormData(f);const result=document.getElementById('result');result.classList.remove('hidden');result.textContent='Провера поруџбине...';const customer={ime:d.get('name'),telefon:d.get('phone')};localStorage.setItem('lastOrder',JSON.stringify({customer,state}));result.textContent='Поруџбина је припремљена. Следећи корак је упис у табеле поруџбине.'};cartCount()}
 const page=document.body.dataset.page;
-if(page==='home'){cartCount();renderProducts()}
+if(page==='home'){cartCount();renderNextDelivery();renderProducts()}
 if(page==='map')initMap();
 if(page==='confirm')initConfirm();
