@@ -118,3 +118,6 @@ textarea{resize:vertical}
   .products{grid-template-columns:1fr}
   .hero h1{font-size:34px}
 }
+.point-list-toggle{margin:10px 0 14px;max-width:320px}
+.points-panel{margin-bottom:14px}
+.points-panel.hidden{display:none}
