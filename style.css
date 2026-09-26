@@ -158,3 +158,32 @@ textarea{resize:vertical}
 @media(min-width:701px){.products-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
 .hero + .delivery-banner + section{margin-top:0}
 @media(max-width:650px){.hero + .delivery-banner + section .section-head h2{margin-top:2px;margin-bottom:8px}}
+
+/* Завршно дотеривање почетне странице за таблет */
+@media (min-width:651px) and (max-width:900px){
+  .container{width:min(92%,820px);padding-top:22px}
+  .hero{padding:34px 0 8px;max-width:760px}
+  .hero h1{font-size:46px;margin:8px 0 12px}
+  .hero p{font-size:17px}
+  .delivery-banner{padding:11px 0 16px}
+  .delivery-banner strong{font-size:22px}
+  .section-head h2{font-size:22px;margin:8px 0 9px}
+  .product-filter{padding-bottom:12px}
+  .filter-btn{padding:8px 13px;font-size:14px}
+  .product-group{margin-bottom:22px}
+  .product-group-title{margin:6px 0 10px}
+  .product-group-title h3{font-size:18px}
+  .products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px}
+  .products-group-grid .product{padding:13px;border-radius:15px}
+  .products-group-grid .product>img{height:150px;margin:0 0 11px;width:100%;border-radius:11px;object-fit:cover}
+  .products-group-grid .product>h3{font-size:17px;line-height:1.2;margin-bottom:5px}
+  .products-group-grid .product>.meta{font-size:12px;line-height:1.35;margin-bottom:5px}
+  .products-group-grid .product>.producer{font-size:12px;margin-bottom:8px}
+  .products-group-grid .product>.variant-label{font-size:12px;margin-top:7px}
+  .products-group-grid .product>.variant-label .variant-select{padding:8px 9px;font-size:13px;margin-top:4px}
+  .products-group-grid .product>.product-bottom{padding-top:10px;gap:7px}
+  .products-group-grid .product>.product-bottom .price{font-size:18px}
+  .products-group-grid .product>.product-bottom .unit{font-size:11px}
+  .products-group-grid .product>.product-bottom .add-btn{min-height:40px;padding:9px 13px;font-size:14px}
+  .bottom-action{margin-top:20px}
+}
