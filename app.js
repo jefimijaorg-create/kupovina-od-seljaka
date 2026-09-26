@@ -120,6 +120,43 @@ async function renderPoints(){
 
     pickupMarkers={};
 
+    const searchInput=document.getElementById('pointSearch');
+    const searchButton=document.getElementById('searchPoint');
+    const searchResult=document.getElementById('searchResult');
+
+    const distanceKm=(a,b)=>{
+      const R=6371, r=Math.PI/180;
+      const dLat=(b.lat-a.lat)*r, dLon=(b.lng-a.lng)*r;
+      const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
+      return 2*R*Math.asin(Math.sqrt(x));
+    };
+
+    const choosePointFromSearch=async()=>{
+      const q=(searchInput?.value||'').trim();
+      if(!q){ if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Унеси адресу или место.';} return; }
+      try{
+        const geo=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=rs&q='+encodeURIComponent(q),{headers:{Accept:'application/json'}});
+        const places=await geo.json();
+        if(!places.length){ if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Нисмо пронашли ту адресу. Пробај назив улице, број или крај.';} return; }
+        const user={lat:Number(places[0].lat),lng:Number(places[0].lon)};
+        const nearest=active.filter(p=>Number.isFinite(Number(p.latitude))&&Number.isFinite(Number(p.longitude)))
+          .map(p=>({...p,distance:distanceKm(user,{lat:Number(p.latitude),lng:Number(p.longitude)})}))
+          .sort((a,b)=>a.distance-b.distance)[0];
+        if(!nearest)return;
+        if(searchResult){
+          searchResult.classList.remove('hidden');
+          searchResult.innerHTML='<span>Најближи пункт</span><strong>'+esc(nearest.name||'Пункт')+'</strong><small>'+nearest.distance.toFixed(1)+' км од тражене адресе</small>';
+        }
+        selectPoint(nearest);
+      }catch(e){
+        if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Претрага тренутно није доступна.';}
+        console.error(e);
+      }
+    };
+
+    if(searchButton)searchButton.onclick=choosePointFromSearch;
+    if(searchInput)searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();choosePointFromSearch()}});
+
     const toggle=document.getElementById('togglePoints');
     const panel=document.getElementById('pointsPanel');
     if(toggle&&panel){
@@ -138,7 +175,8 @@ async function renderPoints(){
       m.bindPopup('<strong>'+esc(p.name||'Пункт')+'</strong>');
     });
 
-    const selectPoint=p=>{
+    let selectPoint; 
+    selectPoint=p=>{
       state.point=p;
       state.delivery='punkt';
       save();
