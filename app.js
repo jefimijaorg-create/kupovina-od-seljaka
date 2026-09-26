@@ -1,37 +1,290 @@
 const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 const headers={'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};
+
 const state=JSON.parse(localStorage.getItem('seljaciState')||'{}');
-state.cart=state.cart||[];state.delivery=state.delivery||'punkt';state.point=state.point||null;
+state.cart=Array.isArray(state.cart)?state.cart:[];
+state.delivery=state.delivery||'punkt';
+state.point=state.point||null;
+state.proposalAddress=state.proposalAddress||'';
+
 const save=()=>localStorage.setItem('seljaciState',JSON.stringify(state));
 const money=n=>new Intl.NumberFormat('sr-RS',{minimumFractionDigits:0,maximumFractionDigits:2}).format(Number(n)||0)+' RSD';
 const api=async(path)=>{const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers});if(!r.ok)throw new Error(await r.text());return r.json()};
-function cartCount(){const e=document.getElementById('cartCount');if(e)e.textContent=state.cart.reduce((s,x)=>s+x.qty,0)}
-function add(p){const x=state.cart.find(i=>i.id===p.id);if(x)x.qty++;else state.cart.push({id:p.id,name:p.name,price:Number(p.price)||0,unit:p.unit||'kom',qty:1});save();cartCount();renderProducts()}
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function cartQty(){return state.cart.reduce((s,x)=>s+Number(x.qty||0),0)}
+function cartCount(){
+  const e=document.getElementById('cartCount');
+  if(e)e.textContent=cartQty();
+  updateHomeContinue();
+}
+function add(p){
+  const x=state.cart.find(i=>String(i.id)===String(p.id));
+  if(x)x.qty++;
+  else state.cart.push({id:p.id,name:p.name,price:Number(p.price)||0,unit:p.unit||'kom',qty:1});
+  save();
+  cartCount();
+  renderProducts();
+}
+function updateHomeContinue(){
+  const b=document.getElementById('homeContinue');
+  if(!b)return;
+  b.disabled=cartQty()===0;
+  b.onclick=()=>{if(cartQty())location.href='mapa.html'};
+}
+
+function formatDeliveryDate(dateString){
+  const d=new Date(dateString+'T12:00:00');
+  return d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'});
+}
+function orderDeadline(dateString){
+  const d=new Date(dateString+'T12:00:00');
+  d.setDate(d.getDate()-4);
+  return d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'})+' у 22:00';
+}
 
 async function renderNextDelivery(){
- const title=document.getElementById('deliveryTitle'),info=document.getElementById('deliveryInfo');if(!title)return;
- try{const rows=await api('ture?select=id,naziv,datum,status,kapacitet&status=in.(open,scheduled)&datum=gte.'+new Date().toISOString().slice(0,10)+'&order=datum.asc,id.desc&limit=1');if(!rows.length){title.textContent='Нема заказане следеће доставе';if(info)info.textContent='';return}const t=rows[0],d=new Date(t.datum+'T12:00:00');title.textContent=d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'});if(info)info.textContent=(t.naziv||'Следећа тура')+' • поруџбине су отворене'}catch(e){title.textContent='Следећа достава';if(info)info.textContent='Провера података...'}}
-async function renderProducts(){
- const box=document.getElementById('products');if(!box)return;
- try{const fields='id,name,description,category,price,currency,stock,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants';const ps=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');box.innerHTML=ps.map(p=>'<article class="product">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:12px">':'')+'<h3>'+esc(p.name||'Производ')+'</h3><div class="meta">'+esc(p.description||p.producer_name||p.unit||'Домаћи производ')+'</div><div class="price">'+money(p.price)+'</div><div class="meta">'+(Number(p.stock)>0?'Доступно: '+p.stock+' '+esc(p.unit||'ком'):'Количина се договара')+(p.has_variants?' • више варијанти':'')+'</div><button class="btn primary" data-add="'+esc(p.id)+'">Додај</button></article>').join('');box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const p=ps.find(x=>String(x.id)===b.dataset.add);if(p)add(p)});const s=document.getElementById('productStatus');if(s)s.textContent=ps.length+' производа из Supabase-а'}catch(e){const s=document.getElementById('productStatus');if(s)s.textContent='Грешка при учитавању';box.innerHTML='<div class="card"><b>Производи тренутно нису доступни.</b></div>'}}
-async function renderPoints(){
- const box=document.getElementById('points');if(!box)return;
- try{
-  const ps=await api('punktovi?select=id,name,city,address,latitude,longitude,is_active,description,viber_group,maps_url,vreme,aktivan,slug&order=sort_order.asc&limit=100');
-  const active=ps.filter(p=>String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
-  box.innerHTML=active.map(p=>'<button class="point '+(state.point?.id==p.id?'active':'')+'" data-id="'+p.id+'"><strong>'+esc(p.name||p.address||'Пункт')+'</strong><small>'+esc(p.address||p.city||'')+(p.vreme?' • '+esc(p.vreme):'')+'</small></button>').join('');
-  const map=L.map('map',{zoomControl:false,scrollWheelZoom:false}).setView([44.78,20.45],11);L.control.zoom({position:'topright'}).addTo(map);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
-  const markers={};
-  active.forEach(p=>{const lat=Number(p.latitude),lng=Number(p.longitude);if(!Number.isFinite(lat)||!Number.isFinite(lng))return;const m=L.marker([lat,lng]).addTo(map);markers[p.id]=m;m.bindTooltip(esc(p.name||'Пункт'),{direction:'top',offset:[0,-8]});});
-  const select=p=>{state.point=p;save();box.querySelectorAll('.point').forEach(x=>x.classList.toggle('active',x.dataset.id==p.id));const lat=Number(p.latitude),lng=Number(p.longitude);if(Number.isFinite(lat)&&Number.isFinite(lng)){map.setView([lat,lng],16,{animate:true});if(markers[p.id])markers[p.id].openPopup()}const card=document.getElementById('mapCard');if(card){card.classList.remove('hidden');card.innerHTML='<strong>'+esc(p.name||'Пункт')+'</strong><span>'+esc([p.address,p.city].filter(Boolean).join(', '))+'</span>'+(p.vreme?'<span>🕒 '+esc(p.vreme)+'</span>':'')+(p.description?'<p>'+esc(p.description)+'</p>':'')+(p.maps_url?'<a target="_blank" rel="noopener" href="'+esc(p.maps_url)+'">Отвори у Google Maps ↗</a>':'');}updateContinue()};
-  box.querySelectorAll('.point').forEach(b=>b.onclick=()=>{const p=active.find(x=>String(x.id)===b.dataset.id);if(p)select(p)});
-  document.getElementById('pointStatus').textContent=active.length+' пунктова';
-  if(state.point){const p=active.find(x=>String(x.id)===String(state.point.id));if(p)select(p)}
- }catch(e){document.getElementById('pointStatus').textContent='Пунктови нису доступни';box.innerHTML='<div class="card">Нема учитаних пунктова.</div>';console.error(e)}
+  const title=document.getElementById('deliveryTitle');
+  const info=document.getElementById('deliveryInfo');
+  if(!title)return;
+  try{
+    const rows=await api('ture?select=id,naziv,datum,status&status=in.(open,scheduled)&datum=gte.'+new Date().toISOString().slice(0,10)+'&order=datum.asc,id.desc&limit=1');
+    if(!rows.length){
+      title.textContent='Нема заказане следеће доставе';
+      if(info)info.textContent='';
+      return;
+    }
+    const t=rows[0];
+    title.textContent=formatDeliveryDate(t.datum);
+    if(info)info.textContent='Поруџбине до '+orderDeadline(t.datum);
+  }catch(e){
+    title.textContent='Следећа достава';
+    if(info)info.textContent='Поруџбине до среде у 22:00';
+  }
 }
-function updateContinue(){const b=document.getElementById('continue');if(b)b.disabled=!state.point||!state.cart.length}
-function initMap(){document.querySelectorAll('.delivery').forEach(b=>b.onclick=()=>{state.delivery=b.dataset.method;save();document.querySelectorAll('.delivery').forEach(x=>x.classList.remove('active'));b.classList.add('active')});const b=document.getElementById('continue');if(b)b.onclick=()=>location.href='potvrdi.html';renderPoints();updateContinue();cartCount()}
-function initConfirm(){const s=document.getElementById('deliverySummary');if(s)s.textContent=(state.delivery==='punkt'?'Преузимање на пункту: ':'Преузимање по договору: ')+(state.point?.name||state.point?.address||'изабрано место');const i=document.getElementById('orderItems');if(i)i.innerHTML=state.cart.length?state.cart.map(x=>'<div class="order-row"><span>'+esc(x.name)+' × '+x.qty+'</span><b>'+money(x.price*x.qty)+'</b></div>').join(''):'Нема производа.';const f=document.getElementById('orderForm');if(f)f.onsubmit=e=>{e.preventDefault();const d=new FormData(f),r=document.getElementById('result');r.classList.remove('hidden');localStorage.setItem('lastOrder',JSON.stringify({customer:{ime:d.get('name'),telefon:d.get('phone')},state}));r.textContent='Поруџбина је припремљена.'};cartCount()}
-const page=document.body.dataset.page;if(page==='home'){cartCount();renderNextDelivery();renderProducts()}if(page==='map')initMap();if(page==='confirm')initConfirm();
+
+async function renderProducts(){
+  const box=document.getElementById('products');
+  if(!box)return;
+  try{
+    const fields='id,name,description,category,price,currency,stock,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants';
+    const ps=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');
+    box.innerHTML=ps.map(p=>`
+      <article class="product">
+        ${p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy">':''}
+        <h3>${esc(p.name||'Производ')}</h3>
+        ${p.description?'<div class="meta">'+esc(p.description)+'</div>':''}
+        ${p.producer_name?'<div class="producer">'+esc(p.producer_name)+'</div>':''}
+        <div class="product-bottom">
+          <div>
+            <div class="price">${money(p.price)}</div>
+            <div class="unit">${esc(p.unit||'ком')}</div>
+          </div>
+          <button class="btn primary add-btn" data-add="${esc(p.id)}" type="button">Додај</button>
+        </div>
+      </article>`).join('');
+    box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
+      const p=ps.find(x=>String(x.id)===b.dataset.add);
+      if(p)add(p);
+    });
+    const s=document.getElementById('productStatus');
+    if(s)s.textContent=ps.length+' производа';
+  }catch(e){
+    const s=document.getElementById('productStatus');
+    if(s)s.textContent='Грешка при учитавању';
+    box.innerHTML='<div class="card"><b>Производи тренутно нису доступни.</b></div>';
+    console.error(e);
+  }
+}
+
+let pickupMap=null;
+let pickupMarkers={};
+
+async function renderPoints(){
+  const box=document.getElementById('points');
+  if(!box)return;
+  try{
+    const ps=await api('punktovi?select=id,name,city,address,latitude,longitude,is_active,description,viber_group,maps_url,vreme,aktivan,slug&order=sort_order.asc&limit=100');
+    const active=ps.filter(p=>String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
+
+    box.innerHTML=active.map(p=>`
+      <button class="point ${state.point?.id==p.id?'active':''}" data-id="${esc(p.id)}" type="button">
+        <strong>${esc(p.name||p.address||'Пункт')}</strong>
+        <small>${esc(p.address||p.city||'')}${p.vreme?' • '+esc(p.vreme):''}</small>
+      </button>`).join('');
+
+    pickupMap=L.map('map',{zoomControl:false,scrollWheelZoom:false}).setView([44.78,20.45],11);
+    L.control.zoom({position:'topright'}).addTo(pickupMap);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(pickupMap);
+
+    pickupMarkers={};
+    active.forEach(p=>{
+      const lat=Number(p.latitude),lng=Number(p.longitude);
+      if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+      const m=L.marker([lat,lng]).addTo(pickupMap);
+      pickupMarkers[p.id]=m;
+      m.bindPopup('<strong>'+esc(p.name||'Пункт')+'</strong>');
+    });
+
+    const selectPoint=p=>{
+      state.point=p;
+      state.delivery='punkt';
+      save();
+      document.querySelectorAll('.delivery').forEach(x=>x.classList.toggle('active',x.dataset.method==='punkt'));
+      box.querySelectorAll('.point').forEach(x=>x.classList.toggle('active',x.dataset.id==p.id));
+
+      const lat=Number(p.latitude),lng=Number(p.longitude);
+      if(Number.isFinite(lat)&&Number.isFinite(lng)){
+        pickupMap.setView([lat,lng],16,{animate:true});
+        if(pickupMarkers[p.id])pickupMarkers[p.id].openPopup();
+      }
+
+      const card=document.getElementById('mapCard');
+      if(card){
+        card.classList.remove('hidden');
+        card.innerHTML='<strong>'+esc(p.name||'Пункт')+'</strong>'+
+          '<span>'+esc([p.address,p.city].filter(Boolean).join(', '))+'</span>'+
+          (p.vreme?'<span>🕒 '+esc(p.vreme)+'</span>':'')+
+          (p.description?'<p>'+esc(p.description)+'</p>':'')+
+          (p.maps_url?'<a target="_blank" rel="noopener" href="'+esc(p.maps_url)+'">Отвори у Google Maps ↗</a>':'');
+      }
+
+      const selected=document.getElementById('selectedPoint');
+      if(selected){
+        selected.classList.remove('hidden');
+        selected.innerHTML='<span>Изабрани пункт</span><strong>'+esc(p.name||'Пункт')+'</strong>';
+      }
+      updateContinue();
+    };
+
+    box.querySelectorAll('.point').forEach(b=>b.onclick=()=>{
+      const p=active.find(x=>String(x.id)===b.dataset.id);
+      if(p)selectPoint(p);
+    });
+
+    const status=document.getElementById('pointStatus');
+    if(status)status.textContent=active.length+' активних';
+    if(state.point){
+      const p=active.find(x=>String(x.id)===String(state.point.id));
+      if(p)selectPoint(p);
+    }
+  }catch(e){
+    const status=document.getElementById('pointStatus');
+    if(status)status.textContent='Пунктови нису доступни';
+    box.innerHTML='<div class="card">Нема учитаних пунктова.</div>';
+    console.error(e);
+  }
+}
+
+function updateContinue(){
+  const b=document.getElementById('continue');
+  if(!b)return;
+  if(state.delivery==='dogovor'){
+    const input=document.getElementById('proposalAddress');
+    b.disabled=!String(input?.value||state.proposalAddress).trim()||!cartQty();
+  }else{
+    b.disabled=!state.point||!cartQty();
+  }
+}
+
+function initMap(){
+  document.querySelectorAll('.delivery').forEach(b=>b.onclick=()=>{
+    state.delivery=b.dataset.method;
+    save();
+    document.querySelectorAll('.delivery').forEach(x=>x.classList.toggle('active',x===b));
+
+    const pointMode=document.getElementById('pointMode');
+    const dogovorMode=document.getElementById('dogovorMode');
+    if(pointMode)pointMode.classList.toggle('hidden',state.delivery!=='punkt');
+    if(dogovorMode)dogovorMode.classList.toggle('hidden',state.delivery!=='dogovor');
+
+    updateContinue();
+  });
+
+  const input=document.getElementById('proposalAddress');
+  if(input){
+    input.value=state.proposalAddress||'';
+    input.addEventListener('input',()=>{
+      state.proposalAddress=input.value;
+      save();
+      updateContinue();
+    });
+  }
+
+  const b=document.getElementById('continue');
+  if(b)b.onclick=()=>{
+    if(state.delivery==='dogovor'){
+      state.proposalAddress=(input?.value||'').trim();
+      state.point=null;
+    }
+    save();
+    location.href='potvrdi.html';
+  };
+
+  if(state.delivery==='dogovor'){
+    document.querySelector('[data-method="dogovor"]')?.click();
+  }
+  renderPoints();
+  updateContinue();
+  cartCount();
+}
+
+function initConfirm(){
+  if(!cartQty()){
+    location.href='index.html';
+    return;
+  }
+
+  const summary=document.getElementById('deliverySummary');
+  if(summary){
+    if(state.delivery==='punkt'){
+      summary.innerHTML=
+        '<span>Пункт</span><strong>'+esc(state.point?.name||'Није изабран')+'</strong>'+
+        (state.point?.address?'<small>'+esc(state.point.address)+'</small>':'')+
+        (state.point?.vreme?'<small>Време преузимања: '+esc(state.point.vreme)+'</small>':'');
+    }else{
+      summary.innerHTML=
+        '<span>По договору</span><strong>Предложена локација</strong>'+
+        '<small>'+esc(state.proposalAddress||'Није унета адреса')+'</small>';
+    }
+  }
+
+  const items=document.getElementById('orderItems');
+  const total=state.cart.reduce((s,x)=>s+Number(x.price||0)*Number(x.qty||0),0);
+  if(items){
+    items.innerHTML=state.cart.map(x=>`
+      <div class="order-row">
+        <span>${esc(x.name)} <small>× ${x.qty}</small></span>
+        <b>${money(x.price*x.qty)}</b>
+      </div>`).join('');
+  }
+  const totalEl=document.getElementById('orderTotal');
+  if(totalEl)totalEl.textContent=money(total);
+
+  const f=document.getElementById('orderForm');
+  if(f)f.onsubmit=e=>{
+    e.preventDefault();
+    const d=new FormData(f);
+    const result=document.getElementById('result');
+    const order={
+      customer:{ime:d.get('name'),telefon:d.get('phone'),napomena:d.get('note')},
+      products:state.cart,
+      pickup:state.delivery==='punkt'
+        ?{method:'punkt',point_id:state.point?.id,point_name:state.point?.name,time:state.point?.vreme,address:state.point?.address}
+        :{method:'dogovor',address:state.proposalAddress},
+      total
+    };
+    localStorage.setItem('lastOrder',JSON.stringify(order));
+    if(result){
+      result.classList.remove('hidden');
+      result.innerHTML='<strong>Поруџбина је припремљена.</strong><span>Хвала! Ускоро ћемо потврдити поруџбину и место преузимања.</span>';
+    }
+  };
+  cartCount();
+}
+
+const page=document.body.dataset.page;
+if(page==='home'){cartCount();renderNextDelivery();renderProducts()}
+if(page==='map')initMap();
+if(page==='confirm')initConfirm();
