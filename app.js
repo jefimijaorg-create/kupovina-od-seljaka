@@ -19,10 +19,20 @@ function cartCount(){
   if(e)e.textContent=cartQty();
   updateHomeContinue();
 }
-function add(p){
-  const x=state.cart.find(i=>String(i.id)===String(p.id));
+function add(p,variant=null){
+  const cartId=variant?String(p.id)+'::'+String(variant.id):String(p.id);
+  const x=state.cart.find(i=>String(i.cartId||i.id)===cartId);
   if(x)x.qty++;
-  else state.cart.push({id:p.id,name:p.name,price:Number(p.price)||0,unit:p.unit||'kom',qty:1});
+  else state.cart.push({
+    cartId,
+    id:p.id,
+    variant_id:variant?.id||null,
+    variant_name:variant?.name||'',
+    name:p.name,
+    price:Number(variant?.price ?? p.price)||0,
+    unit:p.unit||'ком',
+    qty:1
+  });
   save();
   cartCount();
   renderProducts();
@@ -70,24 +80,54 @@ async function renderProducts(){
   try{
     const fields='id,name,description,category,price,currency,stock,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants';
     const ps=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');
-    box.innerHTML=ps.map(p=>`
+    const vs=await api('product_variants?select=id,product_id,name,price,is_active&is_active=eq.true&limit=100');
+    const variantsByProduct={};
+    vs.forEach(v=>{
+      (variantsByProduct[v.product_id]??=[]).push(v);
+    });
+
+    box.innerHTML=ps.map(p=>{
+      const variants=variantsByProduct[p.id]||[];
+      const variantSelect=variants.length
+        ? '<label class="variant-label">Паковање<select class="variant-select" data-variant-for="'+esc(p.id)+'">'+
+            variants.map(v=>'<option value="'+esc(v.id)+'">'+esc(v.name)+' — '+money(v.price)+'</option>').join('')+
+          '</select></label>'
+        : '';
+      const displayPrice=variants.length?variants[0].price:p.price;
+      return `
       <article class="product">
         ${p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy">':''}
         <h3>${esc(p.name||'Производ')}</h3>
         ${p.description?'<div class="meta">'+esc(p.description)+'</div>':''}
         ${p.producer_name?'<div class="producer">'+esc(p.producer_name)+'</div>':''}
+        ${variantSelect}
         <div class="product-bottom">
           <div>
-            <div class="price">${money(p.price)}</div>
+            <div class="price">${money(displayPrice)}</div>
             <div class="unit">${esc(p.unit||'ком')}</div>
           </div>
           <button class="btn primary add-btn" data-add="${esc(p.id)}" type="button">Додај</button>
         </div>
-      </article>`).join('');
+      </article>`;
+    }).join('');
+
     box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
       const p=ps.find(x=>String(x.id)===b.dataset.add);
-      if(p)add(p);
+      if(!p)return;
+      const variants=variantsByProduct[p.id]||[];
+      const select=box.querySelector('[data-variant-for="'+p.id+'"]');
+      const variant=variants.find(v=>String(v.id)===String(select?.value))||null;
+      add(p,variant);
     });
+
+    box.querySelectorAll('.variant-select').forEach(select=>select.addEventListener('change',()=>{
+      const p=ps.find(x=>String(x.id)===select.dataset.variantFor);
+      const v=(variantsByProduct[p.id]||[]).find(x=>String(x.id)===String(select.value));
+      const card=select.closest('.product');
+      const price=card?.querySelector('.price');
+      if(price&&v)price.textContent=money(v.price);
+    }));
+
     const s=document.getElementById('productStatus');
     if(s)s.textContent=ps.length+' производа';
   }catch(e){
