@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Избор доставе — Куповина од сељака</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body data-page="map">
+<header class="top"><a href="index.html" class="logo">Од села до града</a><a href="index.html" class="back">← Производи</a></header>
+<main class="container">
+<section class="hero small"><span>КОРАК 2 ОД 3</span><h1>Како преузимаш поруџбину?</h1><p>Изабери начин, па затим пункт.</p></section>
+<div class="delivery-options">
+<button class="delivery active" data-method="punkt"><strong>📍 Преузимање на пункту</strong><small>Изабери место које ти одговара.</small></button>
+<button class="delivery" data-method="dogovor"><strong>🚗 Преузимање успут / по договору</strong><small>Предложи место у зони наше руте.</small></button>
+</div>
+<section><div class="section-head"><h2>Изабери пункт</h2><span id="pointStatus">Учитавање...</span></div><div id="points" class="points"></div><div id="map" class="map"></div></section>
+<div class="bottom-action"><a href="index.html" class="btn secondary">← Назад</a><button id="continue" class="btn primary" disabled>Настави на податке →</button></div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
