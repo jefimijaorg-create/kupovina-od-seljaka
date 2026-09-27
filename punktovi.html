@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Пунктови и достава — Од села до града</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<header class="top">
+  <a href="index.html" class="logo">Од села до града</a>
+  <nav class="main-nav">
+    <a href="o-projektu.html">О пројекту</a>
+    <a href="punktovi.html">Пунктови</a>
+  </nav>
+  <a href="index.html" class="cart-link">Куповина →</a>
+</header>
+
+<main class="container">
+  <section class="hero small">
+    <span>ПРЕУЗИМАЊЕ</span>
+    <h1>Пунктови и достава</h1>
+    <p>Овде можеш да погледаш где преузимамо поруџбине и којом зоном се крећемо — пре него што било шта наручиш.</p>
+  </section>
+
+  <section id="dostave" class="card">
+    <div class="section-head">
+      <h2>Следећа достава</h2>
+      <span id="deliveryStatus">Учитавање...</span>
+    </div>
+    <div class="delivery-large">
+      <small>СЛЕДЕЋИ ТЕРМИН</small>
+      <strong id="deliveryDate">Учитавање...</strong>
+      <span id="deliveryDeadline">Поруџбине до среде у 22:00</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2>Пунктови</h2>
+      <span id="pointStatus">Учитавање...</span>
+    </div>
+    <p class="hint">Изабери пункт са списка или кликни на маркер на мапи.</p>
+    <div id="publicPoints" class="public-points"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head">
+      <h2>Зона доставе</h2>
+    </div>
+    <p class="hint">Пунктови су на договореној рути кроз Београд. Није фиксна достава на сваку адресу — ако ти пункт не одговара, можеш предложити место успут, а ми потврђујемо да ли је у зони руте.</p>
+    <div class="map-wrap">
+      <div id="publicMap" class="map"></div>
+    </div>
+  </section>
+
+  <div class="bottom-action">
+    <a href="o-projektu.html" class="btn secondary">← О пројекту</a>
+    <a href="index.html" class="btn primary">Погледај производе →</a>
+  </div>
+</main>
+
+<script>
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const headers={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path){const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers});if(!r.ok)throw new Error(await r.text());return r.json()}
+function deliveryDate(s){return new Date(s+'T12:00:00').toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'})}
+function deadline(s){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()-4);return d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'})+' у 22:00'}
+async function load(){
+  try{
+    const tours=await api('ture?select=id,naziv,datum,status&status=in.(open,scheduled)&datum=gte.'+new Date().toISOString().slice(0,10)+'&order=datum.asc,id.desc&limit=1');
+    if(tours.length){
+      document.getElementById('deliveryDate').textContent=deliveryDate(tours[0].datum);
+      document.getElementById('deliveryDeadline').textContent='Поруџбине до '+deadline(tours[0].datum);
+      document.getElementById('deliveryStatus').textContent='Активна достава';
+    }else{
+      document.getElementById('deliveryDate').textContent='Нема заказаног термина';
+      document.getElementById('deliveryDeadline').textContent='Термин ће бити објављен чим буде отворена следећа тура.';
+    }
+    const ps=await api('punktovi?select=id,name,city,address,latitude,longitude,is_active,description,viber_group,maps_url,vreme,aktivan,slug&order=sort_order.asc&limit=100');
+    const active=ps.filter(p=>String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
+    document.getElementById('pointStatus').textContent=active.length+' активних';
+    document.getElementById('publicPoints').innerHTML=active.map(p=>'<article class="public-point"><div><strong>'+esc(p.name||'Пункт')+'</strong><span>'+esc([p.address,p.city].filter(Boolean).join(', '))+'</span>'+(p.vreme?'<small>🕒 '+esc(p.vreme)+'</small>':'')+(p.description?'<p>'+esc(p.description)+'</p>':'')+'</div>'+(p.maps_url?'<a class="btn secondary" target="_blank" rel="noopener" href="'+esc(p.maps_url)+'">Мапа ↗</a>':'')+'</article>').join('');
+    const map=L.map('publicMap',{scrollWheelZoom:false}).setView([44.78,20.45],11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+    const bounds=[];
+    active.forEach(p=>{const lat=Number(p.latitude),lng=Number(p.longitude);if(!Number.isFinite(lat)||!Number.isFinite(lng))return;L.marker([lat,lng]).addTo(map).bindPopup('<strong>'+esc(p.name||'Пункт')+'</strong><br>'+esc(p.address||''));bounds.push([lat,lng])});
+    if(bounds.length)map.fitBounds(bounds,{padding:[25,25]});
+  }catch(e){
+    document.getElementById('deliveryStatus').textContent='Подаци тренутно нису доступни';
+    document.getElementById('pointStatus').textContent='Подаци тренутно нису доступни';
+    console.error(e);
+  }
+}
+load();
+</script>
+</body>
+</html>
