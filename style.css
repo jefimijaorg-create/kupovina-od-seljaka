@@ -19,7 +19,14 @@ body{padding-bottom:0}
 .section-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .section-head h2{margin:6px 0 10px;font-size:24px}
 .section-head span{font-size:13px;color:#777}
-.products{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+/* Листа производа: категорије иду једна испод друге. */
+.products{display:block;width:100%}
+.product-group{display:block;width:100%;margin:0 0 28px}
+.product-group-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px;padding-bottom:6px;border-bottom:1px solid #e1dbcf}
+.product-group-title h3{margin:0;font-size:20px}
+.product-group-title span{font-size:12px;color:#687064;background:#f1f3ef;border-radius:999px;padding:4px 9px}
+.products-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .product,.card,.delivery{background:#fff;border:1px solid #e4ded2;border-radius:18px;padding:18px;box-shadow:0 5px 20px #00000008}
 .product{display:flex;flex-direction:column;min-width:0}
 .product img{width:100%;height:190px;object-fit:cover;border-radius:13px;margin-bottom:14px;background:#eee}
@@ -80,7 +87,7 @@ textarea{resize:vertical}
 .hidden{display:none}
 @media(max-width:850px){
   .container{width:min(92%,820px)}
-  .products{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .points{grid-template-columns:repeat(2,minmax(0,1fr))}
   .hero{padding:36px 0 8px}
   .hero h1{font-size:clamp(36px,6vw,48px)}
@@ -102,15 +109,16 @@ textarea{resize:vertical}
   .hero p{font-size:16px}
   .delivery-banner{padding:10px 0 16px;margin-bottom:0}
   .delivery-banner strong{font-size:21px}
-  .products{grid-template-columns:1fr 1fr;gap:10px}
-  .product{padding:12px;border-radius:14px}
-  .product img{height:130px;margin-bottom:10px}
-  .product h3{font-size:15px}
-  .product .meta{font-size:12px}
-  .producer{font-size:12px}
-  .price{font-size:17px}
-  .product-bottom{align-items:stretch;flex-direction:column}
-  .add-btn{width:100%}
+  .products-group-grid{display:flex;flex-direction:column;gap:8px}
+  .product{display:grid;grid-template-columns:72px 1fr auto;grid-template-areas:"image info action" "image variant action";align-items:center;gap:8px 12px;padding:10px;border-radius:14px}
+  .product>img{grid-area:image;width:72px;height:72px;object-fit:cover;border-radius:10px;margin:0}
+  .product>h3{grid-area:info;margin:0;font-size:15px}
+  .product>.meta,.product>.producer{display:none}
+  .product>.variant-label{grid-area:variant;margin:0}
+  .product>.product-bottom{grid-area:action;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .product>.product-bottom .unit{display:none}
+  .product>.product-bottom .price{font-size:15px}
+  .add-btn{width:auto}
   .btn{padding:12px 13px}
   .delivery-options{grid-template-columns:1fr;gap:9px}
   .delivery{min-height:94px}
@@ -124,7 +132,6 @@ textarea{resize:vertical}
   .card{padding:16px}
 }
 @media(max-width:390px){
-  .products{grid-template-columns:1fr}
   .hero h1{font-size:34px}
 }
 .point-list-toggle{margin:10px 0 14px;max-width:320px}
@@ -146,53 +153,6 @@ textarea{resize:vertical}
 .product-filter::-webkit-scrollbar{display:none}
 .filter-btn{border:1px solid #d8ddd4;background:#fff;border-radius:999px;padding:9px 14px;white-space:nowrap;font:inherit;font-weight:700;cursor:pointer}
 .filter-btn.active{background:#e8f0e3;border-color:#b9cdb0}
-.product-group{margin:0 0 26px}
-.product-group-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px}
-.product-group-title h3{margin:0;font-size:20px}
-.product-group-title span{font-size:12px;color:#687064;background:#f1f3ef;border-radius:999px;padding:4px 9px}
-.products-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-@media(max-width:850px) and (min-width:651px){.products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
-@media(max-width:700px){.products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
-@media(max-width:390px){.products-group-grid{grid-template-columns:1fr}}
-@media(max-width:700px){.products-group-grid{display:flex;flex-direction:column;gap:8px}.products-group-grid .product{display:grid;grid-template-columns:72px 1fr auto;grid-template-areas:"image info action" "image variant action";align-items:center;gap:8px 12px;padding:10px}.products-group-grid .product>img{grid-area:image;width:72px;height:72px;object-fit:cover;border-radius:10px}.products-group-grid .product>h3{grid-area:info;margin:0}.products-group-grid .product>.meta,.products-group-grid .product>.producer{display:none}.products-group-grid .product>.variant-label{grid-area:variant;margin:0}.products-group-grid .product>.product-bottom{grid-area:action;display:flex;flex-direction:column;align-items:flex-end;gap:6px}.products-group-grid .product>.product-bottom .unit{display:none}.products-group-grid .product>.product-bottom .price{font-size:15px}}
-@media(min-width:701px){.products-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
-.hero + .delivery-banner + section{margin-top:0}
-@media(max-width:650px){.hero + .delivery-banner + section .section-head h2{margin-top:2px;margin-bottom:8px}}
-
-/* Завршно дотеривање почетне странице за таблет */
-@media (min-width:651px) and (max-width:900px){
-  .container{width:min(92%,820px);padding-top:22px}
-  .hero{padding:34px 0 8px;max-width:760px}
-  .hero h1{font-size:46px;margin:8px 0 12px}
-  .hero p{font-size:17px}
-  .delivery-banner{padding:11px 0 16px}
-  .delivery-banner strong{font-size:22px}
-  .section-head h2{font-size:22px;margin:8px 0 9px}
-  .product-filter{padding-bottom:12px}
-  .filter-btn{padding:8px 13px;font-size:14px}
-  .product-group{margin-bottom:22px}
-  .product-group-title{margin:6px 0 10px}
-  .product-group-title h3{font-size:18px}
-  .products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px}
-  .products-group-grid .product{padding:13px;border-radius:15px}
-  .products-group-grid .product>img{height:150px;margin:0 0 11px;width:100%;border-radius:11px;object-fit:cover}
-  .products-group-grid .product>h3{font-size:17px;line-height:1.2;margin-bottom:5px}
-  .products-group-grid .product>.meta{font-size:12px;line-height:1.35;margin-bottom:5px}
-  .products-group-grid .product>.producer{font-size:12px;margin-bottom:8px}
-  .products-group-grid .product>.variant-label{font-size:12px;margin-top:7px}
-  .products-group-grid .product>.variant-label .variant-select{padding:8px 9px;font-size:13px;margin-top:4px}
-  .products-group-grid .product>.product-bottom{padding-top:10px;gap:7px}
-  .products-group-grid .product>.product-bottom .price{font-size:18px}
-  .products-group-grid .product>.product-bottom .unit{font-size:11px}
-  .products-group-grid .product>.product-bottom .add-btn{min-height:40px;padding:9px 13px;font-size:14px}
-  .bottom-action{margin-top:20px}
-}
-
-
-/* Горњи мени и SEO садржај */
-.main-nav{display:flex;align-items:center;gap:22px;margin-left:auto;margin-right:24px}
-.main-nav a{color:#52604e;text-decoration:none;font-size:14px;font-weight:700}
-.main-nav a:hover{color:#496a3f}
 .how-it-works{margin-top:34px;padding:22px 0 4px;border-top:1px solid #e4ded2}
 .how-it-works h2{font-size:22px;margin:0 0 14px}
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -209,3 +169,34 @@ textarea{resize:vertical}
   .how-grid{grid-template-columns:1fr;gap:8px}
   .how-grid>div{padding:13px}
 }
+
+/* Завршно дотеривање листе производа */
+@media (min-width:651px) and (max-width:900px){
+  .container{width:min(92%,820px);padding-top:22px}
+  .hero{padding:34px 0 8px;max-width:760px}
+  .hero h1{font-size:46px;margin:8px 0 12px}
+  .hero p{font-size:17px}
+  .delivery-banner{padding:11px 0 16px}
+  .delivery-banner strong{font-size:22px}
+  .section-head h2{font-size:22px;margin:8px 0 9px}
+  .product-filter{padding-bottom:12px}
+  .filter-btn{padding:8px 13px;font-size:14px}
+  .product-group{margin-bottom:26px}
+  .product-group-title{margin:4px 0 11px;padding-bottom:7px}
+  .product-group-title h3{font-size:19px}
+  .products-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .products-group-grid .product{padding:13px;border-radius:15px}
+  .products-group-grid .product>img{height:150px;margin:0 0 11px;width:100%;border-radius:11px;object-fit:cover}
+  .products-group-grid .product>h3{font-size:17px;line-height:1.2;margin-bottom:5px}
+  .products-group-grid .product>.meta{font-size:12px;line-height:1.35;margin-bottom:5px}
+  .products-group-grid .product>.producer{font-size:12px;margin-bottom:8px}
+  .products-group-grid .product>.variant-label{font-size:12px;margin-top:7px}
+  .products-group-grid .product>.variant-label .variant-select{padding:8px 9px;font-size:13px;margin-top:4px}
+  .products-group-grid .product>.product-bottom{padding-top:10px;gap:7px}
+  .products-group-grid .product>.product-bottom .price{font-size:18px}
+  .products-group-grid .product>.product-bottom .unit{font-size:11px}
+  .products-group-grid .product>.product-bottom .add-btn{min-height:40px;padding:9px 13px;font-size:14px}
+}
+
+/* Без ружних иконица када спољна слика производа не постоји */
+.product img[src=""]{display:none}
