@@ -2,14 +2,20 @@
 <html lang="sr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">\n<meta name="description" content="Купујте домаће производе директно од газдинстава. Домаће млеко, сир, јаја и козији производи, уз преузимање на договореним пунктовима у Београду.">\n<meta name="keywords" content="домаћи производи, домаће млеко, домаћи сир, домаћа јаја, козије млеко, козији сир, куповина од сељака, газдинства, Београд">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Купујте домаће производе директно од газдинстава. Домаће млеко, сир, јаја и козији производи, уз преузимање на договореним пунктовима у Београду.">
+<meta name="keywords" content="домаћи производи, домаће млеко, домаћи сир, домаћа јаја, козије млеко, козији сир, куповина од сељака, газдинства, Београд">
 <title>Домаћи производи директно од газдинстава | Од села до града</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body data-page="home">
 <header class="top">
   <a href="index.html" class="logo">Од села до града</a>
-  <div class="cart-link" aria-label="Корпа">Корпа <b id="cartCount">0</b></div>
+  <nav class="main-nav">
+    <a href="o-projektu.html">О пројекту</a>
+    <a href="punktovi.html">Пунктови</a>
+  </nav>
+  <a href="mapa.html" class="cart-link" id="cartLink" aria-label="Корпа">Корпа <b id="cartCount">0</b></a>
 </header>
 
 <main class="container">
@@ -17,17 +23,16 @@
     <span>ДОМАЋЕ • ДИРЕКТНО • ПО ДОГОВОРУ</span>
     <h1>Куповина од сељака</h1>
     <p>Домаћи производи директно од газдинстава.</p>
-
     <div id="nextDelivery" class="delivery-banner" aria-live="polite">
-    <div>
-      <small>СЛЕДЕЋА ДОСТАВА</small>
-      <strong id="deliveryTitle">Учитавање...</strong>
-      <span id="deliveryInfo">Поруџбине до среде у 22:00</span>
-    </div>
+      <div>
+        <small>СЛЕДЕЋА ДОСТАВА</small>
+        <strong id="deliveryTitle">Учитавање...</strong>
+        <span id="deliveryInfo">Поруџбине до среде у 22:00</span>
+      </div>
     </div>
   </section>
 
-  <section>
+  <section id="proizvodi">
     <div class="section-head">
       <h2>Производи</h2>
       <span id="productStatus">Учитавање...</span>
@@ -36,8 +41,17 @@
     <div id="products" class="products"></div>
   </section>
 
-  <section id="kako-radi" class="how-it-works">\n    <h2>Како функционише куповина?</h2>\n    <div class="how-grid">\n      <div><b>1. Изабери производе</b><span>Изабери млеко, сир, јаја и друге доступне домаће производе.</span></div>\n      <div><b>2. Изабери место</b><span>Одабери пункт за преузимање или предложи локацију по договору.</span></div>\n      <div><b>3. Пошаљи поруџбину</b><span>Остави контакт податке, а ми потврђујемо поруџбину и преузимање.</span></div>\n    </div>\n  </section>\n\n  <div class="bottom-action">
-    <button id="homeContinue" class="btn primary full" disabled>Настави →</button>
+  <section id="kako-radi" class="how-it-works">
+    <h2>Како функционише куповина?</h2>
+    <div class="how-grid">
+      <div><b>1. Изабери производе</b><span>Изабери млеко, сир, јаја и друге доступне домаће производе.</span></div>
+      <div><b>2. Изабери место</b><span>Тек када изабереш производе, настављаш на избор пункта или места по договору.</span></div>
+      <div><b>3. Пошаљи поруџбину</b><span>Остави контакт податке, а ми потврђујемо поруџбину и преузимање.</span></div>
+    </div>
+  </section>
+
+  <div class="bottom-action">
+    <button id="homeContinue" class="btn primary full" disabled>Изабери производе</button>
   </div>
 </main>
 
