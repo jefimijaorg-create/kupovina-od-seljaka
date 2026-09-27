@@ -15,8 +15,14 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 function cartQty(){return state.cart.reduce((s,x)=>s+Number(x.qty||0),0)}
 function cartCount(){
+  const qty=cartQty();
   const e=document.getElementById('cartCount');
-  if(e)e.textContent=cartQty();
+  if(e)e.textContent=qty;
+  const link=document.getElementById('cartLink');
+  if(link){
+    link.classList.toggle('cart-empty',qty===0);
+    link.setAttribute('aria-disabled',qty===0?'true':'false');
+  }
   updateHomeContinue();
 }
 function add(p,variant=null){
@@ -299,6 +305,10 @@ function updateContinue(){
 }
 
 function initMap(){
+  if(!cartQty()){
+    location.href='index.html';
+    return;
+  }
   document.querySelectorAll('.delivery').forEach(b=>b.onclick=()=>{
     state.delivery=b.dataset.method;
     save();
