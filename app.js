@@ -304,6 +304,58 @@ function updateContinue(){
   }
 }
 
+function renderCart(){
+  const box=document.getElementById('cartBox');
+  if(!box)return;
+  const count=cartQty();
+  const total=state.cart.reduce((s,x)=>s+Number(x.price||0)*Number(x.qty||0),0);
+
+  if(!count){
+    box.innerHTML='<div class="card cart-empty-box"><h2>Корпа је празна</h2><p>Изабери производе које желиш, па се врати овде да провериш поруџбину.</p><a href="index.html" class="btn primary">Погледај производе →</a></div>';
+    const cont=document.getElementById('cartContinue');
+    if(cont)cont.disabled=true;
+    return;
+  }
+
+  box.innerHTML='<div class="cart-list">'+state.cart.map((x,i)=>`
+    <article class="cart-item">
+      <div class="cart-item-main">
+        <strong>${esc(x.name)}</strong>
+        ${x.variant_name?'<small>'+esc(x.variant_name)+'</small>':''}
+        <span>${money(x.price)} / ${esc(x.unit||'ком')}</span>
+      </div>
+      <div class="qty-control" aria-label="Количина">
+        <button type="button" data-cart-dec="${i}" aria-label="Смањи количину">−</button>
+        <b>${x.qty}</b>
+        <button type="button" data-cart-inc="${i}" aria-label="Повећај количину">+</button>
+      </div>
+      <div class="cart-item-total">${money(Number(x.price||0)*Number(x.qty||0))}</div>
+      <button type="button" class="cart-remove" data-cart-remove="${i}">Уклони</button>
+    </article>`).join('')+'</div>'+
+    '<div class="cart-total"><span>Укупно</span><strong>'+money(total)+'</strong></div>';
+
+  box.querySelectorAll('[data-cart-inc]').forEach(b=>b.onclick=()=>{
+    state.cart[Number(b.dataset.cartInc)].qty++;
+    save();renderCart();cartCount();
+  });
+  box.querySelectorAll('[data-cart-dec]').forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.cartDec);
+    state.cart[i].qty--;
+    if(state.cart[i].qty<=0)state.cart.splice(i,1);
+    save();renderCart();cartCount();
+  });
+  box.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=()=>{
+    state.cart.splice(Number(b.dataset.cartRemove),1);
+    save();renderCart();cartCount();
+  });
+
+  const cont=document.getElementById('cartContinue');
+  if(cont){
+    cont.disabled=false;
+    cont.onclick=()=>{if(cartQty())location.href='mapa.html'};
+  }
+}
+
 function initMap(){
   if(!cartQty()){
     location.href='index.html';
@@ -406,5 +458,6 @@ function initConfirm(){
 
 const page=document.body.dataset.page;
 if(page==='home'){cartCount();renderNextDelivery();renderProducts()}
+if(page==='cart'){cartCount();renderCart()}
 if(page==='map')initMap();
 if(page==='confirm')initConfirm();
