@@ -200,3 +200,39 @@ textarea{resize:vertical}
 
 /* Без ружних иконица када спољна слика производа не постоји */
 .product img[src=""]{display:none}
+
+.main-nav{display:flex;align-items:center;gap:20px;margin-left:auto;margin-right:20px}
+.main-nav a{color:#4b5849;text-decoration:none;font-size:13px;font-weight:800}
+.main-nav a:hover{color:#496a3f}
+.cart-link.cart-empty{opacity:.8}
+.project-page{max-width:900px}
+.project-intro p{color:#62675f;line-height:1.65;font-size:16px}
+.project-links{display:grid;gap:10px;margin:18px 0 28px}
+.info-link{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;background:#fff;border:1px solid #e4ded2;border-radius:16px;padding:15px 17px;text-decoration:none;color:#263126}
+.info-link>span{font-size:24px;text-align:center}
+.info-link strong,.info-link small{display:block}
+.info-link strong{font-size:16px}
+.info-link small{color:#6a7068;line-height:1.4;margin-top:4px}
+.info-link:last-child{margin-bottom:0}
+.project-steps{margin-top:20px}
+.project-note{background:#edf4e9;border:1px solid #cbdcc4;border-radius:16px;padding:18px;margin:18px 0;color:#354232}
+.project-note strong{display:block;margin-bottom:5px}
+.project-note p{margin:0;line-height:1.55}
+.delivery-large{margin-top:8px;padding:18px 0 4px}
+.delivery-large small{display:block;color:#718365;font-weight:800;letter-spacing:1.2px;font-size:11px}
+.delivery-large strong{display:block;color:#496a3f;font-size:30px;margin:5px 0}
+.delivery-large span{color:#62675f}
+.public-points{display:grid;gap:10px;margin-top:12px}
+.public-point{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fff;border:1px solid #e4ded2;border-radius:15px;padding:15px}
+.public-point strong,.public-point span,.public-point small{display:block}
+.public-point strong{font-size:16px}
+.public-point span,.public-point small{color:#62675f;font-size:13px;margin-top:4px}
+.public-point p{color:#62675f;font-size:13px;line-height:1.4;margin:7px 0 0}
+.public-point .btn{flex-shrink:0}
+@media(max-width:650px){
+  .main-nav{order:3;width:100%;margin:0;padding:8px 0 0;gap:18px}
+  .main-nav a{font-size:12px}
+  .public-point{align-items:flex-start}
+  .public-point .btn{padding:9px 11px;font-size:12px}
+  .delivery-large strong{font-size:25px}
+}
