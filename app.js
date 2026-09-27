@@ -125,42 +125,61 @@ function renderProductGroups(ps,variantsByProduct,filter='all'){
       <div class="products-group-grid">
         ${items.map(p=>{
           const variants=variantsByProduct[p.id]||[];
-          const variantSelect=variants.length
-            ? '<label class="variant-label">Паковање<select class="variant-select" data-variant-for="'+esc(p.id)+'">'+
-                variants.map(v=>'<option value="'+esc(v.id)+'">'+esc(v.name)+' — '+money(v.price)+'</option>').join('')+
-              '</select></label>'
-            : '';
-          const displayPrice=variants.length?variants[0].price:p.price;
+          const variantRows=variants.length
+            ? '<div class="variant-list">'+variants.map(v=>{
+                const cartId=String(p.id)+'::'+String(v.id);
+                const inCart=state.cart.find(x=>String(x.cartId||x.id)===cartId);
+                const qty=Number(inCart?.qty||0);
+                return '<div class="variant-row">'+
+                  '<div class="variant-info"><strong>'+esc(v.name)+'</strong><span>'+money(v.price)+'</span></div>'+
+                  '<div class="variant-qty" aria-label="Количина '+esc(v.name)+'">'+
+                    '<button type="button" class="variant-minus" data-variant-dec="'+esc(p.id)+'" data-variant-id="'+esc(v.id)+'" aria-label="Смањи">−</button>'+
+                    '<b data-variant-qty="'+esc(cartId)+'">'+qty+'</b>'+
+                    '<button type="button" class="variant-plus" data-variant-inc="'+esc(p.id)+'" data-variant-id="'+esc(v.id)+'" aria-label="Повећај">+</button>'+
+                  '</div>'+
+                '</div>';
+              }).join('')+'</div>'
+            : '<div class="product-bottom"><div><div class="price">'+money(p.price)+'</div><div class="unit">'+esc(p.unit||'ком')+'</div></div><button class="btn primary add-btn" data-add="'+esc(p.id)+'" type="button">Додај</button></div>';
           return `
           <article class="product">
             ${p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy">':''}
             <h3>${esc(p.name||'Производ')}</h3>
             ${p.description?'<div class="meta">'+esc(p.description)+'</div>':''}
             ${p.producer_name?'<div class="producer">'+esc(p.producer_name)+'</div>':''}
-            ${variantSelect}
-            <div class="product-bottom">
-              <div><div class="price">${money(displayPrice)}</div><div class="unit">${esc(p.unit||'ком')}</div></div>
-              <button class="btn primary add-btn" data-add="${esc(p.id)}" type="button">Додај</button>
-            </div>
+            ${variantRows}
           </article>`;
         }).join('')}
       </div>
     </section>`).join('');
 
-  box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
-    const p=ps.find(x=>String(x.id)===b.dataset.add);
+  const changeVariantQty=(productId,variantId,delta)=>{
+    const p=ps.find(x=>String(x.id)===String(productId));
     if(!p)return;
     const variants=variantsByProduct[p.id]||[];
-    const select=box.querySelector('[data-variant-for="'+p.id+'"]');
-    const variant=variants.find(v=>String(v.id)===String(select?.value))||null;
-    add(p,variant);
+    const v=variants.find(x=>String(x.id)===String(variantId));
+    if(!v)return;
+    const cartId=String(p.id)+'::'+String(v.id);
+    const x=state.cart.find(i=>String(i.cartId||i.id)===cartId);
+    if(delta>0){
+      if(x)x.qty+=delta;
+      else state.cart.push({cartId,id:p.id,variant_id:v.id,variant_name:v.name,name:p.name,price:Number(v.price)||0,unit:p.unit||'ком',qty:delta});
+    }else if(x){
+      x.qty+=delta;
+      if(x.qty<=0)state.cart.splice(state.cart.indexOf(x),1);
+    }
+    save();
+    cartCount();
+    renderProductGroups(ps,variantsByProduct,filter);
+  };
+
+  box.querySelectorAll('.variant-plus').forEach(b=>b.onclick=()=>changeVariantQty(b.dataset.variantInc,b.dataset.variantId,1));
+  box.querySelectorAll('.variant-minus').forEach(b=>b.onclick=()=>changeVariantQty(b.dataset.variantDec,b.dataset.variantId,-1));
+
+  box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
+    const p=ps.find(x=>String(x.id)===b.dataset.add);
+    if(p)add(p,null);
   });
-  box.querySelectorAll('.variant-select').forEach(select=>select.onchange=()=>{
-    const p=ps.find(x=>String(x.id)===select.dataset.variantFor);
-    const v=(variantsByProduct[p.id]||[]).find(x=>String(x.id)===String(select.value));
-    const price=select.closest('.product')?.querySelector('.price');
-    if(price&&v)price.textContent=money(v.price);
-  });
+
   const s=document.getElementById('productStatus');
   if(s)s.textContent=ps.filter(p=>filter==='all'||String(p.category||'Остало')===filter).length+' производа';
 }
