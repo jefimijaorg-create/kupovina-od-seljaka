@@ -1,60 +1,105 @@
 <!doctype html>
-<html lang="sr">
+<html lang="sr" class="h-full">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Купујте домаће производе директно од газдинстава. Домаће млеко, сир, јаја и козији производи, уз преузимање на договореним пунктовима у Београду.">
-<meta name="keywords" content="домаћи производи, домаће млеко, домаћи сир, домаћа јаја, козије млеко, козији сир, куповина од сељака, газдинства, Београд">
-<title>Домаћи производи директно од газдинстава | Од села до града</title>
+<meta name="description" content="Домаћи производи директно од газдинстава из Велике Плане, уз организован довоз и преузимање у Београду.">
+<meta name="keywords" content="домаћи производи, домаће млеко, домаћи сир, домаћа јаја, козије млеко, козији сир, Велика Плана, Београд">
+<title>Наручи домаће из Велике Плане</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="style.css">
+<style>
+body{font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#111827}
+h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
+.app-shell{width:100%;max-width:560px;height:100vh;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.app-main{flex:1;overflow-y:auto;padding-bottom:92px;background:rgba(254,243,199,.32)}
+.app-card{background:#fff;border:2px solid #fde68a;border-radius:24px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.story-card{background:#fcf8ec;border:2px solid #d4c39f;border-radius:24px;padding:20px}
+.story-text{background:rgba(255,255,255,.9);border:1px solid #fde7a9;border-radius:18px;padding:16px;font-size:13px;line-height:1.65;color:#374151}
+.story-text p{margin:0 0 12px}.story-text p:last-child{margin-bottom:0}
+.filter-btn{white-space:nowrap;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#374151}
+.filter-btn.active{background:#111827;color:#fff;border-color:#111827}
+.product-group{margin-top:14px}.product-group-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.product-group-title h3{font-size:16px;font-weight:900;margin:0}.product-group-title span{font-size:11px;color:#6b7280}
+.products-group-grid{display:grid;gap:10px}.product{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:12px;box-shadow:0 1px 5px rgba(0,0,0,.04)}
+.product>img{width:100%;height:150px;object-fit:cover;border-radius:13px;margin-bottom:10px}.product>h3{font-size:15px;font-weight:900;margin:0}.product>.meta{font-size:11px;color:#6b7280;margin-top:3px}.product>.producer{font-size:11px;color:#166534;font-weight:700;margin-top:4px}
+.variant-list{display:flex;flex-direction:column;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid #f3f4f6}.variant-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:9px}.variant-info strong{display:block;font-size:12px}.variant-info span{display:block;font-size:11px;font-weight:800;color:#047857;margin-top:2px}.variant-qty{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:3px 6px}.variant-qty button{width:26px;height:26px;border:0;border-radius:50%;background:transparent;font-weight:900;font-size:16px;line-height:1;cursor:pointer}.variant-qty .variant-plus{color:#047857}.variant-qty b{width:18px;text-align:center;font-size:12px}
+.bottom-action{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);padding:10px 14px 14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid #e5e7eb;z-index:30}
+.bottom-action button{width:100%;border:0;border-radius:15px;padding:13px;background:#047857;color:#fff;font-weight:900;font-size:13px}.bottom-action button:disabled{background:#d1d5db;color:#6b7280}
+@media(min-width:700px){.app-shell{height:92vh;border-radius:36px;margin:auto;border:8px solid #1f2937}.app-main{border-radius:28px}.bottom-action{bottom:4vh;border-radius:0 0 28px 28px}}
+</style>
 </head>
-<body data-page="home">
-<header class="top">
-  <a href="index.html" class="logo">Од села до града</a>
-  <nav class="main-nav">
-    <a href="o-projektu.html">О пројекту</a>
-    <a href="punktovi.html">Пунктови</a>
-  </nav>
-  <a href="korpa.html" class="cart-link" id="cartLink" aria-label="Корпа">Корпа <b id="cartCount">0</b></a>
+<body data-page="home" class="h-full">
+<div class="app-shell">
+<header class="bg-white border-b border-gray-100 py-3 px-4 flex justify-between items-center z-20 flex-shrink-0">
+  <a href="index.html" class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700"><i class="fa-solid fa-house text-sm"></i></a>
+  <a href="index.html" class="flex items-center gap-1.5 no-underline">
+    <span class="text-xl">🌱</span>
+    <div class="text-center"><span class="text-xs font-black text-emerald-800 uppercase block leading-none">НАРУЧИ ДОМАЋЕ</span><span class="text-[9px] font-semibold text-gray-500 tracking-wider">из Велике Плане</span></div>
+  </a>
+  <div class="flex items-center gap-2">
+    <button onclick="showToast('Поделите са пријатељима у Viber групи!')" class="bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl font-bold text-xs"><i class="fa-solid fa-share-nodes mr-1"></i>Подели</button>
+    <a href="korpa.html" class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center relative" aria-label="Корпа"><i class="fa-solid fa-cart-shopping text-sm"></i><span id="cartCount" class="absolute -top-1 -right-1 bg-amber-400 text-gray-900 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span></a>
+  </div>
 </header>
 
-<main class="container">
-  <section class="hero">
-    <span>ДОМАЋЕ • ДИРЕКТНО • ПО ДОГОВОРУ</span>
-    <h1>Куповина од сељака</h1>
-    <p>Домаћи производи директно од газдинстава.</p>
-    <div id="nextDelivery" class="delivery-banner" aria-live="polite">
-      <div>
-        <small>СЛЕДЕЋА ДОСТАВА</small>
-        <strong id="deliveryTitle">Учитавање...</strong>
-        <span id="deliveryInfo">Поруџбине до среде у 22:00</span>
-      </div>
+<main class="app-main">
+<div class="p-4 space-y-4">
+  <section class="story-card space-y-4">
+    <div class="text-center space-y-2">
+      <span class="text-[10px] font-bold tracking-widest uppercase text-emerald-800 bg-emerald-100/70 px-3 py-1 rounded-full inline-block">🌿 Лична прича</span>
+      <h1 class="text-2xl font-black text-gray-900 leading-snug">У Велику Плану сам дошао из Београда. А сада у Београд доносим Велику Плану.</h1>
+      <p class="text-xs font-bold text-emerald-900">— Ја сам Јовица Вратница</p>
+    </div>
+    <div class="bg-emerald-900 text-white p-4 rounded-2xl text-center shadow-md">
+      <div class="text-base font-black uppercase font-serif tracking-tight text-amber-200">Удружимо купце.<br>Удружимо газдинства.</div>
+      <div class="text-[11px] text-emerald-100 font-medium mt-1">Повежимо Велику Плану и Београд.</div>
+    </div>
+    <div class="story-text">
+      <p>У Велику Плану сам дошао из Београда. И за ових неколико година упознао сам људе, села и газдинства. Видео сам колико се овде ради и производи.</p>
+      <p>Али сам видео и један проблем о коме се много прича, а мало решава.</p>
+      <p>У Београду постоје људи који желе да купе домаће. У Великој Плани и околним селима постоје газдинства која то домаће производе. Наизглед, све је једноставно. Само их треба повезати.</p>
+      <p>И то смо већ много пута покушавали. Направи се огласник. Газдинство објави шта има, купац пронађе производ, јави се и они се повежу.</p>
+      <p>А онда настане питање које нико није решио до краја. Како ће производ стићи до Београда? Да ли се газдинству исплати да иде због једне поруџбине? Ако не иде, ко ће довести производ? Ако иде, ко плаћа трошак пута?</p>
+      <p>Ту сам схватио да само повезивање није довољно. Зато „Наручи домаће из Велике Плане“ није замишљено као још један огласник. Идеја је да повежемо понуду, потражњу и довоз.</p>
+      <p>Газдинства кажу шта имају. Купци кажу шта желе. Поруџбине се сакупе, повежу и организују тако да више производа и више газдинстава може да иде истим путем за Београд.</p>
+      <p>Један купац наручи млеко. Други сир. Трећи јаја. Неко жели производ са другог газдинства. Не мора свака од тих поруџбина да има свој пут. <strong>Могу да путују заједно.</strong> Ту је цела идеја.</p>
+      <p>Не правимо каталог да бисмо показали колико газдинстава постоји. Хоћемо да оно што газдинства стварно имају може да дође до људи који то стварно желе.</p>
+      <p>За почетак све радимо једноставно. Преко Viber групе „Београдске поруџбине из Плане“. Тамо се види шта је доступно, шта људи траже, сакупљају се поруџбине и према њима организују довоз и преузимање.</p>
+      <p>Не знам докле ће ова прича стићи. Али мислим да је време да престанемо да причамо само о томе како треба повезати село и град. <strong>Хајде да их стварно повежемо.</strong> Газдинство које производи. Човек у Београду који жели да купи. И пут који их спаја.</p>
+      <p>Ја сам из Београда дошао у Велику Плану. <strong>Сада хоћу да део те Велике Плане вратим у Београд.</strong></p>
+      <p>Ко жели да помогне, да наручи, да понуди производ или да предложи како ово може боље — нека се укључи. Ово није готов систем. Ово је покушај да направимо нешто што до сада нисмо успели. И можда је управо то најважније. <strong>Да пробамо.</strong></p>
+    </div>
+    <div class="bg-emerald-50 border-2 border-emerald-700/30 rounded-2xl p-4 text-center space-y-3">
+      <div class="text-xs font-bold text-emerald-900">Придружите се Viber групи:</div>
+      <div class="text-sm font-black text-gray-900 font-serif">📱 „Београдске поруџбине из Плане“</div>
+      <a href="https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rk" target="_blank" rel="noopener noreferrer" class="block bg-[#7360f2] text-white py-3 rounded-xl font-bold text-xs">Придружи се Viber групи</a>
     </div>
   </section>
 
-  <section id="proizvodi">
-    <div class="section-head">
-      <h2>Производи</h2>
-      <span id="productStatus">Учитавање...</span>
+  <section class="app-card space-y-3" id="proizvodi">
+    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+      <div class="flex items-center gap-2"><span class="text-lg">🧺</span><h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Изаберите производе</h2></div>
+      <span id="productStatus" class="text-[10px] text-gray-500">Учитавање...</span>
     </div>
-    <div id="productFilter" class="product-filter" aria-label="Филтер производа"></div>
-    <div id="products" class="products"></div>
+    <div id="productFilter" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
+    <div id="products" class="space-y-4"></div>
   </section>
 
-  <section id="kako-radi" class="how-it-works">
-    <h2>Како функционише куповина?</h2>
-    <div class="how-grid">
-      <div><b>1. Изабери производе</b><span>Изабери млеко, сир, јаја и друге доступне домаће производе.</span></div>
-      <div><b>2. Изабери место</b><span>Тек када изабереш производе, настављаш на избор пункта или места по договору.</span></div>
-      <div><b>3. Пошаљи поруџбину</b><span>Остави контакт податке, а ми потврђујемо поруџбину и преузимање.</span></div>
+  <section class="app-card space-y-3">
+    <h2 class="text-base font-black text-gray-900 font-serif">Како функционише?</h2>
+    <div class="grid gap-2">
+      <div class="bg-gray-50 rounded-xl p-3"><b class="text-xs block">1. Изабери производе</b><span class="text-[11px] text-gray-600">Сваки производ има своја паковања и засебну количину.</span></div>
+      <div class="bg-gray-50 rounded-xl p-3"><b class="text-xs block">2. Изабери место</b><span class="text-[11px] text-gray-600">Изабери пункт за преузимање или место по договору.</span></div>
+      <div class="bg-gray-50 rounded-xl p-3"><b class="text-xs block">3. Пошаљи поруџбину</b><span class="text-[11px] text-gray-600">Остави контакт податке, а ми потврђујемо поруџбину.</span></div>
     </div>
   </section>
-
-  <div class="bottom-action">
-    <button id="homeContinue" class="btn primary full" disabled>Изабери производе</button>
-  </div>
+</div>
 </main>
 
+<div class="bottom-action"><button id="homeContinue" disabled>Изабери место преузимања</button></div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
