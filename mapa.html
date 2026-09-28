@@ -1,86 +1,85 @@
 <!doctype html>
-<html lang="sr">
+<html lang="sr" class="h-full">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Преузимање — Од села до града</title>
-<link rel="stylesheet" href="style.css">
+<title>Изабери место преузимања — Наручи домаће из Велике Плане</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#111827}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
+.app-shell{width:100%;max-width:560px;height:100vh;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.app-main{flex:1;overflow-y:auto;padding-bottom:90px;background:rgba(254,243,199,.32)}
+.app-card{background:#fff;border:2px solid #fde68a;border-radius:24px;padding:16px}
+.delivery-choice{display:flex;gap:8px;width:100%}
+.delivery{flex:1;text-align:left;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:13px;cursor:pointer}
+.delivery.active{border-color:#047857;background:#ecfdf5;box-shadow:0 0 0 2px rgba(4,120,87,.08)}
+.delivery strong{display:block;font-size:12px;color:#111827}.delivery small{display:block;font-size:10px;color:#6b7280;margin-top:4px;line-height:1.4}
+.point-search{display:flex;gap:7px}.point-search input,.proposal-input{min-width:0;flex:1;border:1px solid #d1d5db;border-radius:13px;padding:11px 12px;font-size:12px;outline:none}.point-search input:focus,.proposal-input:focus{border-color:#047857}
+.search-btn{border:0;border-radius:13px;background:#047857;color:#fff;padding:0 13px;font-size:11px;font-weight:800;white-space:nowrap}
+.point-list-toggle button{width:100%;border:1px solid #d1d5db;background:#fff;border-radius:13px;padding:10px;font-size:11px;font-weight:800}
+.points-panel{margin-top:8px}.points{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto}
+.point{display:block;width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:13px;padding:10px 12px;cursor:pointer}.point.active{border-color:#047857;background:#ecfdf5}
+.point strong{display:block;font-size:12px}.point small{display:block;color:#6b7280;font-size:10px;margin-top:3px}
+.map-wrap{position:relative;margin-top:10px;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;background:#e5e7eb}.map{height:250px}
+.map-card{position:absolute;z-index:500;left:10px;right:10px;bottom:10px;background:rgba(255,255,255,.96);border-radius:14px;padding:11px;box-shadow:0 3px 14px rgba(0,0,0,.15);font-size:11px}.map-card>*{display:block;margin-top:3px}.map-card strong{font-size:13px}.map-card a{color:#047857;font-weight:800}
+.selected-summary{margin-top:10px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:15px;padding:12px}.selected-summary span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#047857;font-weight:900}.selected-summary strong{display:block;font-size:14px;margin-top:3px}
+.proposal{background:#fff;border:2px solid #fde68a;border-radius:24px;padding:16px}.proposal label{display:block;font-size:11px;font-weight:800}.proposal-input{display:block;width:100%;margin-top:7px;box-sizing:border-box}
+.bottom-action{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);padding:10px 14px 14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid #e5e7eb;z-index:1000;display:flex;gap:8px}.bottom-action>*{flex:1}.bottom-action a{display:flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid #d1d5db;border-radius:14px;padding:12px;color:#374151;background:#fff;font-size:12px;font-weight:800}.bottom-action button{border:0;border-radius:14px;padding:12px;background:#047857;color:#fff;font-size:12px;font-weight:900}.bottom-action button:disabled{background:#d1d5db;color:#6b7280}
+.hidden{display:none!important}
+@media(min-width:700px){.app-shell{height:92vh;border-radius:36px;margin:auto;border:8px solid #1f2937}.app-main{border-radius:28px}.bottom-action{bottom:4vh;border-radius:0 0 28px 28px}}
+</style>
 </head>
-<body data-page="map">
-<header class="top">
-  <a href="index.html" class="logo">Од села до града</a>
-  <nav class="main-nav">
-    <a href="o-projektu.html">О пројекту</a>
-    <a href="punktovi.html">Пунктови</a>
-  </nav>
-  <a href="index.html" class="back">← Производи</a>
+<body data-page="map" class="h-full">
+<div class="app-shell">
+<header class="bg-white border-b border-gray-100 py-3 px-4 flex justify-between items-center z-20 flex-shrink-0">
+  <a href="index.html" class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700"><i class="fa-solid fa-arrow-left text-sm"></i></a>
+  <div class="text-center"><span class="text-[10px] font-black text-emerald-800 uppercase block">МЕСТО ПРЕУЗИМАЊА</span><span class="text-[9px] text-gray-500">Наручи домаће из Велике Плане</span></div>
+  <a href="korpa.html" class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center relative"><i class="fa-solid fa-cart-shopping text-sm"></i><span id="cartCount" class="absolute -top-1 -right-1 bg-amber-400 text-gray-900 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span></a>
 </header>
-
-<main class="container">
-  <section class="hero small">
-    <span>КОРАК 2 ОД 3</span>
-    <h1>Како желиш да преузмеш поруџбину?</h1>
-    <p>Изабери место које ти највише одговара.</p>
+<main class="app-main">
+<div class="p-4 space-y-4">
+  <section class="app-card">
+    <span class="text-[10px] font-bold tracking-widest uppercase text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full inline-block">📍 Корак 2 од 3</span>
+    <h1 class="text-2xl font-black text-gray-900 mt-3 leading-tight">Где желиш да преузмеш поруџбину?</h1>
+    <p class="text-xs text-gray-600 mt-2">Изабери пункт који ти одговара или предложи место по договору.</p>
   </section>
 
-  <div class="delivery-options">
-    <button class="delivery active" data-method="punkt" type="button">
-      <strong>📍 Преузимање на пункту</strong>
-      <small>Изабери место које ти одговара.</small>
-    </button>
-    <button class="delivery" data-method="dogovor" type="button">
-      <strong>🚗 Успут / по договору</strong>
-      <small>Предложи место ако ти не одговара ниједан пункт.</small>
-    </button>
-  </div>
-
-  <section id="pointMode" class="points-section">
-    <div class="section-head">
-      <h2>Пунктови</h2>
-      <span id="pointStatus">Учитавање...</span>
+  <section class="app-card space-y-3">
+    <div class="delivery-choice">
+      <button class="delivery active" data-method="punkt" type="button"><strong>📍 Пункт</strong><small>Изабери место за преузимање.</small></button>
+      <button class="delivery" data-method="dogovor" type="button"><strong>🚗 По договору</strong><small>Предложи место на нашој рути.</small></button>
     </div>
-    <p class="hint">Унеси адресу — наћи ћемо ти најближи пункт.</p>
+  </section>
 
+  <section id="pointMode" class="app-card space-y-3">
+    <div class="flex justify-between items-center">
+      <div><h2 class="text-base font-black">Пунктови</h2><p class="text-[10px] text-gray-500 mt-1">Пронађи најближи пункт</p></div>
+      <span id="pointStatus" class="text-[10px] text-gray-500">Учитавање...</span>
+    </div>
     <div class="point-search">
       <input id="pointSearch" type="search" placeholder="Унеси адресу или место..." autocomplete="street-address">
-      <button id="searchPoint" class="btn primary" type="button">Пронађи пункт</button>
+      <button id="searchPoint" class="search-btn" type="button">Пронађи</button>
     </div>
-    <div id="searchResult" class="search-result hidden" aria-live="polite"></div>
-
-    <div class="point-list-toggle">
-      <button id="togglePoints" class="btn secondary full" type="button">☰ Листа пунктова</button>
-    </div>
-
-    <div id="pointsPanel" class="points-panel hidden">
-      <div id="points" class="points"></div>
-    </div>
-
-    <div class="map-wrap">
-      <div id="map" class="map"></div>
-      <div id="mapCard" class="map-card hidden"></div>
-    </div>
-
+    <div id="searchResult" class="search-result hidden bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-[11px]"></div>
+    <div class="point-list-toggle"><button id="togglePoints" type="button">☰ Листа пунктова</button></div>
+    <div id="pointsPanel" class="points-panel hidden"><div id="points" class="points"></div></div>
+    <div class="map-wrap"><div id="map" class="map"></div><div id="mapCard" class="map-card hidden"></div></div>
     <div id="selectedPoint" class="selected-summary hidden"></div>
   </section>
 
-  <section id="dogovorMode" class="card pickup-proposal hidden">
-    <div class="section-head">
-      <h2>Предложи место преузимања</h2>
-    </div>
-    <p>Место мора бити у зони наше руте. Након поруџбине потврдићемо да ли можемо да се нађемо на предложеној локацији.</p>
-    <label>
-      Адреса или место
-      <input id="proposalAddress" type="text" placeholder="нпр. Улица и број, Београд" autocomplete="street-address">
-    </label>
+  <section id="dogovorMode" class="proposal hidden space-y-3">
+    <h2 class="text-base font-black">Предложи место преузимања</h2>
+    <p class="text-[11px] text-gray-600 leading-relaxed">Предложи место које је на нашој рути. Након поруџбине потврдићемо да ли можемо да се нађемо тамо.</p>
+    <label>Адреса или место<input id="proposalAddress" class="proposal-input" type="text" placeholder="нпр. Улица и број, Београд" autocomplete="street-address"></label>
   </section>
-
-  <div class="bottom-action">
-    <a href="index.html" class="btn secondary">← Производи</a>
-    <button id="continue" class="btn primary" disabled type="button">Настави →</button>
-  </div>
+</div>
 </main>
-
+<div class="bottom-action"><a href="index.html">← Производи</a><button id="continue" disabled type="button">Настави →</button></div>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="app.js"></script>
 </body>
