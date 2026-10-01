@@ -144,24 +144,55 @@ function renderPickupHome(){
 function openPickup(farmId){
  const f=farm(farmId),gs=groupFarm(farmId);if(!f)return;
  const root=document.getElementById('pickupHome');
- root.innerHTML='<button class="back" id="backPickup">← Сва газдинства</button><div style="margin-top:12px"><div class="farm-name">Преузимање — '+esc(f.name)+'</div><div class="note">Сада проверавамо физички шта нам је дао.</div></div>'+
+ root.innerHTML='<button class="back" id="backPickup">← Сва газдинства</button><div style="margin-top:12px"><div class="farm-name">Преузимање — '+esc(f.name)+'</div><div class="note">За сваки производ означи да ли је преузет. Код млека уноси број балона и флаша одвојено.</div></div>'+
  gs.map((g,i)=>{
-  const p=g.size||0, planned=g.packages||0;
-  return '<div class="farm-card"><div class="product-head"><div><div class="name">'+esc(g.product)+'</div><div class="meta">Планирано: '+(planned?(planned+' × '+p+' '+esc(g.packUnit)+' = '+g.qty+' '+esc(g.unit)):(g.qty+' '+esc(g.unit)))+'</div></div><div class="qty">'+price(g.rows[0]).toLocaleString('sr-RS')+' дин./'+esc(g.unit)+'</div></div>'+
-   '<div class="two" style="margin-top:10px"><label class="meta">Преузето паковања<input data-pick-count="'+i+'" type="number" min="0" step="1" value="'+planned+'"></label><label class="meta">Преузето укупно<input data-pick-qty="'+i+'" type="number" min="0" step="0.01" value="'+(p?planned*p:g.qty)+'"></label></div>'+
+  const p=num(g.size),planned=num(g.packages),milk=/млеко|сурутка/i.test(g.product);
+  const type=(p===6?'Балони од 6 л':p===2?'Флаше од 2 л':p?('Паковања од '+p+' '+g.packUnit):'Количина');
+  const already=g.rows.some(r=>num(r.preuzeta_kolicina)>0||String(r.status_stavke||'').includes('preuzeto'));
+  const countDefault=already?Math.round(g.rows.reduce((s,r)=>s+num(r.preuzeta_kolicina),0)/(p||1)):planned;
+  const qtyDefault=already?g.rows.reduce((s,r)=>s+num(r.preuzeta_kolicina),0):g.qty;
+  return '<div class="farm-card pickup-item" data-item="'+i+'" data-picked="'+(already?'yes':'no')+'"><div class="product-head"><div><div class="name">'+esc(g.product)+'</div><div class="meta">Треба: '+(planned?(planned+' × '+p+' '+esc(g.packUnit)+' = '+g.qty+' '+esc(g.unit)):(g.qty+' '+esc(g.unit)))+'</div></div><div class="qty">'+price(g.rows[0]).toLocaleString('sr-RS')+' дин./'+esc(g.unit)+'</div></div>'+
+   '<div class="two" style="margin-top:10px"><button type="button" class="tab '+(already?'':'active')+'" data-not-picked="'+i+'">Није преузето</button><button type="button" class="tab '+(already?'active':'')+'" data-picked="'+i+'">Преузето</button></div>'+
+   '<div class="two" style="margin-top:10px"><label class="meta">'+(milk?type:'Стварно преузето ('+esc(g.unit)+')')+'<input data-pick-count="'+i+'" type="number" min="0" step="1" value="'+(milk?countDefault:qtyDefault)+'"></label><label class="meta">Стварна количина ('+esc(g.unit)+')<input data-pick-qty="'+i+'" type="number" min="0" step="0.01" value="'+qtyDefault+'"></label></div>'+
    '<div class="meta" data-pick-line="'+i+'"></div></div>';
  }).join('')+
- '<div class="card" style="background:#f8faf8"><div class="row-main"><div><div class="name">За плаћање</div><div class="meta">Само стварно преузето.</div></div><div class="money" id="pickTotal">0 дин.</div></div></div>'+
- '<button class="save" id="savePick">Сачувај преузимање</button>';
+ '<div class="card" style="background:#f8faf8"><div class="row-main"><div><div class="name">За плаћање</div><div class="meta">Обрачунава се само оно што је означено као преузето.</div></div><div class="money" id="pickTotal">0 дин.</div></div></div>'+
+ '<button class="save" id="savePick">Сачувај преузимање и дуговање</button>';
  document.getElementById('backPickup').onclick=renderPickupHome;
- root.querySelectorAll('[data-pick-count]').forEach(x=>x.oninput=()=>{const i=num(x.dataset.pickCount),size=num(gs[i].size);if(size)root.querySelector('[data-pick-qty="'+i+'"]').value=(num(x.value)*size).toFixed(2).replace(/\.00$/,'');recalcPickup(gs)});
- root.querySelectorAll('[data-pick-qty]').forEach(x=>x.oninput=()=>recalcPickup(gs));
+ root.querySelectorAll('[data-not-picked]').forEach(b=>b.onclick=()=>{
+  const i=num(b.dataset.notPicked),item=root.querySelector('[data-item="'+i+'"]');item.dataset.picked='no';
+  item.querySelector('[data-not-picked]').classList.add('active');item.querySelector('[data-picked="'+i+'"]').classList.remove('active');
+  item.querySelector('[data-pick-count="'+i+'"]').value=0;item.querySelector('[data-pick-qty="'+i+'"]').value=0;recalcPickup(gs);
+ });
+ root.querySelectorAll('[data-picked]').forEach(b=>{if(b.tagName!=='BUTTON')return;b.onclick=()=>{
+  const i=num(b.dataset.picked),item=root.querySelector('[data-item="'+i+'"]');item.dataset.picked='yes';
+  item.querySelector('[data-picked="'+i+'"]').classList.add('active');item.querySelector('[data-not-picked="'+i+'"]').classList.remove('active');
+  const g=gs[i];if(num(item.querySelector('[data-pick-qty="'+i+'"]').value)===0){item.querySelector('[data-pick-count="'+i+'"]').value=g.packages||g.qty;item.querySelector('[data-pick-qty="'+i+'"]').value=g.qty;}recalcPickup(gs);
+ }});
+ root.querySelectorAll('[data-pick-count]').forEach(x=>x.oninput=()=>{
+  const i=num(x.dataset.pickCount),g=gs[i],item=root.querySelector('[data-item="'+i+'"]'),size=num(g.size);
+  if(size)item.querySelector('[data-pick-qty="'+i+'"]').value=(num(x.value)*size).toFixed(2).replace(/\\.00$/,'');
+  if(num(x.value)>0){item.dataset.picked='yes';item.querySelector('[data-picked="'+i+'"]').classList.add('active');item.querySelector('[data-not-picked="'+i+'"]').classList.remove('active');}
+  recalcPickup(gs);
+ });
+ root.querySelectorAll('[data-pick-qty]').forEach(x=>x.oninput=()=>{
+  const i=num(x.dataset.pickQty),item=root.querySelector('[data-item="'+i+'"]');
+  if(num(x.value)>0){item.dataset.picked='yes';item.querySelector('[data-picked="'+i+'"]').classList.add('active');item.querySelector('[data-not-picked="'+i+'"]').classList.remove('active');}
+  recalcPickup(gs);
+ });
  document.getElementById('savePick').onclick=()=>savePickup(farmId,gs);
  recalcPickup(gs);
 }
 function recalcPickup(gs){
  let total=0;
- gs.forEach((g,i)=>{const q=num(document.querySelector('[data-pick-qty="'+i+'"]')?.value),pr=price(g.rows[0]);total+=q*pr;const el=document.querySelector('[data-pick-line="'+i+'"]');if(el)el.textContent='Преузето: '+q+' '+g.unit+' · '+(q*pr).toLocaleString('sr-RS')+' дин.'});
+ gs.forEach((g,i)=>{
+  const item=document.querySelector('[data-item="'+i+'"]');
+  const picked=item?.dataset.picked==='yes';
+  const q=picked?num(item.querySelector('[data-pick-qty="'+i+'"]')?.value):0;
+  const pr=price(g.rows[0]);total+=q*pr;
+  const el=document.querySelector('[data-pick-line="'+i+'"]');
+  if(el)el.textContent=(picked?'Преузето: ':'Није преузето')+q+' '+g.unit+' · '+(q*pr).toLocaleString('sr-RS')+' дин.';
+ });
  const el=document.getElementById('pickTotal');if(el)el.textContent=total.toLocaleString('sr-RS')+' дин.';
 }
 async function savePickup(farmId,gs){
@@ -169,7 +200,8 @@ async function savePickup(farmId,gs){
  try{
   let total=0;
   for(let i=0;i<gs.length;i++){
-   const g=gs[i],actual=num(document.querySelector('[data-pick-qty="'+i+'"]')?.value),pr=price(g.rows[0]);total+=actual*pr;
+   const g=gs[i],item=document.querySelector('[data-item="'+i+'"]'),picked=item?.dataset.picked==='yes';
+   const actual=picked?num(item.querySelector('[data-pick-qty="'+i+'"]')?.value):0,pr=price(g.rows[0]);total+=actual*pr;
    let left=actual;
    for(const r of g.rows){
     const taken=Math.min(qty(r),Math.max(0,left));left-=taken;
@@ -182,7 +214,7 @@ async function savePickup(farmId,gs){
   alert('Преузимање је сачувано. За плаћање: '+total.toLocaleString('sr-RS')+' дин.');
   await reload();showTab('debt');
  }catch(e){alert('Није сачувано: '+e.message);console.error(e)}
- finally{btn.disabled=false;btn.textContent='Сачувај преузимање'}
+ finally{btn.disabled=false;btn.textContent='Сачувај преузимање и дуговање'}
 }
 
 function renderDebts(){
