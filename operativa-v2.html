@@ -273,7 +273,6 @@ function renderDebts(){
   return '<div class="farm-card"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+st+'</div></div><div class="money">'+(p?total.toLocaleString('sr-RS')+' дин.':'—')+'</div></div>'+(p?'<div class="meta">Плаћено: '+paid.toLocaleString('sr-RS')+' дин. · Дуг: '+Math.max(0,total-paid).toLocaleString('sr-RS')+' дин.</div>':'')+'</div>';
  }).join('')||'<div class="note">Нема дуговања.</div>';
 }
->
 function showTab(tab){
  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
  document.querySelectorAll('[id^="view-"]').forEach(v=>v.classList.add('hidden'));
@@ -313,3 +312,7 @@ async function boot(){
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 boot();
+
+</script>
+</body>
+</html>
