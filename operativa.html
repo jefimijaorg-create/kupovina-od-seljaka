@@ -54,6 +54,11 @@ select{width:100%;margin-top:8px;border:1px solid #d1d5db;border-radius:10px;pad
   </section>
 
   <section class="card">
+    <div class="section-title"><h2>Преузимања</h2><span class="note">отвори газдинство</span></div>
+    <div id="pickupFarms"></div>
+  </section>
+
+  <section class="card">
     <div class="section-title"><h2>Шта узимамо од газдинстава</h2><span id="visibleCount" class="note"></span></div>
     <div id="farmSummary"></div>
   </section>
@@ -70,7 +75,7 @@ const SUPABASE_ANON_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 const headers={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};
 const api=async(path,opts={})=>{const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{...opts,headers:{...headers,...(opts.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json()};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let tour,rows=[],farms=[],filter='all',packageFilter='all',farmFilter='all';
+let tour,rows=[],farms=[],products=[],filter='all',packageFilter='all',farmFilter='all';
 
 function parsePackages(r){
   const n=String(r.napomena||'');
@@ -112,6 +117,81 @@ function renderStats(){
   document.getElementById('liters').textContent=totalLiters(rows);
   document.getElementById('eggs').textContent=rows.filter(r=>productKey(r).toLowerCase().includes('јај')).reduce((s,r)=>s+unitQty(r),0);
 }
+function purchasePrice(r){
+  const direct=Number(r.nabavna_cena);
+  if(Number.isFinite(direct)&&direct>0)return direct;
+  const p=products.find(x=>String(x.name).trim().toLowerCase()===String(r.proizvod||'').trim().toLowerCase());
+  return p&&p.purchase_price!=null?Number(p.purchase_price):null;
+}
+function farmRows(farmId){return rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(farmId));}
+function renderPickupFarms(){
+  const html=farms.map(f=>{
+    const rs=farmRows(f.id), qty=rs.reduce((s,r)=>s+unitQty(r),0);
+    const amount=rs.reduce((s,r)=>{const p=purchasePrice(r);return s+(p==null?0:unitQty(r)*p)},0);
+    const unpaid=rs.some(r=>purchasePrice(r)==null);
+    return '<button class="row" style="width:100%;text-align:left;border:0;background:#fff;cursor:pointer" data-pickfarm="'+f.id+'">'+
+      '<div class="row-main"><div><div class="name">'+esc(f.name)+'</div><div class="meta">'+rs.length+' ставки · '+qty+' јединица</div></div><div class="qty">'+(amount?amount.toLocaleString('sr-RS')+' дин.':'—')+'</div></div>'+
+      (unpaid?'<div class="meta" style="color:#b45309">Недостаје набавна цена за једну или више ставки.</div>':'')+
+    '</button>';
+  }).join('');
+  document.getElementById('pickupFarms').innerHTML=html||'<p class="note">Нема газдинстава.</p>';
+  document.querySelectorAll('[data-pickfarm]').forEach(b=>b.onclick=()=>openPickup(Number(b.dataset.pickfarm)));
+}
+function openPickup(farmId){
+  const f=farms.find(x=>Number(x.id)===farmId), rs=farmRows(farmId);
+  if(!f)return;
+  const old=document.getElementById('pickupDetail'); if(old)old.remove();
+  const box=document.createElement('section'); box.id='pickupDetail'; box.className='card';
+  box.innerHTML='<div class="section-title"><h2>Преузимање — '+esc(f.name)+'</h2><button class="filter" id="closePickup">Затвори</button></div>'+
+    '<div id="pickupLines" style="margin-top:8px">'+rs.map(r=>{
+      const p=purchasePrice(r), taken=Number(r.preuzeta_kolicina)||0;
+      return '<div class="row"><div class="row-main"><div><div class="name">'+esc(r.proizvod)+'</div><div class="meta">За: '+esc(r.recipient_name||'Купац')+' · наручено '+esc(r.kolicina)+' '+esc(r.jedinica||'')+(r.package_info?' · '+esc(r.package_info):'')+'</div></div><div class="qty">'+(p==null?'—':p.toLocaleString('sr-RS')+' дин./'+esc(r.jedinica||''))+'</div></div>'+
+      '<input data-taken="'+r.id+'" type="number" min="0" step="0.01" value="'+taken+'" placeholder="Преузето" style="width:100%;margin-top:8px;border:1px solid #d1d5db;border-radius:10px;padding:10px;font-weight:800">'+
+      '<div class="meta" data-line-total="'+r.id+'">'+(p==null?'Нема набавне цене':('За ову ставку: '+(taken*p).toLocaleString('sr-RS')+' дин.'))+'</div></div>';
+    }).join('')+'</div>'+
+    '<div class="card" style="margin-top:10px;background:#f8faf8"><div class="row-main"><div><div class="name">Укупно за плаћање</div><div class="meta">Износ који улази у дуговање газдинству.</div></div><div class="qty" id="pickupTotal">0 дин.</div></div></div>'+
+    '<button class="save" id="savePickup">Сачувај преузимање и додај у дуговање</button>';
+  document.querySelector('main.wrap').insertBefore(box,document.querySelector('main.wrap').children[3]);
+  document.querySelectorAll('[data-taken]').forEach(i=>i.oninput=()=>recalcPickup(rs));
+  document.getElementById('closePickup').onclick=()=>box.remove();
+  document.getElementById('savePickup').onclick=()=>savePickup(farmId,rs);
+  recalcPickup(rs);
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function recalcPickup(rs){
+  let total=0;
+  rs.forEach(r=>{
+    const p=purchasePrice(r), input=document.querySelector('[data-taken="'+r.id+'"]');
+    const q=input?Number(input.value)||0:0;
+    if(p!=null)total+=q*p;
+    const el=document.querySelector('[data-line-total="'+r.id+'"]');
+    if(el)el.textContent=p==null?'Нема набавне цене':('За ову ставку: '+(q*p).toLocaleString('sr-RS')+' дин.');
+  });
+  const el=document.getElementById('pickupTotal');if(el)el.textContent=total.toLocaleString('sr-RS')+' дин.';
+}
+async function savePickup(farmId,rs){
+  const btn=document.getElementById('savePickup');btn.disabled=true;btn.textContent='Чувам...';
+  try{
+    let total=0;
+    for(const r of rs){
+      const input=document.querySelector('[data-taken="'+r.id+'"]');
+      const q=Number(input?.value)||0,p=purchasePrice(r);
+      if(p==null)throw new Error('Недостаје набавна цена за '+r.proizvod);
+      total+=q*p;
+      await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:q,nabavna_cena:p,status_stavke:q>=Number(r.kolicina)?'preuzeto':'delimicno_preuzeto'})});
+      r.preuzeta_kolicina=q;r.nabavna_cena=p;
+    }
+    const existing=await api('producer_payouts?producer_id=eq.'+farmId+'&tura_id=eq.'+tour.id+'&limit=1');
+    if(existing.length){
+      await api('producer_payouts?id=eq.'+existing[0].id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({total_amount:total,is_paid:false})});
+    }else{
+      await api('producer_payouts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({producer_id:farmId,period:tour.datum,total_amount:total,is_paid:false,tura_id:tour.id})});
+    }
+    alert('Преузимање је сачувано. '+total.toLocaleString('sr-RS')+' дин. је додато у дуговање.');
+    document.getElementById('pickupDetail')?.remove();
+    render();
+  }catch(e){alert('Није сачувано: '+e.message);console.error(e)}finally{btn.disabled=false;btn.textContent='Сачувај преузимање и додај у дуговање'}
+}
 function renderFarmSummary(list){
   const groups={};
   list.forEach(r=>{
@@ -149,7 +229,7 @@ function renderOrders(list){
   });
 }
 function render(){
-  renderStats();renderFilters();
+  renderStats();renderFilters();renderPickupFarms();
   const list=rows.filter(matches);
   renderFarmSummary(list);renderOrders(list);
 }
@@ -160,6 +240,7 @@ async function init(){
     tour=ts[0];
     document.getElementById('tourTitle').textContent=tour.naziv||('Достава '+tour.datum);
     farms=await api('gazdinstva?select=id,name,is_active&is_active=eq.true&order=name.asc');
+    products=await api('products?select=id,name,purchase_price,unit,gazdinstvo_id&is_active=eq.true&order=name.asc');
     rows=await api('stavke_porudzbine?select=id,porudzbina_id,proizvod,kolicina,jedinica,dodijeljeno_gazdinstvo_id,velicina_pakovanja,broj_pakovanja,package_info,package_count,package_size,package_unit,total_quantity,quantity_unit,recipient_name,napomena&tura_id=eq.'+tour.id+'&order=id.asc&limit=500');
     document.getElementById('status').textContent='ажурира се директно из базе';
     render();
