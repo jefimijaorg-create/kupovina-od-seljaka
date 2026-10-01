@@ -274,3 +274,42 @@ function renderDebts(){
  }).join('')||'<div class="note">Нема дуговања.</div>';
 }
 >
+function showTab(tab){
+ document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+ document.querySelectorAll('[id^="view-"]').forEach(v=>v.classList.add('hidden'));
+ const view=document.getElementById('view-'+tab); if(view)view.classList.remove('hidden');
+ if(tab==='orders')renderOrders();
+ if(tab==='farms')renderFarmPlan();
+ if(tab==='pickup')renderPickupHome();
+ if(tab==='debt')renderDebts();
+}
+async function reload(){
+ const [t,rs,fs,ps,po]=await Promise.all([
+  api('ture?order=datum.desc,id.desc&limit=1'),
+  api('stavke_porudzbine?tura_id=eq.'+(tour?.id||0)+'&order=id.asc'),
+  api('gazdinstva?is_active=eq.true&order=name.asc'),
+  api('products?select=id,name,purchase_price,unit&order=name.asc'),
+  api('producer_payouts?tura_id=eq.'+(tour?.id||0)+'&order=id.asc')
+ ]);
+ tour=t?.[0]||tour;
+ rows=rs||[];farms=fs||[];products=ps||[];payouts=po||[];
+ if(tour){
+  document.getElementById('tourTitle').textContent=tour.naziv||('Тура '+tour.datum);
+  document.getElementById('status').textContent=tour.datum?new Date(tour.datum+'T00:00:00').toLocaleDateString('sr-RS'):'';
+ }
+ renderHeader();initFilters();renderOrders();renderFarmPlan();renderPickupHome();renderDebts();
+}
+async function boot(){
+ try{
+  const ts=await api('ture?order=datum.desc,id.desc&limit=1');
+  tour=ts?.[0];
+  if(!tour)throw new Error('Није пронађена ниједна тура.');
+  await reload();
+ }catch(e){
+  console.error(e);
+  document.getElementById('status').textContent='Грешка';
+  document.getElementById('orders').innerHTML='<div class="farm-card danger"><div class="name">Није могуће учитати оперативу.</div><div class="meta">'+esc(e.message)+'</div></div>';
+ }
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+boot();
