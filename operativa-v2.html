@@ -3,317 +3,108 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Оператива — Наручи домаће из Велике Плане</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Поруџбине — Наручи домаће из Велике Плане</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#172018;font-family:Arial,sans-serif}.wrap{max-width:760px;margin:auto;padding:12px 12px 90px}
-.top{position:sticky;top:0;z-index:30;background:#172018;color:#fff;padding:14px 12px;border-radius:0 0 18px 18px}.top h1{margin:0;font-size:21px}.top p{margin:4px 0 0;color:#cbd5ce;font-size:12px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-top:12px;box-shadow:0 2px 8px #0000000a}.section-title{display:flex;justify-content:space-between;align-items:center;gap:8px}.section-title h2{margin:0;font-size:17px}
-.note{font-size:11px;color:#667067;line-height:1.45}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.tab{border:1px solid #d1d5db;background:#fff;border-radius:11px;padding:9px 4px;font-weight:900;font-size:11px}.tab.active{background:#172018;color:#fff;border-color:#172018}
-.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.stat{background:#f8faf8;border-radius:12px;padding:10px}.stat b{display:block;font-size:19px}.stat span{font-size:11px;color:#667067}
-.row{border-top:1px solid #eef0ed;padding:12px 0}.row:first-child{border-top:0}.row-main{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.name{font-weight:900;font-size:14px}.qty{font-weight:900;font-size:15px;text-align:right}.meta{font-size:11px;color:#69736b;margin-top:3px;line-height:1.45}
-.farm-card{border:1px solid #dfe5df;border-radius:14px;padding:13px;margin-top:9px;background:#fff}.farm-card button{width:100%;text-align:left;border:0;background:transparent;padding:0}.farm-head{display:flex;justify-content:space-between;gap:10px}.farm-name{font-size:16px;font-weight:900}.big{font-size:18px;font-weight:900}
-.product{background:#f8faf8;border-radius:12px;padding:11px;margin-top:8px}.product-head{display:flex;justify-content:space-between;gap:8px}.packline{display:flex;justify-content:space-between;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid #e5e9e5;font-size:12px}
-.badge{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900;background:#e8eee9;color:#344238;margin:2px 3px 0 0}
-input,select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:10px;background:#fff;font-weight:800}input:focus,select:focus{outline:2px solid #a7c4ae}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.save{width:100%;border:0;border-radius:12px;background:#047857;color:#fff;padding:13px;font-weight:900;margin-top:12px}.danger{background:#fff7ed;border-color:#fed7aa}.ok{color:#166534}.warn{color:#a16207}
-.hidden{display:none}.back{border:0;background:#eef2ee;border-radius:10px;padding:8px 11px;font-weight:900}.money{font-weight:900;font-size:16px}
-@media(min-width:650px){.statgrid{grid-template-columns:repeat(4,1fr)}}
-
-.filterbar{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.filterbar .wide{grid-column:1/-1}
-.checkrow{display:flex;gap:10px;align-items:flex-start}.checkrow input{width:auto;margin-top:3px}.selectbox{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}.assignbar{position:sticky;bottom:8px;z-index:20;background:#172018;color:#fff;border-radius:14px;padding:10px;margin-top:10px;box-shadow:0 5px 18px #0003}.assignbar select{color:#172018}.subhead{font-size:12px;font-weight:900;margin-top:12px}.paybox{background:#f8faf8;border-radius:12px;padding:10px;margin-top:10px}.paybox .two{align-items:end}
+*{box-sizing:border-box}
+body{margin:0;background:#f3f4f6;color:#172018;font-family:Arial,sans-serif}
+.wrap{max-width:760px;margin:auto;padding:0 12px 40px}
+.top{background:#172018;color:#fff;padding:16px 0;border-radius:0 0 18px 18px}
+h1{margin:0;font-size:21px}.sub{margin-top:4px;color:#cbd5ce;font-size:12px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-top:12px}
+.head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+h2{margin:0;font-size:17px}.note{font-size:11px;color:#667067}
+.order{border-top:1px solid #e5e7eb;padding:14px 0}.order:first-child{border-top:0}
+.buyer{font-size:16px;font-weight:900}.orderid{font-size:11px;color:#68736b;margin-top:2px}
+.item{background:#f8faf8;border-radius:12px;padding:10px;margin-top:8px}
+.itemtop{display:flex;justify-content:space-between;gap:10px}
+.product{font-weight:900;font-size:14px}.qty{font-weight:900;text-align:right;white-space:nowrap}
+.meta{font-size:11px;color:#69736b;margin-top:4px;line-height:1.45}
+.loading{text-align:center;padding:25px;color:#667067}
+.error{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px;color:#9a3412}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap" style="padding:0 12px"><h1>Оператива</h1><p>Поруџбине → газдинства → преузимање → дуговање</p></div></header>
+<header class="top"><div class="wrap">
+<h1>Поруџбине</h1>
+<div class="sub">Наручи домаће из Велике Плане</div>
+</div></header>
+
 <main class="wrap">
 <section class="card">
- <div class="section-title"><h2 id="tourTitle">Учитавање...</h2><span id="status" class="note"></span></div>
- <div class="statgrid">
-  <div class="stat"><b id="buyers">0</b><span>купаца</span></div>
-  <div class="stat"><b id="lineCount">0</b><span>ставки</span></div>
-  <div class="stat"><b id="farmCount">0</b><span>газдинстава</span></div>
-  <div class="stat"><b id="debtTotal">0</b><span>дуговање</span></div>
- </div>
- <div class="tabs">
-  <button class="tab active" data-tab="orders">Поруџбине</button>
-  <button class="tab" data-tab="farms">За газдинства</button>
-  <button class="tab" data-tab="pickup">Преузимање</button>
-  <button class="tab" data-tab="debt">Дуговања</button>
- </div>
-</section>
-<section id="view-orders" class="card">
- <div class="section-title"><h2>Поруџбине</h2><span class="note">шта су купци тражили</span></div>
- 
-<div class="filterbar">
- <select id="filterProduct"><option value="">Сви производи</option></select>
- <select id="filterPackage"><option value="">Сва паковања</option><option value="балон">Балони × 6 л</option><option value="флаша">Флаше × 2 л</option></select>
- <select id="filterBuyer"><option value="">Сви купци</option></select>
- <select id="filterFarm"><option value="">Сва газдинства</option></select>
- <select id="filterStatus" class="wide"><option value="">Сви статуси</option><option value="недодељено">Није додељено</option><option value="додељено">Додељено</option><option value="није_преузето">Није преузето</option><option value="делимично">Делимично преузето</option><option value="преузето">Преузето</option></select>
-</div>
-<div class="selectbox">
- <button class="back" id="selectAll">Изабери све приказане</button>
- <span class="note" id="selectedCount">0 изабрано</span>
-</div>
-<div id="orders"></div>
-<div class="assignbar">
- <div style="font-weight:900;font-size:12px;margin-bottom:7px">Додела изабраних ставки газдинству</div>
- <div class="selectbox" style="margin-top:0">
-  <select id="assignFarm"><option value="">Изабери газдинство</option></select>
-  <button class="save" style="margin:0" id="assignBtn">Додели</button>
- </div>
+<div class="head">
+<h2 id="tourTitle">Учитавање...</h2>
+<span id="tourDate" class="note"></span>
 </div>
 </section>
-<section id="view-farms" class="card hidden">
- <div class="section-title"><h2>Шта узимамо од газдинстава</h2><span class="note">шта треба да нам дају</span></div>
- <div id="farmPlan"></div>
-</section>
-<section id="view-pickup" class="card hidden">
- <div id="pickupHome"></div>
-</section>
-<section id="view-debt" class="card hidden">
- <div class="section-title"><h2>Дуговања</h2><span class="note">само стварно преузето</span></div>
- <div id="debts"></div>
+
+<section class="card">
+<div class="head">
+<h2>Листа поруџбина</h2>
+<span id="count" class="note"></span>
+</div>
+<div id="orders"><div class="loading">Учитавање поруџбина...</div></div>
 </section>
 </main>
+
 <script>
-const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
-const SUPABASE_ANON_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
-const headers={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};
-const api=async(path,opts={})=>{const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{...opts,headers:{...headers,...(opts.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json()};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let tour,rows=[],farms=[],products=[],payouts=[];
-
-function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
-function farm(id){return farms.find(f=>String(f.id)===String(id))}
-function farmName(id){return farm(id)?.name||'Није додељено'}
-function unit(r){return r.jedinica||r.quantity_unit||''}
-function qty(r){return num(r.kolicina||r.total_quantity)}
-function price(r){const direct=num(r.nabavna_cena);if(direct>0)return direct;const p=products.find(x=>String(x.name).trim().toLowerCase()===String(r.proizvod||'').trim().toLowerCase());return p?num(p.purchase_price):0}
-
-function packageParts(r){
- const text=String(r.package_info||r.napomena||'');
- const parts=[];
- const re=/(\d+)\s*(?:×|x)?\s*(балон(?:а|и)?|флаш(?:а|е|и)?)\s*(?:од\s*)?(\d+(?:[.,]\d+)?)\s*л/ig;
- let m;
- while((m=re.exec(text))!==null){
-  const count=num(m[1]),size=num(String(m[3]).replace(',','.'));
-  if(count>0&&size>0)parts.push({count,size,type:/балон/i.test(m[2])?'балон':'флаша',unit:'л',qty:count*size});
- }
- if(parts.length)return parts;
- const count=num(r.package_count||r.broj_pakovanja),size=num(r.package_size);
- if(count>0&&size>0){
-  const explicit=/балон/i.test(text)?'балон':/флаш/i.test(text)?'флаша':'паковање';
-  return [{count,size,type:explicit,unit:String(r.package_unit||'л'),qty:count*size}];
- }
- return [{count:0,size:0,type:'количина',unit:unit(r),qty:qty(r)}];
-}
+const URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const headers={apikey:KEY,Authorization:'Bearer '+KEY};
+const api=async path=>{
+ const r=await fetch(URL+'/rest/v1/'+path,{headers});
+ if(!r.ok)throw new Error(await r.text());
+ return r.json();
+};
+const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function packageText(r){
- return packageParts(r).map(p=>p.count?p.count+' '+(p.type==='балон'?(p.count===1?'балон':'балона'):p.type==='флаша'?(p.count===1?'флаша':'флаше'):'паковања')+(p.size?' × '+p.size+' л':''):p.qty+' '+p.unit).join(' + ');
-}
-function groupFarm(farmId){
- const rs=rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(farmId)),groups={};
- rs.forEach(r=>{
-  const product=String(r.proizvod||'').trim(),key=product.toLowerCase();
-  groups[key]??={product,unit:unit(r),qty:0,rows:[],packages:{}};
-  const g=groups[key];g.qty+=qty(r);g.rows.push(r);
-  packageParts(r).forEach(p=>{
-   const pk=p.type+'|'+p.size+'|'+p.unit;
-   if(!g.packages[pk])g.packages[pk]={type:p.type,size:p.size,unit:p.unit,count:0,qty:0};
-   g.packages[pk].count+=p.count;g.packages[pk].qty+=p.qty;
-  });
- });
- return Object.values(groups);
-}
-function packageSummary(g){
- return Object.values(g.packages).filter(p=>p.count>0).map(p=>
-  (p.type==='балон'?'Балони':p.type==='флаша'?'Флаше':'Паковања')+' × '+p.size+' '+p.unit+' — '+p.count+' ком. = '+p.qty+' '+p.unit
- ).join('<br>');
+ if(r.package_info) return r.package_info;
+ const count=Number(r.package_count||r.broj_pakovanja||0);
+ const size=Number(r.package_size||0);
+ const unit=r.package_unit||'л';
+ if(count&&size)return count+' × '+size+' '+unit;
+ return (r.kolicina??'')+' '+(r.jedinica||r.quantity_unit||'');
 }
 
-
-function renderHeader(){
- document.getElementById('buyers').textContent=new Set(rows.map(r=>r.porudzbina_id)).size;
- document.getElementById('lineCount').textContent=rows.length;
- document.getElementById('farmCount').textContent=farms.filter(f=>rows.some(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id))).length;
- const debt=payouts.reduce((s,p)=>s+num(p.total_amount),0);
- document.getElementById('debtTotal').textContent=debt.toLocaleString('sr-RS')+' дин.';
-}
-
-let selectedIds=new Set();
-function rowMatches(r){
- const product=document.getElementById('filterProduct')?.value||'',pack=document.getElementById('filterPackage')?.value||'';
- const buyer=document.getElementById('filterBuyer')?.value||'',fid=document.getElementById('filterFarm')?.value||'',st=document.getElementById('filterStatus')?.value||'';
- if(product&&String(r.proizvod)!==product)return false;
- if(buyer&&String(r.recipient_name||'')!==buyer)return false;
- if(fid&&String(r.dodijeljeno_gazdinstvo_id||'')!==fid)return false;
- if(pack&&!packageParts(r).some(p=>p.type===pack))return false;
- const taken=num(r.preuzeta_kolicina),q=qty(r);
- if(st==='недодељено'&&r.dodijeljeno_gazdinstvo_id)return false;
- if(st==='додељено'&&!r.dodijeljeno_gazdinstvo_id)return false;
- if(st==='није_преузето'&&taken>0)return false;
- if(st==='делимично'&&(taken<=0||taken>=q))return false;
- if(st==='преузето'&&taken<q)return false;
- return true;
-}
-function renderOrders(){
- const visible=rows.filter(rowMatches),groups={};
- visible.forEach(r=>{groups[r.porudzbina_id]??=[];groups[r.porudzbina_id].push(r)});
- document.getElementById('orders').innerHTML=Object.entries(groups).map(([oid,rs])=>
-  '<div class="farm-card"><div class="row-main"><div><div class="name">Поруџбина #'+esc(oid)+'</div><div class="meta">'+esc(rs[0].recipient_name||'Купац')+'</div></div><div class="qty">'+rs.length+' ставки</div></div>'+
-  rs.map(r=>'<div class="product checkrow"><input type="checkbox" data-row-select="'+r.id+'" '+(selectedIds.has(String(r.id))?'checked':'')+'><div style="flex:1"><div class="product-head"><div><b>'+esc(r.proizvod)+'</b><div class="meta">'+esc(packageText(r))+'</div></div><div class="qty">'+esc(farmName(r.dodijeljeno_gazdinstvo_id))+'</div></div><div class="meta">'+(r.napomena?esc(r.napomena):'')+(r.status_stavke?' · статус: '+esc(r.status_stavke):'')+'</div></div></div>').join('')+'</div>'
- ).join('')||'<div class="note">Нема ставки за изабране филтере.</div>';
- document.querySelectorAll('[data-row-select]').forEach(x=>x.onchange=()=>{if(x.checked)selectedIds.add(x.dataset.rowSelect);else selectedIds.delete(x.dataset.rowSelect);updateSelectedCount()});
- updateSelectedCount();
-}
-function updateSelectedCount(){document.getElementById('selectedCount').textContent=selectedIds.size+' изабрано'}
-function initFilters(){
- const product=[...new Set(rows.map(r=>String(r.proizvod||'')).filter(Boolean))].sort(),buyer=[...new Set(rows.map(r=>String(r.recipient_name||'')).filter(Boolean))].sort();
- document.getElementById('filterProduct').innerHTML='<option value="">Сви производи</option>'+product.map(x=>'<option>'+esc(x)+'</option>').join('');
- document.getElementById('filterBuyer').innerHTML='<option value="">Сви купци</option>'+buyer.map(x=>'<option>'+esc(x)+'</option>').join('');
- document.getElementById('filterFarm').innerHTML='<option value="">Сва газдинства</option>'+farms.map(f=>'<option value="'+f.id+'">'+esc(f.name)+'</option>').join('');
- ['filterProduct','filterPackage','filterBuyer','filterFarm','filterStatus'].forEach(id=>document.getElementById(id).onchange=renderOrders);
- document.getElementById('selectAll').onclick=()=>{rows.filter(rowMatches).forEach(r=>selectedIds.add(String(r.id)));renderOrders()};
- document.getElementById('assignBtn').onclick=assignSelected;
- document.getElementById('assignFarm').innerHTML='<option value="">Изабери газдинство</option>'+farms.map(f=>'<option value="'+f.id+'">'+esc(f.name)+'</option>').join('');
-}
-async function assignSelected(){
- const farmId=document.getElementById('assignFarm').value;
- const ids=[...selectedIds].filter(id=>rows.some(r=>String(r.id)===id));
- if(!farmId||!ids.length){alert('Изабери ставке и газдинство.');return}
- try{
-  for(const id of ids)await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({dodijeljeno_gazdinstvo_id:num(farmId)})});
-  selectedIds.clear();await reload();showTab('orders');alert('Ставке су додељене газдинству.');
- }catch(e){alert('Додела није сачувана: '+e.message)}
-}
-
-function renderFarmPlan(){
- const assigned=farms.filter(f=>rows.some(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id))),unassigned=rows.filter(r=>!r.dodijeljeno_gazdinstvo_id);
- let html=assigned.map(f=>{
-  const gs=groupFarm(f.id);
-  return '<div class="farm-card"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+gs.length+' производа</div></div></div>'+
-   gs.map(g=>{
-    const details=g.rows.map(r=>{
-     const packs=packageText(r);
-     return '<div class="meta" style="margin-top:7px;padding-top:7px;border-top:1px solid #e5e9e5"><b>'+esc(r.recipient_name||'Купац')+'</b><br>'+esc(packs)+'</div>';
-    }).join('');
-    return '<div class="product"><div class="name">'+esc(g.product)+'</div><div style="margin-top:7px">'+packageSummary(g)+'</div><div class="meta" style="margin-top:7px"><b>Укупно: '+g.qty+' '+esc(g.unit)+'</b></div><div class="subhead">Купци</div>'+details+'</div>';
-   }).join('')+'</div>';
- }).join('');
- if(unassigned.length)html+='<div class="farm-card danger"><div class="name">Није додељено газдинству</div><div class="meta">'+unassigned.map(r=>esc(r.proizvod)+' — '+esc(packageText(r))).join('<br>')+'</div></div>';
- document.getElementById('farmPlan').innerHTML=html||'<div class="note">Нема додељених ставки.</div>';
-}
-
-function pickupGroups(farmId){
- const groups={};
- rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(farmId)).forEach(r=>{
-  packageParts(r).forEach(p=>{
-   if(!p.count)return;
-   const key=String(r.proizvod).toLowerCase()+'|'+p.type+'|'+p.size+'|'+p.unit;
-   if(!groups[key])groups[key]={product:r.proizvod,type:p.type,size:p.size,unit:p.unit,planned:0,litres:0,rows:[]};
-   const g=groups[key];g.planned+=p.count;g.litres+=p.qty;g.rows.push({row:r,part:p});
-  });
- });
- return Object.values(groups);
-}
-function renderPickupHome(){
- const assigned=farms.filter(f=>rows.some(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id)));
- document.getElementById('pickupHome').innerHTML='<div class="section-title"><h2>Преузимање</h2><span class="note">шта стварно узимаш</span></div>'+
- assigned.map(f=>{const gs=pickupGroups(f.id);return '<button class="farm-card" data-open-pickup="'+f.id+'"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+gs.reduce((s,g)=>s+g.planned,0)+' паковања</div></div><div class="big">'+gs.reduce((s,g)=>s+g.litres,0)+' л</div></div>'+gs.map(g=>'<div class="meta" style="margin-top:5px">• '+esc(g.product)+' — '+g.planned+' × '+esc(g.type)+' од '+g.size+' '+g.unit+'</div>').join('')+'</button>'}).join('')||'<div class="note">Нема додељених газдинстава.</div>';
- document.querySelectorAll('[data-open-pickup]').forEach(b=>b.onclick=()=>openPickup(num(b.dataset.openPickup)));
-}
-function openPickup(farmId){
- const f=farm(farmId),gs=pickupGroups(farmId);if(!f)return;
- const root=document.getElementById('pickupHome');
- root.innerHTML='<button class="back" id="backPickup">← Сва газдинства</button><div style="margin-top:12px"><div class="farm-name">Преузимање — '+esc(f.name)+'</div><div class="note">Уноси број стварно преузетих паковања. Систем рачуна литре из паковања.</div></div>'+
- gs.map((g,i)=>{
-  const label=(g.type==='балон'?'Балони':'Флаше')+' × '+g.size+' '+g.unit,existing=g.rows.reduce((s,a)=>s+Math.min(num(a.row.preuzeta_kolicina)/g.size,a.part.count),0);
-  return '<div class="farm-card pickup-item" data-item="'+i+'"><div class="product-head"><div><div class="name">'+esc(g.product)+'</div><div class="meta">'+esc(label)+' · наручено '+g.planned+' ком. = '+g.litres+' '+esc(g.unit)+'</div></div><div class="qty">'+price(g.rows[0].row).toLocaleString('sr-RS')+' дин./'+esc(g.unit)+'</div></div><div class="two" style="margin-top:10px"><label class="meta">Наручено<input value="'+g.planned+'" disabled></label><label class="meta">Преузето<input data-pick-count="'+i+'" type="number" min="0" step="1" value="'+existing+'"></label></div><div class="meta" data-pick-line="'+i+'"></div></div>';
- }).join('')+
- '<div class="paybox"><div class="row-main"><div><div class="name">Преузимање</div><div class="meta">Само стварно преузета роба улази у износ.</div></div><div class="money" id="pickTotal">0 дин.</div></div><div class="two" style="margin-top:10px"><label class="meta">Плаћено<input id="paidAmount" type="number" min="0" step="1" value="'+num(localStorage.getItem('paid_'+tour.id+'_'+farmId))+'"></label><div class="meta" id="payStatus" style="padding:10px"></div></div></div><button class="save" id="savePick">Сачувај преузимање и плаћање</button>';
- document.getElementById('backPickup').onclick=renderPickupHome;
- root.querySelectorAll('[data-pick-count]').forEach(x=>x.oninput=()=>recalcPickup(gs,farmId));
- document.getElementById('paidAmount').oninput=()=>recalcPickup(gs,farmId);
- document.getElementById('savePick').onclick=()=>savePickup(farmId,gs);
- recalcPickup(gs,farmId);
-}
-function recalcPickup(gs,farmId){
- let total=0;
- gs.forEach((g,i)=>{const n=num(document.querySelector('[data-pick-count="'+i+'"]')?.value),q=n*g.size,pr=price(g.rows[0].row);total+=q*pr;const el=document.querySelector('[data-pick-line="'+i+'"]');if(el)el.textContent='Преузето: '+n+' ком. = '+q+' '+g.unit+' · '+(q*pr).toLocaleString('sr-RS')+' дин.'});
- const el=document.getElementById('pickTotal');if(el)el.textContent=total.toLocaleString('sr-RS')+' дин.';
- const paid=num(document.getElementById('paidAmount')?.value),st=document.getElementById('payStatus');
- if(st)st.textContent=paid<=0?'Није плаћено':paid<total?'Делимично плаћено':'Плаћено';
-}
-async function savePickup(farmId,gs){
- const btn=document.getElementById('savePick');btn.disabled=true;btn.textContent='Чувам...';
- try{
-  const actualByRow=new Map(),priceByRow=new Map();let total=0;
-  for(let i=0;i<gs.length;i++){
-   const g=gs[i],n=num(document.querySelector('[data-pick-count="'+i+'"]')?.value),actual=n*g.size,pr=price(g.rows[0].row);total+=actual*pr;let remaining=actual;
-   for(const a of g.rows){const available=a.part.qty,taken=Math.min(available,remaining);remaining-=taken;actualByRow.set(a.row.id,(actualByRow.get(a.row.id)||0)+taken);priceByRow.set(a.row.id,pr);if(remaining<=0)break;}
-  }
-  for(const r of rows.filter(x=>String(x.dodijeljeno_gazdinstvo_id)===String(farmId))){
-   const taken=actualByRow.get(r.id)||0;
-   await api('stavke_porudzbine?id=eq.'+r.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:taken,nabavna_cena:priceByRow.get(r.id)??price(r),status_stavke:taken>=qty(r)?'preuzeto':(taken>0?'delimicno_preuzeto':'nije_preuzeto')})});
-  }
-  const paid=num(document.getElementById('paidAmount')?.value);localStorage.setItem('paid_'+tour.id+'_'+farmId,String(paid));
-  const ex=payouts.find(p=>String(p.producer_id)===String(farmId));
-  if(ex)await api('producer_payouts?id=eq.'+ex.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({total_amount:total,is_paid:paid>=total&&total>0})});
-  else await api('producer_payouts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({producer_id:farmId,period:tour.datum,total_amount:total,is_paid:paid>=total&&total>0,tura_id:tour.id})});
-  alert('Сачувано. Преузето: '+total.toLocaleString('sr-RS')+' дин.');await reload();showTab('pickup');openPickup(farmId);
- }catch(e){alert('Није сачувано: '+e.message);console.error(e)}
- finally{btn.disabled=false;btn.textContent='Сачувај преузимање и плаћање'}
-}
-
-function renderDebts(){
- document.getElementById('debts').innerHTML=farms.map(f=>{
-  const p=payouts.find(x=>String(x.producer_id)===String(f.id)),paid=num(localStorage.getItem('paid_'+tour.id+'_'+f.id)),total=p?num(p.total_amount):0,st=!p?'Није још преузето':paid<=0?'Није плаћено':paid<total?'Делимично плаћено':'Плаћено';
-  return '<div class="farm-card"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+st+'</div></div><div class="money">'+(p?total.toLocaleString('sr-RS')+' дин.':'—')+'</div></div>'+(p?'<div class="meta">Плаћено: '+paid.toLocaleString('sr-RS')+' дин. · Дуг: '+Math.max(0,total-paid).toLocaleString('sr-RS')+' дин.</div>':'')+'</div>';
- }).join('')||'<div class="note">Нема дуговања.</div>';
-}
-function showTab(tab){
- document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
- document.querySelectorAll('[id^="view-"]').forEach(v=>v.classList.add('hidden'));
- const view=document.getElementById('view-'+tab); if(view)view.classList.remove('hidden');
- if(tab==='orders')renderOrders();
- if(tab==='farms')renderFarmPlan();
- if(tab==='pickup')renderPickupHome();
- if(tab==='debt')renderDebts();
-}
-async function reload(){
- const [t,rs,fs,ps,po]=await Promise.all([
-  api('ture?order=datum.desc,id.desc&limit=1'),
-  api('stavke_porudzbine?tura_id=eq.'+(tour && tour.id || 0)+'&order=id.asc'),
-  api('gazdinstva?is_active=eq.true&order=name.asc'),
-  api('products?select=id,name,purchase_price,unit&order=name.asc'),
-  api('producer_payouts?tura_id=eq.'+(tour?.id||0)+'&order=id.asc')
- ]);
- tour=t?.[0]||tour;
- rows=rs||[];farms=fs||[];products=ps||[];payouts=po||[];
- if(tour){
-  document.getElementById('tourTitle').textContent=tour.naziv||('Тура '+tour.datum);
-  document.getElementById('status').textContent=tour.datum?new Date(tour.datum+'T00:00:00').toLocaleDateString('sr-RS'):'';
- }
- renderHeader();initFilters();renderOrders();renderFarmPlan();renderPickupHome();renderDebts();
-}
 async function boot(){
  try{
-  const ts=await api('ture?order=datum.desc,id.desc&limit=1');
-  tour=ts && ts[0];
-  if(!tour)throw new Error('Није пронађена ниједна тура.');
-  await reload();
+  const tours=await api('ture?order=datum.desc,id.desc&limit=1');
+  const tour=tours[0];
+  if(!tour)throw new Error('Нема активне туре.');
+
+  const rows=await api('stavke_porudzbine?tura_id=eq.'+tour.id+'&order=porudzbina_id.asc,id.asc');
+
+  document.getElementById('tourTitle').textContent=tour.naziv||('Тура '+tour.datum);
+  document.getElementById('tourDate').textContent=tour.datum?new Date(tour.datum+'T00:00:00').toLocaleDateString('sr-RS'):'';
+  document.getElementById('count').textContent=rows.length+' ставки';
+
+  const groups={};
+  rows.forEach(r=>{
+   const id=r.porudzbina_id;
+   if(!groups[id])groups[id]=[];
+   groups[id].push(r);
+  });
+
+  const html=Object.entries(groups).map(([id,items])=>{
+   const buyer=items[0].recipient_name||'Купац';
+   return '<div class="order">'+
+    '<div class="buyer">'+esc(buyer)+'</div>'+
+    '<div class="orderid">Поруџбина #'+esc(id)+'</div>'+
+    items.map(r=>'<div class="item">'+
+      '<div class="itemtop"><div class="product">'+esc(r.proizvod)+'</div><div class="qty">'+esc(r.kolicina)+' '+esc(r.jedinica||r.quantity_unit||'')+'</div></div>'+
+      '<div class="meta">'+esc(packageText(r))+'</div>'+
+      (r.napomena?'<div class="meta">'+esc(r.napomena)+'</div>':'')+
+      '</div>').join('')+
+   '</div>';
+  }).join('');
+
+  document.getElementById('orders').innerHTML=html||'<div class="loading">Нема поруџбина за ову туру.</div>';
  }catch(e){
-  console.error(e);
-  document.getElementById('status').textContent='Грешка';
-  document.getElementById('tourTitle').textContent='Оператива — грешка при учитавању';
-  document.getElementById('orders').innerHTML='<div class="farm-card danger"><div class="name">Није могуће учитати оперативу.</div><div class="meta">'+esc(e.message)+'</div></div>';
+  document.getElementById('tourTitle').textContent='Грешка';
+  document.getElementById('orders').innerHTML='<div class="error">Није могуће учитати поруџбине.<br>'+esc(e.message)+'</div>';
  }
 }
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 boot();
-
 </script>
 </body>
 </html>
