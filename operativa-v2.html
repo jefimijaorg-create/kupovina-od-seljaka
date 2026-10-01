@@ -89,7 +89,7 @@ function packageParts(r){
  return [{count:0,size:0,type:'количина',unit:unit(r),qty:qty(r)}];
 }
 function packageText(r){
- return packageParts(r).map(p=>p.count?p.count+' '+p.type+(p.count===1?'':'а')+(p.size?' × '+p.size+' л':''):p.qty+' '+p.unit).join(' + ');
+ return packageParts(r).map(p=>p.count?p.count+' '+(p.type==='балон'?(p.count===1?'балон':'балона'):p.type==='флаша'?(p.count===1?'флаша':'флаше'):'паковања')+(p.size?' × '+p.size+' л':''):p.qty+' '+p.unit).join(' + ');
 }
 function groupFarm(farmId){
  const rs=rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(farmId)),groups={};
@@ -127,7 +127,7 @@ function renderFarmPlan(){
    const list=packaging.filter(g=>g.packType===type),count=list.reduce((s,g)=>s+g.packages,0),litres=list.reduce((s,g)=>s+g.qty,0);
    return count?'<div class="packline"><b>'+(type==='балон'?'Балони од 6 л':'Флаше од 2 л')+'</b><b>'+count+' ком. · '+litres+' л</b></div>':'';
   }).join('');
-  return '<div class="farm-card"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+gs.length+' ставки за припрему</div></div><div class="big">'+total+' л/јед.</div></div>'+packSummary+
+  return '<div class="farm-card"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+gs.length+' ставки за припрему</div></div><div class="big">'+total+' укупно</div></div>'+packSummary+
    gs.map(g=>'<div class="product"><div class="product-head"><b>'+esc(g.product)+'</b><b>'+g.qty+' '+esc(g.unit)+'</b></div><div class="meta">'+(g.packType==='балон'?'Балони од 6 л: ':g.packType==='флаша'?'Флаше од 2 л: ':g.packType==='паковање'?'Паковања: ':'')+(g.packages?g.packages+' ком.':'')+(g.size?' · '+g.size+' л по паковању':'')+'</div></div>').join('')+'</div>';
  }).join('');
  if(unassigned.length)html+='<div class="farm-card danger"><div class="name">Није додељено газдинству</div><div class="meta">'+unassigned.map(r=>esc(r.proizvod)+' — '+qty(r)+' '+esc(unit(r))).join('<br>')+'</div></div>';
