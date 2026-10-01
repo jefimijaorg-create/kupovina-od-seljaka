@@ -128,7 +128,13 @@ function renderFarmPlan(){
    return count?'<div class="packline"><b>'+(type==='балон'?'Балони од 6 л':'Флаше од 2 л')+'</b><b>'+count+' ком. · '+litres+' л</b></div>':'';
   }).join('');
   return '<div class="farm-card"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+gs.length+' ставки за припрему</div></div><div class="big">'+total+' укупно</div></div>'+packSummary+
-   gs.map(g=>'<div class="product"><div class="product-head"><b>'+esc(g.product)+'</b><b>'+g.qty+' '+esc(g.unit)+'</b></div><div class="meta">'+(g.packType==='балон'?'Балони од 6 л: ':g.packType==='флаша'?'Флаше од 2 л: ':g.packType==='паковање'?'Паковања: ':'')+(g.packages?g.packages+' ком.':'')+(g.size?' · '+g.size+' л по паковању':'')+'</div></div>').join('')+'</div>';
+   gs.map(g=>{
+   const detail=g.rows.map(r=>{
+    const packs=packageParts(r).map(p=>p.count+' '+(p.type==='балон'?(p.count===1?'балон':'балона'):p.type==='флаша'?(p.count===1?'флаша':'флаше'):'паковања')+(p.size?' × '+p.size+' л':'')).join(' + ');
+    return '<div class="meta" style="margin-top:7px;padding-top:7px;border-top:1px solid #e5e9e5"><b>'+esc(r.recipient_name||'Купац')+'</b> — '+qty(r)+' '+esc(unit(r))+(packs?' · '+esc(packs):'')+(r.napomena?' · '+esc(String(r.napomena).split(';')[0]):'')+'</div>';
+   }).join('');
+   return '<div class="product"><div class="product-head"><b>'+esc(g.product)+'</b><b>'+g.qty+' '+esc(g.unit)+'</b></div><div class="meta">'+(g.packType==='балон'?'Балони од 6 л: ':g.packType==='флаша'?'Флаше од 2 л: ':g.packType==='паковање'?'Паковања: ':'')+(g.packages?g.packages+' ком.':'')+(g.size?' · '+g.size+' л по паковању':'')+'</div>'+detail+'</div>';
+  }).join('')+'</div>';
  }).join('');
  if(unassigned.length)html+='<div class="farm-card danger"><div class="name">Није додељено газдинству</div><div class="meta">'+unassigned.map(r=>esc(r.proizvod)+' — '+qty(r)+' '+esc(unit(r))).join('<br>')+'</div></div>';
  document.getElementById('farmPlan').innerHTML=html||'<div class="note">Нема додељених ставки.</div>';
