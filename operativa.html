@@ -50,7 +50,7 @@ select{width:100%;margin-top:8px;border:1px solid #d1d5db;border-radius:10px;pad
   <section class="card">
     <div class="section-title"><h2>Филтрирај</h2><span class="note">једним додиром</span></div>
     <div id="filters" class="filters" style="margin-top:10px"></div>
-    <div id="packageFilters" class="filters" style="margin-top:8px"></div>
+    <div id="packageFilters" class="filters" style="margin-top:8px"></div><div id="farmFilters" class="filters" style="margin-top:8px"></div>
   </section>
 
   <section class="card">
@@ -66,11 +66,11 @@ select{width:100%;margin-top:8px;border:1px solid #d1d5db;border-radius:10px;pad
 
 <script>
 const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
-const SUPABASE_ANON_KEY='sb_publishable_TRZp46sXsdIUsE4Vl65_2Q_QskFb532';
+const SUPABASE_ANON_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 const headers={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};
 const api=async(path,opts={})=>{const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{...opts,headers:{...headers,...(opts.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json()};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let tour,rows=[],farms=[],filter='all',packageFilter='all';
+let tour,rows=[],farms=[],filter='all',packageFilter='all',farmFilter='all';
 
 function parsePackages(r){
   const n=String(r.napomena||'');
@@ -91,13 +91,16 @@ function renderFilters(){
   const products=[...new Set(rows.map(productKey))].sort();
   document.getElementById('filters').innerHTML='<button class="filter '+(filter==='all'?'active':'')+'" data-f="all">Све</button>'+
     products.map(p=>'<button class="filter '+(filter===p?'active':'')+'" data-f="'+esc(p)+'">'+esc(p)+'</button>').join('');
+  document.getElementById('farmFilters').innerHTML='<button class="filter '+(farmFilter==='all'?'active':'')+'" data-farm="all">Сва газдинства</button>'+['unassigned',...farms.map(f=>String(f.id))].map(id=>'<button class="filter '+(farmFilter===id?'active':'')+'" data-farm="'+id+'">'+(id==='unassigned'?'Није додељено':esc(farmName(id)))+'</button>').join('');
   document.getElementById('packageFilters').innerHTML=
     ['all','балони','флаше','без паковања'].map(p=>'<button class="filter '+(packageFilter===p?'active':'')+'" data-p="'+p+'">'+(p==='all'?'Сва паковања':p==='без паковања'?'Без уписа':p)+'</button>').join('');
   document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;render();});
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{packageFilter=b.dataset.p;render();});
+  document.querySelectorAll('[data-farm]').forEach(b=>b.onclick=()=>{farmFilter=b.dataset.farm;render();});
 }
 function matches(r){
   if(filter!=='all'&&productKey(r)!==filter)return false;
+  if(farmFilter!=='all'){const id=r.dodijeljeno_gazdinstvo_id;if(farmFilter==='unassigned'){if(id)return false;}else if(String(id)!==farmFilter)return false;}
   if(packageFilter==='all')return true;
   const p=parsePackages(r);
   if(packageFilter==='без паковања')return !p.length;
