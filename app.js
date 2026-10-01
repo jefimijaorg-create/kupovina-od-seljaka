@@ -48,8 +48,8 @@ function updateHomeContinue(){
   if(!b)return;
   const qty=cartQty();
   b.disabled=qty===0;
-  b.textContent=qty ? 'Изабери место преузимања →' : 'Изабери место преузимања';
-  b.onclick=()=>{if(cartQty())location.href='mapa.html'};
+  b.textContent=qty ? 'Провери корпу →' : 'Изабери производе';
+  b.onclick=()=>{if(cartQty())location.href='korpa.html'};
 }
 
 function formatDeliveryDate(dateString){
@@ -446,7 +446,7 @@ function initConfirm(){
   if(items){
     items.innerHTML=state.cart.map(x=>`
       <div class="order-row">
-        <span>${esc(x.name)} <small>× ${x.qty}</small></span>
+        <span><strong>${esc(x.name)}</strong>${x.variant_name?'<small>'+esc(x.variant_name)+'</small>':''}<small>× ${x.qty}</small></span>
         <b>${money(x.price*x.qty)}</b>
       </div>`).join('');
   }
@@ -454,22 +454,116 @@ function initConfirm(){
   if(totalEl)totalEl.textContent=money(total);
 
   const f=document.getElementById('orderForm');
-  if(f)f.onsubmit=e=>{
+  if(f)f.onsubmit=async e=>{
     e.preventDefault();
-    const d=new FormData(f);
+    const submit=f.querySelector('button[type="submit"]');
     const result=document.getElementById('result');
-    const order={
-      customer:{ime:d.get('name'),telefon:d.get('phone'),napomena:d.get('note')},
-      products:state.cart,
-      pickup:state.delivery==='punkt'
-        ?{method:'punkt',point_id:state.point?.id,point_name:state.point?.name,time:state.point?.vreme,address:state.point?.address}
-        :{method:'dogovor',address:state.proposalAddress},
-      total
-    };
-    localStorage.setItem('lastOrder',JSON.stringify(order));
+    const d=new FormData(f);
+    const name=String(d.get('name')||'').trim();
+    const phone=String(d.get('phone')||'').trim();
+    const note=String(d.get('note')||'').trim();
+
+    if(!name||!phone){
+      if(result){
+        result.classList.remove('hidden');
+        result.innerHTML='<strong>Недостају подаци.</strong><span>Унеси име и број телефона.</span>';
+      }
+      return;
+    }
+
+    if(state.delivery==='punkt'&&!state.point?.id){
+      if(result){
+        result.classList.remove('hidden');
+        result.innerHTML='<strong>Није изабран пункт.</strong><span>Врати се корак назад и изабери место преузимања.</span>';
+      }
+      return;
+    }
+
+    if(state.delivery==='dogovor'&&!String(state.proposalAddress||'').trim()){
+      if(result){
+        result.classList.remove('hidden');
+        result.innerHTML='<strong>Није унето место.</strong><span>Унеси предложену адресу или место преузимања.</span>';
+      }
+      return;
+    }
+
+    if(!state.cart.length)return;
+
+    if(submit){
+      submit.disabled=true;
+      submit.textContent='Чувам поруџбину...';
+    }
     if(result){
       result.classList.remove('hidden');
-      result.innerHTML='<strong>Поруџбина је припремљена.</strong><span>Хвала! Ускоро ћемо потврдити поруџбину и место преузимања.</span>';
+      result.innerHTML='<span>Поруџбина се уписује...</span>';
+    }
+
+    try{
+      const rpcBody={
+        p_name:name,
+        p_phone:phone,
+        p_note:note,
+        p_point_id:state.delivery==='punkt' ? Number(state.point.id) : null,
+        p_pickup_address:state.delivery==='dogovor' ? String(state.proposalAddress||'').trim() : null,
+        p_items:state.cart.map(x=>({
+          product_id:x.id,
+          variant_id:x.variant_id||null,
+          qty:Number(x.qty||0)
+        }))
+      };
+
+      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/create_web_order',{
+        method:'POST',
+        headers,
+        body:JSON.stringify(rpcBody)
+      });
+
+      if(!r.ok){
+        let message='Поруџбина није уписана.';
+        try{
+          const err=await r.json();
+          message=err.message||err.error_description||message;
+        }catch(_){}
+        throw new Error(message);
+      }
+
+      const saved=await r.json();
+      const orderId=saved?.order_id;
+      const savedTotal=Number(saved?.total||total);
+
+      localStorage.setItem('lastOrder',JSON.stringify({
+        order_id:orderId,
+        customer:{ime:name,telefon:phone,napomena:note},
+        products:state.cart,
+        pickup:state.delivery==='punkt'
+          ?{method:'punkt',point_id:state.point?.id,point_name:state.point?.name,time:state.point?.vreme,address:state.point?.address}
+          :{method:'dogovor',address:state.proposalAddress},
+        total:savedTotal
+      }));
+
+      state.cart=[];
+      state.point=null;
+      state.proposalAddress='';
+      state.delivery='punkt';
+      save();
+
+      if(result){
+        result.classList.remove('hidden');
+        result.innerHTML='<strong>Поруџбина је примљена.</strong><span>Број поруџбине: #'+esc(orderId||'')+'</span><span>Укупно: '+money(savedTotal)+'</span><span>Ускоро ћемо потврдити поруџбину и место преузимања.</span>';
+      }
+      f.reset();
+      cartCount();
+      if(submit)submit.textContent='Поруџбина је послата';
+    }catch(err){
+      console.error(err);
+      if(result){
+        result.classList.remove('hidden');
+        result.innerHTML='<strong>Нисмо успели да упишемо поруџбину.</strong><span>'+esc(err.message||'Покушај поново.')+'</span>';
+      }
+      if(submit){
+        submit.disabled=false;
+        submit.textContent='Покушај поново';
+      }
     }
   };
   cartCount();
