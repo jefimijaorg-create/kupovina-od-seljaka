@@ -95,7 +95,7 @@ function price(r){const direct=num(r.nabavna_cena);if(direct>0)return direct;con
 function packageParts(r){
  const text=String(r.package_info||r.napomena||'');
  const parts=[];
- const re=/(\\d+)\\s*(?:×|x)?\\s*(балон(?:а|и)?|флаш(?:а|е|и)?)\\s*(?:од\\s*)?(\\d+(?:[.,]\\d+)?)\\s*л/ig;
+ const re=/(\d+)\s*(?:×|x)?\s*(балон(?:а|и)?|флаш(?:а|е|и)?)\s*(?:од\s*)?(\d+(?:[.,]\d+)?)\s*л/ig;
  let m;
  while((m=re.exec(text))!==null){
   const count=num(m[1]),size=num(String(m[3]).replace(',','.'));
