@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Оператива — Наручи домаће из Велике Плане</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{margin:0;background:#f3f4f6;color:#172018;font-family:Arial,sans-serif}
+.wrap{max-width:760px;margin:auto;padding:14px 12px 90px}
+.top{position:sticky;top:0;z-index:20;background:#172018;color:#fff;padding:14px 12px;border-radius:0 0 18px 18px}
+.top h1{margin:0;font-size:21px}.top p{margin:4px 0 0;color:#cbd5ce;font-size:12px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-top:12px;box-shadow:0 2px 8px #0000000a}
+.filters{display:flex;gap:7px;overflow:auto;padding-bottom:3px}
+.filter{border:1px solid #d1d5db;background:#fff;border-radius:999px;padding:8px 11px;font-weight:800;font-size:12px;white-space:nowrap}
+.filter.active{background:#172018;color:#fff;border-color:#172018}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#f8faf8;border-radius:12px;padding:10px}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:#667067}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:8px}.section-title h2{margin:0;font-size:17px}
+.row{border-top:1px solid #eef0ed;padding:12px 0}.row:first-child{border-top:0}
+.row-main{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.name{font-weight:900;font-size:14px}.qty{font-weight:900;font-size:15px;text-align:right}
+.meta{font-size:11px;color:#69736b;margin-top:3px;line-height:1.45}
+select{width:100%;margin-top:8px;border:1px solid #d1d5db;border-radius:10px;padding:10px;background:#fff;font-weight:700}
+.badge{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900;margin:2px 3px 0 0}
+.badge.filled{background:#dcfce7;color:#166534}.badge.empty{background:#fef3c7;color:#92400e}
+.save{width:100%;border:0;border-radius:12px;background:#047857;color:#fff;padding:12px;font-weight:900;margin-top:10px}
+.note{font-size:11px;color:#667067;line-height:1.5}
+@media(min-width:650px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap" style="padding:0 12px">
+    <h1>Оператива</h1>
+    <p>Од поруџбине до газдинства — шта треба узети, од кога и у ком паковању.</p>
+  </div>
+</header>
+<main class="wrap">
+  <section class="card">
+    <div class="section-title"><h2 id="tourTitle">Учитавање туре...</h2><span id="status" class="note"></span></div>
+    <div class="grid" style="margin-top:10px">
+      <div class="stat"><b id="buyers">0</b><span>купаца</span></div>
+      <div class="stat"><b id="lines">0</b><span>ставки</span></div>
+      <div class="stat"><b id="liters">0</b><span>литара</span></div>
+      <div class="stat"><b id="eggs">0</b><span>јаја</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title"><h2>Филтрирај</h2><span class="note">једним додиром</span></div>
+    <div id="filters" class="filters" style="margin-top:10px"></div>
+    <div id="packageFilters" class="filters" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-title"><h2>Шта узимамо од газдинстава</h2><span id="visibleCount" class="note"></span></div>
+    <div id="farmSummary"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-title"><h2>Поруџбине</h2><span class="note">свака ставка се може доделити</span></div>
+    <div id="orders"></div>
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_TRZp46sXsdIUsE4Vl65_2Q_QskFb532';
+const headers={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'};
+const api=async(path,opts={})=>{const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{...opts,headers:{...headers,...(opts.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json()};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tour,rows=[],farms=[],filter='all',packageFilter='all';
+
+function parsePackages(r){
+  const n=String(r.napomena||'');
+  const out=[];
+  const balloons=(n.match(/(\d+)\s*балон/g)||[]).reduce((s,m)=>s+Number(m.match(/\d+/)[0]),0);
+  const bottles=(n.match(/(\d+)\s*флаш/g)||[]).reduce((s,m)=>s+Number(m.match(/\d+/)[0]),0);
+  if(balloons)out.push({type:'балони',count:balloons});
+  if(bottles)out.push({type:'флаше',count:bottles});
+  return out;
+}
+function unitQty(r){return Number(r.kolicina)||0}
+function totalLiters(list){return list.filter(r=>String(r.jedinica).toLowerCase()==='l').reduce((s,r)=>s+unitQty(r),0)}
+function productKey(r){return String(r.proizvod||'').trim()||'Остало'}
+function farmName(id){const f=farms.find(x=>String(x.id)===String(id));return f?.name||'Није додељено'}
+function packageLabel(r){const p=parsePackages(r);return p.length?p.map(x=>x.count+' '+x.type).join(' + '):'Паковање није уписано'}
+
+function renderFilters(){
+  const products=[...new Set(rows.map(productKey))].sort();
+  document.getElementById('filters').innerHTML='<button class="filter '+(filter==='all'?'active':'')+'" data-f="all">Све</button>'+
+    products.map(p=>'<button class="filter '+(filter===p?'active':'')+'" data-f="'+esc(p)+'">'+esc(p)+'</button>').join('');
+  document.getElementById('packageFilters').innerHTML=
+    ['all','балони','флаше','без паковања'].map(p=>'<button class="filter '+(packageFilter===p?'active':'')+'" data-p="'+p+'">'+(p==='all'?'Сва паковања':p==='без паковања'?'Без уписа':p)+'</button>').join('');
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;render();});
+  document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{packageFilter=b.dataset.p;render();});
+}
+function matches(r){
+  if(filter!=='all'&&productKey(r)!==filter)return false;
+  if(packageFilter==='all')return true;
+  const p=parsePackages(r);
+  if(packageFilter==='без паковања')return !p.length;
+  return p.some(x=>x.type===packageFilter);
+}
+function renderStats(){
+  document.getElementById('buyers').textContent=new Set(rows.map(r=>r.porudzbina_id)).size;
+  document.getElementById('lines').textContent=rows.length;
+  document.getElementById('liters').textContent=totalLiters(rows);
+  document.getElementById('eggs').textContent=rows.filter(r=>productKey(r).toLowerCase().includes('јај')).reduce((s,r)=>s+unitQty(r),0);
+}
+function renderFarmSummary(list){
+  const groups={};
+  list.forEach(r=>{
+    const f=farmName(r.dodijeljeno_gazdinstvo_id);
+    const k=f+'||'+productKey(r);
+    groups[k]??={farm:f,product:productKey(r),qty:0,unit:r.jedinica,balloons:0,bottles:0};
+    groups[k].qty+=unitQty(r);
+    parsePackages(r).forEach(p=>{if(p.type==='балони')groups[k].balloons+=p.count;if(p.type==='флаше')groups[k].bottles+=p.count;});
+  });
+  const arr=Object.values(groups).sort((a,b)=>a.farm.localeCompare(b.farm)||a.product.localeCompare(b.product));
+  document.getElementById('farmSummary').innerHTML=arr.length?arr.map(x=>
+    '<div class="row"><div class="row-main"><div><div class="name">'+esc(x.farm)+'</div><div class="meta">'+esc(x.product)+'</div></div><div class="qty">'+x.qty+' '+esc(x.unit)+'</div></div>'+
+    '<div class="meta">'+(x.balloons?'🫙 '+x.balloons+' балона ':'')+(x.bottles?'🧴 '+x.bottles+' флаша':'')+'</div></div>'
+  ).join(''):'<p class="note">Нема ставки за изабрани филтер.</p>';
+}
+function farmOptions(selected){
+  return '<option value="">— није додељено —</option>'+farms.map(f=>'<option value="'+esc(f.id)+'" '+(String(f.id)===String(selected)?'selected':'')+'>'+esc(f.name)+'</option>').join('');
+}
+function renderOrders(list){
+  document.getElementById('visibleCount').textContent=list.length+' ставки';
+  document.getElementById('orders').innerHTML=list.map(r=>
+    '<div class="row">'+
+      '<div class="row-main"><div><div class="name">'+esc(r.proizvod)+'</div><div class="meta">'+esc(r.recipient_name||'Купац')+(r.napomena?' · '+esc(r.napomena):'')+'</div></div><div class="qty">'+esc(r.kolicina)+' '+esc(r.jedinica)+'</div></div>'+
+      '<div style="margin-top:5px">'+parsePackages(r).map(p=>'<span class="badge filled">'+p.count+' '+p.type+'</span>').join('')+(parsePackages(r).length?'':'<span class="badge empty">паковање није уписано</span>')+'</div>'+
+      '<select data-row="'+r.id+'">'+farmOptions(r.dodijeljeno_gazdinstvo_id)+'</select>'+
+    '</div>'
+  ).join('')||'<p class="note">Нема ставки.</p>';
+  document.querySelectorAll('[data-row]').forEach(s=>s.onchange=async()=>{
+    s.disabled=true;
+    try{
+      await api('stavke_porudzbine?id=eq.'+encodeURIComponent(s.dataset.row),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({dodijeljeno_gazdinstvo_id:s.value?Number(s.value):null})});
+      const r=rows.find(x=>String(x.id)===String(s.dataset.row)); if(r)r.dodijeljeno_gazdinstvo_id=s.value?Number(s.value):null;
+      render();
+    }catch(e){alert('Није сачувано. Провери дозволе базе.');s.disabled=false;console.error(e)}
+  });
+}
+function render(){
+  renderStats();renderFilters();
+  const list=rows.filter(matches);
+  renderFarmSummary(list);renderOrders(list);
+}
+async function init(){
+  try{
+    const ts=await api('ture?select=id,naziv,datum,status&datum=eq.2026-10-04&order=id.desc&limit=1');
+    if(!ts.length)throw new Error('Нема туре');
+    tour=ts[0];
+    document.getElementById('tourTitle').textContent=tour.naziv||('Достава '+tour.datum);
+    farms=await api('gazdinstva?select=id,name,is_active&is_active=eq.true&order=name.asc');
+    rows=await api('stavke_porudzbine?select=id,porudzbina_id,proizvod,kolicina,jedinica,dodijeljeno_gazdinstvo_id,velicina_pakovanja,broj_pakovanja,package_info,package_count,package_size,package_unit,total_quantity,quantity_unit,recipient_name,napomena&tura_id=eq.'+tour.id+'&order=id.asc&limit=500');
+    document.getElementById('status').textContent='ажурира се директно из базе';
+    render();
+  }catch(e){
+    document.getElementById('status').textContent='грешка';
+    document.getElementById('orders').innerHTML='<p class="note">Не могу да учитам оперативне податке.</p>';
+    console.error(e);
+  }
+}
+init();
+</script>
+</body>
+</html>
