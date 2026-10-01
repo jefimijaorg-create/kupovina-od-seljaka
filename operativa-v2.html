@@ -196,8 +196,13 @@ function renderFarmPlan(){
   return '<div class="farm-card"><div class="farm-head"><div><div class="farm-name">'+esc(f.name)+'</div><div class="meta">'+gs.length+' производа</div></div></div>'+
    gs.map(g=>{
     const details=g.rows.map(r=>{
-     const packs=packageText(r);
-     return '<div class="meta" style="margin-top:7px;padding-top:7px;border-top:1px solid #e5e9e5"><b>'+esc(r.recipient_name||'Купац')+'</b><br>'+esc(packs)+'</div>';
+     const parts=packageParts(r);
+     const packLines=parts.map(p=>{
+      if(!p.count)return esc(p.qty+' '+p.unit);
+      const label=p.type==='балон'?(p.count===1?'балон':'балона'):p.type==='флаша'?(p.count===1?'флаша':'флаше'):'паковања';
+      return esc(p.count+' '+label+' × '+p.size+' '+p.unit);
+     }).join('<br>');
+     return '<div class="meta" style="margin-top:7px;padding-top:7px;border-top:1px solid #e5e9e5"><b>'+esc(r.recipient_name||'Купац')+'</b><br>'+packLines+'<br><b>Укупно: '+esc(qty(r)+' '+unit(r))+'</b></div>';
     }).join('');
     return '<div class="product"><div class="name">'+esc(g.product)+'</div><div style="margin-top:7px">'+packageSummary(g)+'</div><div class="meta" style="margin-top:7px"><b>Укупно: '+g.qty+' '+esc(g.unit)+'</b></div><div class="subhead">Купци</div>'+details+'</div>';
    }).join('')+'</div>';
