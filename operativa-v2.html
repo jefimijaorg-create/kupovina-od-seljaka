@@ -121,7 +121,7 @@ function groupFarm(farmId){
   const g=groups[key];g.qty+=qty(r);g.rows.push(r);
   packageParts(r).forEach(p=>{
    const pk=p.type+'|'+p.size+'|'+p.unit;
-   g.packages[pk]??={type:p.type,size:p.size,unit:p.unit,count:0,qty:0};
+   if(!g.packages[pk])g.packages[pk]={type:p.type,size:p.size,unit:p.unit,count:0,qty:0};
    g.packages[pk].count+=p.count;g.packages[pk].qty+=p.qty;
   });
  });
@@ -212,7 +212,7 @@ function pickupGroups(farmId){
   packageParts(r).forEach(p=>{
    if(!p.count)return;
    const key=String(r.proizvod).toLowerCase()+'|'+p.type+'|'+p.size+'|'+p.unit;
-   groups[key]??={product:r.proizvod,type:p.type,size:p.size,unit:p.unit,planned:0,litres:0,rows:[]};
+   if(!groups[key])groups[key]={product:r.proizvod,type:p.type,size:p.size,unit:p.unit,planned:0,litres:0,rows:[]};
    const g=groups[key];g.planned+=p.count;g.litres+=p.qty;g.rows.push({row:r,part:p});
   });
  });
@@ -285,7 +285,7 @@ function showTab(tab){
 async function reload(){
  const [t,rs,fs,ps,po]=await Promise.all([
   api('ture?order=datum.desc,id.desc&limit=1'),
-  api('stavke_porudzbine?tura_id=eq.'+(tour?.id||0)+'&order=id.asc'),
+  api('stavke_porudzbine?tura_id=eq.'+(tour && tour.id || 0)+'&order=id.asc'),
   api('gazdinstva?is_active=eq.true&order=name.asc'),
   api('products?select=id,name,purchase_price,unit&order=name.asc'),
   api('producer_payouts?tura_id=eq.'+(tour?.id||0)+'&order=id.asc')
@@ -301,12 +301,13 @@ async function reload(){
 async function boot(){
  try{
   const ts=await api('ture?order=datum.desc,id.desc&limit=1');
-  tour=ts?.[0];
+  tour=ts && ts[0];
   if(!tour)throw new Error('Није пронађена ниједна тура.');
   await reload();
  }catch(e){
   console.error(e);
   document.getElementById('status').textContent='Грешка';
+  document.getElementById('tourTitle').textContent='Оператива — грешка при учитавању';
   document.getElementById('orders').innerHTML='<div class="farm-card danger"><div class="name">Није могуће учитати оперативу.</div><div class="meta">'+esc(e.message)+'</div></div>';
  }
 }
