@@ -380,6 +380,8 @@ async function renderPoints(){
     if(state.point){
       const p=active.find(x=>String(x.id)===String(state.point.id));
       if(p)selectPoint(p);
+    }else if(navigator.geolocation){
+      setTimeout(useCurrentLocation,400);
     }
   }catch(e){
     const status=document.getElementById('pointStatus');
