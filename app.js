@@ -116,7 +116,7 @@ async function renderProducts(){
     const categories=[...new Set(ps.map(p=>String(p.category||'Остало').trim()||'Остало'))];
     const filter=document.getElementById('productFilter');
     if(filter){
-      filter.innerHTML='<button type="button" class="filter-btn active" data-filter="all">Све</button'+
+      filter.innerHTML='<button type="button" class="filter-btn active" data-filter="all">Све</button>'+
         categories.map(c=>'<button type="button" class="filter-btn" data-filter="'+esc(c)+'">'+esc(c)+'</button>').join('');
       filter.querySelectorAll('.filter-btn').forEach(b=>b.onclick=()=>{
         filter.querySelectorAll('.filter-btn').forEach(x=>x.classList.toggle('active',x===b));
