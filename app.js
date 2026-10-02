@@ -212,6 +212,9 @@ async function renderPoints(){
     const searchInput=document.getElementById('pointSearch');
     const searchButton=document.getElementById('searchPoint');
     const searchResult=document.getElementById('searchResult');
+    const suggestionBox=document.getElementById('addressSuggestions');
+    const locationButton=document.getElementById('useMyLocation');
+    const locationStatus=document.getElementById('locationStatus');
 
     const distanceKm=(a,b)=>{
       const R=6371, r=Math.PI/180;
@@ -220,35 +223,102 @@ async function renderPoints(){
       return 2*R*Math.asin(Math.sqrt(x));
     };
 
+    const showNearest=async(user,label='унете адресе')=>{
+      const nearest=active.filter(p=>Number.isFinite(Number(p.latitude))&&Number.isFinite(Number(p.longitude)))
+        .map(p=>({...p,distance:distanceKm(user,{lat:Number(p.latitude),lng:Number(p.longitude)})}))
+        .sort((a,b)=>a.distance-b.distance)[0];
+      if(!nearest)return;
+      if(searchResult){
+        searchResult.classList.remove('hidden');
+        searchResult.innerHTML='<span class="eyebrow">Предлажемо ти најближи пункт</span>'+
+          '<strong>'+esc(nearest.name||'Пункт')+'</strong>'+
+          '<span class="distance">'+nearest.distance.toFixed(1)+' км од '+esc(label)+'</span>'+
+          '<button type="button" id="chooseNearest">Изабери овај пункт</button>';
+        document.getElementById('chooseNearest')?.addEventListener('click',()=>selectPoint(nearest));
+      }
+      selectPoint(nearest);
+    };
+
+    const reverseCurrentLocation=async(pos)=>{
+      const user={lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude)};
+      try{
+        const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+user.lat+'&lon='+user.lng+'&zoom=18&addressdetails=1',{headers:{Accept:'application/json'}});
+        const place=await r.json();
+        const label=place.display_name||'Твоја тренутна локација';
+        if(searchInput)searchInput.value=label;
+        if(locationStatus)locationStatus.textContent='Локација је пронађена.';
+        await showNearest(user,'твоје локације');
+      }catch(e){
+        if(locationStatus)locationStatus.textContent='Локација је пронађена, али адреса није.';
+        await showNearest(user,'твоје локације');
+        console.error(e);
+      }
+    };
+
+    const useCurrentLocation=()=>{
+      if(!navigator.geolocation){
+        if(locationStatus)locationStatus.textContent='Овај уређај не подржава локацију.';
+        return;
+      }
+      if(locationStatus)locationStatus.textContent='Читам твоју локацију...';
+      if(locationButton)locationButton.disabled=true;
+      navigator.geolocation.getCurrentPosition(
+        reverseCurrentLocation,
+        err=>{
+          if(locationStatus)locationStatus.textContent=err.code===1?'Дозвола за локацију није дата.':'Нисмо успели да прочитамо локацију.';
+          if(locationButton)locationButton.disabled=false;
+        },
+        {enableHighAccuracy:true,timeout:10000,maximumAge:300000}
+      );
+    };
+
+    let autocompleteTimer=null;
+    const loadSuggestions=async()=>{
+      const q=(searchInput?.value||'').trim();
+      if(!suggestionBox)return;
+      if(q.length<3){suggestionBox.classList.add('hidden');return;}
+      try{
+        const geo=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=rs&accept-language=sr&q='+encodeURIComponent(q),{headers:{Accept:'application/json'}});
+        const places=await geo.json();
+        suggestionBox.innerHTML=places.map((p,i)=>'<button type="button" class="address-suggestion" data-suggestion="'+i+'">'+esc(p.display_name)+'</button>').join('');
+        suggestionBox.classList.toggle('hidden',!places.length);
+        suggestionBox.querySelectorAll('.address-suggestion').forEach((b,i)=>{
+          b.onclick=()=>{
+            const p=places[i];
+            searchInput.value=p.display_name||q;
+            suggestionBox.classList.add('hidden');
+            showNearest({lat:Number(p.lat),lng:Number(p.lon)},'унете адресе');
+          };
+        });
+      }catch(e){
+        suggestionBox.classList.add('hidden');
+        console.error(e);
+      }
+    };
+
+    if(locationButton)locationButton.onclick=useCurrentLocation;
+    if(searchInput){
+      searchInput.addEventListener('input',()=>{
+        clearTimeout(autocompleteTimer);
+        autocompleteTimer=setTimeout(loadSuggestions,500);
+      });
+      searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();choosePointFromSearch()}});
+    }
+
     const choosePointFromSearch=async()=>{
       const q=(searchInput?.value||'').trim();
       if(!q){ if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Унеси адресу или место.';} return; }
+      suggestionBox?.classList.add('hidden');
       try{
         const geo=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=rs&q='+encodeURIComponent(q),{headers:{Accept:'application/json'}});
         const places=await geo.json();
         if(!places.length){ if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Нисмо пронашли ту адресу. Пробај назив улице, број или крај.';} return; }
-        const user={lat:Number(places[0].lat),lng:Number(places[0].lon)};
-        const nearest=active.filter(p=>Number.isFinite(Number(p.latitude))&&Number.isFinite(Number(p.longitude)))
-          .map(p=>({...p,distance:distanceKm(user,{lat:Number(p.latitude),lng:Number(p.longitude)})}))
-          .sort((a,b)=>a.distance-b.distance)[0];
-        if(!nearest)return;
-        if(searchResult){
-          searchResult.classList.remove('hidden');
-          searchResult.innerHTML='<span class="eyebrow">Предлажемо ти најближи пункт</span>'+
-            '<strong>'+esc(nearest.name||'Пункт')+'</strong>'+
-            '<span class="distance">'+nearest.distance.toFixed(1)+' км од унете адресе</span>'+
-            '<button type="button" id="chooseNearest">Изабери овај пункт</button>';
-          document.getElementById('chooseNearest')?.addEventListener('click',()=>selectPoint(nearest));
-        }
-        selectPoint(nearest);
+        await showNearest({lat:Number(places[0].lat),lng:Number(places[0].lon)},'унете адресе');
       }catch(e){
         if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Претрага тренутно није доступна.';}
         console.error(e);
       }
     };
-
-    if(searchButton)searchButton.onclick=choosePointFromSearch;
-    if(searchInput)searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();choosePointFromSearch()}});
 
     const toggle=document.getElementById('togglePoints');
     const panel=document.getElementById('pointsPanel');
