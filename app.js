@@ -70,18 +70,20 @@ async function renderNextDelivery(){
   const info=document.getElementById('deliveryInfo');
   if(!title)return;
   try{
-    const rows=await api('ture?select=id,naziv,datum,status&status=in.(open,scheduled)&datum=gte.'+new Date().toISOString().slice(0,10)+'&order=datum.asc,id.desc&limit=1');
+    // На почетној страници приказујемо датум најновије отворене туре из базе.
+    const rows=await api('ture?select=id,naziv,datum,status&status=eq.open&order=datum.desc,id.desc&limit=1');
     if(!rows.length){
-      title.textContent='Нема заказане следеће доставе';
+      title.textContent='Нема отворене туре';
       if(info)info.textContent='';
       return;
     }
     const t=rows[0];
-    title.textContent=formatDeliveryDate(t.datum);
-    if(info)info.textContent='Поруџбине до '+orderDeadline(t.datum);
+    const d=new Date(t.datum+'T12:00:00');
+    title.textContent=d.toLocaleDateString('sr-RS',{day:'numeric',month:'numeric',year:'numeric'});
+    if(info)info.textContent='';
   }catch(e){
-    title.textContent='Следећа достава';
-    if(info)info.textContent='Поруџбине до среде у 22:00';
+    title.textContent='Датум није доступан';
+    if(info)info.textContent='';
   }
 }
 
