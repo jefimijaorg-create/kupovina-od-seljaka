@@ -47,9 +47,12 @@ function updateHomeContinue(){
   const b=document.getElementById('homeContinue');
   if(!b)return;
   const qty=cartQty();
-  b.disabled=qty===0;
-  b.textContent=qty ? 'Провери корпу →' : 'Изабери производе';
-  b.onclick=()=>{if(cartQty())location.href='korpa.html'};
+  b.disabled=false;
+  b.textContent=qty ? 'Изабери место доставе →' : 'Додај производе ↓';
+  b.onclick=()=>{
+    if(cartQty()) location.href='mapa.html';
+    else document.getElementById('proizvodi')?.scrollIntoView({behavior:'smooth',block:'start'});
+  };
 }
 
 function formatDeliveryDate(dateString){
