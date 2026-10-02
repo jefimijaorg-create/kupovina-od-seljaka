@@ -85,12 +85,35 @@ async function renderNextDelivery(){
   }
 }
 
+async function getCurrentTour(){
+  const today=new Date().toISOString().slice(0,10);
+  const rows=await api('ture?select=id,naziv,datum,status&status=in.(open,scheduled)&datum=gte.'+today+'&order=datum.asc,id.desc&limit=1');
+  return rows[0]||null;
+}
+
+async function getTourConfig(tourId){
+  const [tp,tv]=await Promise.all([
+    api('tura_punktovi?select=punkt_id,redosled&tura_id=eq.'+tourId+'&aktivan=eq.true&order=redosled.asc'),
+    api('tura_proizvodi?select=proizvod_id&tura_id=eq.'+tourId+'&aktivan=eq.true')
+  ]);
+  return {pointIds:tp.map(x=>String(x.punkt_id)),productIds:tv.map(x=>String(x.proizvod_id))};
+}
+
 async function renderProducts(){
   const box=document.getElementById('products');
   if(!box)return;
   try{
     const fields='id,name,description,category,price,currency,stock,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants';
-    const ps=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');
+    const tour=await getCurrentTour();
+    if(!tour){
+      box.innerHTML='<div class="card"><b>Тренутно нема отворене туре за Београд.</b></div>';
+      const s=document.getElementById('productStatus'); if(s)s.textContent='Нема активне туре';
+      return;
+    }
+    window.currentTour=tour;
+    const config=await getTourConfig(tour.id);
+    const psAll=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');
+    const ps=config.productIds.length ? psAll.filter(p=>config.productIds.includes(String(p.id))) : [];
     const vs=await api('product_variants?select=id,product_id,name,price,is_active&is_active=eq.true&limit=100');
     const variantsByProduct={};
     vs.forEach(v=>(variantsByProduct[v.product_id]??=[]).push(v));
@@ -193,8 +216,13 @@ async function renderPoints(){
   const box=document.getElementById('points');
   if(!box)return;
   try{
-    const ps=await api('punktovi?select=id,name,city,address,latitude,longitude,is_active,description,viber_group,maps_url,vreme,aktivan,slug&order=sort_order.asc&limit=100');
-    const active=ps.filter(p=>String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
+    const tour=window.currentTour||await getCurrentTour();
+    if(!tour){box.innerHTML='<div class="card">Тренутно нема активне туре.</div>';return;}
+    const config=await getTourConfig(tour.id);
+    const ids=config.pointIds;
+    const query=ids.length?'&id=in.('+ids.join(',')+')':'&id=eq.0';
+    const ps=await api('punktovi?select=id,name,city,address,latitude,longitude,is_active,description,viber_group,maps_url,vreme,aktivan,slug&order=sort_order.asc&limit=100'+query);
+    const active=ps.filter(p=>ids.includes(String(p.id))&&String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
 
     box.innerHTML=active.map(p=>`
       <button class="point ${state.point?.id==p.id?'active':''}" data-id="${esc(p.id)}" type="button">
