@@ -106,16 +106,9 @@ async function renderProducts(){
   if(!box)return;
   try{
     const fields='id,name,description,category,price,currency,stock,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants';
-    const tour=await getCurrentTour();
-    if(!tour){
-      box.innerHTML='<div class="card"><b>Тренутно нема отворене туре за Београд.</b></div>';
-      const s=document.getElementById('productStatus'); if(s)s.textContent='Нема активне туре';
-      return;
-    }
-    window.currentTour=tour;
-    const config=await getTourConfig(tour.id);
-    const psAll=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');
-    const ps=config.productIds.length ? psAll.filter(p=>config.productIds.includes(String(p.id))) : [];
+    // Понуда на почетној страници = сви активни производи из базе.
+    // Не филтрирамо производе по тури, датуму или tura_proizvodi.
+    const ps=await api('products?select='+fields+'&is_active=eq.true&order=name.asc&limit=100');
     const vs=await api('product_variants?select=id,product_id,name,price,is_active&is_active=eq.true&limit=100');
     const variantsByProduct={};
     vs.forEach(v=>(variantsByProduct[v.product_id]??=[]).push(v));
@@ -123,7 +116,7 @@ async function renderProducts(){
     const categories=[...new Set(ps.map(p=>String(p.category||'Остало').trim()||'Остало'))];
     const filter=document.getElementById('productFilter');
     if(filter){
-      filter.innerHTML='<button type="button" class="filter-btn active" data-filter="all">Све</button>'+
+      filter.innerHTML='<button type="button" class="filter-btn active" data-filter="all">Све</button>'+\
         categories.map(c=>'<button type="button" class="filter-btn" data-filter="'+esc(c)+'">'+esc(c)+'</button>').join('');
       filter.querySelectorAll('.filter-btn').forEach(b=>b.onclick=()=>{
         filter.querySelectorAll('.filter-btn').forEach(x=>x.classList.toggle('active',x===b));
