@@ -48,7 +48,7 @@ function updateHomeContinue(){
   if(!b)return;
   const qty=cartQty();
   b.disabled=false;
-  b.textContent=qty ? 'Изабери место доставе →' : 'Додај производе ↓';
+  b.textContent=qty ? 'Изабери место преузимања →' : 'Наручи производе';
   b.onclick=()=>{
     if(cartQty()) location.href='mapa.html';
     else document.getElementById('proizvodi')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -148,7 +148,6 @@ function renderProductGroups(ps,variantsByProduct,filter='all'){
             ${p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy">':''}
             <h3>${esc(p.name||'Производ')}</h3>
             ${p.description?'<div class="meta">'+esc(p.description)+'</div>':''}
-            ${p.producer_name?'<div class="producer">'+esc(p.producer_name)+'</div>':''}
             ${variantRows}
           </article>`;
         }).join('')}
