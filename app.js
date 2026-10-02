@@ -309,16 +309,35 @@ async function renderPoints(){
       const q=(searchInput?.value||'').trim();
       if(!q){ if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Унеси адресу или место.';} return; }
       suggestionBox?.classList.add('hidden');
+
+      // Прво тражимо међу нашим активним пунктовима.
+      const ql=q.toLocaleLowerCase('sr');
+      const pointMatch=active.find(p=>
+        String(p.name||'').toLocaleLowerCase('sr').includes(ql) ||
+        String(p.address||'').toLocaleLowerCase('sr').includes(ql) ||
+        String(p.city||'').toLocaleLowerCase('sr').includes(ql)
+      );
+      if(pointMatch){
+        selectPoint(pointMatch);
+        if(searchResult){
+          searchResult.classList.remove('hidden');
+          searchResult.innerHTML='<span class="eyebrow">Пункт пронађен</span><strong>'+esc(pointMatch.name||'Пункт')+'</strong><span class="distance">'+esc(pointMatch.address||'')+'</span>';
+        }
+        return;
+      }
+
       try{
         const geo=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=rs&q='+encodeURIComponent(q),{headers:{Accept:'application/json'}});
         const places=await geo.json();
-        if(!places.length){ if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Нисмо пронашли ту адресу. Пробај назив улице, број или крај.';} return; }
+        if(!places.length){ if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Нисмо пронашли ту адресу или пункт. Пробај назив улице, број или назив пункта.';} return; }
         await showNearest({lat:Number(places[0].lat),lng:Number(places[0].lon)},'унете адресе');
       }catch(e){
         if(searchResult){searchResult.classList.remove('hidden');searchResult.textContent='Претрага тренутно није доступна.';}
         console.error(e);
       }
     };
+
+    if(searchButton)searchButton.onclick=choosePointFromSearch;
 
     const toggle=document.getElementById('togglePoints');
     const panel=document.getElementById('pointsPanel');
@@ -330,13 +349,16 @@ async function renderPoints(){
       };
     }
 
+    const markerBounds=[];
     active.forEach(p=>{
       const lat=Number(p.latitude),lng=Number(p.longitude);
       if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
       const m=L.marker([lat,lng]).addTo(pickupMap);
       pickupMarkers[p.id]=m;
-      m.bindPopup('<strong>'+esc(p.name||'Пункт')+'</strong>');
+      markerBounds.push([lat,lng]);
+      m.bindPopup('<strong>'+esc(p.name||'Пункт')+'</strong><br><small>'+esc(p.address||'')+'</small>');
     });
+    if(markerBounds.length>1)pickupMap.fitBounds(markerBounds,{padding:[24,24],maxZoom:12});
 
     let selectPoint; 
     selectPoint=p=>{
