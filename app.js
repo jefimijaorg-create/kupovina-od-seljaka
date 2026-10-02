@@ -10,7 +10,7 @@ state.proposalAddress=state.proposalAddress||'';
 
 const save=()=>localStorage.setItem('seljaciState',JSON.stringify(state));
 const money=n=>new Intl.NumberFormat('sr-RS',{minimumFractionDigits:0,maximumFractionDigits:2}).format(Number(n)||0)+' RSD';
-const api=async(path)=>{const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers});if(!r.ok)throw new Error(await r.text());return r.json()};
+const api=async(path)=>{const sep=path.includes('?')?'&':'?';const r=await fetch(SUPABASE_URL+'/rest/v1/'+path+sep+'_ts='+Date.now(),{headers,cache:'no-store'});if(!r.ok)throw new Error(await r.text());return r.json()};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function cartQty(){return state.cart.reduce((s,x)=>s+Number(x.qty||0),0)}
