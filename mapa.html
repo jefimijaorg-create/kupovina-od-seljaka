@@ -20,10 +20,15 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
 .delivery strong{display:block;font-size:12px;color:#111827}.delivery small{display:block;font-size:10px;color:#6b7280;margin-top:4px;line-height:1.4}
 .point-search{display:flex;gap:7px}.point-search input,.proposal-input{min-width:0;flex:1;border:1px solid #d1d5db;border-radius:13px;padding:11px 12px;font-size:12px;outline:none}.point-search input:focus,.proposal-input:focus{border-color:#047857}
 .search-btn{border:0;border-radius:13px;background:#047857;color:#fff;padding:0 13px;font-size:11px;font-weight:800;white-space:nowrap}
+.search-result{margin-top:8px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:12px}
+.search-result .eyebrow{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#047857;font-weight:900}
+.search-result strong{display:block;font-size:14px;margin-top:3px}
+.search-result .distance{display:block;color:#4b5563;font-size:11px;margin-top:3px}
+.search-result button{margin-top:9px;border:0;border-radius:11px;background:#047857;color:#fff;padding:9px 12px;font-size:11px;font-weight:900;width:100%}
 .point-list-toggle button{width:100%;border:1px solid #d1d5db;background:#fff;border-radius:13px;padding:10px;font-size:11px;font-weight:800}
 .points-panel{margin-top:8px}.points{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto}
 .point{display:block;width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:13px;padding:10px 12px;cursor:pointer}.point.active{border-color:#047857;background:#ecfdf5}
-.point strong{display:block;font-size:12px}.point small{display:block;color:#6b7280;font-size:10px;margin-top:3px}
+.point strong{display:block;font-size:12px}.point small{display:block;color:#6b7280;font-size:10px;margin-top:3px;line-height:1.4}
 .map-wrap{position:relative;margin-top:10px;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;background:#e5e7eb}.map{height:250px}
 .map-card{position:absolute;z-index:500;left:10px;right:10px;bottom:10px;background:rgba(255,255,255,.96);border-radius:14px;padding:11px;box-shadow:0 3px 14px rgba(0,0,0,.15);font-size:11px}.map-card>*{display:block;margin-top:3px}.map-card strong{font-size:13px}.map-card a{color:#047857;font-weight:800}
 .selected-summary{margin-top:10px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:15px;padding:12px}.selected-summary span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#047857;font-weight:900}.selected-summary strong{display:block;font-size:14px;margin-top:3px}
@@ -45,27 +50,27 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
   <section class="app-card">
     <span class="text-[10px] font-bold tracking-widest uppercase text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full inline-block">📍 Корак 2 од 3</span>
     <h1 class="text-2xl font-black text-gray-900 mt-3 leading-tight">Где желиш да преузмеш поруџбину?</h1>
-    <p class="text-xs text-gray-600 mt-2">Изабери активни пункт који ти одговара или предложи место успут, по договору. Не правимо фиксну доставу на сваку адресу — место зависи од руте и стварних поруџбина.</p>
+    <p class="text-xs text-gray-600 mt-2">Унеси своју адресу и предложићемо ти најближи активни пункт. Видећеш и колико је удаљен од унете адресе.</p>
   </section>
 
   <section class="app-card space-y-3">
     <div class="delivery-choice">
-      <button class="delivery active" data-method="punkt" type="button"><strong>📍 Пункт</strong><small>Изабери место за преузимање.</small></button>
+      <button class="delivery active" data-method="punkt" type="button"><strong>📍 Пункт</strong><small>Пронађи најближи пункт по адреси.</small></button>
       <button class="delivery" data-method="dogovor" type="button"><strong>🚗 По договору</strong><small>Предложи место на нашој рути.</small></button>
     </div>
   </section>
 
   <section id="pointMode" class="app-card space-y-3">
     <div class="flex justify-between items-center">
-      <div><h2 class="text-base font-black">Пунктови</h2><p class="text-[10px] text-gray-500 mt-1">Погледај активне пунктове</p></div>
+      <div><h2 class="text-base font-black">Пронађи најближи пункт</h2><p class="text-[10px] text-gray-500 mt-1">Унеси адресу, крај или место у Београду</p></div>
       <span id="pointStatus" class="text-[10px] text-gray-500">Учитавање...</span>
     </div>
     <div class="point-search">
-      <input id="pointSearch" type="search" placeholder="Унеси адресу или место..." autocomplete="street-address">
-      <button id="searchPoint" class="search-btn" type="button">Пронађи</button>
+      <input id="pointSearch" type="search" placeholder="нпр. Булевар краља Александра 100" autocomplete="street-address">
+      <button id="searchPoint" class="search-btn" type="button">Предложи</button>
     </div>
-    <div id="searchResult" class="search-result hidden bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-[11px]"></div>
-    <div class="point-list-toggle"><button id="togglePoints" type="button">☰ Листа пунктова</button></div>
+    <div id="searchResult" class="search-result hidden"></div>
+    <div class="point-list-toggle"><button id="togglePoints" type="button">☰ Листа свих пунктова</button></div>
     <div id="pointsPanel" class="points-panel hidden"><div id="points" class="points"></div></div>
     <div class="map-wrap"><div id="map" class="map"></div><div id="mapCard" class="map-card hidden"></div></div>
     <div id="selectedPoint" class="selected-summary hidden"></div>
