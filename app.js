@@ -234,7 +234,11 @@ async function renderPoints(){
         if(!nearest)return;
         if(searchResult){
           searchResult.classList.remove('hidden');
-          searchResult.innerHTML='<span>Најближи пункт</span><strong>'+esc(nearest.name||'Пункт')+'</strong><small>'+nearest.distance.toFixed(1)+' км од тражене адресе</small>';
+          searchResult.innerHTML='<span class="eyebrow">Предлажемо ти најближи пункт</span>'+
+            '<strong>'+esc(nearest.name||'Пункт')+'</strong>'+
+            '<span class="distance">'+nearest.distance.toFixed(1)+' км од унете адресе</span>'+
+            '<button type="button" id="chooseNearest">Изабери овај пункт</button>';
+          document.getElementById('chooseNearest')?.addEventListener('click',()=>selectPoint(nearest));
         }
         selectPoint(nearest);
       }catch(e){
