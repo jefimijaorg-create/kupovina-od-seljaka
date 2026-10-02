@@ -19,6 +19,8 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
 .delivery.active{border-color:#047857;background:#ecfdf5;box-shadow:0 0 0 2px rgba(4,120,87,.08)}
 .delivery strong{display:block;font-size:12px;color:#111827}.delivery small{display:block;font-size:10px;color:#6b7280;margin-top:4px;line-height:1.4}
 .point-search{display:flex;gap:7px}.point-search input,.proposal-input{min-width:0;flex:1;border:1px solid #d1d5db;border-radius:13px;padding:11px 12px;font-size:12px;outline:none}.point-search input:focus,.proposal-input:focus{border-color:#047857}
+.location-actions{display:flex;align-items:center;gap:8px;margin-top:7px}.location-actions button{border:0;background:#f0fdf4;color:#047857;border-radius:11px;padding:8px 10px;font-size:10px;font-weight:800}.location-actions span{font-size:9px;color:#6b7280}
+.address-suggestions{margin-top:6px;border:1px solid #e5e7eb;border-radius:13px;background:#fff;overflow:hidden;box-shadow:0 5px 18px rgba(0,0,0,.08);position:relative;z-index:900}.address-suggestion{display:block;width:100%;border:0;border-bottom:1px solid #f3f4f6;background:#fff;text-align:left;padding:10px 11px;font-size:10px;color:#374151}.address-suggestion:last-child{border-bottom:0}.address-suggestion:active{background:#ecfdf5}
 .search-btn{border:0;border-radius:13px;background:#047857;color:#fff;padding:0 13px;font-size:11px;font-weight:800;white-space:nowrap}
 .search-result{margin-top:8px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:12px}
 .search-result .eyebrow{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#047857;font-weight:900}
@@ -69,6 +71,11 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
       <input id="pointSearch" type="search" placeholder="нпр. Булевар краља Александра 100" autocomplete="street-address">
       <button id="searchPoint" class="search-btn" type="button">Предложи</button>
     </div>
+    <div class="location-actions">
+      <button id="useMyLocation" type="button">📍 Користи моју тренутну локацију</button>
+      <span id="locationStatus"></span>
+    </div>
+    <div id="addressSuggestions" class="address-suggestions hidden"></div>
     <div id="searchResult" class="search-result hidden"></div>
     <div class="point-list-toggle"><button id="togglePoints" type="button">☰ Листа свих пунктова</button></div>
     <div id="pointsPanel" class="points-panel hidden"><div id="points" class="points"></div></div>
