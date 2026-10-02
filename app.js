@@ -57,7 +57,7 @@ function updateHomeContinue(){
 
 function formatDeliveryDate(dateString){
   const d=new Date(dateString+'T12:00:00');
-  return d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'});
+  return d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
 function orderDeadline(dateString){
   const d=new Date(dateString+'T12:00:00');
