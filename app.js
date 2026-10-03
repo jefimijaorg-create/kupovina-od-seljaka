@@ -559,7 +559,7 @@ function initConfirm(){
         (state.point?.vreme?'<small>Време преузимања: '+esc(state.point.vreme)+'</small>':'');
     }else{
       summary.innerHTML=
-        '<span>По договору</span><strong>Предложена локација</strong>'+
+        '<span>Предлог места преузимања</span><strong>По договору</strong>'+
         '<small>'+esc(state.proposalAddress||'Није унета адреса')+'</small>';
     }
   }
