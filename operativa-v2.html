@@ -52,6 +52,7 @@ async function assign(id){const f=document.querySelector('[data-s="'+id+'"]').va
 
 function fmt(v){return Number(v||0).toLocaleString('sr-RS',{maximumFractionDigits:2})}
 function renderNeeds(){
+ if(!rows.length){document.getElementById('needs').innerHTML='<div class="empty">Нема производа у поруџбинама за ову туру.</div>';return}
  const groups={};
  rows.forEach(r=>{
    const product=String(r.proizvod||'Непознат производ').trim();
