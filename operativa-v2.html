@@ -136,37 +136,24 @@ function renderNeeds(){
  if(!rows.length){document.getElementById('needs').innerHTML='<div class="empty">Нема производа у поруџбинама за ову туру.</div>';return}
  const groups={};
  rows.forEach(r=>{
-   const product=String(r.proizvod||'Непознат производ').trim();
-   const v=variantFor(r);
+   const product=String(r.proizvod||'Непознат производ').trim(),v=variantFor(r);
    const u=String(v?.package_unit||r.quantity_unit||r.jedinica||'ком').toLowerCase();
-   const count=n(r.package_count||r.broj_pakovanja);
-   const size=n(v?.package_value||r.package_size);
+   const count=n(r.package_count||r.broj_pakovanja),size=n(v?.package_value||r.package_size);
    const physical=v&&count&&size?count*size:n(r.total_quantity??r.kolicina);
-   const hasPack=Boolean(v&&count&&size);
-   const label=hasPack?String(v.name||v.size_label||r.variant_name||('Паковање '+fmt(size)+' '+u)).trim():'';
-   const key=product.toLowerCase();
-   if(!groups[key])groups[key]={name:product,unit:String(r.quantity_unit||r.jedinica||u).toLowerCase(),total:0,orders:new Set(),lines:0,packages:{},unpacked:0,unpackedLines:{}};
-   const g=groups[key];g.total+=physical;g.orders.add(String(r.porudzbina_id));g.lines++;
+   const hasPack=Boolean(v&&count&&size),key=product.toLowerCase(),qty=q(r);
+   if(!groups[key])groups[key]={name:product,unit:String(r.quantity_unit||r.jedinica||u).toLowerCase(),total:0,sale:0,purchase:0,orders:new Set(),lines:0,packages:{},unknownPackageQty:0};
+   const g=groups[key];g.total+=physical;g.sale+=salePrice(r)*qty;g.purchase+=price(r)*qty;g.orders.add(String(r.porudzbina_id));g.lines++;
    if(hasPack){
-     const variantKey=String(v.id);
-     if(!g.packages[variantKey])g.packages[variantKey]={label,count:0,quantity:0,unit:u,size};
-     g.packages[variantKey].count+=count;
-     g.packages[variantKey].quantity+=physical;
-   }else{
-     g.unpacked+=physical;
-     const l='unlinked|'+u;
-     if(!g.unpackedLines[l])g.unpackedLines[l]={label:'Без повезане варијанте у каталогу',count:0,quantity:0,unit:u};
-     g.unpackedLines[l].count++;g.unpackedLines[l].quantity+=physical;
-   }
+     const variantKey=String(v.id),label=String(v.name||v.size_label||r.variant_name||('Паковање '+fmt(size)+' '+u)).trim();
+     if(!g.packages[variantKey])g.packages[variantKey]={label,count:0,quantity:0,unit:u};
+     g.packages[variantKey].count+=count;g.packages[variantKey].quantity+=physical;
+   }else g.unknownPackageQty+=physical;
  });
  const all=Object.values(groups).sort((a,b)=>a.name.localeCompare(b.name,'sr'));
- document.getElementById('needs').innerHTML='<div class="stats"><div class="stat"><b>'+all.length+'</b><span>различитих производа</span></div><div class="stat"><b>'+rows.length+'</b><span>ставки у поруџбинама</span></div><div class="stat"><b>'+new Set(rows.map(r=>r.porudzbina_id)).size+'</b><span>поруџбина</span></div></div><div class="summary-grid">'+all.map(g=>{
+ document.getElementById('needs').innerHTML='<div class="hint">Ово је збир свих поруџбина купаца — пре избора газдинстава. Количине се рачунају без обзира на то да ли је ставка додељена.</div><div class="stats"><div class="stat"><b>'+all.length+'</b><span>различитих производа</span></div><div class="stat"><b>'+rows.length+'</b><span>ставки у поруџбинама</span></div><div class="stat"><b>'+new Set(rows.map(r=>r.porudzbina_id)).size+'</b><span>поруџбина</span></div></div><div class="summary-grid">'+all.map(g=>{
    const detail=Object.values(g.packages).sort((a,b)=>a.label.localeCompare(b.label,'sr')).map(p=>'<div class="summary-line"><span>'+e(p.label)+'</span><b>'+fmt(p.count)+' пак. · '+fmt(p.quantity)+' '+e(p.unit)+'</b></div>').join('');
-   const fallback=Object.values(g.unpackedLines).sort((a,b)=>b.quantity-a.quantity).map(p=>'<div class="summary-line"><span>'+e(p.label)+' <span class="hint">('+p.count+' '+(p.count===1?'ставка':'ставки')+')</span></span><b>'+fmt(p.quantity)+' '+e(p.unit)+'</b></div>').join('');
-   let note='';
-   if(g.name.toLowerCase().includes('јај')){const eggs=g.unit==='kom'||g.unit==='ком';if(eggs&&g.total%10===0&&!Object.keys(g.packages).length)note='<div class="summary-note">Укупно '+fmt(g.total)+' јаја · еквивалент '+fmt(g.total/10)+' паковања од 10. То је само бројчани еквивалент, не потврђена врста паковања.</div>'}
-   if(g.name.toLowerCase().includes('млеко')&&!Object.keys(g.packages).length)note='<div class="summary-note">Укупно '+fmt(g.total)+' '+e(g.unit)+'. За део ставки није повезана варијанта из каталога, па се њихова амбалажа не нагађа.</div>';
-   return'<article class="summary-card"><div class="summary-head"><strong>'+e(g.name)+'</strong><div class="summary-total"><b>'+fmt(g.total)+'</b><span>'+e(g.unit)+'</span></div><div class="hint">'+g.orders.size+' поруџбина · '+g.lines+' ставки</div></div><div class="summary-detail">'+(detail||'')+(fallback||'')+'</div>'+note+'</article>'
+   const unknown=g.unknownPackageQty>0?'<div class="summary-line"><span>Количина без изабраног паковања</span><b>'+fmt(g.unknownPackageQty)+' '+e(g.unit)+'</b></div>':'';
+   return'<article class="summary-card"><div class="summary-head"><strong>'+e(g.name)+'</strong><div class="summary-total"><b>'+fmt(g.total)+'</b><span>'+e(g.unit)+'</span></div><div class="hint">'+g.orders.size+' поруџбина · '+g.lines+' ставки</div></div><div class="summary-detail">'+(detail||'')+unknown+'<div class="summary-line"><span>Продајна вредност</span><b>'+fmt(g.sale)+' дин.</b></div><div class="summary-line"><span>Набавна вредност</span><b>'+fmt(g.purchase)+' дин.</b></div></div></article>'
  }).join('')+'</div>';
 }
 function renderFarms(){const assigned=fs.filter(f=>rows.some(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id)));let html=assigned.map(f=>{const rr=rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id)),g={};rr.forEach(r=>(g[String(r.proizvod).toLowerCase()]??=[]).push(r));return'<div class="farm"><div class="farmhead"><div><div class="farmname">'+e(f.name)+'</div><div class="hint">'+rr.length+' додељених ставки · '+new Set(rr.map(r=>r.porudzbina_id)).size+' поруџбина</div></div></div>'+Object.values(g).map(rs=>'<div class="product"><div class="prodtop"><b>'+e(rs[0].proizvod)+'</b><b>'+fmt(rs.reduce((s,r)=>s+q(r),0))+' '+e(unit(rs[0]))+'</b></div><div class="meta">'+[...new Set(rs.map(pack))].map(x=>e(x)).join('<br>')+'</div><div class="customers">'+rs.map(r=>'<div class="customer"><b>'+e(r.recipient_name||'Купац')+'</b><span>'+e(pack(r))+'</span><b>'+e(fmt(q(r))+' '+unit(r))+'</b></div>').join('')+'</div></div>').join('')+'</div>'}).join('');const un=rows.filter(r=>!r.dodijeljeno_gazdinstvo_id);if(un.length)html+='<div class="farm" style="padding:12px;background:var(--redbg)"><b>Није додељено</b>'+un.map(r=>'<div class="meta">'+e(r.recipient_name||'Купац')+' — '+e(r.proizvod)+' — '+e(pack(r))+'</div>').join('')+'</div>';document.getElementById('farms').innerHTML=html||'<div class="empty">Нема додељених ставки.</div>'}
