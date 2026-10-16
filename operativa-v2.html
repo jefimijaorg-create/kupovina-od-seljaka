@@ -136,6 +136,38 @@ select:focus,input:focus{border-color:#65a778;box-shadow:0 0 0 3px rgba(73,150,9
 .point-edit-summary{background:#fff;border:1px solid #e0e9de;border-radius:13px;padding:13px;font-size:12px}.point-edit-summary>strong{display:block;margin-bottom:9px}.point-edit-summary>div:not(.point-edit-total){display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #edf1eb}.point-edit-summary>div span{overflow-wrap:anywhere}.point-edit-total{display:flex;justify-content:space-between;padding-top:12px;margin-top:4px;border-top:1px solid #dfe8dd;font-size:14px}
 .point-edit-actions{position:sticky;bottom:0;display:grid;grid-template-columns:1fr 1.4fr;gap:9px;padding:12px 15px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e0e8df}.point-edit-actions button{min-height:46px;border:1px solid #dce6da;border-radius:11px;background:#fff;font-weight:850}.point-edit-actions .primary{background:#24734a;color:#fff;border:0}
 @media(max-width:600px){.point-edit-overlay{background:#f8fbf6}.point-edit-sheet{width:100%;max-width:none;box-shadow:none}.point-card-head{padding:12px 8px;gap:7px}.point-card-main strong{font-size:12px}.point-card-total strong{font-size:10px}.point-customer-head{gap:6px;padding:10px 7px}.point-customer-total{font-size:10px}}
+
+/* На телефону: мени и поруџбине одмах на врху, без скроловања до таба */
+@media(max-width:600px){
+ main.wrap{display:flex;flex-direction:column;padding-top:8px;gap:0}
+ main.wrap>.workflow-tabs{order:-4;position:sticky;top:0;z-index:50;flex-wrap:nowrap;overflow-x:auto;margin:0 -2px 10px;padding:7px 2px;background:rgba(243,246,241,.97);backdrop-filter:blur(10px);scrollbar-width:none}
+ main.wrap>.workflow-tabs::-webkit-scrollbar{display:none}
+ main.wrap>.utility-tabs{order:-3;margin:0 0 9px}
+ main.wrap>#view-orders{order:-2}
+ main.wrap>.stats{order:-1;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
+ main.wrap>.money-stats{order:0}
+ main.wrap>#view-procurement{order:1}
+ main.wrap>#view-route{order:2}
+ main.wrap>#view-pickup{order:3}
+ main.wrap>#view-manifest{order:4}
+ main.wrap>#view-deliverers{order:5}
+ main.wrap>#view-debt{order:6}
+ .wrap{width:calc(100% - 20px)}
+ .top{padding:14px 0 16px}
+ .top-inner{gap:10px}
+ .brandmark{width:42px;height:42px;flex-basis:42px;border-radius:13px;font-size:14px}
+ .top-chip{display:none}
+ .top h1{font-size:22px}
+ .top p{font-size:11px}
+ .tour{padding:9px 0}
+ .tourname{font-size:13px}
+ .tour .hint{font-size:10px}
+ .panel{padding:13px;border-radius:15px}
+ .head h2{font-size:18px}
+ .head{margin-bottom:10px}
+ .tab{min-height:40px;padding:9px 11px;font-size:11px}
+ .tab-copy small{display:none}
+}
 </style></head><body>
 <header class="top"><div class="wrap top-inner" style="padding-bottom:0"><div class="brandmark" aria-hidden="true">НД</div><div class="brandcopy"><div class="eyebrow">НАРУЧИ ДОМАЋЕ ИЗ ВЕЛИКЕ ПЛАНЕ</div><h1>Оператива</h1><p>Све за туру на једном месту — од поруџбине до преузимања.</p></div><div class="top-chip"><span class="live-dot"></span> Радни панел</div></div></header>
 <div class="tour"><div class="wrap" style="padding-bottom:0"><div class="tourin"><div style="flex:1;min-width:0"><div class="tourname" id="tourTitle">Учитавање тура...</div><div class="hint" id="tourDate"></div></div><div style="width:min(48%,260px)"><select id="tourSelect" aria-label="Изабери туру"><option value="">Учитавање тура...</option></select><div class="hint" id="status" style="text-align:right;margin-top:4px"></div></div></div></div></div>
