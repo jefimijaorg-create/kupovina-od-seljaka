@@ -14,7 +14,7 @@
 <section id="app" class="hidden">
 <div class="panel"><div class="fields" style="justify-content:space-between;align-items:center"><div><strong id="tourTitle">Учитавање туре…</strong><div id="tourDate" class="muted"></div></div><button id="refresh" class="primary">Освежи податке</button></div></div>
 <div class="panel stats"><div class="stat"><small>Поруџбине</small><strong id="count">—</strong></div><div class="stat"><small>Укупно</small><strong id="sum">—</strong></div><div class="stat"><small>Пунктови</small><strong id="stopsCount">—</strong></div></div>
-<div class="panel"><div class="toolbar"><input id="search" placeholder="Претрага: купац, производ, телефон…"><select id="stopFilter"><option value="">Сви пунктови</option></select><select id="statusFilter"><option value="">Сви статуси</option><option value="new">Нова</option><option value="confirmed">Потврђена</option><option value="delivered">Испоручена</option><option value="cancelled">Отказана</option></select></div><div class="actions"><button id="copy">Копирај списак</button><button id="print">Штампај / PDF</button></div></div>
+<div class="panel"><div class="toolbar"><input id="search" placeholder="Претрага: купац, производ, телефон…"><select id="stopFilter"><option value="">Сви пунктови</option></select><select id="statusFilter"><option value="">Сви статуси</option><option value="primljeno">Примљено</option><option value="primljena">Примљена</option><option value="potvrdjena">Потврђена</option><option value="isporucena">Испоручена</option><option value="otkazana">Отказана</option></select></div><div class="actions"><button id="copy">Копирај списак</button><button id="print">Штампај / PDF</button></div></div>
 <div id="orders"></div><p id="message" class="muted"></p>
 </section>
 <footer>Приступ је преко Supabase Auth налога. Не дели администраторску лозинку.</footer>
@@ -36,17 +36,19 @@ $('copy').onclick=async()=>{const text=makeText(filtered());try{await navigator.
 async function load(){
  say('Учитавање…');
  try{
-  const [{data:ts,error:te},{data:os,error:oe},{data:is,error:ie},{data:ps,error:pe}]=await Promise.all([
+  const [{data:ts,error:te},{data:os,error:oe},{data:is,error:ie},{data:ps,error:pe},{data:cs,error:ce}]=await Promise.all([
    sb.from('ture').select('id,naziv,datum,status').eq('id',66).limit(1),
    sb.from('porudzbine').select('id,kupac_id,status,ukupna_cena,napomena,adresa_dostave,telefon,punkt_id,dostavljac,created_at').order('id'),
    sb.from('stavke_porudzbine').select('id,porudzbina_id,proizvod,kolicina,jedinica,cena_stavke,tura_id,variant_name,package_count,package_size,package_unit,total_quantity,quantity_unit,status_stavke'),
-   sb.from('punktovi').select('id,name,city,address,vreme,aktivan,is_active').limit(500)
+   sb.from('punktovi').select('id,name,city,address,vreme,aktivan,is_active').limit(500),
+   sb.from('kupci').select('id,ime_prezime,telefon').limit(1000)
   ]);
-  if(te||oe||ie||pe)throw te||oe||ie||pe;
+  if(te||oe||ie||pe||ce)throw te||oe||ie||pe||ce;
   tour=ts?.[0];if(!tour)throw new Error('Тура 66 није пронађена.');
   const tourOrderIds=new Set((is||[]).filter(i=>String(i.tura_id)==String(tour.id)).map(i=>String(i.porudzbina_id)));
   items=(is||[]).filter(i=>String(i.tura_id)==String(tour.id));
-  orders=(os||[]).filter(o=>tourOrderIds.has(String(o.id)));
+  const customers=cs||[];
+  orders=(os||[]).filter(o=>tourOrderIds.has(String(o.id))).map(o=>({...o,kupac:customers.find(c=>String(c.id)===String(o.kupac_id))||null}));
   points=ps||[];
   $('tourTitle').textContent=tour.naziv||'Тура '+tour.id;
   $('tourDate').textContent=new Date(tour.datum+'T12:00:00').toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · ID '+tour.id;
@@ -62,17 +64,17 @@ async function load(){
 function oLabel(id){return 'Пункт '+id;}
 function pointName(id){const p=points.find(p=>String(p.id)===String(id));return p?.name||('Пункт '+id);}
 function pointTime(id){const p=points.find(p=>String(p.id)===String(id));return p?.vreme||'';}
-function customerName(o){return o.kupac?.ime_prezime||o.ime_prezime||'Купац #'+o.kupac_id;}
-function enriched(){return orders.map(o=>({...o,kupac:null,lines:items.filter(i=>String(i.porudzbina_id)===String(o.id))}));}
-function filtered(){const q=$('search').value.trim().toLocaleLowerCase('sr');const stop=$('stopFilter').value,status=$('statusFilter').value;return enriched().filter(o=>(!stop||String(o.punkt_id)===stop)&&(!status||String(o.status||'new')===status)&&(!q||[o.kupac_id,o.telefon,o.adresa_dostave,o.napomena,o.status,...o.lines.map(i=>i.proizvod)].join(' ').toLocaleLowerCase('sr').includes(q))).sort((a,b)=>{const ta=pointTime(a.punkt_id),tb=pointTime(b.punkt_id);return ta.localeCompare(tb)||Number(a.punkt_id||0)-Number(b.punkt_id||0)||Number(a.id)-Number(b.id);});}
-function makeText(rows){return (tour?.naziv||'Поруџбине')+'\n'+rows.map(o=>{const lines=o.lines.map(i=>'  • '+i.proizvod+': '+(i.total_quantity??i.kolicina)+' '+(i.quantity_unit||i.jedinica||'')+' — '+money(i.cena_stavke)).join('\n');return (pointTime(o.punkt_id)?pointTime(o.punkt_id)+' — ':'')+pointName(o.punkt_id)+'\nПоруџбина #'+o.id+' / купац #'+o.kupac_id+'\n'+(o.telefon||'')+'\n'+(o.adresa_dostave||'')+'\n'+lines+'\nУкупно: '+money(o.ukupna_cena)+'\nСтатус: '+(o.status||'new');}).join('\n\n');}
+function customerName(o){return o.kupac?.ime_prezime||'Купац #'+o.kupac_id;}
+function enriched(){return orders.map(o=>({...o,lines:items.filter(i=>String(i.porudzbina_id)===String(o.id))}));}
+function filtered(){const q=$('search').value.trim().toLocaleLowerCase('sr');const stop=$('stopFilter').value,status=$('statusFilter').value;return enriched().filter(o=>(!stop||String(o.punkt_id)===stop)&&(!status||String(o.status||'new')===status)&&(!q||[customerName(o),o.kupac?.telefon,o.kupac_id,o.telefon,o.adresa_dostave,o.napomena,o.status,...o.lines.map(i=>i.proizvod)].join(' ').toLocaleLowerCase('sr').includes(q))).sort((a,b)=>{const ta=pointTime(a.punkt_id),tb=pointTime(b.punkt_id);return ta.localeCompare(tb)||Number(a.punkt_id||0)-Number(b.punkt_id||0)||Number(a.id)-Number(b.id);});}
+function makeText(rows){return (tour?.naziv||'Поруџбине')+'\n'+rows.map(o=>{const lines=o.lines.map(i=>'  • '+i.proizvod+': '+(i.total_quantity??i.kolicina)+' '+(i.quantity_unit||i.jedinica||'')+' — '+money(i.cena_stavke)).join('\n');return (pointTime(o.punkt_id)?pointTime(o.punkt_id)+' — ':'')+pointName(o.punkt_id)+'\nПоруџбина #'+o.id+' / купац #'+o.kupac_id+'\n'+(o.telefon||'')+'\n'+(o.adresa_dostave||'')+'\n'+lines+'\nУкупно: '+money(o.ukupna_cena)+'\nСтатус: '+(o.status||'primljeno');}).join('\n\n');}
 function render(){
  const rows=filtered();const groups=new Map();rows.forEach(o=>{const key=String(o.punkt_id||'0');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(o);});
  $('orders').innerHTML=rows.length?[...groups.entries()].map(([pid,arr])=>'<section><div class="stop">'+esc(pointTime(pid))+(pointTime(pid)?' — ':'')+esc(pointName(pid))+' <span class="muted">('+arr.length+')</span></div>'+arr.map(o=>{
  const customer='Купац #'+o.kupac_id;
  const lines=o.lines.map(i=>'<li><strong>'+esc(i.proizvod)+'</strong> — '+esc(i.total_quantity??i.kolicina)+' '+esc(i.quantity_unit||i.jedinica||'')+(i.variant_name?' · '+esc(i.variant_name):'')+' <span class="muted">('+money(i.cena_stavke)+')</span></li>').join('');
- const st=o.status||'new';const label={new:'Нова',confirmed:'Потврђена',delivered:'Испоручена',cancelled:'Отказана'}[st]||st;
- return '<article class="order"><div class="order-head"><div><div class="name">'+esc(customer)+' <span class="muted">#'+o.id+'</span></div><div class="muted">'+esc(o.telefon||'')+' · '+esc(o.adresa_dostave||'')+'</div></div><div class="amount">'+money(o.ukupna_cena)+'</div></div><ul class="items">'+(lines||'<li>Нема ставки</li>')+'</ul>'+(o.napomena?'<div class="muted">Напомена: '+esc(o.napomena)+'</div>':'')+'<div class="actions"><span class="pill">'+esc(label)+'</span><select data-status="'+o.id+'" aria-label="Статус поруџбине"><option value="new" '+(st==='new'?'selected':'')+'>Нова</option><option value="confirmed" '+(st==='confirmed'?'selected':'')+'>Потврђена</option><option value="delivered" '+(st==='delivered'?'selected':'')+'>Испоручена</option><option value="cancelled" '+(st==='cancelled'?'selected':'')+'>Отказана</option></select><button data-copy="'+o.id+'">Копирај поруџбину</button></div></article>';
+ const st=o.status||'primljeno';const label={primljeno:'Примљено',primljena:'Примљена',potvrdjena:'Потврђена',isporucena:'Испоручена',otkazana:'Отказана'}[st]||st;
+ return '<article class="order"><div class="order-head"><div><div class="name">'+esc(customer)+' <span class="muted">#'+o.id+'</span></div><div class="muted">'+esc(o.telefon||'')+' · '+esc(o.adresa_dostave||'')+'</div></div><div class="amount">'+money(o.ukupna_cena)+'</div></div><ul class="items">'+(lines||'<li>Нема ставки</li>')+'</ul>'+(o.napomena?'<div class="muted">Напомена: '+esc(o.napomena)+'</div>':'')+'<div class="actions"><span class="pill">'+esc(label)+'</span><select data-status="'+o.id+'" aria-label="Статус поруџбине"><option value="primljeno" '+(st==='primljeno'?'selected':'')+'>Примљено</option><option value="primljena" '+(st==='primljena'?'selected':'')+'>Примљена</option><option value="potvrdjena" '+(st==='potvrdjena'?'selected':'')+'>Потврђена</option><option value="isporucena" '+(st==='isporucena'?'selected':'')+'>Испоручена</option><option value="otkazana" '+(st==='otkazana'?'selected':'')+'>Отказана</option></select><button data-copy="'+o.id+'">Копирај поруџбину</button></div></article>';
  }).join('')+'</section>').join(''):'<div class="panel empty">Нема поруџбина за изабране филтере.</div>';
  $('orders').querySelectorAll('[data-status]').forEach(sel=>sel.onchange=()=>changeStatus(sel.dataset.status,sel.value,sel));
  $('orders').querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const o=rows.find(x=>String(x.id)===b.dataset.copy);try{await navigator.clipboard.writeText(makeText([o]));say('Поруџбина #'+o.id+' је копирана.');}catch(e){say('Копирање није доступно у овом прегледачу.');}});
