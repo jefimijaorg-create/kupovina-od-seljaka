@@ -128,7 +128,7 @@ function renderPayouts(){
   }).join('')+'</div>';
 }
 async function load(){
-  const tours=await api('ture?datum=eq.2026-09-20&select=id,naziv,datum,status');
+  const params=new URLSearchParams(location.search);const tourId=params.get('id');const tourQuery=tourId?'ture?id=eq.'+encodeURIComponent(tourId)+'&select=id,naziv,datum,status':'ture?datum=eq.2026-09-20&select=id,naziv,datum,status';const tours=await api(tourQuery);
   if(!tours.length)throw new Error('Тура није пронађена.');
   state.tour=tours[0];
   state.farms=await api('gazdinstva?is_active=eq.true&select=id,name&order=name.asc');
