@@ -11,8 +11,35 @@
 <header><div><h1>Наручи домаће — Admin</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке</div></div><button id="logout" class="hidden">Одјава</button></header>
 <main>
 <section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Унеси корисничко име и лозинку.</p><form id="loginForm"><div class="fields" style="margin:10px 0"><input id="username" type="text" autocomplete="username" placeholder="Корисничко име" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button><p id="loginError" class="error"></p></form></section>
+<section id="bootstrapPanel" class="panel login">
+<h2>Прво покретање — главни администратор</h2>
+<p class="muted">Ово користиш само једном, након што је код за почетно подешавање постављен на серверу.</p>
+<form id="bootstrapForm">
+<div class="fields" style="margin:10px 0"><input id="bootstrapSecret" type="password" autocomplete="off" placeholder="Једнократни код за подешавање" required></div>
+<div class="fields" style="margin:10px 0"><input id="bootstrapPassword" type="password" minlength="12" autocomplete="new-password" placeholder="Нова лозинка (најмање 12 знакова)" required></div>
+<div class="fields" style="margin:10px 0"><input id="bootstrapPassword2" type="password" minlength="12" autocomplete="new-password" placeholder="Понови нову лозинку" required></div>
+<button class="primary" type="submit">Направи главни налог</button><p id="bootstrapMessage" class="muted"></p>
+</form></section>
 <section id="app" class="hidden">
-<div class="panel"><div class="fields" style="justify-content:space-between;align-items:center"><div><strong id="tourTitle">Учитавање туре…</strong><div id="tourDate" class="muted"></div></div><button id="refresh" class="primary">Освежи податке</button></div></div>
+<div class="panel" id="accountPanel">
+<h2>Налог и корисници</h2>
+<p class="muted">Лозинке се мењају преко Auth сервиса; у бази се не чувају као читљив текст.</p>
+<div class="fields" style="margin:10px 0"><input id="currentPassword" type="password" autocomplete="current-password" placeholder="Тренутна лозинка"><input id="newPassword" type="password" minlength="12" autocomplete="new-password" placeholder="Нова лозинка (12+ знакова)"><button id="changeOwnPassword" class="primary" type="button">Промени моју лозинку</button></div>
+<p id="accountMessage" class="muted"></p>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+<h3>Додај корисника</h3>
+<div class="toolbar" style="grid-template-columns:1fr 1fr">
+<input id="newUsername" placeholder="Корисничко име">
+<input id="newEmail" type="email" placeholder="Имејл за пријаву и ресет">
+<input id="newDisplayName" placeholder="Име и презиме">
+<input id="newUserPassword" type="password" minlength="12" placeholder="Почетна лозинка (12+)">
+<select id="newUserRole"><option value="operator">Оператива — мења поруџбине</option><option value="viewer">Само преглед</option><option value="admin">Администратор</option></select>
+<button id="createUser" class="primary" type="button">Направи корисника</button>
+</div>
+<h3 style="margin-top:20px">Постојећи корисници</h3>
+<div id="usersList" class="muted">Учитавање корисника…</div>
+</div>
+\n<div class="panel"><div class="fields" style="justify-content:space-between;align-items:center"><div><strong id="tourTitle">Учитавање туре…</strong><div id="tourDate" class="muted"></div></div><button id="refresh" class="primary">Освежи податке</button></div></div>
 <div class="panel stats"><div class="stat"><small>Поруџбине</small><strong id="count">—</strong></div><div class="stat"><small>Укупно</small><strong id="sum">—</strong></div><div class="stat"><small>Пунктови</small><strong id="stopsCount">—</strong></div></div>
 <div class="panel"><div class="toolbar"><input id="search" placeholder="Претрага: купац, производ, телефон…"><select id="stopFilter"><option value="">Сви пунктови</option></select><select id="statusFilter"><option value="">Сви статуси</option><option value="nova">Нова — чека потврду</option><option value="primljeno">Нова — непрегледана</option><option value="primljena">Прегледана</option><option value="potvrdjena">Потврђена</option><option value="provera">Потребна провера</option><option value="u_pripremi">У припреми</option><option value="spremna">Спремна за доставу</option><option value="isporucena">Испоручена</option><option value="otkazana">Отказана</option></select></div><div class="actions"><button id="copy">Копирај списак</button><button id="print">Штампај / PDF</button></div></div>
 <div id="orders"></div><p id="message" class="muted"></p>
@@ -29,7 +56,47 @@ const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(Number(n)||0)+' дин.';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=t=>$('message').textContent=t;
-async function authState(){const {data:{session}}=await sb.auth.getSession();$('loginPanel').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);$('logout').classList.toggle('hidden',!session);if(session)await load();}
+
+const USER_FN=URL+'/functions/v1/app-user-management';
+async function userAction(payload){
+ const {data:{session}}=await sb.auth.getSession();
+ const res=await fetch(USER_FN,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||''),'apikey':KEY},body:JSON.stringify(payload)});
+ const data=await res.json().catch(()=>({error:'Сервер није вратио исправан одговор.'}));
+ if(!res.ok)throw new Error(data.error||'Захтев није успео.');
+ return data;
+}
+$('bootstrapForm').addEventListener('submit',async e=>{
+ e.preventDefault();$('bootstrapMessage').textContent='';
+ const a=$('bootstrapPassword').value,b=$('bootstrapPassword2').value;
+ if(a!==b){$('bootstrapMessage').textContent='Лозинке се не поклапају.';return;}
+ if(a.length<12){$('bootstrapMessage').textContent='Лозинка мора имати најмање 12 знакова.';return;}
+ try{const r=await userAction({action:'bootstrap',password:a});$('bootstrapMessage').textContent=r.message||'Налог је направљен. Сада се пријави.';$('bootstrapPassword').value='';$('bootstrapPassword2').value='';$('bootstrapSecret').value='';}
+ catch(err){$('bootstrapMessage').textContent=err.message;}
+});
+$('changeOwnPassword').onclick=async()=>{
+ const old=$('currentPassword').value, next=$('newPassword').value;
+ if(!old||next.length<12){$('accountMessage').textContent='Унеси тренутну и нову лозинку од најмање 12 знакова.';return;}
+ try{const {error:checkError}=await sb.auth.signInWithPassword({email:(await sb.auth.getUser()).data.user.email,password:old});if(checkError)throw new Error('Тренутна лозинка није исправна.');
+ const {error}=await sb.auth.updateUser({password:next});if(error)throw error;
+ $('accountMessage').textContent='Лозинка је промењена.';$('currentPassword').value='';$('newPassword').value='';
+ }catch(err){$('accountMessage').textContent='Промена није успела: '+err.message;}
+};
+$('createUser').onclick=async()=>{
+ const payload={action:'create',username:$('newUsername').value,email:$('newEmail').value,password:$('newUserPassword').value,display_name:$('newDisplayName').value,role:$('newUserRole').value};
+ try{const r=await userAction(payload);$('accountMessage').textContent=r.message||'Корисник је направљен.';$('newUserPassword').value='';await loadUsers();}
+ catch(err){$('accountMessage').textContent='Није направљен: '+err.message;}
+};
+async function loadUsers(){
+ $('usersList').textContent='Учитавање…';
+ try{const r=await userAction({action:'list'});
+ $('usersList').innerHTML=(r.users||[]).map(u=>'<div class="order"><div class="order-head"><div><strong>'+esc(u.username)+'</strong> '+(u.display_name?'— '+esc(u.display_name):'')+'<div class="muted">'+esc(u.email)+' · '+esc(u.role)+'</div></div><span class="pill">'+(u.is_active?'Активан':'Искључен')+'</span></div>'+(u.role==='super_admin'?'': '<div class="actions"><select data-role="'+esc(u.id)+'"><option value="operator" '+(u.role==='operator'?'selected':'')+'>Оператива</option><option value="viewer" '+(u.role==='viewer'?'selected':'')+'>Само преглед</option><option value="admin" '+(u.role==='admin'?'selected':'')+'>Администратор</option></select><button data-active="'+esc(u.id)+'" data-next="'+(!u.is_active)+'">'+(u.is_active?'Искључи налог':'Укључи налог')+'</button><button data-reset="'+esc(u.id)+'">Пошаљи линк за ресет лозинке</button><button data-pass="'+esc(u.id)+'">Постави привремену лозинку</button></div>')+'</div>').join('')||'Нема корисника.';
+ $('usersList').querySelectorAll('[data-role]').forEach(el=>el.onchange=async()=>{try{await userAction({action:'set_role',id:el.dataset.role,role:el.value});$('accountMessage').textContent='Улога је промењена.';await loadUsers();}catch(e){$('accountMessage').textContent=e.message;await loadUsers();}});
+ $('usersList').querySelectorAll('[data-active]').forEach(el=>el.onclick=async()=>{try{await userAction({action:'set_active',id:el.dataset.active,active:el.dataset.next==='true'});await loadUsers();}catch(e){$('accountMessage').textContent=e.message;}});
+ $('usersList').querySelectorAll('[data-reset]').forEach(el=>el.onclick=async()=>{try{const r=await userAction({action:'reset_email',id:el.dataset.reset});$('accountMessage').textContent=r.message||'Послат је линк за ресет.';}catch(e){$('accountMessage').textContent=e.message;}});
+ $('usersList').querySelectorAll('[data-pass]').forEach(el=>el.onclick=async()=>{const p=prompt('Унеси привремену лозинку од најмање 12 знакова. Кориснику је пренеси безбедним каналом.');if(!p)return;try{await userAction({action:'set_password',id:el.dataset.pass,password:p});$('accountMessage').textContent='Лозинка је постављена.';}catch(e){$('accountMessage').textContent=e.message;}});
+ }catch(e){$('usersList').textContent='Управљање корисницима није доступно: '+e.message;}
+}
+\nasync function authState(){const {data:{session}}=await sb.auth.getSession();$('loginPanel').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);$('logout').classList.toggle('hidden',!session);if(session){$('bootstrapPanel').classList.add('hidden');await load();await loadUsers();}else{$('bootstrapPanel').classList.remove('hidden');}}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='';const username=$('username').value.trim();const email=username.toLowerCase()==='admin'?'autoservisgumco@gmail.com':username.includes('@')?username:'';if(!email){$('loginError').textContent='Унеси корисничко име admin.';return;}const {error}=await sb.auth.signInWithPassword({email,password:$('password').value});if(error){$('loginError').textContent='Пријава није успела: '+error.message;return;}await authState();});
 $('logout').onclick=async()=>{await sb.auth.signOut();await authState();};
 $('refresh').onclick=load;$('search').addEventListener('input',render);$('stopFilter').onchange=render;$('statusFilter').onchange=render;$('print').onclick=()=>window.print();
