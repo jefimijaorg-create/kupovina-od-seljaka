@@ -98,7 +98,29 @@ async function loadUsers(){
 }
 
 async function authState(){const {data:{session}}=await sb.auth.getSession();$('loginPanel').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);$('logout').classList.toggle('hidden',!session);if(session){$('bootstrapPanel').classList.add('hidden');await load();await loadUsers();}else{$('bootstrapPanel').classList.remove('hidden');}}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='';const username=$('username').value.trim().toLowerCase();const password=$('password').value;try{const res=await fetch(USER_FN,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({action:'login',username,password})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Пријава није успела.');const {error}=await sb.auth.setSession({access_token:data.session.access_token,refresh_token:data.session.refresh_token});if(error)throw error;await authState();}catch(err){$('loginError').textContent=err.message;}});
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const out=$('loginError'),button=$('loginForm').querySelector('button[type="submit"]');
+ out.textContent='1/4 Проверавам везу са сервером…';button.disabled=true;
+ const username=$('username').value.trim().toLowerCase(),password=$('password').value;
+ try{
+  if(!window.supabase||!sb){out.textContent='ГРЕШКА: Supabase JavaScript библиотека није учитана. Провери интернет или блокирање CDN-а.';return;}
+  out.textContent='2/4 Повезујем се са Supabase Edge Function…';
+  let res;
+  try{res=await fetch(USER_FN,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({action:'login',username,password})});}
+  catch(net){throw new Error('API/МРЕЖА: не могу да дохватим сервер. Провери интернет, адресу функције и CORS. Детаљ: '+(net.message||net));}
+  let data;
+  try{data=await res.json();}catch{throw new Error('API ОДГОВОР: сервер је вратио нечитљив одговор (HTTP '+res.status+'). Могућ проблем са Edge Function-ом или API кључем.');}
+  if(!res.ok)throw new Error('СЕРВЕР (HTTP '+res.status+'): '+(data.error||'Није прихватио пријаву.'));
+  if(!data.session?.access_token||!data.session?.refresh_token)throw new Error('AUTH ОДГОВОР: сервер није вратио сесију. Проверити Supabase Auth и publishable API key.');
+  out.textContent='3/4 Сервер је прихватио корисника и лозинку. Чувам сесију…';
+  const {error}=await sb.auth.setSession({access_token:data.session.access_token,refresh_token:data.session.refresh_token});
+  if(error)throw new Error('СЕСИЈА: корисник/лозинка су прихваћени, али Supabase није сачувао сесију. '+error.message);
+  out.textContent='4/4 Пријава успешна. Учитавање поруџбина…';
+  await authState();
+ }catch(err){out.textContent='ПРОВЕРА ПРИЈАВЕ: '+(err.message||String(err));}
+ finally{button.disabled=false;}
+});
 $('logout').onclick=async()=>{await sb.auth.signOut();await authState();};
 $('refresh').onclick=load;$('search').addEventListener('input',render);$('stopFilter').onchange=render;$('statusFilter').onchange=render;$('print').onclick=()=>window.print();
 $('copy').onclick=async()=>{const text=makeText(filtered());try{await navigator.clipboard.writeText(text);say('Списак је копиран.');}catch{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();say('Списак је копиран.');}};
