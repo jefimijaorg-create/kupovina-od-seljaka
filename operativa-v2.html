@@ -484,7 +484,7 @@ async function updatePendingStatus(id,status,button){
   }else{await openPendingOrders()}
  }catch(err){button.disabled=false;alert('Статус није сачуван: '+(err.message||err))}
 }
-checkPendingOrders();setInterval(checkPendingOrders,30000);document.getElementById('workflowMenuBack').onclick=()=>{document.querySelector('.workflow-tabs')?.classList.remove('menu-collapsed');document.querySelector('.workflow-tabs')?.scrollIntoView({behavior:'smooth',block:'start'})};document.getElementById('orderViewToggle').onclick=()=>{orderView=orderView==='buyer'?'point':'buyer';renderOrders()};if(DEMO){
+checkPendingOrders();setInterval(checkPendingOrders,30000);document.getElementById('workflowMenuBack').onclick=()=>{document.querySelector('.workflow-tabs')?.classList.remove('menu-collapsed');document.querySelector('.workflow-tabs')?.scrollIntoView({behavior:'smooth',block:'start'})};document.getElementById('orderViewToggle').onclick=()=>{orderView=orderView==='buyer'?'point':'buyer';renderOrders()};orderStatusFilterSelect.onchange=()=>renderOrders();if(DEMO){
  const gate=document.getElementById('demoGate');gate.style.display='flex';
  document.getElementById('demoGateForm').addEventListener('submit',ev=>{ev.preventDefault();if(document.getElementById('demoUser').value.trim()==='demo'&&document.getElementById('demoPass').value==='PlanaDemo26!'){demoUnlocked=true;gate.style.display='none';document.getElementById('status').textContent='ДЕМО РЕЖИМ · измене су пробне и не чувају се у стварној бази';}else document.getElementById('demoGateError').textContent='Подаци нису тачни. Провери корисника и демо лозинку.'});
 }
