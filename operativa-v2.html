@@ -216,7 +216,7 @@ const U='https://kszkehxrcuagymlfowqj.supabase.co',K='sb_publishable_TRZp6skXsdI
 const api=async(p,o={})=>{const r=await fetch(U+'/rest/v1/'+p,{cache:'no-store',...o,headers:{...H,...(o.headers||{})}});if(!r.ok)throw Error((await r.text())||('HTTP '+r.status));return r.status===204?null:r.json()};
 
 /* Нове поруџбине које чекају потврду: провера одмах и затим на сваких 30 секунди. */
-let pendingOrderIds=new Set();
+let pendingOrderIds=new Set();\nlet newestPendingOrderId=null;
 async function checkPendingOrders(){
  const box=document.getElementById('pendingNotice');
  const title=document.getElementById('pendingTitle');
