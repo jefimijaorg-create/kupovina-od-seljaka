@@ -2,13 +2,13 @@
 <html lang="sr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin — Наручи домаће</title>
+<title>Оператива — Наручи домаће</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{color-scheme:light;--green:#166534;--line:#e5e7eb;--muted:#64748b}*{box-sizing:border-box}body{margin:0;background:#f3f5f4;color:#17211b;font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#14532d;color:white;padding:18px max(16px,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:21px;margin:0}main{max-width:1100px;margin:auto;padding:18px 14px 60px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 3px 12px #0f172a08}.login{max-width:430px;margin:7vh auto}.fields{display:flex;gap:9px;flex-wrap:wrap}input,select,button{font:inherit;border-radius:10px;padding:10px 12px;border:1px solid #cbd5e1;background:white}input{min-width:0;flex:1}button{cursor:pointer;font-weight:700}button.primary{background:var(--green);color:white;border-color:var(--green)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:13px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:22px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.stop{margin:14px 0 8px;font-size:17px;font-weight:800}.order{border:1px solid var(--line);border-radius:13px;padding:13px;margin:8px 0;background:white}.order-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.name{font-weight:800;font-size:16px}.muted{color:var(--muted);font-size:13px}.items{margin:8px 0;padding-left:19px}.items li{margin:3px 0}.amount{font-weight:900;white-space:nowrap}.pill{display:inline-block;border-radius:999px;padding:3px 9px;background:#ecfdf5;color:#166534;font-size:12px;font-weight:800}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.error{color:#b91c1c}.hidden{display:none!important}.empty{padding:20px;text-align:center;color:var(--muted)}footer{font-size:12px;color:var(--muted);text-align:center;margin:22px 0}@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.order-head{display:block}.amount{display:block;margin-top:5px}}@media print{header,.toolbar,.actions,.login,footer,.no-print{display:none!important}body{background:white}main{max-width:none;padding:0}.panel,.order{box-shadow:none;border-color:#bbb;break-inside:avoid}.stop{break-after:avoid}}
 </style></head>
 <body>
-<header><div><h1>Наручи домаће — Admin</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке</div></div><button id="logout" class="hidden">Одјава</button></header>
+<header><div><h1>Наручи домаће — Оператива</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке · директан приступ</div></div><button id="logout" class="hidden">Одјава</button></header>
 <main>
 <section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Унеси корисничко име и лозинку.</p><form id="loginForm"><div class="fields" style="margin:10px 0"><input id="username" type="text" autocomplete="username" placeholder="Корисничко име" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button><p id="loginError" class="error"></p></form></section>
 <section id="bootstrapPanel" class="panel login">
@@ -174,5 +174,13 @@ function render(){
  $('orders').querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const o=rows.find(x=>String(x.id)===b.dataset.copy);try{await navigator.clipboard.writeText(makeText([o]));say('Поруџбина #'+o.id+' је копирана.');}catch(e){say('Копирање није доступно у овом прегледачу.');}});
 }
 async function changeStatus(id,status,control){control.disabled=true;say('Чување статуса…');try{const {error}=await sb.from('porudzbine').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;const o=orders.find(o=>String(o.id)===String(id));if(o)o.status=status;render();say('Статус поруџбине #'+id+' је сачуван.');}catch(e){control.disabled=false;say('Статус није сачуван: '+e.message);}}
-sb.auth.onAuthStateChange(()=>{});authState();
+async function startDirect(){
+ $('loginPanel').classList.add('hidden');
+ $('bootstrapPanel').classList.add('hidden');
+ $('app').classList.remove('hidden');
+ $('logout').classList.add('hidden');
+ $('accountPanel').classList.add('hidden');
+ await load();
+}
+startDirect();
 </script></body></html>
