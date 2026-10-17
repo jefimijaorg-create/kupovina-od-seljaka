@@ -458,7 +458,7 @@ async function openPendingOrders(){
    const linked=[...new Set(ol.map(x=>String(x.tura_id||'')).filter(Boolean))].map(id=>tourRows.find(t=>String(t.id)===id)).filter(Boolean);
    const tourLabel=linked.map(t=>(t.naziv||('Тура '+t.id))+(t.datum?' — '+t.datum:'')).join(', ')||'Тура није наведена у ставкама';
    const when=o.created_at?new Date(o.created_at).toLocaleString('sr-RS'):'Време није доступно';
-   return '<article class="pending-order" id="pending-order-'+e(o.id)+'"><div class="pending-order-head"><div><strong>Поруџбина #'+e(o.id)+' · '+e(cust?.ime_prezime||('Купац #'+o.kupac_id))+'</strong><div class="pending-order-meta">'+e(when)+'</div><div class="pending-order-meta">'+e(o.telefon||cust?.telefon||'Телефон није унет')+' · '+e(o.adresa_dostave||'Адреса није унета')+'</div><div class="pending-order-meta">Тура: '+e(tourLabel)+'</div></div><strong>'+n(o.ukupna_cena).toLocaleString('sr-RS')+' дин.</strong></div><div class="pending-order-lines">'+(ol.map(x=>'<div class="pending-order-line"><span><b>'+e(x.proizvod||'Производ')+'</b>'+(x.variant_name?' · '+e(x.variant_name):'')+'</span><strong>'+e(x.total_quantity??x.kolicina??'—')+' '+e(x.quantity_unit||x.jedinica||'')+'</strong></div>').join('')||'<div class="hint">Ставке поруџбине нису пронађене.</div>')+(o.napomena?'<div class="pending-order-meta">Напомена: '+e(o.napomena)+'</div>':'')+'</div><div class="pending-order-actions"><button type="button" class="pending-accept" data-pending-accept="'+e(o.id)+'">Прихвати поруџбину</button><button type="button" class="pending-reject" data-pending-reject="'+e(o.id)+'">Одбиј</button></div></article>';
+   return '<article class="pending-order" id="pending-order-'+e(o.id)+'" data-phone="'+e(o.telefon||cust?.telefon||'')+'" data-customer="'+e(cust?.ime_prezime||('Купац #'+o.kupac_id))+'" data-total="'+e(n(o.ukupna_cena))+'"><div class="pending-order-head"><div><strong>Поруџбина #'+e(o.id)+' · '+e(cust?.ime_prezime||('Купац #'+o.kupac_id))+'</strong><div class="pending-order-meta">'+e(when)+'</div><div class="pending-order-meta">'+e(o.telefon||cust?.telefon||'Телефон није унет')+' · '+e(o.adresa_dostave||'Адреса није унета')+'</div><div class="pending-order-meta">Тура: '+e(tourLabel)+'</div></div><strong>'+n(o.ukupna_cena).toLocaleString('sr-RS')+' дин.</strong></div><div class="pending-order-lines">'+(ol.map(x=>'<div class="pending-order-line"><span><b>'+e(x.proizvod||'Производ')+'</b>'+(x.variant_name?' · '+e(x.variant_name):'')+'</span><strong>'+e(x.total_quantity??x.kolicina??'—')+' '+e(x.quantity_unit||x.jedinica||'')+'</strong></div>').join('')||'<div class="hint">Ставке поруџбине нису пронађене.</div>')+(o.napomena?'<div class="pending-order-meta">Напомена: '+e(o.napomena)+'</div>':'')+'</div><div class="pending-order-actions"><button type="button" class="pending-accept" data-pending-accept="'+e(o.id)+'">Прихвати поруџбину</button><button type="button" class="pending-reject" data-pending-reject="'+e(o.id)+'">Одбиј</button></div></article>';
   }).join('');
   root.querySelectorAll('[data-pending-accept]').forEach(b=>b.onclick=()=>updatePendingStatus(b.dataset.pendingAccept,'potvrdjena',b));
   root.querySelectorAll('[data-pending-reject]').forEach(b=>b.onclick=()=>{if(confirm('Да ли сигурно одбијаш поруџбину #'+b.dataset.pendingReject+'?'))updatePendingStatus(b.dataset.pendingReject,'otkazana',b)});
@@ -466,8 +466,23 @@ async function openPendingOrders(){
 }
 async function updatePendingStatus(id,status,button){
  button.disabled=true;
- try{await api('porudzbine?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({status,updated_at:new Date().toISOString()})});await openPendingOrders();await reload();await checkPendingOrders()}
- catch(err){button.disabled=false;alert('Статус није сачуван: '+(err.message||err))}
+ const card=document.getElementById('pending-order-'+id);
+ const phone=(card?.dataset.phone||'').trim();
+ const customer=card?.dataset.customer||('купац #'+id);
+ const total=Number(card?.dataset.total||0).toLocaleString('sr-RS');
+ try{
+  await api('porudzbine?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({status,updated_at:new Date().toISOString()})});
+  await reload();await checkPendingOrders();
+  if(status==='potvrdjena'){
+   const msg='Здраво, '+customer+'! Ваша поруџбина #'+id+' у износу од '+total+' дин. је прихваћена. Хвала вам на поверењу! Наручи домаће из Велике Плане.';
+   const root=document.getElementById('pendingOrderList'),info=document.getElementById('pendingModalInfo');
+   info.textContent='Поруџбина #'+id+' је прихваћена';
+   root.innerHTML='<div class="notice" style="border-color:#b9ddc3;background:#effaf1;color:#205e36"><strong>Поруџбина #'+e(id)+' је прихваћена и статус је сачуван.</strong><p>Следећи корак је слање Viber поруке купцу.</p></div><div class="pending-order"><div class="pending-order-head"><div><strong>'+e(customer)+'</strong><div class="pending-order-meta">Viber/телефон: '+e(phone||'Број није унет')+'</div></div><strong>'+e(total)+' дин.</strong></div><div class="pending-order-lines"><div style="white-space:pre-wrap;font-size:13px;line-height:1.6" id="acceptedViberMessage">'+e(msg)+'</div></div><div class="pending-order-actions"><button type="button" class="pending-accept" id="copyAcceptedViber">Копирај Viber поруку</button><button type="button" class="pending-reject" id="openAcceptedViber" '+(!phone?'disabled':'')+'>Отвори Viber разговор</button><button type="button" id="backToPending">Назад на поруџбине на чекању</button></div><div class="pending-order-meta" style="padding:0 13px 13px">Viber не шаље поруку аутоматски само на основу телефонског броја. У Viber-у провери примаоца и притисни „Пошаљи“.</div></div>';
+   document.getElementById('copyAcceptedViber').onclick=async()=>{try{await navigator.clipboard.writeText(msg);alert('Текст Viber поруке је копиран.')}catch(_){prompt('Копирај текст поруке:',msg)}};
+   document.getElementById('openAcceptedViber').onclick=()=>{const digits=phone.replace(/[^0-9+]/g,'');if(!digits){alert('За ову поруџбину није унет телефон.');return}window.location.href='viber://chat?number='+encodeURIComponent(digits)};
+   document.getElementById('backToPending').onclick=openPendingOrders;
+  }else{await openPendingOrders()}
+ }catch(err){button.disabled=false;alert('Статус није сачуван: '+(err.message||err))}
 }
 checkPendingOrders();setInterval(checkPendingOrders,30000);document.getElementById('workflowMenuBack').onclick=()=>{document.querySelector('.workflow-tabs')?.classList.remove('menu-collapsed');document.querySelector('.workflow-tabs')?.scrollIntoView({behavior:'smooth',block:'start'})};document.getElementById('orderViewToggle').onclick=()=>{orderView=orderView==='buyer'?'point':'buyer';renderOrders()};if(DEMO){
  const gate=document.getElementById('demoGate');gate.style.display='flex';
