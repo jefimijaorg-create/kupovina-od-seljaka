@@ -70,7 +70,7 @@ $('bootstrapForm').addEventListener('submit',async e=>{
  const a=$('bootstrapPassword').value,b=$('bootstrapPassword2').value;
  if(a!==b){$('bootstrapMessage').textContent='Лозинке се не поклапају.';return;}
  if(a.length<12){$('bootstrapMessage').textContent='Лозинка мора имати најмање 12 знакова.';return;}
- try{const r=await userAction({action:'bootstrap',password:a});$('bootstrapMessage').textContent=r.message||'Налог је направљен. Сада се пријави.';$('bootstrapPassword').value='';$('bootstrapPassword2').value='';$('bootstrapSecret').value='';}
+ try{const r=await userAction({action:'bootstrap',password:a,bootstrap_secret:$('bootstrapSecret').value});$('bootstrapMessage').textContent=r.message||'Налог је направљен. Сада се пријави.';$('bootstrapPassword').value='';$('bootstrapPassword2').value='';$('bootstrapSecret').value='';}
  catch(err){$('bootstrapMessage').textContent=err.message;}
 });
 $('changeOwnPassword').onclick=async()=>{
