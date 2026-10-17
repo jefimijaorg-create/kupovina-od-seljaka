@@ -36,8 +36,11 @@ $('copy').onclick=async()=>{const text=makeText(filtered());try{await navigator.
 async function load(){
  say('Учитавање…');
  try{
+  let requestedTourId=null;
+  if(requestedOrderId){const {data:targetItems,error:targetError}=await sb.from('stavke_porudzbine').select('tura_id').eq('porudzbina_id',requestedOrderId).limit(20);if(targetError)throw targetError;requestedTourId=targetItems?.find(x=>x.tura_id!=null)?.tura_id||null;}
+  const selectedTourId=requestedTourId||66;
   const [{data:ts,error:te},{data:os,error:oe},{data:is,error:ie},{data:ps,error:pe},{data:cs,error:ce}]=await Promise.all([
-   sb.from('ture').select('id,naziv,datum,status').eq('id',66).limit(1),
+   sb.from('ture').select('id,naziv,datum,status').eq('id',selectedTourId).limit(1),
    sb.from('porudzbine').select('id,kupac_id,status,ukupna_cena,napomena,adresa_dostave,telefon,punkt_id,dostavljac,created_at').order('id'),
    sb.from('stavke_porudzbine').select('id,porudzbina_id,proizvod,kolicina,jedinica,cena_stavke,tura_id,variant_name,package_count,package_size,package_unit,total_quantity,quantity_unit,status_stavke'),
    sb.from('punktovi').select('id,name,city,address,vreme,aktivan,is_active').limit(500),
