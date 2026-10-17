@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Демо админ — Наручи домаће</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17221b;background:#f3f6f2}*{box-sizing:border-box}body{margin:0}.top{background:#174b32;color:white;padding:18px 22px}.top strong{font-size:20px}.top small{display:block;opacity:.82;margin-top:4px}.wrap{max-width:1050px;margin:24px auto;padding:0 14px}.panel{background:white;border:1px solid #dce5dc;border-radius:16px;padding:20px;box-shadow:0 5px 18px #153e2410}.login{max-width:420px;margin:8vh auto}.muted{color:#66736a;font-size:14px}.field{display:block;width:100%;padding:12px;border:1px solid #cbd6cc;border-radius:9px;margin:7px 0 14px;font:inherit}button,.btn{border:0;border-radius:9px;background:#17613b;color:white;padding:11px 15px;font:inherit;font-weight:650;cursor:pointer}button.secondary{background:#e8efe9;color:#21422e}button:focus,input:focus{outline:2px solid #6aa47e;outline-offset:2px}.notice{background:#fff6dc;border:1px solid #ead79c;border-radius:10px;padding:11px 13px;font-size:14px;margin:14px 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.stat{background:#f4f8f4;padding:14px;border-radius:12px}.stat b{display:block;font-size:25px}.tools{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.tools input,.tools select{padding:10px;border:1px solid #cbd6cc;border-radius:9px;font:inherit;flex:1;min-width:160px}.orders{display:grid;gap:12px}.order{border:1px solid #dce5dc;border-radius:12px;padding:15px}.orderhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.order h3{margin:0 0 5px}.tag{font-size:12px;border-radius:20px;padding:5px 9px;background:#e6efe8;color:#205334;font-weight:700}.items{font-size:14px;line-height:1.6;margin:10px 0}.orderfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.order select{padding:8px;border:1px solid #cbd6cc;border-radius:8px;font:inherit}.hidden{display:none!important}.empty{padding:25px;text-align:center;color:#66736a}@media(max-width:560px){.stats{grid-template-columns:1fr}.wrap{margin:14px auto}.panel{padding:15px}}
+</style>
+</head>
+<body>
+<header class="top"><strong>Наручи домаће из Велике Плане</strong><small>Демо админ панел · пробни подаци</small></header>
+<main class="wrap">
+<section id="login" class="panel login">
+<h1>Демо пријава</h1>
+<p class="muted">Ово је пробна верзија за испробавање. Не повезује се са стварним поруџбинама.</p>
+<form id="loginForm">
+<label for="username">Админ корисник</label><input class="field" id="username" autocomplete="username" value="demo" required>
+<label for="password">Демо лозинка</label><input class="field" id="password" type="password" autocomplete="current-password" required>
+<button type="submit" style="width:100%">Пријави се у демо</button>
+<p id="loginError" class="muted" role="alert"></p>
+</form>
+<div class="notice"><b>Пробни приступ</b><br>Корисник: <code>demo</code><br>Лозинка: <code>PlanaDemo26!</code></div>
+</section>
+<section id="dashboard" class="hidden">
+<div class="panel">
+<div class="orderhead"><div><h1 style="margin:0">Пробне поруџбине</h1><p class="muted">Мењај статусе, претражуј и филтрирај. Све измене су само у овом прегледу.</p></div><button id="reset" class="secondary">Врати почетно стање</button></div>
+<div class="notice">ДЕМО РЕЖИМ — ови купци и поруџбине су измишљени. Ништа се не уписује у стварну базу.</div>
+<div class="stats"><div class="stat"><span class="muted">Укупно поруџбина</span><b id="total">0</b></div><div class="stat"><span class="muted">Чекају потврду</span><b id="pending">0</b></div><div class="stat"><span class="muted">Испоручене</span><b id="delivered">0</b></div></div>
+<div class="tools"><input id="search" placeholder="Претрага купца или производа…"><select id="filter"><option value="">Сви статуси</option><option value="nova">Нова — чека потврду</option><option value="potvrdjena">Потврђена</option><option value="priprema">У припреми</option><option value="spremna">Спремна за доставу</option><option value="isporucena">Испоручена</option></select><button id="logout" class="secondary">Одјава</button></div>
+<div id="orders" class="orders"></div>
+</div>
+</section>
+</main>
+<script>
+const seed=[
+{id:1041,name:"Милица Петровић",place:"Београђанка — Зелени венац",phone:"060 111 222",items:[["Домаће млеко",3,"л",150],["Млади пуномасни сир",1,"кг",800]],status:"nova"},
+{id:1042,name:"Ненад Јовановић",place:"Бањица",phone:"060 333 444",items:[["Јаја",30,"ком",35],["Домаће млеко",2,"л",150]],status:"potvrdjena"},
+{id:1043,name:"Јелена Илић",place:"Мали Мокри Луг",phone:"060 555 666",items:[["Стари пуномасни сир",1,"кг",900],["Козји сир",0.5,"кг",1300]],status:"priprema"},
+{id:1044,name:"Марко Николић",place:"Бежанијска коса",phone:"060 777 888",items:[["Јаја",60,"ком",35],["Домаће млеко",5,"л",150]],status:"spremna"},
+{id:1045,name:"Ана Марковић",place:"Сурчин",phone:"060 999 000",items:[["Млади пуномасни сир",2,"кг",800]],status:"isporucena"}
+];
+const labels={nova:"Нова — чека потврду",potvrdjena:"Потврђена",priprema:"У припреми",spremna:"Спремна за доставу",isporucena:"Испоручена"};
+let orders=structuredClone(seed);
+const $=id=>document.getElementById(id);
+$("loginForm").addEventListener("submit",e=>{e.preventDefault();if($("username").value.trim()==="demo"&&$("password").value==="PlanaDemo26!"){$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("loginError").textContent="";render()}else{$("loginError").textContent="Подаци нису тачни. Користи приказане демо податке."}});
+$("logout").onclick=()=>{$("dashboard").classList.add("hidden");$("login").classList.remove("hidden");$("password").value=""};
+$("reset").onclick=()=>{orders=structuredClone(seed);render()};
+$("search").addEventListener("input",render);$("filter").addEventListener("change",render);
+function money(n){return new Intl.NumberFormat("sr-RS").format(n)+" дин."}
+function total(o){return o.items.reduce((s,x)=>s+x[1]*x[3],0)}
+function render(){
+$("total").textContent=orders.length;$("pending").textContent=orders.filter(o=>o.status==="nova").length;$("delivered").textContent=orders.filter(o=>o.status==="isporucena").length;
+const q=$("search").value.toLocaleLowerCase("sr");const f=$("filter").value;
+const shown=orders.filter(o=>(!f||o.status===f)&&(!q||(o.name+" "+o.place+" "+o.items.map(x=>x[0]).join(" ")).toLocaleLowerCase("sr").includes(q)));
+$("orders").innerHTML=shown.length?shown.map(o=>'<article class="order"><div class="orderhead"><div><h3>Поруџбина #'+o.id+' · '+o.name+'</h3><div class="muted">'+o.place+' · '+o.phone+'</div></div><span class="tag">'+labels[o.status]+'</span></div><div class="items">'+o.items.map(x=>x[0]+' — '+x[1]+' '+x[2]+' × '+money(x[3])).join("<br>")+'</div><div class="orderfoot"><b>Укупно: '+money(total(o))+'</b><label>Статус: <select data-id="'+o.id+'">'+Object.entries(labels).map(([k,v])=>'<option value="'+k+'" '+(k===o.status?'selected':'')+'>'+v+'</option>').join("")+'</select></label></div></article>').join(""):'<div class="empty">Нема поруџбина за овај избор.</div>';
+$("orders").querySelectorAll("select[data-id]").forEach(el=>el.addEventListener("change",()=>{const o=orders.find(x=>x.id===Number(el.dataset.id));if(o){o.status=el.value;render()}}))
+}
+</script>
+</body>
+</html>
