@@ -10,14 +10,14 @@
 <body>
 <header><div><h1>Наручи домаће — Admin</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке</div></div><button id="logout" class="hidden">Одјава</button></header>
 <main>
-<section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Пријави се Supabase налогом администратора.</p><form id="loginForm"><div class="fields" style="margin:10px 0"><input id="email" type="email" autocomplete="username" placeholder="Е-пошта" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button><p id="loginError" class="error"></p></form></section>
+<section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Унеси корисничко име и лозинку.</p><form id="loginForm"><div class="fields" style="margin:10px 0"><input id="username" type="text" autocomplete="username" placeholder="Корисничко име" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button><p id="loginError" class="error"></p></form></section>
 <section id="app" class="hidden">
 <div class="panel"><div class="fields" style="justify-content:space-between;align-items:center"><div><strong id="tourTitle">Учитавање туре…</strong><div id="tourDate" class="muted"></div></div><button id="refresh" class="primary">Освежи податке</button></div></div>
 <div class="panel stats"><div class="stat"><small>Поруџбине</small><strong id="count">—</strong></div><div class="stat"><small>Укупно</small><strong id="sum">—</strong></div><div class="stat"><small>Пунктови</small><strong id="stopsCount">—</strong></div></div>
 <div class="panel"><div class="toolbar"><input id="search" placeholder="Претрага: купац, производ, телефон…"><select id="stopFilter"><option value="">Сви пунктови</option></select><select id="statusFilter"><option value="">Сви статуси</option><option value="nova">Нова — чека потврду</option><option value="primljeno">Нова — непрегледана</option><option value="primljena">Прегледана</option><option value="potvrdjena">Потврђена</option><option value="provera">Потребна провера</option><option value="u_pripremi">У припреми</option><option value="spremna">Спремна за доставу</option><option value="isporucena">Испоручена</option><option value="otkazana">Отказана</option></select></div><div class="actions"><button id="copy">Копирај списак</button><button id="print">Штампај / PDF</button></div></div>
 <div id="orders"></div><p id="message" class="muted"></p>
 </section>
-<footer>Приступ је преко Supabase Auth налога. Не дели администраторску лозинку.</footer>
+<footer>Пријава корисничким именом користи заштићени Supabase Auth налог. Не дели лозинку.</footer>
 </main>
 <script>
 const URL='https://kszkehxrcuagymlfowqj.supabase.co';
@@ -30,7 +30,7 @@ const money=n=>new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(N
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=t=>$('message').textContent=t;
 async function authState(){const {data:{session}}=await sb.auth.getSession();$('loginPanel').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);$('logout').classList.toggle('hidden',!session);if(session)await load();}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='';const {error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error){$('loginError').textContent='Пријава није успела: '+error.message;return;}await authState();});
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='';const username=$('username').value.trim();const email=username.toLowerCase()==='admin'?'autoservisgumco@gmail.com':username.includes('@')?username:'';if(!email){$('loginError').textContent='Унеси корисничко име admin.';return;}const {error}=await sb.auth.signInWithPassword({email,password:$('password').value});if(error){$('loginError').textContent='Пријава није успела: '+error.message;return;}await authState();});
 $('logout').onclick=async()=>{await sb.auth.signOut();await authState();};
 $('refresh').onclick=load;$('search').addEventListener('input',render);$('stopFilter').onchange=render;$('statusFilter').onchange=render;$('print').onclick=()=>window.print();
 $('copy').onclick=async()=>{const text=makeText(filtered());try{await navigator.clipboard.writeText(text);say('Списак је копиран.');}catch{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();say('Списак је копиран.');}};
