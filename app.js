@@ -70,7 +70,7 @@ async function renderNextDelivery(){
   const info=document.getElementById('deliveryInfo');
   if(!title)return;
   try{
-    // На почетној страници приказујемо датум најновије отворене туре из базе.
+    // Приказујемо најновију отворену туру из постојеће базе.
     const rows=await api('ture?select=id,naziv,datum,status&status=eq.open&order=datum.desc,id.desc&limit=1');
     if(!rows.length){
       title.textContent='Нема отворене туре';
@@ -80,10 +80,11 @@ async function renderNextDelivery(){
     const t=rows[0];
     const d=new Date(t.datum+'T12:00:00');
     title.textContent=d.toLocaleDateString('sr-RS',{day:'numeric',month:'numeric',year:'numeric'});
-    if(info)info.textContent='';
+    if(info)info.textContent=(t.naziv||'Отворена тура')+(String(t.naziv||'').toLocaleLowerCase('sr').includes('test')?' · пробна тура за проверу система':'');
   }catch(e){
     title.textContent='Датум није доступан';
     if(info)info.textContent='';
+    console.error(e);
   }
 }
 
