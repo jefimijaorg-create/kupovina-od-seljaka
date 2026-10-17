@@ -224,7 +224,7 @@ async function checkPendingOrders(){
  const details=document.getElementById('pendingDetails');
  if(!box)return;
  try{
-  const pending=await api('porudzbine?select=id,created_at,status,telefon,ukupna_cena,napomena&status=eq.nova&order=created_at.desc&limit=100')||[];
+  const pending=await api('porudzbine?select=id,created_at,status,telefon,ukupna_cena,napomena&status=in.(nova,primljeno)&order=created_at.desc&limit=100')||[];
   const ids=new Set(pending.map(x=>String(x.id)));
   const fresh=pending.filter(x=>!pendingOrderIds.has(String(x.id)));
   pendingOrderIds=ids;
