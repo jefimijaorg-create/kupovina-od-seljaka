@@ -450,23 +450,23 @@ function setupReceiptForm(){
  const form=document.getElementById('farmReceiptForm');if(!form)return;
  const farm=document.getElementById('receiptFarm'),product=document.getElementById('receiptProduct'),variant=document.getElementById('receiptVariant');
  farm.innerHTML='<option value="">Изабери газдинство</option>'+fs.map(x=>'<option value="'+e(x.id)+'">'+e(x.name)+'</option>').join('');
- product.innerHTML='<option value="">Изабери производ</option>'+ps.map(x=>'<option value="'+e(x.id)+'">'+e(x.name)+'</option>').join('');
+ const productOptions={};rows.forEach(r=>{if(r.product_id)productOptions[String(r.product_id)]=r.proizvod||String(r.product_id)});variants.forEach(v=>{if(!productOptions[String(v.product_id)])productOptions[String(v.product_id)]=rows.find(r=>String(r.product_id)===String(v.product_id))?.proizvod||('Производ '+String(v.product_id).slice(0,8))});product.innerHTML='<option value="">Изабери производ</option>'+Object.entries(productOptions).map(([id,name])=>'<option value="'+e(id)+'">'+e(name)+'</option>').join('');
  const today=new Date();form.elements.datum.value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
- function updateVariants(){const list=variants.filter(v=>String(v.product_id)===String(product.value)&&v.is_active!==false);variant.innerHTML='<option value="">Изабери паковање</option>'+list.map(v=>'<option value="'+e(v.id)+'">'+e(v.name||v.size_label||v.package_info||'Паковање')+' ('+e(v.package_value||'')+' '+e(v.package_unit||v.unit||'')+')</option>').join('');if(list.length===1){variant.value=list[0].id;const p=ps.find(x=>String(x.id)===String(product.value));form.elements.cena_pakovanja.value=n(p?.purchase_price)*n(list[0].package_value)||''}}
+ function updateVariants(){const list=variants.filter(v=>String(v.product_id)===String(product.value)&&v.is_active!==false);variant.innerHTML='<option value="">Изабери паковање</option>'+list.map(v=>'<option value="'+e(v.id)+'">'+e(v.name||v.size_label||v.package_info||'Паковање')+' ('+e(v.package_value||'')+' '+e(v.package_unit||v.unit||'')+')</option>').join('');if(list.length===1){variant.value=list[0].id;form.elements.cena_pakovanja.value=''}}
  product.onchange=updateVariants;
- variant.onchange=()=>{const v=variants.find(x=>String(x.id)===String(variant.value)),p=ps.find(x=>String(x.id)===String(product.value));if(v)form.elements.cena_pakovanja.value=n(p?.purchase_price)*n(v.package_value)||''};
+ variant.onchange=()=>{form.elements.cena_pakovanja.value=''};
  form.onsubmit=saveFarmReceipt;
 }
 async function saveFarmReceipt(ev){
  ev.preventDefault();const form=ev.currentTarget,status=document.getElementById('receiptStatus'),button=document.getElementById('receiptSubmit');
  const farmId=n(form.elements.gazdinstvo_id.value),productId=form.elements.product_id.value,variantId=form.elements.variant_id.value,count=n(form.elements.broj_pakovanja.value),packagePrice=n(form.elements.cena_pakovanja.value),date=form.elements.datum.value;
- const product=ps.find(x=>String(x.id)===String(productId)),v=variants.find(x=>String(x.id)===String(variantId));
- if(!farmId||!product||count<=0||!date||packagePrice<0)return status.textContent='Провери газдинство, производ, број паковања, цену и датум.';
+ const v=variants.find(x=>String(x.id)===String(variantId)),productName=rows.find(x=>String(x.product_id)===String(productId))?.proizvod||v?.name||'Производ';
+ if(!farmId||!productId||count<=0||!date||packagePrice<0)return status.textContent='Провери газдинство, производ, број паковања, цену и датум.';
  if(!v)return status.textContent='Изабери конкретну величину паковања за овај производ.';
  const size=n(v.package_value);if(size<=0)return status.textContent='Изабрано паковање нема исправно дефинисану величину у каталогу.';
  const unitValue=v.package_unit||v.unit||product.unit||'ком',physical=count*size,unitCost=packagePrice/size;
  button.disabled=true;button.textContent='Чување…';status.textContent='';
- try{await api('nabavka_evidencija',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({datum:date,tura_id:tour?.id||null,gazdinstvo_id:farmId,product_id:product.id,variant_id:v.id,proizvod:product.name,kolicina:physical,jedinica:unitValue,nabavna_cena:unitCost,ukupno:count*packagePrice,placeno:0,napomena:form.elements.napomena.value||null,broj_pakovanja:count,velicina_pakovanja:size,jedinica_pakovanja:v.name||v.size_label||('паковање '+fmt(size)+' '+unitValue)})});await reload();show('procurement')}catch(err){status.textContent='Није сачувано: '+(err?.message||String(err))}finally{button.disabled=false;button.textContent='Сачувај преузимање'}
+ try{await api('nabavka_evidencija',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({datum:date,tura_id:tour?.id||null,gazdinstvo_id:farmId,product_id:productId,variant_id:v.id,proizvod:productName,kolicina:physical,jedinica:unitValue,nabavna_cena:unitCost,ukupno:count*packagePrice,placeno:0,napomena:form.elements.napomena.value||null,broj_pakovanja:count,velicina_pakovanja:size,jedinica_pakovanja:v.name||v.size_label||('паковање '+fmt(size)+' '+unitValue)})});await reload();show('procurement')}catch(err){status.textContent='Није сачувано: '+(err?.message||String(err))}finally{button.disabled=false;button.textContent='Сачувај преузимање'}
 }
 function renderProcurementLog(){
  const root=document.getElementById('purchaseHistoryList');if(!root)return;
