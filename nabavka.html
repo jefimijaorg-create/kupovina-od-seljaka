@@ -452,9 +452,9 @@ function setupReceiptForm(){
  farm.innerHTML='<option value="">Изабери газдинство</option>'+fs.map(x=>'<option value="'+e(x.id)+'">'+e(x.name)+'</option>').join('');
  product.innerHTML='<option value="">Изабери производ</option>'+ps.map(x=>'<option value="'+e(x.id)+'">'+e(x.name)+'</option>').join('');
  const today=new Date();form.elements.datum.value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
- function updateVariants(){const list=variants.filter(v=>String(v.product_id)===String(product.value)&&v.is_active!==false);variant.innerHTML='<option value="">Изабери паковање</option>'+list.map(v=>'<option value="'+e(v.id)+'">'+e(v.name||v.size_label||v.package_info||'Паковање')+' ('+e(v.package_value||'')+' '+e(v.package_unit||v.unit||'')+')</option>').join('');if(list.length===1){variant.value=list[0].id;form.elements.cena_pakovanja.value=list[0].price||''}}
+ function updateVariants(){const list=variants.filter(v=>String(v.product_id)===String(product.value)&&v.is_active!==false);variant.innerHTML='<option value="">Изабери паковање</option>'+list.map(v=>'<option value="'+e(v.id)+'">'+e(v.name||v.size_label||v.package_info||'Паковање')+' ('+e(v.package_value||'')+' '+e(v.package_unit||v.unit||'')+')</option>').join('');if(list.length===1){variant.value=list[0].id;const p=ps.find(x=>String(x.id)===String(product.value));form.elements.cena_pakovanja.value=n(p?.purchase_price)*n(list[0].package_value)||''}}
  product.onchange=updateVariants;
- variant.onchange=()=>{const v=variants.find(x=>String(x.id)===String(variant.value));if(v)form.elements.cena_pakovanja.value=v.price||''};
+ variant.onchange=()=>{const v=variants.find(x=>String(x.id)===String(variant.value)),p=ps.find(x=>String(x.id)===String(product.value));if(v)form.elements.cena_pakovanja.value=n(p?.purchase_price)*n(v.package_value)||''};
  form.onsubmit=saveFarmReceipt;
 }
 async function saveFarmReceipt(ev){
