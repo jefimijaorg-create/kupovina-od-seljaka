@@ -587,6 +587,8 @@ function setupProcurementPanels(){
  const createFarm=document.getElementById('createFarmForm')?.closest('.farm-create');if(createFarm)farmsPanel.appendChild(createFarm);
  const farmList=document.getElementById('farms');if(farmList){if(farmList.previousElementSibling?.classList.contains('head'))farmsPanel.appendChild(farmList.previousElementSibling);farmsPanel.appendChild(farmList)}
  const log=document.getElementById('purchaseLogPanel');if(log)ordered.appendChild(log);
+ const customerView=document.getElementById('view-manifest'),customerIntro=customerView?.querySelector('.section-intro'),customerListHead=document.querySelector('.purchase-history-head'),customerList=document.getElementById('purchaseHistoryList');
+ if(customerView&&customerListHead&&customerList){if(customerIntro){customerIntro.after(customerListHead);customerListHead.after(customerList)}else{customerView.append(customerListHead,customerList)}}
  document.querySelectorAll('[data-procurement-tab]').forEach(btn=>btn.addEventListener('click',()=>{
   const key=btn.dataset.procurementTab;
   document.querySelectorAll('[data-procurement-tab]').forEach(b=>b.classList.toggle('active',b===btn));
