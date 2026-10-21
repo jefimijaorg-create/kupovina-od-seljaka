@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Пример набавке и паковања — Наручи домаће</title>
+<style>
+:root{--ink:#193426;--muted:#718075;--line:#e0e9df;--bg:#f2f6f0;--green:#236c43;--pale:#e8f4e8;--orange:#fff3dd;--orangeink:#8b5c16}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(125deg,#173d2b,#28734a);color:white;padding:24px 16px 27px}header .wrap,main{max-width:850px;margin:auto}small.eyebrow{letter-spacing:1.5px;font-weight:800;color:#cce6d0;font-size:10px}h1{font-size:clamp(25px,6vw,35px);line-height:1.12;margin:8px 0}header p{margin:0;color:#e1eee2;font-size:13px}
+main{padding:16px 12px 50px}.demo{background:var(--orange);color:var(--orangeink);border:1px solid #f1dfb8;padding:11px 13px;border-radius:12px;font-size:12px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.stat{background:white;border:1px solid var(--line);border-radius:13px;padding:12px 10px}.stat b{display:block;font-size:22px;line-height:1.2}.stat span{font-size:10px;color:var(--muted)}
+section{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 4px 15px #19342608}
+.section-title{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.section-title h2{margin:0;font-size:18px}.pill{white-space:nowrap;border-radius:99px;background:var(--pale);color:var(--green);padding:5px 8px;font-size:10px;font-weight:850}
+.lead{font-size:12px;color:var(--muted);margin:5px 0 13px}
+.supply{padding:12px 0;border-top:1px solid #edf1eb}.supply:first-of-type{border-top:0}.supply-head{display:flex;justify-content:space-between;gap:10px}.supply-head b{font-size:14px}.total{text-align:right;font-weight:900;white-space:nowrap}.sub{font-size:11px;color:var(--muted);margin-top:3px}
+.packages{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.pack{background:#f4f8f2;border:1px solid #e0eadd;border-radius:9px;padding:7px 9px;font-size:12px}.pack b{color:var(--green)}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}th,td{text-align:left;padding:10px 6px;border-bottom:1px solid #edf1eb;vertical-align:top}th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}td:last-child,th:last-child{text-align:right}.customer{padding:12px 0;border-top:1px solid #edf1eb}.customer:first-of-type{border-top:0}.customer-top{display:flex;justify-content:space-between;gap:10px}.customer-top b{font-size:13px}.customer-top span{font-size:11px;color:var(--muted)}.itemline{font-size:12px;margin-top:7px;display:flex;justify-content:space-between;gap:10px}.itemline span:last-child{font-weight:800;text-align:right}
+.checkrow{display:flex;align-items:center;gap:9px;padding:10px 0;border-top:1px solid #edf1eb;font-size:13px}.checkrow input{width:18px;height:18px;accent-color:var(--green)}.checkrow.done label{text-decoration:line-through;color:var(--muted)}
+.note{font-size:11px;color:var(--muted);margin-top:12px}.foot{font-size:11px;color:var(--muted);text-align:center;padding:15px}
+@media(min-width:620px){main{padding-top:22px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.two section{margin:0}.stat{padding:15px}}
+</style></head>
+<body>
+<header><div class="wrap"><small class="eyebrow">НАРУЧИ ДОМАЋЕ ИЗ ВЕЛИКЕ ПЛАНЕ</small><h1>Набавка и паковање</h1><p>Преглед шта преузимамо од газдинстава и како припремамо поруџбине за купце.</p></div></header>
+<main>
+<div class="demo"><b>ПРОБНИ ПРИМЕР — није стварна поруџбина.</b><br>Количине и имена испод служе само да се испроба распоред странице.</div>
+<div class="stats"><div class="stat"><b>36 л</b><span>млека за преузимање</span></div><div class="stat"><b>120</b><span>јаја за преузимање</span></div><div class="stat"><b>5 кг</b><span>сира за преузимање</span></div></div>
+<section>
+<div class="section-title"><h2>1. Набавка од газдинстава</h2><span class="pill">УКУПНО ЗА ПРЕУЗИМАЊЕ</span></div>
+<p class="lead">Овде се сабирају све поруџбине по производу. Паковање је приказано као помоћ при преузимању и транспорту.</p>
+<div class="supply"><div class="supply-head"><div><b>Кравље млеко</b><div class="sub">Газдинство: пример газдинства А</div></div><div class="total">36 л<div class="sub">укупно</div></div></div><div class="packages"><span class="pack"><b>6 × 6 л</b> балон</span><span class="pack"><b>18 × 2 л</b> флаша</span><span class="pack"><b>Укупно 24</b> амбалаже</span></div></div>
+<div class="supply"><div class="supply-head"><div><b>Јаја</b><div class="sub">Газдинство: пример газдинства Б</div></div><div class="total">120 ком.<div class="sub">укупно</div></div></div><div class="packages"><span class="pack"><b>12 × 10</b> комада</span><span class="pack"><b>6 × 20</b> комада</span><span class="pack"><b>Укупно 18</b> паковања</span></div></div>
+<div class="supply"><div class="supply-head"><div><b>Пуномасни сир</b><div class="sub">Газдинство: пример газдинства В</div></div><div class="total">5 кг<div class="sub">укупно</div></div></div><div class="packages"><span class="pack"><b>10 × 0,5 кг</b></span><span class="pack"><b>5 × 1 кг</b></span><span class="pack">Пример поделе — ускладити са стварном поруџбином</span></div></div>
+</section>
+<div class="two">
+<section><div class="section-title"><h2>2. Паковање за купце</h2><span class="pill">ПО КУПЦУ</span></div><p class="lead">Проверава се шта иде у сваку појединачну поруџбину.</p>
+<div class="customer"><div class="customer-top"><b>Купац А — пример</b><span>Поруџбина #101</span></div><div class="itemline"><span>Млеко</span><span>3 л · 2 флаше (1,5 л)</span></div><div class="itemline"><span>Јаја</span><span>10 ком. · 1 паковање</span></div><div class="itemline"><span>Сир</span><span>0,5 кг · 1 паковање</span></div></div>
+<div class="customer"><div class="customer-top"><b>Купац Б — пример</b><span>Поруџбина #102</span></div><div class="itemline"><span>Млеко</span><span>6 л · 1 балон од 6 л</span></div><div class="itemline"><span>Јаја</span><span>30 ком. · 3 паковања по 10</span></div></div>
+<div class="customer"><div class="customer-top"><b>Купац В — пример</b><span>Поруџбина #103</span></div><div class="itemline"><span>Млеко</span><span>1,5 л · 1 флаша</span></div><div class="itemline"><span>Сир</span><span>1 кг · 1 паковање</span></div></div>
+</section>
+<section><div class="section-title"><h2>3. Контролна листа</h2><span class="pill">ЗА ПРИПРЕМУ</span></div><p class="lead">Означи шта је завршено. Ово је само пробна листа на овој страници.</p>
+<div id="checks"><div class="checkrow"><input type="checkbox" id="c1"><label for="c1">Проверена количина млека</label></div><div class="checkrow"><input type="checkbox" id="c2"><label for="c2">Проверен број јаја</label></div><div class="checkrow"><input type="checkbox" id="c3"><label for="c3">Сир измерен и распоређен</label></div><div class="checkrow"><input type="checkbox" id="c4"><label for="c4">Паковања означена именом купца</label></div><div class="checkrow"><input type="checkbox" id="c5"><label for="c5">Поруџбине спремне за утовар</label></div></div><p class="note">Ознаке се не чувају у бази и не утичу на стварне поруџбине.</p>
+</section>
+</div>
+<div class="foot">Пример изгледа странице · Наручи домаће из Велике Плане</div>
+</main>
+<script>document.querySelectorAll('.checkrow input').forEach(x=>x.addEventListener('change',()=>x.closest('.checkrow').classList.toggle('done',x.checked)));</script>
+</body></html>
