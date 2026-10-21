@@ -325,7 +325,7 @@ function demoApi(path,o={}){
  if(params.has('limit'))result=result.slice(0,Number(params.get('limit')));if(params.has('select')){const cols=params.get('select').split(',');if(!cols.includes('*'))result=result.map(row=>Object.fromEntries(cols.filter(k=>k in row).map(k=>[k,row[k]])))}
  return Promise.resolve(JSON.parse(JSON.stringify(result)));
 }
-const api=async(p,o={})=>{if(DEMO)return demoApi(p,o);const r=await fetch(U+'/rest/v1/'+p,{cache:'no-store',...o,headers:{...H,...(o.headers||{})}});if(!r.ok)throw Error((await r.text())||('HTTP '+r.status));return r.status===204?null:r.json()};
+const api=async(p,o={})=>{if(DEMO)return demoApi(p,o);const r=await fetch(U+'/rest/v1/'+p,{cache:'no-store',...o,headers:{...H,...(o.headers||{})}});const body=await r.text();if(!r.ok)throw Error(body||('HTTP '+r.status));if(r.status===204||!body.trim())return null;try{return JSON.parse(body)}catch(err){throw Error('База је вратила неочекиван одговор ('+r.status+'): '+body.slice(0,240))}};
 
 /* Нове поруџбине које чекају потврду: провера одмах и затим на сваких 30 секунди. */
 let pendingOrderIds=new Set();
