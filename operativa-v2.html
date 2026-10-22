@@ -316,6 +316,7 @@ body{padding-bottom:88px}
 const U='https://kszkehxrcuagymlfowqj.supabase.co',K='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',H={apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'};
 const DEMO=new URLSearchParams(location.search).get('demo')==='1';
 let demoUnlocked=false;
+let selectedNeedProducts=new Set();
 const demoTables={
 ture:[{id:9001,naziv:'ДЕМО ТУРА — Београд',datum:'2026-10-18',status:'open',dostavljac:'Демо достављач'}],
 stavke_porudzbine:[
