@@ -295,7 +295,13 @@ body{background:#f3f4f6}
 
 /* Самостална страница ДОСТАВА: приказује само списак за предају. */
 body{padding-bottom:0!important}
-body>.top,body>.menu-shade,body>.main-menu,body>#pendingNotice,body>#pendingModal,body>.tour,body>#tourBottomNav,body>footer{display:none!important}
+body>.top,body>.menu-shade,body>.main-menu,body>#pendingNotice,body>#pendingModal,body>#tourBottomNav,body>footer{display:none!important}
+/* Остављамо избор туре и статус базе видљивим: потребни су за рад доставе. */
+body>.tour{display:block!important;background:#fff!important;border-bottom:1px solid #dce5dd!important;padding:10px 0!important}
+body>.tour .tourin{width:min(100% - 20px,1000px)!important;margin:0 auto!important}
+body>.tour #status{display:block!important;text-align:left!important;white-space:normal!important;max-width:none!important;margin-top:5px!important;font-size:12px!important}
+#view-manifest #manifest{display:block!important;visibility:visible!important;min-height:80px!important}
+#view-manifest #manifest:empty:before{content:'Учитавање поруџбина из базе…';display:block;padding:18px;border-radius:12px;background:#f3f7f3;color:#526257;font-weight:700}
 main.wrap{display:block!important;width:min(100% - 20px,1000px)!important;max-width:1000px!important;margin:0 auto!important;padding:14px 0 30px!important}
 main.wrap>.stats,main.wrap>.tabs,main.wrap>.utility-tabs,main.wrap>#workNavBar,main.wrap>.workflow-tabs{display:none!important}
 main.wrap>section:not(#view-manifest),main.wrap>div:not(#view-manifest){display:none!important}
