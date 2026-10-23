@@ -29,7 +29,31 @@ function purchaseValue(x,countOverride,sizeOverride){let r=purchaseRecord(x);if(
 function purchaseText(x,countOverride,sizeOverride){let r=purchaseRecord(x);if(!r)return 'набавна цена није унета';let p=pack(x),count=countOverride===undefined?p.count:n(countOverride),size=sizeOverride===undefined?p.size:n(sizeOverride);return r.kind==='package'?'набавка паковања '+cash(r.price)+' · укупно '+cash(count*r.price):'набавка '+cash(r.price)+'/'+r.unit+' · укупно '+cash(count*size*r.price)}
 function textPack(x){let p=pack(x);return fmt(p.count)+' × '+p.label+' = '+fmt(p.total)+' '+p.unit}
 function say(t,bad=false){let e=document.getElementById('message');e.textContent=t;e.className='bg-white border rounded-xl p-3 mb-5 text-sm '+(bad?'border-red-300 text-red-700':'border-emerald-200 text-emerald-800')}
-async function loadData(){try{say('Учитавање података из Supabase…');let d=await Promise.all([api('ture?select=id,naziv,datum,status&order=datum.desc.nullslast&order=id.desc&limit=300'),api('gazdinstva?select=id,name&order=name.asc'),api('punktovi?select=id,name,city,address'),api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave&limit=3000'),api('kupci?select=id,ime_prezime,telefon'),api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme'),api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true'),api('products?select=id,name,purchase_price,unit,calc_unit'),api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true')]);[tours,farms,points,orders,customers,tourPoints,farmOffers,productCatalog,farmProducts]=d;let sel=document.getElementById('tour-select'),prev=sel.value||'68';sel.innerHTML=tours.map(t=>'<option value="'+t.id+'">'+esc(t.naziv||'Тура '+t.id)+' · '+esc(t.datum||'')+'</option>').join('');tourId=tours.some(t=>String(t.id)===prev)?Number(prev):(tours.some(t=>Number(t.id)===68)?68:Number(tours[0]?.id||68));sel.value=String(tourId);await loadTour()}catch(e){say('Грешка базе: '+e.message,true)}}
+async function loadData(){
+ try{
+  say('Учитавање података из базе…');
+  const core=await Promise.all([
+   api('ture?select=id,naziv,datum,status&order=datum.desc.nullslast&order=id.desc&limit=300'),
+   api('gazdinstva?select=id,name&order=name.asc'),
+   api('punktovi?select=id,name,city,address'),
+   api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave&limit=3000'),
+   api('kupci?select=id,ime_prezime,telefon'),
+   api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme')
+  ]);
+  [tours,farms,points,orders,customers,tourPoints]=core;
+  const optional=await Promise.all([
+   api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true').catch(()=>[]),
+   api('products?select=id,name,purchase_price,unit,calc_unit').catch(()=>[]),
+   api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true').catch(()=>[])
+  ]);
+  [farmOffers,productCatalog,farmProducts]=optional;
+  let sel=document.getElementById('tour-select'),prev=sel.value||'68';
+  sel.innerHTML=tours.map(t=>'<option value="'+t.id+'">'+esc(t.naziv||'Тура '+t.id)+' · '+esc(t.datum||'')+'</option>').join('');
+  tourId=tours.some(t=>String(t.id)===prev)?Number(prev):(tours.some(t=>Number(t.id)===68)?68:Number(tours[0]?.id||68));
+  sel.value=String(tourId);
+  await loadTour()
+ }catch(e){say('Грешка при учитавању основних података: '+e.message,true);console.error('loadData',e)}
+}
 async function loadTour(){try{tourId=Number(document.getElementById('tour-select').value||68);let t=tours.find(x=>Number(x.id)===tourId);document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;items=await api('stavke_porudzbine?select=*&tura_id=eq.'+tourId+'&order=id.asc');populateFilters();populatePickupSummaryFilters();renderAll();say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки.')}catch(e){say('Грешка при учитавању: '+e.message,true)}}
 function switchTab(v){view=v;let a=v==='pickup';document.getElementById('pickup-tab').classList.toggle('hidden',!a);document.getElementById('delivery-tab').classList.toggle('hidden',a);document.getElementById('btn-pickup').className='flex-1 py-3 px-2 font-bold text-sm rounded-lg '+(a?'text-emerald-800 bg-emerald-50':'text-slate-500');document.getElementById('btn-delivery').className='flex-1 py-3 px-2 font-bold text-sm rounded-lg '+(!a?'text-emerald-800 bg-emerald-50':'text-slate-500');if(!a)renderDelivery()}
 function populateFilters(){ }
