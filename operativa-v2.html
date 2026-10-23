@@ -705,7 +705,7 @@ async function saveDeliverer(id){const input=document.querySelector('[data-deliv
 function renderManifest(){
  const stopOrder=new Map(routeStops.slice().sort((a,b)=>{const at=String(a.vreme||'').slice(0,5),bt=String(b.vreme||'').slice(0,5);if(at&&bt)return at.localeCompare(bt)||n(a.redosled)-n(b.redosled);if(at)return -1;if(bt)return 1;return n(a.redosled)-n(b.redosled)||n(a.punkt_id)-n(b.punkt_id)}).map((s,i)=>[String(s.punkt_id),{i,time:s.vreme||''}]));
  const allOrders=orderGroups().filter(o=>o.rs.length).sort((a,b)=>{const pa=stopOrder.get(String(a.m?.punkt_id))||{i:9999},pb=stopOrder.get(String(b.m?.punkt_id))||{i:9999};return pa.i-pb.i||String(a.id).localeCompare(String(b.id),undefined,{numeric:true})});
- const isComplete=o=>{const ready=o.rs.filter(r=>n(r.preuzeta_kolicina)>0);return ready.length>0&&ready.every(r=>n(r.isporucena_kolicina)>=n(r.preuzeta_kolicina))};
+ const isComplete=o=>{const ready=o.rs.filter(r=>n(r.preuzeta_kolicina)>0);return ready.length>0&&o.rs.every(r=>{const picked=n(r.preuzeta_kolicina);return picked>0?n(r.isporucena_kolicina)>=picked:q(r)<=0})};
  const view=window.manifestView==='delivered'?'delivered':'pending';
  const pending=allOrders.filter(o=>!isComplete(o)),delivered=allOrders.filter(isComplete),os=view==='delivered'?delivered:pending;
  const availableRows=os.flatMap(o=>o.rs).filter(r=>n(r.preuzeta_kolicina)>0);
