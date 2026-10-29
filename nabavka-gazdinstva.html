@@ -529,7 +529,7 @@ function renderNeeds(){
    const hasPack=Boolean(count>0&&size>0),key=product.toLowerCase(),qty=q(r);
    if(!groups[key])groups[key]={name:product,unit:String(r.quantity_unit||r.jedinica||u).toLowerCase(),total:0,sale:0,purchase:0,orders:new Set(),lines:0,packages:{},unknownPackageQty:0,rows:[]};
    const g=groups[key];g.total+=physical;g.sale+=salePrice(r)*qty;g.purchase+=price(r)*qty;g.orders.add(String(r.porudzbina_id));g.lines++;g.rows.push(r);
-   if(hasPack){const variantKey=String(v.id),label=String(v.name||v.size_label||r.variant_name||('Паковање '+fmt(size)+' '+u)).trim();if(!g.packages[variantKey])g.packages[variantKey]={label,count:0,quantity:0,unit:u};g.packages[variantKey].count+=count;g.packages[variantKey].quantity+=physical}
+   if(hasPack){const variantKey=String(v?.id||((r.variant_id||'')+'|'+fmt(size)+'|'+u)),label=String(v?.name||v?.size_label||r.variant_name||r.velicina_pakovanja||('Паковање '+fmt(size)+' '+u)).trim();if(!g.packages[variantKey])g.packages[variantKey]={label,count:0,quantity:0,unit:u};g.packages[variantKey].count+=count;g.packages[variantKey].quantity+=physical}
    else g.unknownPackageQty+=physical;
  });
  const all=Object.values(groups).sort((a,b)=>a.name.localeCompare(b.name,'sr'));
