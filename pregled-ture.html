@@ -141,7 +141,6 @@ async function copyPointViber(pointId){
   Object.keys(byOrder).forEach((id,i)=>{
    const its=byOrder[id],o=ord(its[0]),b=buyer(o),sum=its.reduce((a,x)=>a+price(x),0);total+=sum;
    lines.push((i+1)+'. '+(b.ime_prezime||'Поруџбина '+id));
-   if(o.telefon||b.telefon)lines.push('Тел: '+(o.telefon||b.telefon));
    if(o.adresa_dostave)lines.push('Адреса: '+o.adresa_dostave);
    its.forEach(x=>lines.push('• '+(x.proizvod||'Производ')+' — '+textPack(x)+' — '+cash(price(x))));
    lines.push('Укупно: '+cash(sum),'');
