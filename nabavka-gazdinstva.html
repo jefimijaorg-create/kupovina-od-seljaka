@@ -676,5 +676,60 @@ checkPendingOrders();setInterval(checkPendingOrders,30000);document.getElementBy
  const gate=document.getElementById('demoGate');gate.style.display='flex';
  document.getElementById('demoGateForm').addEventListener('submit',ev=>{ev.preventDefault();if(document.getElementById('demoUser').value.trim()==='demo'&&document.getElementById('demoPass').value==='PlanaDemo26!'){demoUnlocked=true;gate.style.display='none';document.getElementById('status').textContent='ДЕМО РЕЖИМ · измене су пробне и не чувају се у стварној бази';}else document.getElementById('demoGateError').textContent='Подаци нису тачни. Провери корисника и демо лозинку.'});
 }
-document.getElementById('tourSelect').onchange=async ev=>{const selected=tours.find(x=>String(x.id)===ev.target.value);if(!selected)return;tour=selected;try{await reload()}catch(x){alert('Не могу да учитам туру: '+x.message)}};(async()=>{const sel=document.getElementById('tourSelect');try{document.getElementById('tourTitle').textContent='Учитавање тура…';sel.innerHTML='<option value="">Учитавање тура…</option>';let tourLoadError='';try{tours=await api('ture?select=id,naziv,datum,status&order=datum.desc,id.desc&limit=100')||[]}catch(firstError){tourLoadError=firstError.message||String(firstError);try{tours=await api('ture?select=*&order=id.desc&limit=100')||[]}catch(secondError){throw Error('Први покушај: '+tourLoadError+'; резервни покушај: '+(secondError.message||String(secondError)))}}if(!tours.length)throw Error('База је доступна, али REST API није вратио туре. '+tourLoadError);tours.sort((a,b)=>String(b.datum||'').localeCompare(String(a.datum||''))||n(b.id)-n(a.id));sel.innerHTML=tours.map(t=>'<option value="'+e(t.id)+'">'+e(t.naziv||('Тура '+t.id))+' — '+e(t.datum||'без датума')+' · '+(String(t.status||'').toLowerCase()==='open'?'АКТИВНА':e(t.status||'без статуса'))+'</option>').join('');tour=tours[0];sel.value=String(tour.id);await reload();const routeHash=decodeURIComponent(location.hash.slice(1)||'procurement');const hashTabs={orders:'orders',procurement:'procurement',route:'route',pickup:'pickup',manifest:'manifest',deliverers:'deliverers',debt:'debt'};if(hashTabs[routeHash])show(hashTabs[routeHash])}catch(x){document.getElementById('tourTitle').textContent=tour?'Подаци туре нису учитани':'Туре нису учитане';document.getElementById('tourDate').textContent=tour?'Тура постоји, али није успело учитавање њених табела.':'Провери везу са базом и дозволе за читање.';document.getElementById('status').textContent=x.message||'Непозната грешка';document.getElementById('tourDate').textContent='Грешка при учитавању: '+(x.message||'Непозната грешка');sel.innerHTML='<option value="">Грешка при учитавању тура</option>';console.error('Грешка при учитавању тура:',x)}})();
+document.getElementById('tourSelect').onchange=async ev=>{const selected=tours.find(x=>String(x.id)===ev.target.value);if(!selected)return;tour=selected;try{await reload()}catch(x){alert('Не могу да учитам туру: '+x.message)}};(async function loadTours(){
+ const sel=document.getElementById('tourSelect');
+ const title=document.getElementById('tourTitle');
+ const date=document.getElementById('tourDate');
+ const status=document.getElementById('status');
+ title.textContent='Учитавање тура…';
+ date.textContent='Повезивање са базом података';
+ sel.innerHTML='<option value="">Учитавање тура…</option>';
+ status.textContent='Покушавам да учитам туре…';
+ const attempts=[
+  'ture?select=id,naziv,datum,status&order=datum.desc,id.desc&limit=100',
+  'ture?select=id,naziv,datum,status&order=id.desc&limit=100',
+  'ture?select=*&order=id.desc&limit=100'
+ ];
+ let lastError='';
+ let loaded=[];
+ for(const query of attempts){
+  try{
+   const result=await api(query);
+   if(Array.isArray(result)&&result.length){loaded=result;break}
+   if(Array.isArray(result)&&!result.length)lastError='Упит је успео, али није вратио ниједну туру.';
+  }catch(err){lastError=err?.message||String(err)}
+ }
+ if(!loaded.length){
+  title.textContent='Туре нису учитане';
+  date.textContent='Није успело читање табеле ture.';
+  sel.innerHTML='<option value="">Грешка при учитавању тура</option>';
+  status.innerHTML='';
+  const box=document.createElement('div');
+  box.style.cssText='margin:10px 0;padding:12px;border:2px solid #b42318;border-radius:10px;background:#fff0ec;color:#8d1b13;font-weight:700;white-space:normal;overflow-wrap:anywhere';
+  box.innerHTML='<div>⚠️ ГРЕШКА ПРИ УЧИТАВАЊУ</div><div style="font-size:12px;margin-top:6px;font-weight:500"></div><button type="button" style="margin-top:10px;padding:9px 12px;border:0;border-radius:8px;background:#17633b;color:white;font-weight:800">Покушај поново</button>';
+  box.children[1].textContent=lastError||'База није вратила туре.';
+  box.querySelector('button').addEventListener('click',()=>loadTours());
+  const notice=document.getElementById('editNotice');
+  if(notice)notice.insertAdjacentElement('afterend',box);else document.querySelector('.tour')?.insertAdjacentElement('afterend',box);
+  console.error('Учитавање тура није успело:',lastError);
+  return;
+ }
+ const existing=document.getElementById('tourLoadError');
+ if(existing)existing.remove();
+ loaded.sort((a,b)=>String(b.datum||'').localeCompare(String(a.datum||''))||n(b.id)-n(a.id));
+ tours=loaded;
+ sel.innerHTML=tours.map(t=>'<option value="'+e(t.id)+'">'+e(t.naziv||('Тура '+t.id))+' — '+e(t.datum||'без датума')+' · '+(String(t.status||'').toLowerCase()==='open'?'АКТИВНА':e(t.status||'без статуса'))+'</option>').join('');
+ const wanted=new URLSearchParams(location.search).get('tura');
+ tour=tours.find(t=>String(t.id)===String(wanted))||tours[0];
+ sel.value=String(tour.id);
+ try{
+  await reload();
+  const routeHash=decodeURIComponent(location.hash.slice(1)||'procurement');
+  const hashTabs={orders:'orders',procurement:'procurement',route:'route',pickup:'pickup',manifest:'manifest',deliverers:'deliverers',debt:'debt'};
+  if(hashTabs[routeHash])show(hashTabs[routeHash]);
+ }catch(err){
+  status.textContent='Туре су учитане, али учитавање података није успело: '+(err?.message||String(err));
+  console.error('Учитавање података туре није успело:',err);
+ }
+})();
 </script></body></html>
