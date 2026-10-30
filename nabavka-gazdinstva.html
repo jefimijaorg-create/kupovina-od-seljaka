@@ -705,6 +705,7 @@ document.getElementById('tourSelect').onchange=async ev=>{const selected=tours.f
   sel.innerHTML='<option value="">Грешка при учитавању тура</option>';
   status.innerHTML='';
   const box=document.createElement('div');
+  box.id='tourLoadError';
   box.style.cssText='margin:10px 0;padding:12px;border:2px solid #b42318;border-radius:10px;background:#fff0ec;color:#8d1b13;font-weight:700;white-space:normal;overflow-wrap:anywhere';
   box.innerHTML='<div>⚠️ ГРЕШКА ПРИ УЧИТАВАЊУ</div><div style="font-size:12px;margin-top:6px;font-weight:500"></div><button type="button" style="margin-top:10px;padding:9px 12px;border:0;border-radius:8px;background:#17633b;color:white;font-weight:800">Покушај поново</button>';
   box.children[1].textContent=lastError||'База није вратила туре.';
