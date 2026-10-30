@@ -286,7 +286,7 @@ select:focus,input:focus{border-color:#65a778;box-shadow:0 0 0 3px rgba(73,150,9
 
 <section id="view-debt" class="panel hidden"><div class="head"><h2>Дуговања</h2><span class="hint">Плати следећи пут</span></div><div id="debt"></div></section><section id="view-directory" class="panel hidden"><div class="head"><div><h2 id="directoryTitle">Списак</h2><div class="hint" id="directoryCount"></div></div><button type="button" id="directoryBack" class="secondary">← Назад</button></div><div id="directoryContent"></div></section></main>
 <script>
-const U='https://kszkehxrcuagymlfowqj.supabase.co',K='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',H={apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'};
+const U='https://kszkehxrcuagymlfowqj.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzemtlaHhyY3VhZ3ltbGZvd3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNDM5NTAsImV4cCI6MjEwMzYxOTk1MH0.qcJMEzLmCkU6hkpfuZnTGxOJMtHxr5B3YsdoiTg_lmY',H={apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'};
 const DEMO=new URLSearchParams(location.search).get('demo')==='1';
 let demoUnlocked=false;
 const demoTables={
