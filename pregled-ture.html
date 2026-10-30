@@ -172,8 +172,7 @@ async function copyAllPointsViber(){
   });
   const rawDate=tour?.datum?String(tour.datum).split('T')[0]:'';
   const date=rawDate&&rawDate.includes('-')?rawDate.split('-').reverse().join('. '):rawDate||'датум није унет';
-  const lines=['📦 *СВЕ ПОРУЏБИНЕ ЗА ДОСТАВУ — НАРУЧИ ДОМАЋЕ*','*ТУРА: '+(tour?.naziv||'Тура '+tourId)+'*','📅 Датум доставе: '+date,''];
-  let grand=0;
+  const lines=['📦 *РАСПОРЕД ДОСТАВЕ — НАРУЧИ ДОМАЋЕ*','*ТУРА: '+(tour?.naziv||'Тура '+tourId)+'*','📅 Датум доставе: '+date,'📍 Проверите свој пункт, време доласка и да ли је ваша поруџбина тачно уписана.','⏰ Наведено време је оквирни план доставе и може мало да одступи.',''];
   keys.forEach(key=>{
    const g=groups[key],ids=Object.keys(g.orders),pointName=String(g.p.name||'Без пункта').toLocaleUpperCase('sr');
    lines.push('━━━━━━━━━━━━━━━━━━','📍 *ПУНКТ: '+pointName+'*','🕒 Време доставе: '+(g.time?String(g.time).slice(0,5):'није унето'),'');
@@ -187,11 +186,10 @@ async function copyAllPointsViber(){
     its.forEach(x=>lines.push('• '+(x.proizvod||'Производ')+' — '+viberPack(x)+' — '+viberItemPrice(x)));
     lines.push('*Укупно за купца'+(missingPrice?' (без ставки без унете цене)':'')+': '+cash(sum)+'*','');
    });
-   grand+=pointTotal;
-   lines.push('*УКУПНО ЗА ПУНКТ'+(g.orders&&Object.values(g.orders).some(its=>its.some(x=>!hasItemPrice(x)))?' (без ставки без унете цене)':'')+': '+cash(pointTotal)+'*','');
+   lines.push('');
   });
-  lines.push('━━━━━━━━━━━━━━━━━━','💰 *УКУПНО ЗА ЦЕЛУ ТУРУ: '+cash(grand)+'*');
-  if(source.some(x=>!hasItemPrice(x)))lines.push('⚠️ Напомена: укупан износ не обухвата ставке за које цена није унета.');
+  lines.push('━━━━━━━━━━━━━━━━━━','✅ Ако нешто није тачно или недостаје, јавите ми што пре.');
+  if(source.some(x=>!hasItemPrice(x)))lines.push('⚠️ Напомена: за неке производе цена није унета — проверите са мном пре доставе.');
   const text=lines.join('\n');
   if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(text);
   else{const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();if(!document.execCommand('copy'))throw Error('Копирање није успело.');area.remove()}
