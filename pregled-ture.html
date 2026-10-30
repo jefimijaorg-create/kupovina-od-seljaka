@@ -172,28 +172,24 @@ async function copyAllPointsViber(){
   });
   const rawDate=tour?.datum?String(tour.datum).split('T')[0]:'';
   const date=rawDate&&rawDate.includes('-')?rawDate.split('-').reverse().join('. '):rawDate;
-  const lines=[
-   'Драги људи, ❤️',
-   '',
-   'У наставку је распоред доставе за '+(tour?.naziv||'наредну туру')+(date?' — '+date+'.':'')+'.',
-   'Погледајте где и када можете да преузмете поруџбину.',
-   ''
-  ];
+  const lines=['Здраво свима!',''];
+  if(date)lines.push('Достава је '+date+'.','');
+  lines.push('Распоред преузимања:','');
   keys.forEach(key=>{
-   const g=groups[key],ids=Object.keys(g.orders),pointName=String(g.p.name||'Место преузимања').toLocaleUpperCase('sr');
-   lines.push('📍 *'+pointName+'*');
-   if(g.time)lines.push('🕒 Око '+String(g.time).slice(0,5));
+   const g=groups[key],ids=Object.keys(g.orders),pointName=String(g.p.name||'Место преузимања');
+   lines.push(pointName);
+   if(g.time)lines.push('Око '+String(g.time).slice(0,5));
    lines.push('');
    ids.sort((a,b)=>String(buyer(ord(g.orders[a][0])).ime_prezime||'').localeCompare(String(buyer(ord(g.orders[b][0])).ime_prezime||''),'sr'));
    ids.forEach(id=>{
-    const its=g.orders[id],o=ord(its[0]),b=buyer(o),sum=its.reduce((acc,x)=>acc+price(x),0);
+    const its=g.orders[id],o=ord(its[0]),b=buyer(o),sum=its.reduce((acc,x)=>acc+price(x),0),missing=its.some(x=>!hasItemPrice(x));
     lines.push(b.ime_prezime||'Купац');
-    its.forEach(x=>lines.push('• '+(x.proizvod||'Производ')+' — '+viberPack(x)+' — '+viberItemPrice(x)));
-    lines.push('*Укупно: '+cash(sum)+'*','');
+    its.forEach(x=>lines.push((x.proizvod||'Производ')+' — '+viberPack(x)+' — '+(hasItemPrice(x)?viberItemPrice(x):'цена није унета')));
+    lines.push(missing?'Укупно: цена није потпуна':'Укупно: '+cash(sum),'');
    });
    lines.push('');
   });
-  lines.push('Ако приметите грешку у поруџбини, јавите ми. Хвала вам! ❤️');
+  lines.push('Хвала вам!');
   const text=lines.join('\n').replace(/\n{3,}/g,'\n\n');
   if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(text);
   else{const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();if(!document.execCommand('copy'))throw Error('Копирање није успело.');area.remove()}
