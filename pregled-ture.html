@@ -144,7 +144,7 @@ function renderProcurement(){
   });
   html+='</div></details>';
  });
- document.getElementById('procurement-list').innerHTML=html||'<div class="p-4 bg-white rounded-xl">Нема ставки за ову туру.</div>';
+ document.getElementById('procurement-summary').innerHTML=html||'<div class="p-4 bg-white rounded-xl">Нема ставки за ову туру.</div>';
 }
 function renderAll(){stats();unassigned();renderPickupSummary();if(view==='orders')renderOrders();if(view==='procurement')renderProcurement();if(view==='pickup')renderPickupSummary();if(view==='delivery')renderDelivery()}
 function preview(id){let x=items.find(x=>Number(x.id)===Number(id)),p=pack(x),c=Math.max(0,Math.floor(n(document.getElementById('c'+id).value))),s=Math.max(0,n(document.getElementById('s'+id).value)),l=document.getElementById('l'+id).value||s+' '+p.unit;document.getElementById('v'+id).textContent=c+' × '+l+' = '+fmt(c*s)+' '+p.unit+' · '+purchaseText(x,c,s)}
