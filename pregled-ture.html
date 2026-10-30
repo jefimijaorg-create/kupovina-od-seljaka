@@ -171,29 +171,36 @@ async function copyAllPointsViber(){
    return groups[a].order-groups[b].order||String(groups[a].p.name||'').localeCompare(String(groups[b].p.name||''),'sr');
   });
   const rawDate=tour?.datum?String(tour.datum).split('T')[0]:'';
-  const date=rawDate&&rawDate.includes('-')?rawDate.split('-').reverse().join('. '):rawDate||'датум није унет';
-  const lines=['📦 *РАСПОРЕД ДОСТАВЕ — НАРУЧИ ДОМАЋЕ*','*ТУРА: '+(tour?.naziv||'Тура '+tourId)+'*','📅 Датум доставе: '+date,'📍 Проверите свој пункт, време доласка и да ли је ваша поруџбина тачно уписана.','⏰ Наведено време је оквирни план доставе и може мало да одступи.',''];
+  const date=rawDate&&rawDate.includes('-')?rawDate.split('-').reverse().join('. '):rawDate||'датум још није одређен';
+  const lines=[
+   'Драги људи, ❤️',
+   '',
+   'У '+(tour?.naziv||'наредној тури')+' доносимо ваше поруџбине из Велике Плане.',
+   '📅 Датум доставе: '+date+'.',
+   '',
+   'Испод је распоред по местима и оквирном времену доласка. Молим вас, проверите да ли су ваша поруџбина и паковања добро уписани.',
+   'Време може мало да одступи, па будите у близини места преузимања нешто пре најављеног доласка.',
+   ''
+  ];
   keys.forEach(key=>{
-   const g=groups[key],ids=Object.keys(g.orders),pointName=String(g.p.name||'Без пункта').toLocaleUpperCase('sr');
-   lines.push('━━━━━━━━━━━━━━━━━━','📍 *ПУНКТ: '+pointName+'*','🕒 Време доставе: '+(g.time?String(g.time).slice(0,5):'није унето'),'');
-   let pointTotal=0;
+   const g=groups[key],ids=Object.keys(g.orders),pointName=String(g.p.name||'Место преузимања није уписано').toLocaleUpperCase('sr');
+   lines.push('━━━━━━━━━━━━━━━━━━','📍 *'+pointName+'*','🕒 Очекивано време доласка: '+(g.time?'око '+String(g.time).slice(0,5):'време још није уписано'),'');
    ids.sort((a,b)=>String(buyer(ord(g.orders[a][0])).ime_prezime||'').localeCompare(String(buyer(ord(g.orders[b][0])).ime_prezime||''),'sr'));
    ids.forEach(id=>{
     const its=g.orders[id],o=ord(its[0]),b=buyer(o),sum=its.reduce((acc,x)=>acc+price(x),0);
-    pointTotal+=sum;
     lines.push('👤 *'+(b.ime_prezime||'Купац')+'*');
     const missingPrice=its.some(x=>!hasItemPrice(x));
     its.forEach(x=>lines.push('• '+(x.proizvod||'Производ')+' — '+viberPack(x)+' — '+viberItemPrice(x)));
-    lines.push('*Укупно за купца'+(missingPrice?' (без ставки без унете цене)':'')+': '+cash(sum)+'*','');
+    lines.push('*Укупно за вашу поруџбину'+(missingPrice?' (без производа без унете цене)':'')+': '+cash(sum)+'*','');
    });
-   lines.push('');
   });
-  lines.push('━━━━━━━━━━━━━━━━━━','✅ Ако нешто није тачно или недостаје, јавите ми што пре.');
-  if(source.some(x=>!hasItemPrice(x)))lines.push('⚠️ Напомена: за неке производе цена није унета — проверите са мном пре доставе.');
-  const text=lines.join('\n');
+  lines.push('━━━━━━━━━━━━━━━━━━','Погледајте да ли је све добро уписано. Ако нешто недостаје или није тачно, јавите ми да исправимо на време.','');
+  lines.push('Хвала вам и видимо се! ❤️');
+  if(source.some(x=>!hasItemPrice(x)))lines.push('','Напомена: за неке производе цена још није унета, па ми се јавите ако треба да је проверимо.');
+  const text=lines.join('\\n');
   if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(text);
   else{const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();if(!document.execCommand('copy'))throw Error('Копирање није успело.');area.remove()}
-  say('Цела тура је копирана за Viber. Отвори Viber и налепи поруку.');
+  say('Viber порука је копирана. Отвори Viber и налепи је у групу.');
  }catch(e){say('Не могу да копирам туру: '+e.message,true)}
 }
 async function copyPointViber(pointId){
