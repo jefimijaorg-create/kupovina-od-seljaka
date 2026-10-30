@@ -187,7 +187,7 @@ async function copyAllPointsViber(){
    ids.sort((a,b)=>String(buyer(ord(g.orders[a][0])).ime_prezime||'').localeCompare(String(buyer(ord(g.orders[b][0])).ime_prezime||''),'sr'));
    ids.forEach(id=>{
     const its=g.orders[id],o=ord(its[0]),b=buyer(o),sum=its.reduce((acc,x)=>acc+price(x),0);
-    lines.push('*'+(b.ime_prezime||'Купац')+'*');
+    lines.push(b.ime_prezime||'Купац');
     its.forEach(x=>lines.push('• '+(x.proizvod||'Производ')+' — '+viberPack(x)+' — '+viberItemPrice(x)));
     lines.push('*Укупно: '+cash(sum)+'*','');
    });
