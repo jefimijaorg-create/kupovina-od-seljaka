@@ -36,7 +36,7 @@ async function loadData(){
  try{
   say('Учитавање података из базе…');
   const core=await Promise.all([
-   api('ture?select=id,naziv,datum,status&order=datum.desc.nullslast&order=id.desc&limit=300'),
+   api('ture?select=id,naziv,datum,status&order=id.desc&limit=300'),
    api('gazdinstva?select=id,name&order=name.asc'),
    api('punktovi?select=id,name,city,address'),
    api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave&limit=3000'),
@@ -50,9 +50,10 @@ async function loadData(){
    api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true').catch(()=>[])
   ]);
   [farmOffers,productCatalog,farmProducts]=optional;
-  let sel=document.getElementById('tour-select'),prev=sel.value||'68';
+  let sel=document.getElementById('tour-select'),prev=sel.value;
+  tours.sort((a,b)=>Number(b.id)-Number(a.id));
   sel.innerHTML=tours.map(t=>'<option value="'+t.id+'">'+esc(t.naziv||'Тура '+t.id)+' · '+esc(t.datum||'')+'</option>').join('');
-  tourId=tours.some(t=>String(t.id)===prev)?Number(prev):(tours.some(t=>Number(t.id)===68)?68:Number(tours[0]?.id||68));
+  tourId=prev&&tours.some(t=>String(t.id)===prev)?Number(prev):Number(tours[0]?.id||0);
   sel.value=String(tourId);
   await loadTour()
  }catch(e){say('Грешка при учитавању основних података: '+e.message,true);console.error('loadData',e)}
