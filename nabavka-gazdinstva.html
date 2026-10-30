@@ -265,6 +265,29 @@ select:focus,input:focus{border-color:#65a778;box-shadow:0 0 0 3px rgba(73,150,9
   <button type="submit" style="width:100%;padding:12px;border:0;border-radius:10px;background:#24734a;color:white;font-weight:900">Уђи у демо оперативу</button><div id="demoGateError" style="font-size:12px;color:#a83f36;margin-top:10px" role="alert"></div>
  </form>
 </div>
+<div id="diagnosticError" role="alert" style="display:block;margin:10px 12px;padding:10px 12px;border:2px solid #d7a900;border-radius:10px;background:#fff8d8;color:#573c00;font:700 13px/1.45 system-ui,sans-serif">⏳ Страница се покреће… Ако ова порука остане, JavaScript није завршио покретање.</div>
+<script>
+(function(){
+ const box=document.getElementById('diagnosticError');
+ window.addEventListener('error',function(ev){
+   box.style.display='block';box.style.borderColor='#b42318';box.style.background='#fff0ec';box.style.color='#8d1b13';
+   box.textContent='⚠️ ГРЕШКА У СКРИПТИ: '+(ev.message||'Непозната JavaScript грешка')+(ev.filename?' · '+ev.filename.split('/').pop():'')+(ev.lineno?' · ред '+ev.lineno:'');
+ });
+ window.addEventListener('unhandledrejection',function(ev){
+   const reason=ev.reason;box.style.display='block';box.style.borderColor='#b42318';box.style.background='#fff0ec';box.style.color='#8d1b13';
+   box.textContent='⚠️ ГРЕШКА: '+(reason&&reason.message?reason.message:String(reason||'Необрађена грешка'));
+ });
+ window.addEventListener('load',function(){
+   setTimeout(function(){
+     if(box.textContent.indexOf('Страница се покреће')===0){
+       box.style.borderColor='#c4d7c7';box.style.background='#edf8ee';box.style.color='#205e36';
+       box.textContent='✓ Скрипта је покренута. Ако се туре или подаци не приказују, погледај црвено обавештење испод избора туре.';
+       setTimeout(function(){if(box.parentNode)box.style.display='none'},9000);
+     }
+   },2500);
+ });
+})();
+</script>
 <header class="top"><div class="wrap top-inner" style="padding-bottom:0"><div class="brandmark" aria-hidden="true">НД</div><div class="brandcopy"><div class="eyebrow">НАРУЧИ ДОМАЋЕ ИЗ ВЕЛИКЕ ПЛАНЕ</div><h1>Оператива</h1><p>Све за туру на једном месту — од поруџбине до преузимања.</p></div><button type="button" id="hamburgerButton" class="hamburger" aria-label="Отвори главни мени" aria-expanded="false"><span></span><span></span><span></span><b>МЕНИ</b></button></div></header>
 <div id="mainMenuShade" class="menu-shade hidden"></div><aside id="mainMenu" class="main-menu hidden" aria-label="Главни мени"><div class="main-menu-head"><div><div class="eyebrow">БРЗА НАВИГАЦИЈА</div><strong>Главни мени</strong></div><button type="button" id="closeMainMenu" aria-label="Затвори мени">✕</button></div><div class="menu-group-label">РАД СА ТУРОМ</div><a class="menu-link" href="porudzbine.html" style="text-decoration:none;color:inherit"><span>🧾</span><span><b>Поруџбине</b><small>Преглед и обрада поруџбина</small></span><i>›</i></a><a class="menu-link" href="nabavka.html" style="text-decoration:none;color:inherit"><span>🛒</span><span><b>Набавка</b><small>Потребно и расподела газдинствима</small></span><i>›</i></a><a class="menu-link" href="ruta.html" style="text-decoration:none;color:inherit"><span>📍</span><span><b>Рута и пунктови</b><small>Редослед и сатница</small></span><i>›</i></a><a class="menu-link" href="preuzimanje.html" style="text-decoration:none;color:inherit"><span>📦</span><span><b>Преузимање</b><small>Роба од газдинстава</small></span><i>›</i></a><a class="menu-link" href="dostava.html" style="text-decoration:none;color:inherit"><span>🚚</span><span><b>Достава</b><small>Испоруке купцима</small></span><i>›</i></a><div class="menu-group-label">СПИСКОВИ</div><a class="menu-link" href="kupci.html" style="text-decoration:none;color:inherit"><span>👥</span><span><b>Сви купци</b><small>Целокупан списак купаца</small></span><i>›</i></a><a class="menu-link" href="ture.html" style="text-decoration:none;color:inherit"><span>🗓️</span><span><b>Све туре</b><small>Датуми и статуси тура</small></span><i>›</i></a><a class="menu-link" href="proizvodi.html" style="text-decoration:none;color:inherit"><span>🥛</span><span><b>Производи</b><small>Списак производа и цена</small></span><i>›</i></a><a class="menu-link" href="gazdinstva.html" style="text-decoration:none;color:inherit"><span>🌾</span><span><b>Газдинства</b><small>Сва учитана газдинства</small></span><i>›</i></a><a class="menu-link" href="punktovi.html" style="text-decoration:none;color:inherit"><span>📌</span><span><b>Пунктови</b><small>Заједнички списак пунктова</small></span><i>›</i></a><div class="menu-group-label">ОСТАЛО</div><a class="menu-link" href="dostavljaci.html" style="text-decoration:none;color:inherit"><span>🚙</span><span><b>Достављачи</b><small>Задужења достављача</small></span><i>›</i></a><a class="menu-link" href="dugovanja.html" style="text-decoration:none;color:inherit"><span>₽</span><span><b>Дуговања</b><small>Ненаплаћене испоруке</small></span><i>›</i></a></aside><div id="pendingNotice" class="pending-notice hidden" role="status" aria-live="polite"><span class="pending-pulse" aria-hidden="true">!</span><div class="pending-copy"><strong id="pendingTitle">Нова поруџбина чека потврду</strong><span id="pendingDetails">Проверавам поруџбине…</span></div><button type="button" id="pendingRefresh">Провери</button><button type="button" id="pendingOpen">Отвори поруџбине</button></div>
 <div id="pendingModal" class="pending-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pendingModalTitle">
