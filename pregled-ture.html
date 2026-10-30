@@ -31,6 +31,26 @@ function purchaseRecord(x){let fid=x.dodijeljeno_gazdinstvo_id||x.gazdinstvo_id;
 function purchaseValue(x,countOverride,sizeOverride){let r=purchaseRecord(x);if(!r)return null;let p=pack(x),count=countOverride===undefined?p.count:n(countOverride),size=sizeOverride===undefined?p.size:n(sizeOverride);return r.kind==='package'?count*r.price:count*size*r.price}
 function purchaseText(x,countOverride,sizeOverride){let r=purchaseRecord(x);if(!r)return 'набавна цена није унета';let p=pack(x),count=countOverride===undefined?p.count:n(countOverride),size=sizeOverride===undefined?p.size:n(sizeOverride);return r.kind==='package'?'набавка паковања '+cash(r.price)+' · укупно '+cash(count*r.price):'набавка '+cash(r.price)+'/'+r.unit+' · укупно '+cash(count*size*r.price)}
 function textPack(x){let p=pack(x);return fmt(p.count)+' × '+p.label+' = '+fmt(p.total)+' '+p.unit}
+function viberPack(x){
+ const p=pack(x),u=String(p.unit||'').toLowerCase();
+ let sizeLabel;
+ if(u==='л'||u==='l'||u==='литара'||u==='литер')sizeLabel=fmt(p.size)+' '+(Math.abs(p.size)===1?'литар':'литара');
+ else if(u==='кг'||u==='kg')sizeLabel=fmt(p.size)+' '+(Math.abs(p.size)===1?'кг':'кг');
+ else if(u==='г'||u==='g'){
+  const kg=p.size/1000;
+  sizeLabel=fmt(kg)+' кг';
+ } else if(u==='ком'||u==='ком.'||u==='комада'||u==='ком.')sizeLabel=fmt(p.size)+' ком';
+ else sizeLabel=fmt(p.size)+' '+p.unit;
+ let totalLabel;
+ if(u==='г'||u==='g')totalLabel=fmt(p.total/1000)+' кг';
+ else if(u==='л'||u==='l'||u==='литара'||u==='литер')totalLabel=fmt(p.total)+' '+(Math.abs(p.total)===1?'литар':'литара');
+ else if(u==='кг'||u==='kg')totalLabel=fmt(p.total)+' кг';
+ else totalLabel=fmt(p.total)+' '+p.unit;
+ return fmt(p.count)+' × '+sizeLabel+' = '+totalLabel;
+}
+function hasItemPrice(x){return x.cena_stavke!==null&&x.cena_stavke!==undefined&&x.cena_stavke!==''&&n(x.cena_stavke)>0 || x.unit_price!==null&&x.unit_price!==undefined&&x.unit_price!==''&&n(x.unit_price)>0}
+function viberItemPrice(x){return hasItemPrice(x)?cash(price(x)):'⚠️ цена није унета'}
+
 function say(t,bad=false){let e=document.getElementById('message');e.textContent=t;e.className='bg-white border rounded-xl p-3 mb-5 text-sm '+(bad?'border-red-300 text-red-700':'border-emerald-200 text-emerald-800')}
 async function loadData(){
  try{
@@ -163,13 +183,15 @@ async function copyAllPointsViber(){
     const its=g.orders[id],o=ord(its[0]),b=buyer(o),sum=its.reduce((acc,x)=>acc+price(x),0);
     pointTotal+=sum;
     lines.push('👤 *'+(b.ime_prezime||'Купац')+'*');
-    its.forEach(x=>lines.push('• '+(x.proizvod||'Производ')+' — '+textPack(x)+' — '+cash(price(x))));
-    lines.push('*Укупно за купца: '+cash(sum)+'*','');
+    const missingPrice=its.some(x=>!hasItemPrice(x));
+    its.forEach(x=>lines.push('• '+(x.proizvod||'Производ')+' — '+viberPack(x)+' — '+viberItemPrice(x)));
+    lines.push('*Укупно за купца'+(missingPrice?' (без ставки без унете цене)':'')+': '+cash(sum)+'*','');
    });
    grand+=pointTotal;
-   lines.push('*УКУПНО ЗА ПУНКТ: '+cash(pointTotal)+'*','');
+   lines.push('*УКУПНО ЗА ПУНКТ'+(g.orders&&Object.values(g.orders).some(its=>its.some(x=>!hasItemPrice(x)))?' (без ставки без унете цене)':'')+': '+cash(pointTotal)+'*','');
   });
   lines.push('━━━━━━━━━━━━━━━━━━','💰 *УКУПНО ЗА ЦЕЛУ ТУРУ: '+cash(grand)+'*');
+  if(source.some(x=>!hasItemPrice(x)))lines.push('⚠️ Напомена: укупан износ не обухвата ставке за које цена није унета.');
   const text=lines.join('\n');
   if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(text);
   else{const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();if(!document.execCommand('copy'))throw Error('Копирање није успело.');area.remove()}
