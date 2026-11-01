@@ -6,15 +6,15 @@
 <div class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print"><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Вредност набавке</span><strong id="stat-price" class="block mt-1 text-xl sm:text-2xl font-black text-emerald-700">—</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето млека</span><strong id="stat-milk" class="block mt-1 text-xl sm:text-2xl font-black text-blue-700">0 л</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето сира</span><strong id="stat-cheese" class="block mt-1 text-xl sm:text-2xl font-black text-amber-700">0 кг</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето јаја</span><strong id="stat-eggs" class="block mt-1 text-xl sm:text-2xl font-black text-yellow-600">0 ком</strong></div></div>
 <div class="bg-white rounded-xl border p-4 mb-6 flex flex-col sm:flex-row gap-3 no-print"><label class="flex-1 text-xs font-bold text-slate-500">ИЗАБЕРИ ТУРУ<select id="tour-select" class="block w-full mt-1 border rounded-lg px-3 py-2 text-sm" onchange="loadTour()"></select></label><label class="flex-1 text-xs font-bold text-slate-500">ПРЕТРАГА КУПЦА / ТЕЛЕФОНА<input id="search" oninput="renderAll()" placeholder="Име или телефон…" class="block w-full mt-1 border rounded-lg px-3 py-2 text-sm"></label></div>
 <div id="unassigned-banner" class="unassigned-sheet hidden bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-6 shadow-sm no-print"><div class="flex justify-between items-center gap-3 mb-3"><h2 class="font-bold text-amber-900"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> Недодељене ставке (<span id="unassigned-count">0</span>)</h2><span class="text-xs text-amber-700 bg-amber-200/60 px-2 py-1 rounded">Додели газдинство пре преузимања</span><button type="button" onclick="toggleUnassigned()" class="bg-amber-200 rounded-lg px-3 py-1 font-bold text-amber-900">Затвори ✕</button></div><div id="unassigned-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
-<nav class="grid grid-cols-2 sm:grid-cols-4 gap-1 border-b mb-6 bg-white rounded-t-xl p-1 shadow-sm no-print"><button id="btn-orders" onclick="switchTab('orders')" class="py-3 px-2 font-bold text-sm rounded-lg text-emerald-800 bg-emerald-50"><i class="fa-solid fa-clipboard-list mr-1"></i> 1. Поруџбине</button><button id="btn-procurement" onclick="switchTab('procurement')" class="py-3 px-2 font-bold text-sm rounded-lg text-slate-500"><i class="fa-solid fa-boxes-stacked mr-1"></i> 2. Набавка</button><button id="btn-pickup" onclick="switchTab('pickup')" class="py-3 px-2 font-bold text-sm rounded-lg text-slate-500"><i class="fa-solid fa-truck-ramp-box mr-1"></i> 3. Преузимање</button><button id="btn-delivery" onclick="switchTab('delivery')" class="py-3 px-2 font-bold text-sm rounded-lg text-slate-500"><i class="fa-solid fa-route mr-1"></i> 4. Достава</button></nav>
+<nav class="grid grid-cols-2 sm:grid-cols-5 gap-1 border-b mb-6 bg-white rounded-t-xl p-1 shadow-sm no-print"><button id="btn-orders" onclick="switchTab('orders')" class="py-3 px-2 font-bold text-sm rounded-lg text-emerald-800 bg-emerald-50"><i class="fa-solid fa-clipboard-list mr-1"></i> 1. Поруџбине</button><button id="btn-procurement" onclick="switchTab('procurement')" class="py-3 px-2 font-bold text-sm rounded-lg text-slate-500"><i class="fa-solid fa-boxes-stacked mr-1"></i> 2. Набавка</button><button id="btn-pickup" onclick="switchTab('pickup')" class="py-3 px-2 font-bold text-sm rounded-lg text-slate-500"><i class="fa-solid fa-truck-ramp-box mr-1"></i> 3. Преузимање</button><button id="btn-delivery" onclick="switchTab('delivery')" class="py-3 px-2 font-bold text-sm rounded-lg text-slate-500"><i class="fa-solid fa-route mr-1"></i> 4. Достава</button><button id="btn-debts" onclick="switchTab('debts')" class="py-3 px-2 font-bold text-sm rounded-lg text-slate-500"><i class="fa-solid fa-wallet mr-1"></i> 5. Дуговања</button></nav>
 <div class="mb-4 no-print"><button id="unassigned-toggle" onclick="toggleUnassigned()" class="unassigned-sheet-toggle w-full text-left bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 font-bold text-amber-900"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Недодељене ставке <span id="unassigned-button-count" class="ml-1 rounded-full bg-amber-200 px-2 py-1 text-xs">0</span><span class="float-right">▼</span></button></div>
 <section id="orders-tab" class="space-y-4"><div class="bg-white p-4 rounded-xl border shadow-sm"><h2 class="font-black text-xl">Поруџбине по купцима</h2><p class="text-sm text-slate-500 mt-1">Преглед шта је сваки купац наручио, по паковањима и цени.</p><div id="orders-summary" class="mt-4"></div></div></section>
 <section id="procurement-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border shadow-sm"><div class="flex flex-wrap items-start justify-between gap-3 mb-4"><div><h2 class="font-black text-xl">Набавка по производима и амбалажи</h2><p class="text-sm text-slate-500 mt-1">Збирни списак за изабрану туру. Иста роба је груписана по величини паковања.</p></div><button onclick="window.print()" class="no-print bg-slate-100 border px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај списак</button></div><div id="procurement-summary"></div></div></section>
 <section id="pickup-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border shadow-sm no-print"><h2 class="font-black text-lg mb-3">Преузимање по газдинству и паковањима</h2><label class="block max-w-xl text-xs font-bold text-slate-500">ИЗАБЕРИ ПРОИЗВОЂАЧА / ГАЗДИНСТВО<select id="pickup-farm-filter" onchange="renderPickupSummary()" class="block w-full mt-1 border rounded-lg px-3 py-2 text-sm"><option value="">Изабери газдинство</option><option value="none">Недодељено</option></select></label><div id="pickup-summary" class="mt-4"></div></div></section>
-<section id="delivery-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border no-print"><p class="text-sm text-slate-600"><i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> Купци су груписани по пунктовима. Означавање доставе чува се у бази.</p><input id="delivery-search" oninput="renderDelivery()" placeholder="Претражи купца или телефон…" class="border rounded-lg px-3 py-2 text-sm w-full sm:w-72 mt-3"></div><div id="points" class="space-y-6"></div></section></main>
+<section id="delivery-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border no-print"><p class="text-sm text-slate-600"><i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> Купци су груписани по пунктовима. Означавање доставе чува се у бази.</p><input id="delivery-search" oninput="renderDelivery()" placeholder="Претражи купца или телефон…" class="border rounded-lg px-3 py-2 text-sm w-full sm:w-72 mt-3"></div><div id="points" class="space-y-6"></div></section><section id="debts-tab" class="hidden space-y-6"><div class="bg-white p-4 sm:p-5 rounded-xl border shadow-sm"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="font-black text-xl">Дуговања газдинствима</h2><p class="text-sm text-slate-500 mt-1">Све набавке, производи, количине, уплате и преостале обавезе.</p></div><button onclick="loadDebts()" class="no-print bg-slate-100 border px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button></div><div id="debts-summary" class="mt-4"></div><input id="debts-search" oninput="renderDebts()" placeholder="Претражи газдинство или производ…" class="no-print w-full border rounded-lg px-3 py-2 text-sm mt-4"><div id="debts-list" class="mt-4 space-y-4"></div></div></section></main>
 <script>
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,'Content-Type':'application/json'};
-let tours=[],items=[],farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],farmProducts=[],allocations=[],tourId=68,view='orders';
+let tours=[],items=[],farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayments=[],tourId=68,view='orders';
 async function api(path,opt={}){let r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...HEAD,...(opt.headers||{})}}),t=await r.text();if(!r.ok)throw Error(t||r.statusText);return t?JSON.parse(t):[]}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=v=>Number(v||0),fmt=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:3}),cash=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.';
@@ -70,6 +70,7 @@ async function loadData(){
    api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true').catch(()=>[])
   ]);
   [farmOffers,productCatalog,farmProducts]=optional;
+  await loadDebts();
   let sel=document.getElementById('tour-select'),prev=sel.value;
   tours.sort((a,b)=>String(b.datum||'').localeCompare(String(a.datum||''))||Number(b.id)-Number(a.id));
   sel.innerHTML=tours.map(t=>'<option value="'+t.id+'">'+esc(t.naziv||'Тура '+t.id)+' · '+esc(t.datum||'')+'</option>').join('');
@@ -79,7 +80,7 @@ async function loadData(){
  }catch(e){say('Грешка при учитавању основних података: '+e.message,true);console.error('loadData',e)}
 }
 async function loadTour(){try{tourId=Number(document.getElementById('tour-select').value||68);let t=tours.find(x=>Number(x.id)===tourId);document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;items=await api('stavke_porudzbine?select=*&tura_id=eq.'+tourId+'&order=id.asc');populateFilters();populatePickupSummaryFilters();renderAll();say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки.')}catch(e){say('Грешка при учитавању: '+e.message,true)}}
-function switchTab(v){view=v;['orders','procurement','pickup','delivery'].forEach(k=>{document.getElementById(k+'-tab').classList.toggle('hidden',k!==v);let b=document.getElementById('btn-'+k);b.className='py-3 px-2 font-bold text-sm rounded-lg '+(k===v?'text-emerald-800 bg-emerald-50':'text-slate-500')});if(v==='orders')renderOrders();if(v==='procurement')renderProcurement();if(v==='pickup')renderPickupSummary();if(v==='delivery')renderDelivery();window.scrollTo({top:document.getElementById('tour-select').getBoundingClientRect().top+window.scrollY-12,behavior:'smooth'})}
+function switchTab(v){view=v;['orders','procurement','pickup','delivery','debts'].forEach(k=>{document.getElementById(k+'-tab').classList.toggle('hidden',k!==v);let b=document.getElementById('btn-'+k);b.className='py-3 px-2 font-bold text-sm rounded-lg '+(k===v?'text-emerald-800 bg-emerald-50':'text-slate-500')});if(v==='orders')renderOrders();if(v==='procurement')renderProcurement();if(v==='pickup')renderPickupSummary();if(v==='delivery')renderDelivery();if(v==='debts')renderDebts();window.scrollTo({top:document.getElementById('tour-select').getBoundingClientRect().top+window.scrollY-12,behavior:'smooth'})}
 function toggleUnassigned(){const panel=document.getElementById('unassigned-banner'),button=document.getElementById('unassigned-toggle');const opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);button.setAttribute('aria-expanded',String(opening));button.innerHTML='<i class="fa-solid fa-triangle-exclamation mr-2"></i>'+(opening?'Затвори недодељене ставке':'Недодељене ставке')+' <span id="unassigned-button-count" class="ml-1 rounded-full bg-amber-200 px-2 py-1 text-xs">'+(document.getElementById('unassigned-count')?.textContent||'0')+'</span><span class="float-right">'+(opening?'▼':'▲')+'</span>';if(opening)panel.scrollTop=0;}
 function populateFilters(){ /* Филтери се попуњавају из базе. */ }
 function filtered(){let s=document.getElementById('search').value.trim().toLowerCase();return items.filter(x=>!s||[x.proizvod,x.package_info,buyer(ord(x)).ime_prezime,buyer(ord(x)).telefon,ord(x).telefon,point(x).name,farm(x)?.name].join(' ').toLowerCase().includes(s))}
@@ -222,6 +223,87 @@ async function copyPointViber(pointId){
   say('Списак за Viber је копиран. Отвори Viber и налепи текст.');
  }catch(e){say('Не могу да копирам списак: '+e.message,true)}
 }
+
+async function loadDebts(){
+ const results=await Promise.all([
+  api('nabavka_evidencija?select=*&order=datum.asc,id.asc'),
+  api('producer_payments?select=*&order=paid_at.desc,created_at.desc')
+ ]);
+ procurementRows=results[0]||[];
+ producerPayments=results[1]||[];
+ if(document.getElementById('debts-tab')&&!document.getElementById('debts-tab').classList.contains('hidden'))renderDebts();
+}
+function debtMoney(v){return n(v).toLocaleString('sr-RS',{minimumFractionDigits:0,maximumFractionDigits:2})+' дин.'}
+function debtUnit(v){return ({l:'л',kg:'кг',kom:'ком',pcs:'ком'})[String(v||'').toLowerCase()]||v||'ком'}
+function debtAmount(x){return n(x.ukupno!==undefined&&x.ukupno!==null?x.ukupno:n(x.kolicina)*n(x.nabavna_cena))}
+function debtPaid(x){return Math.min(debtAmount(x),n(x.placeno))}
+function debtOutstanding(x){return Math.max(0,debtAmount(x)-debtPaid(x))}
+function debtFarmName(id){return farms.find(f=>String(f.id)===String(id))?.name||('Газдинство '+id)}
+function debtTourLabel(id){
+ const t=tours.find(t=>String(t.id)===String(id));
+ return t?(t.naziv||('Тура '+id)):'Набавка без повезане туре';
+}
+function debtDate(v){if(!v)return 'Датум није унет';let s=String(v).slice(0,10);let p=s.split('-');return p.length===3?p[2]+'.'+p[1]+'.'+p[0]+'.':s}
+function renderDebts(){
+ const rows=procurementRows||[],search=(document.getElementById('debts-search')?.value||'').trim().toLowerCase();
+ const total=rows.reduce((s,x)=>s+debtAmount(x),0),paid=rows.reduce((s,x)=>s+debtPaid(x),0),due=Math.max(0,total-paid);
+ const summary=document.getElementById('debts-summary');
+ if(!summary)return;
+ summary.innerHTML='<div class="grid grid-cols-1 sm:grid-cols-3 gap-3"><div class="rounded-xl bg-slate-50 border p-3"><div class="text-xs font-bold uppercase text-slate-500">Укупна набавка</div><div class="text-xl font-black mt-1">'+debtMoney(total)+'</div></div><div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3"><div class="text-xs font-bold uppercase text-emerald-700">Уплаћено</div><div class="text-xl font-black text-emerald-800 mt-1">'+debtMoney(paid)+'</div></div><div class="rounded-xl bg-rose-50 border border-rose-200 p-3"><div class="text-xs font-bold uppercase text-rose-700">Преостали дуг</div><div class="text-2xl font-black text-rose-800 mt-1">'+debtMoney(due)+'</div></div></div><div class="text-xs text-slate-500 mt-2">Обухваћене су набавке из свих тура, не само тренутно изабране туре.</div>';
+ const byFarm={};
+ rows.forEach(x=>{const id=String(x.gazdinstvo_id);if(!byFarm[id])byFarm[id]=[];byFarm[id].push(x)});
+ const ids=Object.keys(byFarm).sort((a,b)=>debtFarmName(a).localeCompare(debtFarmName(b),'sr'));
+ const visible=ids.filter(id=>(debtFarmName(id)+' '+byFarm[id].map(x=>x.proizvod).join(' ')).toLowerCase().includes(search));
+ const list=document.getElementById('debts-list');
+ if(!rows.length){list.innerHTML='<div class="rounded-xl border border-dashed p-6 text-center text-slate-500">Нема евидентираних набавки у табели набавке.</div>';return}
+ list.innerHTML=visible.map(id=>{
+  const farmRows=byFarm[id],fTotal=farmRows.reduce((s,x)=>s+debtAmount(x),0),fPaid=farmRows.reduce((s,x)=>s+debtPaid(x),0),fDue=Math.max(0,fTotal-fPaid);
+  const tourGroups={};farmRows.forEach(x=>{const k=String(x.tura_id||'none');if(!tourGroups[k])tourGroups[k]=[];tourGroups[k].push(x)});
+  const tourKeys=Object.keys(tourGroups).sort((a,b)=>{
+   const da=tourGroups[a].map(x=>String(x.datum||'')).sort().at(-1)||'',db=tourGroups[b].map(x=>String(x.datum||'')).sort().at(-1)||'';
+   return db.localeCompare(da)||Number(b)-Number(a);
+  });
+  const tourHtml=tourKeys.map(tid=>{
+   const tr=tourGroups[tid],tt=tr.reduce((s,x)=>s+debtAmount(x),0),tp=tr.reduce((s,x)=>s+debtPaid(x),0),td=tt-tp;
+   const products=tr.map(x=>{
+    const q=n(x.kolicina),u=debtUnit(x.jedinica),unitPrice=n(x.nabavna_cena),amount=debtAmount(x),p=debtPaid(x),left=debtOutstanding(x);
+    return '<div class="rounded-lg border bg-white p-3 mb-2"><div class="flex flex-wrap justify-between gap-2"><div class="font-bold">'+esc(x.proizvod||'Производ није наведен')+'</div><div class="font-black">'+debtMoney(amount)+'</div></div><div class="text-sm text-slate-600 mt-1">'+fmt(q)+' '+esc(u)+' × '+debtMoney(unitPrice)+' / '+esc(u)+'</div><div class="grid grid-cols-3 gap-2 mt-3 text-xs"><div><span class="text-slate-500 block">Износ</span><b>'+debtMoney(amount)+'</b></div><div><span class="text-slate-500 block">Плаћено</span><b class="text-emerald-700">'+debtMoney(p)+'</b></div><div><span class="text-slate-500 block">Остало</span><b class="'+(left>0?'text-rose-700':'text-emerald-700')+'">'+debtMoney(left)+'</b></div></div></div>';
+   }).join('');
+   return '<details class="border rounded-xl overflow-hidden" open><summary class="cursor-pointer list-none p-3 bg-slate-50 flex flex-wrap items-center justify-between gap-2"><div><div class="font-bold">'+esc(debtTourLabel(tid==='none'?null:tid))+'</div><div class="text-xs text-slate-500">'+debtDate(tr.map(x=>x.datum).sort().at(-1))+' · '+tr.length+' ставки производа</div></div><div class="text-right"><div class="font-black">'+debtMoney(tt)+'</div><div class="text-xs '+(td>0?'text-rose-700':'text-emerald-700')+'">Дуг: '+debtMoney(td)+'</div></div></summary><div class="p-3 border-t">'+products+'<div class="flex justify-between border-t pt-2 font-bold"><span>Укупно за туру</span><span>'+debtMoney(tt)+'</span></div></div></details>';
+  }).join('');
+  const history=producerPayments.filter(p=>String(p.producer_id)===id).map(p=>{
+   let alloc=[];try{alloc=Array.isArray(p.allocations)?p.allocations:JSON.parse(p.allocations||'[]')}catch(e){}
+   const details=alloc.map(a=>'<div class="text-xs text-slate-600">• '+esc(a.proizvod||'Производ')+' — '+debtMoney(a.rasporedjeno)+' (тура '+esc(a.tura_id||'—')+')</div>').join('');
+   return '<div class="border-b last:border-0 py-2"><div class="flex justify-between gap-2"><span class="font-semibold">'+debtDate(p.paid_at)+'</span><b class="text-emerald-700">−'+debtMoney(p.amount)+'</b></div>'+(p.note?'<div class="text-xs text-slate-500">'+esc(p.note)+'</div>':'')+details+'</div>';
+  }).join('');
+  const openingPayments= farmRows.reduce((s,x)=>s+n(x.placeno),0);
+  return '<details class="border-2 '+(fDue>0?'border-slate-200':'border-emerald-200')+' rounded-2xl overflow-hidden bg-white"><summary class="list-none cursor-pointer p-4 flex flex-wrap justify-between items-center gap-3"><div><div class="font-black text-lg">'+esc(debtFarmName(id))+'</div><div class="text-xs text-slate-500 mt-1">'+tourKeys.length+' тура · '+farmRows.length+' производа/ставки</div></div><div class="text-right"><div class="text-xs text-slate-500">Преостали дуг</div><div class="text-xl font-black '+(fDue>0?'text-rose-700':'text-emerald-700')+'">'+debtMoney(fDue)+'</div></div></summary><div class="p-3 sm:p-4 border-t bg-slate-50 space-y-3"><div class="grid grid-cols-3 gap-2 text-xs"><div class="bg-white border rounded-lg p-2"><span class="text-slate-500 block">Набављено</span><b>'+debtMoney(fTotal)+'</b></div><div class="bg-white border rounded-lg p-2"><span class="text-slate-500 block">Уплаћено</span><b class="text-emerald-700">'+debtMoney(fPaid)+'</b></div><div class="bg-white border rounded-lg p-2"><span class="text-slate-500 block">Дугујемо</span><b class="text-rose-700">'+debtMoney(fDue)+'</b></div></div><div class="space-y-3">'+tourHtml+'</div>'+(fDue>0?'<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 no-print"><button onclick="payProducer('+Number(id)+',\'all\')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg px-4 py-3"><i class="fa-solid fa-check mr-1"></i> Измири све · '+debtMoney(fDue)+'</button><button onclick="togglePartialPayment('+Number(id)+')" class="bg-white border border-slate-300 font-bold rounded-lg px-4 py-3">Измири део</button></div><div id="partial-payment-'+id+'" class="hidden bg-white border rounded-xl p-3 space-y-2 no-print"><label class="block text-xs font-bold text-slate-600">ИЗНОС УПЛАТЕ (ДИН.)<input id="partial-amount-'+id+'" type="number" min="0.01" max="'+fDue+'" step="0.01" placeholder="Унеси износ" class="w-full border rounded-lg px-3 py-2 mt-1"></label><label class="block text-xs font-bold text-slate-600">ДАТУМ УПЛАТЕ<input id="partial-date-'+id+'" type="date" value="'+new Date().toISOString().slice(0,10)+'" class="w-full border rounded-lg px-3 py-2 mt-1"></label><label class="block text-xs font-bold text-slate-600">НАПОМЕНА (ОПЦИОНО)<input id="partial-note-'+id+'" type="text" placeholder="Нпр. готовинска уплата" class="w-full border rounded-lg px-3 py-2 mt-1"></label><button onclick="payProducer('+Number(id)+',\'partial\')" class="w-full bg-emerald-700 text-white font-bold rounded-lg px-4 py-3">Сачувај уплату</button></div>':'<div class="rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Све обавезе су измирене.</div>')+'<details class="border rounded-lg bg-white p-3"><summary class="cursor-pointer font-bold">Историја уплата ('+producerPayments.filter(p=>String(p.producer_id)===id).length+')</summary><div class="mt-2">'+(history||'<div class="text-sm text-slate-500">Још нема евидентираних уплата.</div>')+'</div></details>'+(openingPayments>0?'<div class="text-xs text-slate-500">У пољу „плаћено“ већ је евидентирано '+debtMoney(openingPayments)+' из ранијег периода; те старе уплате немају засебан дневник.</div>':'')+'</div></details>';
+ }).join('');
+ list.innerHTML=visible.length?visible.join(''):'<div class="rounded-xl border border-dashed p-6 text-center text-slate-500">Нема газдинстава или производа који одговарају претрази.</div>';
+}
+function togglePartialPayment(id){const el=document.getElementById('partial-payment-'+id);if(el)el.classList.toggle('hidden')}
+async function payProducer(id,mode){
+ try{
+  const farmRows=procurementRows.filter(x=>String(x.gazdinstvo_id)===String(id));
+  const due=farmRows.reduce((s,x)=>s+debtOutstanding(x),0);
+  if(due<=0)throw Error('Ово газдинство нема преосталих дуговања.');
+  let amount=due,paidAt=new Date().toISOString().slice(0,10),note='';
+  if(mode==='all'){
+   if(!confirm('Измирити целокупан дуг према '+debtFarmName(id)+' у износу од '+debtMoney(due)+'?'))return;
+  }else{
+   amount=n(document.getElementById('partial-amount-'+id)?.value);
+   paidAt=document.getElementById('partial-date-'+id)?.value||paidAt;
+   note=document.getElementById('partial-note-'+id)?.value||'';
+   if(!Number.isFinite(amount)||amount<=0)throw Error('Унеси износ уплате већи од нуле.');
+   if(amount>due+0.001)throw Error('Уплата не може бити већа од преосталог дуга '+debtMoney(due)+'.');
+  }
+  const result=await api('rpc/register_producer_payment',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({p_producer_id:Number(id),p_amount:amount,p_paid_at:paidAt,p_note:note})});
+  await loadDebts();
+  renderDebts();
+  say('Уплата је сачувана. '+debtFarmName(id)+' · '+debtMoney(amount)+'. Распоређена је од најстарије набавке ка новијој.');
+ }catch(e){say('Уплата није сачувана: '+e.message,true)}
+}
+
 function renderOrders(){
  const list=filtered(),groups={};
  list.forEach(x=>{
@@ -300,7 +382,7 @@ function renderProcurement(){
  });
  document.getElementById('procurement-summary').innerHTML=html||'<div class="p-4 bg-white rounded-xl">Нема ставки за ову туру.</div>';
 }
-function renderAll(){stats();unassigned();renderPickupSummary();if(view==='orders')renderOrders();if(view==='procurement')renderProcurement();if(view==='pickup')renderPickupSummary();if(view==='delivery')renderDelivery()}
+function renderAll(){stats();unassigned();renderPickupSummary();if(view==='orders')renderOrders();if(view==='procurement')renderProcurement();if(view==='pickup')renderPickupSummary();if(view==='delivery')renderDelivery();if(view==='debts')renderDebts()}
 function preview(id){let x=items.find(x=>Number(x.id)===Number(id)),p=pack(x),c=Math.max(0,Math.floor(n(document.getElementById('c'+id).value))),s=Math.max(0,n(document.getElementById('s'+id).value)),l=document.getElementById('l'+id).value||s+' '+p.unit;document.getElementById('v'+id).textContent=c+' × '+l+' = '+fmt(c*s)+' '+p.unit+' · '+purchaseText(x,c,s)}
 async function savePack(id){try{let x=items.find(x=>Number(x.id)===Number(id));if(!x)throw Error('Ставка није пронађена');let p=pack(x),c=Math.max(0,Math.floor(n(document.getElementById('c'+id).value))),s=Math.max(0,n(document.getElementById('s'+id).value)),l=document.getElementById('l'+id).value.trim()||'Паковање';if(!s||!c)throw Error('Број паковања и величина морају бити већи од нуле');let info=c+' × '+l,patch={package_count:c,broj_pakovanja:c,package_size:s,package_unit:p.unit,package_info:info,velicina_pakovanja:info};patch.preuzeta_kolicina=farm(x)?Math.min(n(x.preuzeta_kolicina),c*s):0;await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(patch)});Object.assign(x,patch);say('Подаци о паковању су сачувани. Оригинална наручена количина и цена нису мењане.');renderAll()}catch(e){say('Није сачувано: '+e.message,true)}}
 async function assignFarm(id,v){try{let x=items.find(x=>Number(x.id)===Number(id));if(!x)throw Error('Ставка није пронађена');let idFarm=v?Number(v):null,oldFarm=assignedFarmId(x),patch={dodijeljeno_gazdinstvo_id:idFarm};if(String(oldFarm||'')!==String(idFarm||''))patch.preuzeta_kolicina=0;await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(patch)});Object.assign(x,patch);say(idFarm?'Газдинство је додељено. Набавна цена ће се читати за изабрано газдинство.':'Ставка је недодељена и преузета количина враћена је на нулу.');renderAll()}catch(e){say('Додела није сачувана: '+e.message,true);renderAll()}}
