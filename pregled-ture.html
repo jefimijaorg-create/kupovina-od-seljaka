@@ -88,7 +88,11 @@ function unassigned(){let s=document.getElementById('search').value.trim().toLow
 function populatePickupSummaryFilters(){let fs=document.getElementById('pickup-farm-filter'),fv=fs.value;fs.innerHTML='<option value="">Изабери газдинство</option><option value="none">Недодељено</option>'+farms.map(f=>'<option value="'+f.id+'">'+esc(farmName(f.name))+'</option>').join('');if(fv==='none'||farms.some(f=>String(f.id)===fv))fs.value=fv;else{let best=farms.slice().sort((a,b)=>items.filter(x=>String(assignedFarmId(x)||'')===String(b.id)).length-items.filter(x=>String(assignedFarmId(x)||'')===String(a.id)).length)[0];fs.value=best?String(best.id):'none'}}
 function renderPickupSummary(){
  let fid=document.getElementById('pickup-farm-filter').value,box=document.getElementById('pickup-summary');
- if(!fid){box.innerHTML='<p class="text-sm text-slate-500">Изабери газдинство да видиш све ставке, паковања и преузете количине.</p>';return}
+ let allCount=0,allGot=0,allRemaining=0,doneRows=0,partialRows=0,notRows=0;
+ items.forEach(x=>{let p=pack(x),got=Math.min(p.count,pickedPackages(x)),left=Math.max(0,p.count-got);allCount+=p.count;allGot+=got;allRemaining+=left;if(p.count>0&&got>=p.count)doneRows++;else if(got>0)partialRows++;else notRows++});
+ let stats='<div class="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-4"><div class="bg-slate-100 rounded-xl p-3"><div class="text-xs text-slate-500">УКУПНО ПАКОВАЊА</div><b class="text-xl">'+fmt(allCount)+'</b></div><div class="bg-emerald-50 rounded-xl p-3"><div class="text-xs text-emerald-700">ПРЕУЗЕТО</div><b class="text-xl text-emerald-800">'+fmt(allGot)+'</b></div><div class="bg-amber-50 rounded-xl p-3"><div class="text-xs text-amber-700">НИЈЕ ПРЕУЗЕТО</div><b class="text-xl text-amber-800">'+fmt(allRemaining)+'</b></div><div class="bg-emerald-50 rounded-xl p-3"><div class="text-xs text-emerald-700">ПОТПУНО ПРЕУЗЕТЕ СТАВКЕ</div><b class="text-xl text-emerald-800">'+doneRows+'</b></div><div class="bg-amber-50 rounded-xl p-3"><div class="text-xs text-amber-700">ДЕЛИМИЧНЕ / НЕПРЕУЗЕТЕ</div><b class="text-xl text-amber-800">'+(partialRows+notRows)+'</b><div class="text-[10px] text-amber-700">'+partialRows+' делимично · '+notRows+' није започето</div></div></div>';
+ box.innerHTML=stats;
+ if(!fid){box.innerHTML+= '<p class="text-sm text-slate-500">Изабери газдинство да видиш детаљан преглед његових ставки.</p>';return}
  let list=items.filter(x=>fid==='none'?!farm(x):String(assignedFarmId(x)||'')===fid),groups={};
  list.forEach(x=>{
   let p=pack(x),key=String(x.proizvod||'')+'|'+String(p.size)+'|'+p.unit;
