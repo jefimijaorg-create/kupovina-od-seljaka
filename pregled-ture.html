@@ -11,7 +11,7 @@
 <section id="orders-tab" class="space-y-4"><div class="bg-white p-4 rounded-xl border shadow-sm"><h2 class="font-black text-xl">Поруџбине по купцима</h2><p class="text-sm text-slate-500 mt-1">Преглед шта је сваки купац наручио, по паковањима и цени.</p><div id="orders-summary" class="mt-4"></div></div></section>
 <section id="procurement-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border shadow-sm"><div class="flex flex-wrap items-start justify-between gap-3 mb-4"><div><h2 class="font-black text-xl">Набавка по производима и амбалажи</h2><p class="text-sm text-slate-500 mt-1">Збирни списак за изабрану туру. Иста роба је груписана по величини паковања.</p></div><button onclick="window.print()" class="no-print bg-slate-100 border px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај списак</button></div><div id="procurement-summary"></div></div></section>
 <section id="pickup-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border shadow-sm no-print"><h2 class="font-black text-lg mb-3">Преузимање по газдинству и паковањима</h2><label class="block max-w-xl text-xs font-bold text-slate-500">ИЗАБЕРИ ПРОИЗВОЂАЧА / ГАЗДИНСТВО<select id="pickup-farm-filter" onchange="renderPickupSummary()" class="block w-full mt-1 border rounded-lg px-3 py-2 text-sm"><option value="">Изабери газдинство</option><option value="none">Недодељено</option></select></label><div id="pickup-summary" class="mt-4"></div></div></section>
-<section id="delivery-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border no-print"><p class="text-sm text-slate-600"><i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> Купци су груписани по пунктовима. Означавање доставе чува се у бази.</p><input id="delivery-search" oninput="renderDelivery()" placeholder="Претражи купца или телефон…" class="border rounded-lg px-3 py-2 text-sm w-full sm:w-72 mt-3"></div><div id="points" class="space-y-6"></div></section><section id="debts-tab" class="hidden space-y-6"><div class="bg-white p-4 sm:p-5 rounded-xl border shadow-sm"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="font-black text-xl">Дуговања газдинствима</h2><p class="text-sm text-slate-500 mt-1">Све набавке, производи, количине, уплате и преостале обавезе.</p></div><button onclick="loadDebts()" class="no-print bg-slate-100 border px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button></div><div id="debts-summary" class="mt-4"></div><input id="debts-search" oninput="renderDebts()" placeholder="Претражи газдинство или производ…" class="no-print w-full border rounded-lg px-3 py-2 text-sm mt-4"><div id="debts-list" class="mt-4 space-y-4"></div></div></section></main>
+<section id="delivery-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border no-print"><p class="text-sm text-slate-600"><i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> Купци су груписани по пунктовима. Означавање доставе чува се у бази.</p><input id="delivery-search" oninput="renderDelivery()" placeholder="Претражи купца или телефон…" class="border rounded-lg px-3 py-2 text-sm w-full sm:w-72 mt-3"></div><div id="points" class="space-y-6"></div></section><section id="debts-tab" class="hidden space-y-6"><div class="bg-white p-4 sm:p-5 rounded-xl border shadow-sm"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="font-black text-xl">Дуговања газдинствима</h2><p class="text-sm text-slate-500 mt-1">Све набавке, производи, количине, уплате и преостале обавезе.</p></div><button onclick="loadDebts()" class="no-print bg-slate-100 border px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button></div><div class="mt-5 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 no-print"><h3 class="font-black text-lg text-emerald-900"><i class="fa-solid fa-circle-plus mr-1"></i> Ручни унос дуга</h3><p class="text-sm text-slate-600 mt-1">Изабери газдинство, упиши производ, количину и набавну цену. Дуг се одмах додаје у укупно стање и улази у расподелу будућих уплата.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3"><label class="text-xs font-bold text-slate-600">ГАЗДИНСТВО<select id="manual-debt-farm" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"><option value="">Изабери газдинство</option></select></label><label class="text-xs font-bold text-slate-600">ДАТУМ ДУГА<input id="manual-debt-date" type="date" value="2026-11-01" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">ПОВЕЖИ СА ТУРОМ (ОПЦИОНО)<select id="manual-debt-tour" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"><option value="">Без туре / старо дуговање</option></select></label><label class="text-xs font-bold text-slate-600">ПРОИЗВОД<input id="manual-debt-product" type="text" placeholder="Нпр. козје млеко, сир, јаја…" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">КОЛИЧИНА<input id="manual-debt-quantity" type="number" min="0.001" step="0.001" value="1" oninput="previewManualDebt()" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">ЈЕДИНИЦА МЕРЕ<select id="manual-debt-unit" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"><option value="л">Литар (л)</option><option value="кг">Килограм (кг)</option><option value="ком">Комад (ком)</option><option value="гајба">Гајба</option><option value="паковање">Паковање</option><option value="друго">Друго</option></select></label><label class="text-xs font-bold text-slate-600">НАБАВНА ЦЕНА ПО ЈЕДИНИЦИ (ДИН.)<input id="manual-debt-price" type="number" min="0" step="0.01" placeholder="0.00" oninput="previewManualDebt()" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">НАПОМЕНА (ОПЦИОНО)<input id="manual-debt-note" type="text" placeholder="Додатне информације…" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label></div><div class="mt-3 rounded-lg bg-white border p-3 flex justify-between items-center gap-3"><span class="text-sm font-bold text-slate-600">УКУПАН ДУГ</span><strong id="manual-debt-total" class="text-xl font-black text-emerald-800">0 дин.</strong></div><button type="button" onclick="saveManualDebt()" class="mt-3 w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-lg px-4 py-3"><i class="fa-solid fa-floppy-disk mr-2"></i>Сачувај дуг</button></div><div id="debts-summary" class="mt-4"></div><input id="debts-search" oninput="renderDebts()" placeholder="Претражи газдинство или производ…" class="no-print w-full border rounded-lg px-3 py-2 text-sm mt-4"><div id="debts-list" class="mt-4 space-y-4"></div></div></section></main>
 <script>
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,'Content-Type':'application/json'};
 let tours=[],items=[],farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourId=68,view='orders';
@@ -224,6 +224,41 @@ async function copyPointViber(pointId){
  }catch(e){say('Не могу да копирам списак: '+e.message,true)}
 }
 
+function populateManualDebtOptions(){
+ const farmSelect=document.getElementById('manual-debt-farm'),tourSelect=document.getElementById('manual-debt-tour');
+ if(farmSelect){const selected=farmSelect.value;farmSelect.innerHTML='<option value="">Изабери газдинство</option>'+farms.map(f=>'<option value="'+esc(f.id)+'">'+esc(farmName(f.name))+'</option>').join('');farmSelect.value=selected}
+ if(tourSelect){const selected=tourSelect.value;tourSelect.innerHTML='<option value="">Без туре / старо дуговање</option>'+tours.map(t=>'<option value="'+esc(t.id)+'">'+esc(t.naziv||('Тура '+t.id))+' · '+esc(t.datum||'')+'</option>').join('');tourSelect.value=selected}
+}
+function previewManualDebt(){
+ const q=n(document.getElementById('manual-debt-quantity')?.value),p=n(document.getElementById('manual-debt-price')?.value);
+ const out=document.getElementById('manual-debt-total');if(out)out.textContent=debtMoney(q*p);
+}
+async function saveManualDebt(){
+ try{
+  const farmId=Number(document.getElementById('manual-debt-farm')?.value);
+  const product=(document.getElementById('manual-debt-product')?.value||'').trim();
+  const quantity=n(document.getElementById('manual-debt-quantity')?.value);
+  const unit=document.getElementById('manual-debt-unit')?.value||'ком';
+  const unitPrice=n(document.getElementById('manual-debt-price')?.value);
+  const date=document.getElementById('manual-debt-date')?.value||new Date().toISOString().slice(0,10);
+  const tourValue=document.getElementById('manual-debt-tour')?.value||'';
+  const note=(document.getElementById('manual-debt-note')?.value||'').trim();
+  if(!farmId)throw Error('Изабери газдинство.');
+  if(!product)throw Error('Унеси назив производа или ставке дуга.');
+  if(!Number.isFinite(quantity)||quantity<=0)throw Error('Количина мора бити већа од нуле.');
+  if(!Number.isFinite(unitPrice)||unitPrice<0)throw Error('Унеси исправну набавну цену.');
+  const total=Math.round(quantity*unitPrice*100)/100;
+  if(total<=0)throw Error('Укупан дуг мора бити већи од нуле.');
+  const payload={gazdinstvo_id:farmId,tura_id:tourValue?Number(tourValue):null,datum:date,proizvod:product,kolicina:quantity,jedinica:unit,nabavna_cena:unitPrice,ukupno:total,placeno:0,napomena:note||null};
+  const saved=await api('nabavka_evidencija',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
+  if(!Array.isArray(saved)||!saved.length)throw Error('База није потврдила упис дуга.');
+  await loadDebts();
+  ['manual-debt-product','manual-debt-note','manual-debt-price'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  document.getElementById('manual-debt-quantity').value='1';
+  previewManualDebt();renderDebts();
+  say('Нови дуг је сачуван: '+debtFarmName(farmId)+' · '+product+' · '+debtMoney(total)+'.');
+ }catch(e){say('Дуг није сачуван: '+e.message,true)}
+}
 async function loadDebts(){
  const results=await Promise.all([
   api('nabavka_evidencija?select=*&order=datum.asc,id.asc'),
@@ -231,6 +266,7 @@ async function loadDebts(){
   api('producer_payments?select=*&order=paid_at.desc,created_at.desc')
  ]);
  procurementRows=results[0]||[];
+ populateManualDebtOptions();
  producerPayouts=results[1]||[];
  producerPayments=results[2]||[];
  if(document.getElementById('debts-tab')&&!document.getElementById('debts-tab').classList.contains('hidden'))renderDebts();
