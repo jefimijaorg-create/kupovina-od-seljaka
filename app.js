@@ -16,6 +16,8 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function cartQty(){return state.cart.reduce((s,x)=>s+Number(x.qty||0),0)}
 function cartCount(){
   const qty=cartQty();
+  const homeCount=document.getElementById('homeCartCount');
+  if(homeCount)homeCount.textContent=qty;
   const e=document.getElementById('cartCount');
   if(e)e.textContent=qty;
   const link=document.getElementById('cartLink');
@@ -61,7 +63,7 @@ function formatDeliveryDate(dateString){
 }
 function orderDeadline(dateString){
   const d=new Date(dateString+'T12:00:00');
-  d.setDate(d.getDate()-4);
+  d.setDate(d.getDate()-3);
   return d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long'})+' у 22:00';
 }
 
@@ -70,20 +72,61 @@ async function renderNextDelivery(){
   const info=document.getElementById('deliveryInfo');
   if(!title)return;
   try{
-    // Приказујемо најновију отворену туру из постојеће базе.
-    const rows=await api('ture?select=id,naziv,datum,status&status=eq.open&order=datum.desc,id.desc&limit=1');
-    if(!rows.length){
-      title.textContent='Нема отворене туре';
-      if(info)info.textContent='';
+    const t=await getCurrentTour();
+    if(!t){
+      title.textContent='Тренутно нема заказане туре';
+      if(info)info.textContent='Погледај поново када објавимо следећу доставу.';
       return;
     }
-    const t=rows[0];
-    const d=new Date(t.datum+'T12:00:00');
-    title.textContent=d.toLocaleDateString('sr-RS',{day:'numeric',month:'numeric',year:'numeric'});
-    if(info)info.textContent=(t.naziv||'Отворена тура')+(String(t.naziv||'').toLocaleLowerCase('sr').includes('test')?' · пробна тура за проверу система':'');
+    title.textContent=formatDeliveryDate(t.datum);
+    const deadline=orderDeadline(t.datum);
+    if(info)info.textContent='Поруџбине примамо до '+deadline+'. '+(t.naziv||'');
   }catch(e){
-    title.textContent='Датум није доступан';
+    title.textContent='Датум туре тренутно није доступан';
     if(info)info.textContent='';
+    console.error(e);
+  }
+}
+
+async function renderHomePoints(){
+  const box=document.getElementById('homePoints');
+  const status=document.getElementById('homePointStatus');
+  const selected=document.getElementById('homePointSelected');
+  if(!box)return;
+  try{
+    const tour=await getCurrentTour();
+    if(!tour){status.textContent='Пунктови ће бити приказани када објавимо следећу туру.';return;}
+    const config=await getTourConfig(tour.id);
+    const ids=config.pointIds;
+    if(!ids.length){status.textContent='Пунктови за ову туру још нису објављени.';return;}
+    const rows=await api('punktovi?select=id,name,city,address,latitude,longitude,is_active,description,vreme,aktivan,slug&order=sort_order.asc&limit=100&id=in.('+ids.join(',')+')');
+    const active=rows.filter(p=>ids.includes(String(p.id))&&String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
+    if(!active.length){status.textContent='Пунктови за ову туру још нису доступни.';return;}
+    status.textContent='Изабери један од '+active.length+' места преузимања:';
+    const render=()=>{
+      box.innerHTML=active.map(p=>'<button type="button" class="home-point '+(String(state.point?.id)===String(p.id)?'active':'')+'" data-home-point="'+esc(p.id)+'"><span class="point-dot">'+(String(state.point?.id)===String(p.id)?'✓':'')+'</span><span class="point-copy"><strong>'+esc(p.name||p.address||'Пункт')+'</strong><small>'+esc([p.address,p.city].filter(Boolean).join(', ')||p.description||'Место преузимања')+'</small></span></button>').join('');
+      box.querySelectorAll('[data-home-point]').forEach(b=>b.onclick=()=>{
+        const p=active.find(x=>String(x.id)===b.dataset.homePoint);
+        if(!p)return;
+        state.point=p;state.delivery='punkt';state.pickupMode='main';state.proposalAddress='';save();
+        render();
+        selected.classList.remove('hidden');
+        selected.innerHTML='<strong>✓ Изабран пункт: '+esc(p.name||'Пункт')+'</strong><br>Избор је сачуван. Сада можеш да изабереш производе или да промениш пункт.';
+      });
+    };
+    if(state.point){
+      const match=active.find(p=>String(p.id)===String(state.point.id));
+      if(match)state.point=match;
+      else state.point=null;
+      save();
+    }
+    render();
+    if(state.point&&active.some(p=>String(p.id)===String(state.point.id))){
+      selected.classList.remove('hidden');
+      selected.innerHTML='<strong>✓ Изабран пункт: '+esc(state.point.name||'Пункт')+'</strong><br>Избор је сачуван.';
+    }
+  }catch(e){
+    status.textContent='Нисмо успели да учитамо пунктове. Покушај поново.';
     console.error(e);
   }
 }
@@ -530,7 +573,7 @@ function initConfirm(){
 }
 
 const page=document.body.dataset.page;
-if(page==='home'){cartCount();renderNextDelivery();renderProducts()}
+if(page==='home'){cartCount();renderNextDelivery();renderHomePoints();renderProducts()}
 if(page==='cart'){cartCount();renderCart()}
 if(page==='map')initMap();
 if(page==='confirm')initConfirm();
