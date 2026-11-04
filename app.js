@@ -120,10 +120,11 @@ async function renderHomePoints(){
     showConfirmed();
   };
   const selectPoint=p=>{
+    const changedPoint=String(state.point?.id||'')!==String(p.id);
     state.point=p;
     state.delivery='punkt';
-    state.pickupMode=state.pickupMode||'main';
-    state.proposalAddress=state.pickupMode==='proposal'?(state.proposalAddress||''):'';
+    if(changedPoint){state.pickupMode='main';state.proposalAddress='';}
+    else state.pickupMode=state.pickupMode||'main';
     state.homePickupConfirmed=false;
     save();
     renderPointList();
