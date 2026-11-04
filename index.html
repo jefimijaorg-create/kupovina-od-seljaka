@@ -2,20 +2,19 @@
 <html lang="sr" class="h-full">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Наручи домаће из Велике Плане — повезујемо газдинства из Велике Плане и околних села са људима у Београду, прикупљамо поруџбине и организујемо доставу и преузимање.">
-<meta name="keywords" content="Наручи домаће из Велике Плане, домаћи производи, газдинства, Велика Плана, Београд, домаће млеко, сир, јаја">
-<title>Наручи домаће из Велике Плане</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Наручи домаће — домаће од произвођача до тебе. Повезујемо домаће произвођаче са купцима и организујемо преузимање и доставу.">
+<meta name="keywords" content="Наручи домаће, домаћи производи, газдинства, Велика Плана, Београд, млеко, сир, јаја">
+<title>Наручи домаће</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="style.css?v=20261104-7">
+<link rel="stylesheet" href="style.css?v=20261104-8">
 <style>
 body{font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#111827}
 h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
-.app-shell{width:100%;max-width:560px;height:100vh;background:#fff;display:flex;flex-direction:column;overflow:hidden}
-.app-main{flex:1;overflow-y:auto;padding-bottom:92px;background:rgba(254,243,199,.32)}
+.app-shell{position:relative;width:100%;max-width:560px;height:100vh;height:100dvh;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.app-main{flex:1;overflow-y:auto;padding-bottom:24px;background:rgba(254,243,199,.32);overscroll-behavior:contain}
 .app-card{background:#fff;border:2px solid #fde68a;border-radius:24px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.story-card{background:#fcf8ec;border:2px solid #d4c39f;border-radius:24px;padding:20px}
 .story-text{background:rgba(255,255,255,.9);border:1px solid #fde7a9;border-radius:18px;padding:16px;font-size:13px;line-height:1.65;color:#374151}
 .story-text p{margin:0 0 12px}.story-text p:last-child{margin-bottom:0}
 .filter-btn{white-space:nowrap;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#374151}
@@ -25,10 +24,25 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 .products-group-grid{display:flex;flex-direction:column;gap:10px}.product{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:12px;box-shadow:0 1px 5px rgba(0,0,0,.04)}
 .product>img{width:100%;height:150px;object-fit:cover;border-radius:13px;margin-bottom:10px}.product>h3{font-size:15px;font-weight:900;margin:0}.product>.meta{font-size:11px;color:#6b7280;margin-top:3px}.product>.producer{font-size:11px;color:#166534;font-weight:700;margin-top:4px}
 .variant-list{display:flex;flex-direction:column;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid #f3f4f6}.variant-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:9px}.variant-info strong{display:block;font-size:12px}.variant-info span{display:block;font-size:11px;font-weight:800;color:#047857;margin-top:2px}.variant-qty{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:3px 6px}.variant-qty button{width:26px;height:26px;border:0;border-radius:50%;background:transparent;font-weight:900;font-size:16px;line-height:1;cursor:pointer}.variant-qty .variant-plus{color:#047857}.variant-qty b{width:18px;text-align:center;font-size:12px}
-.bottom-action{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);padding:10px 14px 14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid #e5e7eb;z-index:30}
-.bottom-action button{width:100%;border:0;border-radius:15px;padding:13px;background:#047857;color:#fff;font-weight:900;font-size:13px}.bottom-action button:disabled{background:#d1d5db;color:#6b7280}
-@media(min-width:700px){.app-shell{height:92vh;border-radius:36px;margin:auto;border:8px solid #1f2937}.app-main{border-radius:28px}.bottom-action{bottom:4vh;border-radius:0 0 28px 28px}}
- 
+.home-intro{padding:5px 2px 2px}.home-kicker{font-size:10px;font-weight:900;letter-spacing:1px;color:#047857}
+.home-intro h1{font-size:29px;line-height:1.12;font-weight:900;color:#17231b;margin:9px 0}.home-intro p{font-size:13px;line-height:1.55;color:#59645c;margin:0}
+.home-tour{border:1px solid #a7f3d0!important;background:#ecfdf5!important;padding:14px}
+.home-main-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.home-main-actions button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;min-width:0;padding:13px 10px;border:1px solid #e5e7eb;border-radius:17px;background:#fff;color:#17231b;box-shadow:0 2px 8px #00000008}
+.home-main-actions button>span{font-size:22px}.home-main-actions strong{font-size:12px;font-weight:900}.home-main-actions small{font-size:9px;line-height:1.35;color:#6b7280}
+.home-main-actions button:active{transform:scale(.98)}
+.home-panel.hidden{display:none}
+.home-panel{padding:18px 16px 24px}
+.home-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sheet-close{width:38px;height:38px;border:0;border-radius:50%;background:#f3f4f6;color:#374151;font-size:17px}
+#homeSheetLayer{display:none;position:absolute;inset:0;z-index:100;pointer-events:none}
+#homeSheetLayer.open{display:block;pointer-events:auto}
+#homeSheetBackdrop{position:absolute;inset:0;background:rgba(17,24,39,.48);opacity:0;transition:opacity .22s ease}
+#homeSheetLayer.visible #homeSheetBackdrop{opacity:1}
+#homeBottomSheet{position:absolute;left:0;right:0;bottom:0;max-height:90%;max-height:90dvh;overflow-y:auto;overscroll-behavior:contain;background:#fff;border-radius:25px 25px 0 0;box-shadow:0 -12px 40px #0002;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);padding-bottom:max(18px,env(safe-area-inset-bottom))}
+#homeSheetLayer.visible #homeBottomSheet{transform:translateY(0)}
+.sheet-handle{width:42px;height:5px;border-radius:9px;background:#d1d5db;margin:10px auto 5px}
+.home-point-selected{padding:12px;border-radius:13px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:12px;line-height:1.45}
 .home-points{display:grid;grid-template-columns:1fr;gap:8px}
 .home-point{display:flex;align-items:center;gap:11px;width:100%;min-width:0;text-align:left;padding:13px;border:1.5px solid #e5e7eb;border-radius:14px;background:#fff;color:#111827}
 .home-point.active{border-color:#047857;background:#ecfdf5}
@@ -37,57 +51,38 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 .home-point .point-copy{display:block;min-width:0;flex:1}
 .home-point strong{display:block;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
 .home-point small{display:block;margin-top:3px;color:#6b7280;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
-.home-point-selected{padding:12px;border-radius:13px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:12px;line-height:1.45}
-.home-bottom-nav{position:fixed;z-index:1000;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:8px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid #e5e7eb;backdrop-filter:blur(12px)}
-.home-bottom-nav a{display:flex;justify-content:center;align-items:center;gap:5px;min-width:0;padding:11px 5px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#14532d;text-decoration:none;font-size:11px;font-weight:900;white-space:nowrap}
-.home-bottom-nav b{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#fef3c7;color:#78350f;font-size:10px}
-@media(min-width:700px){.home-bottom-nav{bottom:4vh;border-radius:16px}}
-.home-intro{padding:5px 2px 2px}
-.home-kicker{font-size:10px;font-weight:900;letter-spacing:1px;color:#047857}
-.home-intro h1{font-size:29px;line-height:1.12;font-weight:900;color:#17231b;margin:9px 0}
-.home-intro p{font-size:13px;line-height:1.55;color:#59645c;margin:0}
-.home-more{margin-top:10px;padding:7px 0;border:0;background:none;color:#047857;font-size:12px;font-weight:900}
-.home-tour{border:1px solid #a7f3d0!important;background:#ecfdf5!important;padding:14px}
-.home-main-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.home-main-actions button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;min-width:0;padding:13px 10px;border:1px solid #e5e7eb;border-radius:17px;background:#fff;color:#17231b;box-shadow:0 2px 8px #00000008}
-.home-main-actions button>span{font-size:22px}
-.home-main-actions strong{font-size:12px;font-weight:900}
-.home-main-actions small{font-size:9px;line-height:1.35;color:#6b7280}
-.home-panel{scroll-margin-top:12px}
-.home-panel-next{display:block;width:100%;margin-top:12px;padding:13px;border-radius:13px;background:#047857;color:white;text-align:center;text-decoration:none;font-size:12px;font-weight:900}
-.home-panel.hidden{display:none}
-@media(min-width:700px){.home-main-actions button{padding:18px}.home-main-actions strong{font-size:14px}}
-
+.home-panel-next{display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:13px;background:#047857;color:white;text-align:center;text-decoration:none;font-size:13px;font-weight:900}
+.sheet-proposal{display:grid;gap:8px;margin-top:14px;padding-top:13px;border-top:1px solid #e5e7eb}
+.sheet-proposal input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px}
+body.sheet-active{overflow:hidden}
+@media(min-width:700px){.app-shell{height:92vh;height:92dvh;border-radius:36px;margin:auto;border:8px solid #1f2937}.home-main-actions button{padding:18px}.home-main-actions strong{font-size:14px}#homeBottomSheet{border-radius:25px 25px 20px 20px;max-height:84%}}
+@media(max-width:370px){.home-intro h1{font-size:26px}.home-main-actions{gap:6px}.home-main-actions button{padding:11px 7px}.home-main-actions strong{font-size:11px}}
 </style>
 </head>
 <body data-page="home" class="h-full">
 <div class="app-shell">
 <header class="bg-white border-b border-gray-100 py-3 px-4 flex justify-between items-center z-20 flex-shrink-0">
-  <a href="index.html" class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700"><i class="fa-solid fa-house text-sm"></i></a>
+  <a href="index.html" class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700" aria-label="Почетна"><i class="fa-solid fa-house text-sm"></i></a>
   <a href="index.html" class="flex items-center gap-1.5 no-underline">
     <span class="text-xl">🌱</span>
     <div class="text-center"><span class="text-xs font-black text-emerald-800 uppercase block leading-none">НАРУЧИ ДОМАЋЕ</span><span class="text-[9px] font-semibold text-gray-500 tracking-wider">из Велике Плане</span></div>
   </a>
-  <div class="flex items-center gap-2">
-    <button onclick="showToast('Поделите са пријатељима у Viber групи!')" class="bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl font-bold text-xs"><i class="fa-solid fa-share-nodes mr-1"></i>Подели</button>
-    <a href="korpa.html" class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center relative" aria-label="Корпа"><i class="fa-solid fa-cart-shopping text-sm"></i><span id="cartCount" class="absolute -top-1 -right-1 bg-amber-400 text-gray-900 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span></a>
-  </div>
+  <button id="cartLink" type="button" onclick="showHomePanel('cart')" class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center relative" aria-label="Отвори корпу"><i class="fa-solid fa-cart-shopping text-sm"></i><span id="cartCount" class="absolute -top-1 -right-1 bg-amber-400 text-gray-900 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span></button>
 </header>
 
-<main class="app-main">
+<main class="app-main" id="homeMain">
 <div class="p-4 space-y-4">
   <section class="home-intro">
     <div class="home-kicker">🌿 НАРУЧИ ДОМАЋЕ · ИЗ ВЕЛИКЕ ПЛАНЕ</div>
     <h1>Домаће од произвођача до тебе.</h1>
-    <p>Повезујемо те са домаћим произвођачима и организујемо преузимање и доставу.</p>
-    <button type="button" class="home-more" onclick="showHomePanel('about')">Види више <span>↓</span></button>
+    <p>Произвођачи припремају своје производе, а ми организујемо преузимање и доставу.</p>
   </section>
 
   <section class="app-card home-tour" id="nextDelivery">
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center text-xl">🚚</div>
       <div class="min-w-0">
-        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">Када је следећа достава?</div>
+        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">СЛЕДЕЋА ДОСТАВА</div>
         <div id="deliveryTitle" class="text-base font-black text-gray-900">Учитавање туре…</div>
         <p id="deliveryInfo" class="text-[11px] text-gray-600 mt-1"></p>
       </div>
@@ -95,63 +90,110 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
   </section>
 
   <nav class="home-main-actions" aria-label="Главни мени">
-    <button type="button" onclick="showHomePanel('delivery')"><span>📍</span><strong>Достава</strong><small>Где преузимамо?</small></button>
-    <button type="button" onclick="showHomePanel('products')"><span>🧺</span><strong>Производи</strong><small>Погледај понуду</small></button>
-    <button type="button" onclick="showHomePanel('about')"><span>🌱</span><strong>О пројекту</strong><small>Ко смо и како радимо</small></button>
+    <button type="button" onclick="showHomePanel('delivery')"><span>📍</span><strong>ДОСТАВА</strong><small>Изабери место преузимања</small></button>
+    <button type="button" onclick="showHomePanel('products')"><span>🧺</span><strong>ПРОИЗВОДИ</strong><small>Погледај понуду</small></button>
+    <button type="button" onclick="showHomePanel('about')"><span>🌱</span><strong>О ПРОЈЕКТУ</strong><small>Како функционише</small></button>
   </nav>
-
-  <section class="app-card space-y-3 home-panel hidden" id="homeDeliveryPanel">
-    <div>
-      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 ГДЕ ПРЕУЗИМАМО?</div>
-      <h2 class="text-base font-black text-gray-900 mt-1">Изабери пункт који ти одговара</h2>
-      <p class="text-xs text-gray-600 mt-1">Погледај места преузимања за следећу туру и изабери свој пункт.</p>
-    </div>
-    <div id="homePointStatus" class="text-xs text-gray-500" aria-live="polite">Учитавање пунктова…</div>
-    <div id="homePoints" class="home-points"></div>
-    <div id="homePointSelected" class="home-point-selected hidden" aria-live="polite"></div>
-    <p class="text-[11px] text-gray-500 m-0">Ако ти ниједан пункт не одговара, у следећем кораку можеш да предложиш место у близини.</p>
-    <a class="home-panel-next" href="index.html#proizvodi" onclick="showHomePanel('products');return false;">Настави на производе →</a>
-  </section>
-
-  <section class="app-card space-y-3 home-panel hidden" id="homeProductsPanel">
-    <div>
-      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🧺 ШТА ДОСТАВЉАМО?</div>
-      <h2 class="text-base font-black text-gray-900 mt-1">Изабери домаће производе</h2>
-      <p class="text-xs text-gray-600 mt-1">Произвођачи формирају понуду и одређују цене. Изабери паковања и количине.</p>
-    </div>
-    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-      <span id="productStatus" class="text-[10px] text-gray-500">Учитавање...</span>
-    </div>
-    <div id="productFilter" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
-    <div id="products" class="space-y-4"></div>
-    <a class="home-panel-next" href="korpa.html">Погледај корпу и настави →</a>
-  </section>
-
-  <section class="app-card home-panel hidden" id="homeAboutPanel">
-    <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🌱 О ПРОЈЕКТУ</div>
-    <h2 class="text-lg font-black text-gray-900 mt-2">Домаће од произвођача до тебе.</h2>
-    <div class="story-text mt-3">
-      <p>„Наручи домаће“ повезује домаће пољопривредне произвођаче из Велике Плане и околних села са купцима.</p>
-      <p>Произвођачи припремају своје производе, одређују понуду и цене. Ми организујемо преузимање и доставу до договорених пунктова.</p>
-      <p>Тако подржавамо домаћу производњу и олакшавамо да квалитетни производи стигну до твог дома.</p>
-    </div>
-    <button type="button" class="home-panel-next" onclick="showHomePanel('delivery')">Погледај где достављамо →</button>
-  </section>
 </div>
 </main>
 
+<div id="homeSheetLayer" aria-hidden="true">
+  <div id="homeSheetBackdrop" onclick="closeHomePanel()"></div>
+  <section id="homeBottomSheet" role="dialog" aria-modal="true" aria-label="Садржај панела">
+    <div class="sheet-handle"></div>
+    <section class="home-panel hidden" id="homeDeliveryPanel">
+      <div class="home-panel-head">
+        <div><div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 ДОСТАВА</div><h2 class="text-lg font-black text-gray-900 mt-1">Где преузимаш своју поруџбину?</h2></div>
+        <button type="button" class="sheet-close" onclick="closeHomePanel()" aria-label="Затвори">×</button>
+      </div>
+      <p class="text-xs text-gray-600 mb-3">Изабери пункт који ти највише одговара.</p>
+      <div id="homePointStatus" class="text-xs text-gray-500 mb-2" aria-live="polite">Учитавање пунктова…</div>
+      <div id="homePoints" class="home-points"></div>
+      <div id="homePointSelected" class="home-point-selected hidden mt-3" aria-live="polite"></div>
+      <div class="sheet-proposal">
+        <strong class="text-sm">Не одговара ти ниједан пункт?</strong>
+        <p class="text-xs text-gray-600">Напиши нам место у близини које ти одговара.</p>
+        <input id="homeProposalAddress" type="text" maxlength="180" placeholder="Унеси место, насеље или улицу">
+        <button type="button" class="home-panel-next" onclick="saveHomeProposal()">Сачувај предлог места</button>
+      </div>
+      <button type="button" class="home-panel-next" onclick="showHomePanel('products')">Настави на производе →</button>
+    </section>
 
+    <section class="home-panel hidden" id="homeProductsPanel">
+      <div class="home-panel-head">
+        <div><div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🧺 ПРОИЗВОДИ</div><h2 class="text-lg font-black text-gray-900 mt-1">Шта достављамо?</h2></div>
+        <button type="button" class="sheet-close" onclick="closeHomePanel()" aria-label="Затвори">×</button>
+      </div>
+      <p class="text-xs text-gray-600 mb-3">Произвођачи формирају понуду и одређују цене. Изабери паковања и количине.</p>
+      <div class="flex items-center justify-between border-b border-gray-100 pb-2"><span id="productStatus" class="text-[10px] text-gray-500">Учитавање…</span></div>
+      <div id="productFilter" class="flex gap-2 overflow-x-auto py-2 no-scrollbar"></div>
+      <div id="products" class="space-y-4"></div>
+      <button type="button" class="home-panel-next" onclick="showHomePanel('cart')">Погледај корпу и настави →</button>
+    </section>
+
+    <section class="home-panel hidden" id="homeAboutPanel">
+      <div class="home-panel-head">
+        <div><div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🌱 О ПРОЈЕКТУ</div><h2 class="text-lg font-black text-gray-900 mt-1">Како функционише Наручи домаће?</h2></div>
+        <button type="button" class="sheet-close" onclick="closeHomePanel()" aria-label="Затвори">×</button>
+      </div>
+      <div class="story-text">
+        <p><strong>1. Произвођачи припремају понуду.</strong> Сами бирају производе, формирају понуду и одређују цене.</p>
+        <p><strong>2. Ви бирате производе.</strong> Прегледате понуду и припремате поруџбину.</p>
+        <p><strong>3. Ми организујемо доставу.</strong> Повезујемо купце и произвођаче и организујемо преузимање.</p>
+        <p>Произвођачи продају своје производе, а „Наручи домаће“ организује логистику и доставу.</p>
+      </div>
+      <button type="button" class="home-panel-next" onclick="showHomePanel('delivery')">Погледај где достављамо →</button>
+    </section>
+
+    <section class="home-panel hidden" id="homeCartPanel">
+      <div class="home-panel-head">
+        <div><div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🛒 КОРПА</div><h2 class="text-lg font-black text-gray-900 mt-1">Твоја поруџбина</h2></div>
+        <button type="button" class="sheet-close" onclick="closeHomePanel()" aria-label="Затвори">×</button>
+      </div>
+      <div id="cartBox"></div>
+      <button id="cartContinue" type="button" class="home-panel-next">Настави наручивање →</button>
+    </section>
+  </section>
 </div>
+</div>
+
 <script>
 function showHomePanel(name){
-  const ids={delivery:'homeDeliveryPanel',products:'homeProductsPanel',about:'homeAboutPanel'};
+  const ids={delivery:'homeDeliveryPanel',products:'homeProductsPanel',about:'homeAboutPanel',cart:'homeCartPanel'};
+  const layer=document.getElementById('homeSheetLayer');
   Object.values(ids).forEach(id=>document.getElementById(id)?.classList.add('hidden'));
   const target=document.getElementById(ids[name]);
   if(!target)return;
   target.classList.remove('hidden');
-  target.scrollIntoView({behavior:'smooth',block:'start'});
+  layer.classList.add('open');
+  layer.setAttribute('aria-hidden','false');
+  document.body.classList.add('sheet-active');
+  requestAnimationFrame(()=>layer.classList.add('visible'));
+  if(name==='cart'&&typeof renderCart==='function')renderCart();
+  if(name==='delivery')document.getElementById('homeProposalAddress').value=(window.homeProposalValue||'');
 }
+function closeHomePanel(){
+  const layer=document.getElementById('homeSheetLayer');
+  layer.classList.remove('visible');
+  layer.setAttribute('aria-hidden','true');
+  document.body.classList.remove('sheet-active');
+  setTimeout(()=>{layer.classList.remove('open');document.querySelectorAll('.home-panel').forEach(p=>p.classList.add('hidden'));},280);
+}
+function saveHomeProposal(){
+  const input=document.getElementById('homeProposalAddress');
+  const value=String(input?.value||'').trim();
+  if(value.length<3){input?.focus();return;}
+  if(typeof state!=='undefined'&&typeof save==='function'){
+    state.proposalAddress=value;
+    state.pickupMode='proposal';
+    save();
+    window.homeProposalValue=value;
+    const status=document.getElementById('homePointStatus');
+    if(status)status.textContent='Предлог места је сачуван. Потврдићемо да ли можемо да организујемо преузимање.';
+  }
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeHomePanel();});
 </script>
-<script src="app.js?v=20261104-6"></script>
+<script src="app.js?v=20261104-8"></script>
 </body>
 </html>
