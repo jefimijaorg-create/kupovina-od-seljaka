@@ -3,177 +3,85 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#496a3f">
-<meta name="description" content="Упознај пројекат Наручи домаће — обједињена понуда домаћих произвођача, групна куповина и заједничка достава.">
+<meta name="theme-color" content="#f5f1e8">
+<meta name="description" content="О пројекту Наручи домаће — идеја повезивања домаћих произвођача, купаца и заједничке доставе.">
 <title>О пројекту — Наручи домаће</title>
 <link rel="stylesheet" href="style.css">
 <style>
-:root{--green:#496a3f;--deep:#263b2b;--soft:#edf3e9;--line:#e4ded2;--ink:#263126;--muted:#62675f}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{background:#f5f1e8;color:var(--ink)}
-.site-head{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding:0 16px}
-.head-inner{width:min(980px,100%);min-height:60px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-size:14px;font-weight:900;color:var(--green);text-decoration:none;white-space:nowrap}
-.head-note{font-size:11px;color:var(--muted)}
-.page{width:min(920px,92%);margin:auto;padding:22px 0 50px}
-.hero{position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(135deg,#344d32,#668052);color:#fff;padding:34px 27px;box-shadow:0 12px 28px #263b2b18}
-.hero:after{content:"🌿";position:absolute;right:15px;bottom:-32px;font-size:150px;opacity:.12;transform:rotate(-18deg);pointer-events:none}
-.kicker{position:relative;z-index:1;font-size:10px;letter-spacing:1.7px;font-weight:900;color:#e0ead8}
-.hero h1{position:relative;z-index:1;font-family:Georgia,serif;font-size:clamp(36px,7vw,56px);line-height:1.04;letter-spacing:-1.1px;margin:12px 0;max-width:650px}
-.hero p{position:relative;z-index:1;max-width:610px;color:#f0f3e9;font-size:15px;line-height:1.65;margin:0}
-.hero-line{position:relative;z-index:1;margin-top:17px;font-size:12px;line-height:1.6;font-weight:800;color:#fff}
-.section{margin-top:30px}
-.section-head{display:block;margin-bottom:15px}
-.eyebrow{font-size:10px;letter-spacing:1.5px;color:var(--green);font-weight:950}
-.section h2{font-family:Georgia,serif;font-size:clamp(25px,4vw,33px);line-height:1.15;margin:7px 0 9px}
-.intro{font-size:14px;line-height:1.7;color:var(--muted);margin:0;max-width:700px}
-.story{background:#fff;border:1px solid var(--line);border-radius:19px;padding:20px;box-shadow:0 4px 16px #263b2b08}
-.story p{font-size:14px;line-height:1.75;color:#505b50;margin:0 0 12px}
-.story p:last-child{margin-bottom:0}
-.story strong{color:#263b2b}
-.pullquote{margin-top:16px;padding:16px 17px;border-left:4px solid #78966a;border-radius:0 13px 13px 0;background:var(--soft);font-family:Georgia,serif;font-size:20px;line-height:1.35;color:#344d32}
-.model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.model-card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:17px;min-height:155px}
-.model-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:var(--soft);font-size:21px;margin-bottom:12px}
-.model-card h3{font-size:15px;margin:0 0 7px;color:#2f4430}
-.model-card p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
-.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:13px}
-.flow-item{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 11px}
-.flow-num{font-size:10px;font-weight:900;color:var(--green);letter-spacing:1px}
-.flow-item strong{display:block;font-size:13px;line-height:1.3;margin:7px 0 5px}
-.flow-item span:last-child{display:block;font-size:11px;line-height:1.5;color:var(--muted)}
-.mission{border-radius:20px;background:#e9efe4;border:1px solid #d7e1d0;padding:21px}
-.mission h2{font-family:Georgia,serif;font-size:27px;margin:0 0 9px;color:#30462f}
-.mission p{font-size:14px;line-height:1.7;color:#52604f;margin:0}
-.cta-section{margin-top:31px}
-.cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.cta{min-height:172px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:12px;padding:19px;border-radius:19px;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink);box-shadow:0 5px 18px #263b2b0a;transition:transform .18s,border-color .18s}
-.cta:hover{transform:translateY(-2px);border-color:#b8c9ae}
-.cta-top{display:flex;align-items:center;justify-content:space-between;width:100%}
-.cta-icon{width:44px;height:44px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:23px}
-.cta-arrow{font-size:21px;color:var(--green)}
-.cta strong{font-size:17px;color:#2f4430}
-.cta small{display:block;color:var(--muted);font-size:12px;line-height:1.55;margin-top:5px}
-.cta-label{font-size:11px;font-weight:900;color:var(--green)}
-.footer{text-align:center;font-size:10px;line-height:1.7;color:#7b8177;margin:27px 0 0}
-@media(max-width:620px){
- .page{width:92%;padding-top:13px}
- .hero{padding:27px 20px;border-radius:20px}
- .hero h1{font-size:39px;max-width:440px}
- .hero p{font-size:14px}
- .section{margin-top:25px}
- .story{padding:17px}
- .story p{font-size:13px}
- .model-grid{grid-template-columns:1fr 1fr;gap:9px}
- .model-card{padding:13px;min-height:166px}
- .model-card h3{font-size:13px}
- .model-card p{font-size:11px}
- .flow{grid-template-columns:1fr 1fr;gap:8px}
- .flow-item{min-height:118px;padding:12px}
- .mission{padding:18px}
- .cta-grid{grid-template-columns:1fr;gap:10px}
- .cta{min-height:142px;padding:16px}
- .head-note{font-size:10px;text-align:right}
-}
-@media(max-width:370px){.head-note{display:none}.model-grid{grid-template-columns:1fr}.model-card{min-height:auto}}
+body{margin:0;background:#f5f1e8;color:#263126;font-family:Arial,sans-serif}
+header{background:#fff;border-bottom:1px solid #e4ded2;padding:17px 20px}
+header div{width:min(760px,100%);margin:auto;font-weight:900;font-size:14px;color:#496a3f}
+main{width:min(760px,calc(100% - 36px));margin:0 auto;padding:34px 0 60px}
+.kicker{font-size:11px;letter-spacing:1.5px;font-weight:800;color:#718365}
+h1,h2{font-family:Georgia,serif;color:#263b2b}
+h1{font-size:clamp(35px,7vw,52px);line-height:1.08;margin:12px 0 15px}
+h2{font-size:25px;line-height:1.2;margin:34px 0 12px}
+p{font-size:15px;line-height:1.8;color:#505b50;margin:0 0 14px}
+.lead{font-size:17px;line-height:1.75;color:#465343}
+.rule{height:1px;background:#e1dbcf;margin:28px 0}
+ul{padding-left:21px;margin:10px 0 18px}
+li{font-size:14px;line-height:1.8;color:#505b50;padding-left:3px}
+.note{font-size:13px;color:#73796f;line-height:1.7}
+.route-title{font-weight:800;color:#344d32;margin:18px 0 5px;font-size:15px}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid #e1dbcf;color:#7b8177;font-size:11px;line-height:1.7}
+@media(max-width:520px){main{padding-top:25px}h2{font-size:23px}p{font-size:14px}.lead{font-size:15px}}
 </style>
 </head>
 <body>
-<header class="site-head">
- <div class="head-inner">
-  <a class="brand" href="index.html">🌱 НАРУЧИ ДОМАЋЕ</a>
-  <span class="head-note">Домаће од произвођача до тебе</span>
- </div>
-</header>
+<header><div>НАРУЧИ ДОМАЋЕ</div></header>
+<main>
+ <div class="kicker">О ПРОЈЕКТУ</div>
+ <h1>Домаће од произвођача до тебе.</h1>
+ <p class="lead">„Наручи домаће“ је идеја која се развија са циљем да повеже домаће произвођаче из Велике Плане и околних села са купцима у Београду и другим местима до којих можемо организовати доставу.</p>
+ <p>Желимо да на једном месту представимо понуду различитих газдинстава, да купци могу да се упознају са производима, а да се преузимање и превоз организују заједнички.</p>
 
-<main class="page">
- <section class="hero">
-  <div class="kicker">О ПРОЈЕКТУ · ВЕЛИКА ПЛАНА И ОКОЛИНА</div>
-  <h1>Заједно повољније. Домаће доступније.</h1>
-  <p>Повезујемо домаће произвођаче и купце кроз обједињену понуду, групну куповину и заједничку доставу.</p>
-  <div class="hero-line">Више произвођача. Једна понуда. Заједнички организована достава.</div>
- </section>
+ <div class="rule"></div>
+ <h2>Зашто покрећемо овај пројекат?</h2>
+ <p>Малим произвођачима често није исплативо да због мањих количина производа организују посебан превоз до сваког купца. Са друге стране, људи у градовима желе да дођу до домаћих производа, али им произвођачи нису увек близу.</p>
+ <p>Идеја је да понуду више газдинстава окупимо на једном месту, да се потребе више купаца сагледају заједно и да се достава организује једном туром, до договорених пунктова.</p>
+ <p>Произвођачи остају они који производе, нуде и продају своје производе и одређују цене. „Наручи домаће“ развија начин да се њихова понуда представи купцима и да се организује заједнички пут од произвођача до места преузимања.</p>
 
- <section class="section" id="zasto">
-  <div class="section-head">
-   <div class="eyebrow">ЗАШТО ПОСТОЈИМО</div>
-   <h2>Добри производи заслужују пут до купаца.</h2>
-   <p class="intro">Малим газдинствима често није исплативо да због неколико поруџбина организују посебан превоз до удаљених купаца.</p>
-  </div>
-  <article class="story">
-   <p>У селима и мањим местима постоје произвођачи који нуде млеко, сир, јаја, поврће и друге домаће производе. Истовремено, купци желе да до тих производа дођу једноставно и поуздано.</p>
-   <p>Проблем настаје када свако газдинство мора самостално да организује превоз малих количина. Посебан пут за сваку појединачну поруџбину често ствара непотребан трошак и отежава доступност производа.</p>
-   <p><strong>Зато смо направили модел у коме се понуда више произвођача и поруџбине више купаца обједињују, а достава организује заједнички.</strong></p>
-   <div class="pullquote">Не мора свака поруџбина да има свој пут. Могу да путују заједно.</div>
-  </article>
- </section>
+ <div class="rule"></div>
+ <h2>Шта желимо да понудимо?</h2>
+ <p>Понуда ће се развијати постепено, у складу са договорима са газдинствима и доступношћу производа. У плану је представљање домаћих производа као што су:</p>
+ <ul>
+  <li>домаће млеко</li>
+  <li>козије млеко и козија сурутка</li>
+  <li>млади и стари пуномасни сир</li>
+  <li>домаћа јаја</li>
+  <li>мед</li>
+  <li>ракија</li>
+  <li>други производи са локалних газдинстава, у складу са понудом произвођача</li>
+ </ul>
+ <p class="note">Ово је оквир понуде коју желимо да развијамо. Доступност и избор производа зависиће од произвођача и периода у години.</p>
 
- <section class="section" id="model">
-  <div class="section-head">
-   <div class="eyebrow">КАКО ЈЕ ПОСТАВЉЕН МОДЕЛ</div>
-   <h2>Три ствари које мењају организацију куповине.</h2>
-   <p class="intro">Сваки део има своју улогу. Произвођач остаје продавац својих производа, а ми организујемо повезивање и логистику.</p>
-  </div>
-  <div class="model-grid">
-   <article class="model-card">
-    <div class="model-icon">🧺</div>
-    <h3>Обједињена понуда</h3>
-    <p>На једном месту представљамо производе различитих газдинстава. Купац може да погледа више понуда без тражења сваког произвођача посебно.</p>
-   </article>
-   <article class="model-card">
-    <div class="model-icon">🛒</div>
-    <h3>Групна куповина</h3>
-    <p>Поруџбине више купаца прикупљају се и организују заједно, како би се планирала набавка и заједничка тура.</p>
-   </article>
-   <article class="model-card">
-    <div class="model-icon">🚚</div>
-    <h3>Заједничка достава</h3>
-    <p>Производи различитих газдинстава превозе се у оквиру организоване туре и испоручују до пунктова и договорених места.</p>
-   </article>
-   <article class="model-card">
-    <div class="model-icon">🤝</div>
-    <h3>Јасна подела улога</h3>
-    <p>Произвођачи нуде и продају своје производе и одређују цене. „Наручи домаће“ повезује понуду, прикупља поруџбине и организује доставу.</p>
-   </article>
-  </div>
-  <div class="flow" aria-label="Ток наручивања">
-   <div class="flow-item"><span class="flow-num">01 · ПРОИЗВОЂАЧИ</span><strong>Нуде производе</strong><span>Свако газдинство одређује своју понуду и цене.</span></div>
-   <div class="flow-item"><span class="flow-num">02 · ОБЈЕДИЊАВАЊЕ</span><strong>Понуда на једном месту</strong><span>Купци прегледају производе различитих газдинстава.</span></div>
-   <div class="flow-item"><span class="flow-num">03 · ПОРУЏБИНЕ</span><strong>Куповина се организује</strong><span>Поруџбине се прикупљају заједно за планирану туру.</span></div>
-   <div class="flow-item"><span class="flow-num">04 · ДОСТАВА</span><strong>Преузимање на пункту</strong><span>Организујемо превоз и обавештавамо купце о преузимању.</span></div>
-  </div>
- </section>
+ <div class="rule"></div>
+ <h2>Где планирамо доставу?</h2>
+ <p>Полазиште пројекта су Велика Плана, Крњево и околна села. План је да се производи преузимају од више произвођача, обједине за туру и превезу ка Београду.</p>
+ <div class="route-title">Планирана релација</div>
+ <p>Велика Плана и околна села → Београд</p>
+ <div class="route-title">Планирана места преузимања у Београду</div>
+ <ul>
+  <li>Мали Мокри Луг — Храм Светог Трифуна</li>
+  <li>Бањица — Спортски центар, Устаничка 26 / Оmladinskih бригада 26</li>
+  <li>Степа</li>
+  <li>Славија</li>
+  <li>Правни факултет</li>
+  <li>Богословија</li>
+  <li>Карабурма — Владе Дивљан</li>
+  <li>Зелени венац</li>
+  <li>Бранков мост</li>
+  <li>Тошин бунар и Сурчин</li>
+ </ul>
+ <p class="note">Ово су планирани пунктови и правци, а не коначан редослед туре. Распоред и места доставе могу да се мењају у складу са интересовањем, договором и могућностима организације превоза. Могућа су и успутна места која се уклапају у руту.</p>
 
- <section class="section">
-  <div class="mission">
-   <div class="eyebrow">НАША МИСИЈА</div>
-   <h2>Да домаће буде ближе свима.</h2>
-   <p>Желимо да малим произвођачима олакшамо приступ купцима, а купцима омогућимо једноставнији приступ домаћим производима. Заједничка организација превоза ствара услове за рационалније трошкове и приступачнију куповину — без обећања да је сваки производ аутоматски јефтинији.</p>
-  </div>
- </section>
+ <div class="rule"></div>
+ <h2>Пројекат који расте заједно са произвођачима и купцима</h2>
+ <p>„Наручи домаће“ је пројекат који тек треба да заживи и да се развија корак по корак. Прво желимо да повежемо произвођаче, представимо њихову понуду и утврдимо руте које имају смисла за заједничку доставу.</p>
+ <p>Како се буду укључивали нови произвођачи и места, тако ће се ширити и понуда и мрежа доставе. Ово је почетак једног система који желимо да градимо заједно.</p>
 
- <section class="cta-section" id="nastavi">
-  <div class="section-head">
-   <div class="eyebrow">ИЗАБЕРИ СЛЕДЕЋИ КОРАК</div>
-   <h2>Шта те занима?</h2>
-   <p class="intro">Погледај шта домаћи произвођачи нуде или провери где можеш да преузмеш своју поруџбину.</p>
-  </div>
-  <div class="cta-grid">
-   <a class="cta" href="ponuda.html">
-    <span class="cta-top"><span class="cta-icon">🧺</span><span class="cta-arrow">↗</span></span>
-    <span><strong>Види производе</strong><small>Прегледај обједињену понуду домаћих произвођача.</small></span>
-    <span class="cta-label">ПОГЛЕДАЈ ПОНУДУ →</span>
-   </a>
-   <a class="cta" href="mesta-preuzimanja.html">
-    <span class="cta-top"><span class="cta-icon">📍</span><span class="cta-arrow">↗</span></span>
-    <span><strong>Види где достављамо</strong><small>Погледај пунктове и провери могућности преузимања у свом месту.</small></span>
-    <span class="cta-label">ПРОВЕРИ ДОСТАВУ →</span>
-   </a>
-  </div>
- </section>
-
- <p class="footer">НАРУЧИ ДОМАЋЕ · ДОМАЋЕ ОД ПРОИЗВОЂАЧА ДО ТЕБЕ</p>
+ <footer>НАРУЧИ ДОМАЋЕ<br>Домаће од произвођача до тебе.</footer>
 </main>
 </body>
 </html>
