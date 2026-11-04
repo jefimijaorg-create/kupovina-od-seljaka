@@ -223,7 +223,7 @@ async function renderPoints(){
     box.innerHTML=active.map(p=>`
       <button class="point ${state.point?.id==p.id?'active':''}" data-id="${esc(p.id)}" type="button">
         <strong>${esc(p.name||p.address||'Пункт')}</strong>
-        <small>${esc(p.address||p.city||'')}${p.vreme?' • '+esc(p.vreme):''}</small>
+        <small>${esc(p.address||p.city||'')}${p.description?' · '+esc(p.description):''}${p.vreme?' • '+esc(p.vreme):''}</small>
       </button>`).join('');
 
     pickupMap=L.map('map',{zoomControl:false,scrollWheelZoom:false}).setView([44.78,20.45],11);
@@ -363,14 +363,11 @@ async function renderPoints(){
     if(searchButton)searchButton.onclick=choosePointFromSearch;
 
     const toggle=document.getElementById('togglePoints');
-    const panel=document.getElementById('pointsPanel');
-    if(toggle&&panel){
-      toggle.onclick=()=>{
-        const open=!panel.classList.contains('hidden');
-        panel.classList.toggle('hidden',open);
-        toggle.textContent=open?'☰ Листа пунктова':'✕ Затвори листу';
-      };
-    }
+    const sheet=document.getElementById('pointsSheet');
+    const closeSheet=()=>sheet?.classList.add('hidden');
+    if(toggle&&sheet)toggle.onclick=()=>sheet.classList.remove('hidden');
+    document.getElementById('closePointsSheet')?.addEventListener('click',closeSheet);
+    sheet?.addEventListener('click',e=>{if(e.target===sheet)closeSheet()});
 
     const markerBounds=[];
     active.forEach(p=>{
@@ -410,8 +407,14 @@ async function renderPoints(){
       const selected=document.getElementById('selectedPoint');
       if(selected){
         selected.classList.remove('hidden');
-        selected.innerHTML='<span>Изабрани пункт</span><strong>'+esc(p.name||'Пункт')+'</strong>';
+        selected.innerHTML='<span>Изабрани пункт</span><strong>'+esc(p.name||'Пункт')+'</strong>'+
+          '<label class="nearby-label" for="nearbyPlace">Ако вам овај пункт не одговара, предложите место у близини.</label>'+
+          '<p class="nearby-help">Напишите нам које место у околини би вам више одговарало. Јавићемо вам да ли можемо да организујемо преузимање тамо.</p>'+
+          '<input id="nearbyPlace" type="text" maxlength="180" placeholder="нпр. улица, насеље или познато место" value="'+esc(state.proposalAddress||'')+'">';
+        const nearby=document.getElementById('nearbyPlace');
+        nearby?.addEventListener('input',()=>{state.proposalAddress=nearby.value;save()});
       }
+      document.getElementById('pointsSheet')?.classList.add('hidden');
       updateContinue();
     };
 
@@ -626,7 +629,7 @@ function initConfirm(){
       const rpcBody={
         p_name:name,
         p_phone:phone,
-        p_note:note,
+        p_note:[note,String(state.proposalAddress||'').trim()?('Предложено место у изабраног пункта: '+String(state.proposalAddress).trim()):''].filter(Boolean).join('\\n'),
         p_point_id:state.delivery==='punkt' ? Number(state.point.id) : null,
         p_pickup_address:state.delivery==='dogovor' ? String(state.proposalAddress||'').trim() : null,
         p_items:state.cart.map(x=>({
