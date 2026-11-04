@@ -42,6 +42,22 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 .home-bottom-nav a{display:flex;justify-content:center;align-items:center;gap:5px;min-width:0;padding:11px 5px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#14532d;text-decoration:none;font-size:11px;font-weight:900;white-space:nowrap}
 .home-bottom-nav b{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#fef3c7;color:#78350f;font-size:10px}
 @media(min-width:700px){.home-bottom-nav{bottom:4vh;border-radius:16px}}
+.home-intro{padding:5px 2px 2px}
+.home-kicker{font-size:10px;font-weight:900;letter-spacing:1px;color:#047857}
+.home-intro h1{font-size:29px;line-height:1.12;font-weight:900;color:#17231b;margin:9px 0}
+.home-intro p{font-size:13px;line-height:1.55;color:#59645c;margin:0}
+.home-more{margin-top:10px;padding:7px 0;border:0;background:none;color:#047857;font-size:12px;font-weight:900}
+.home-tour{border:1px solid #a7f3d0!important;background:#ecfdf5!important;padding:14px}
+.home-main-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.home-main-actions button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;min-width:0;padding:13px 10px;border:1px solid #e5e7eb;border-radius:17px;background:#fff;color:#17231b;box-shadow:0 2px 8px #00000008}
+.home-main-actions button>span{font-size:22px}
+.home-main-actions strong{font-size:12px;font-weight:900}
+.home-main-actions small{font-size:9px;line-height:1.35;color:#6b7280}
+.home-panel{scroll-margin-top:12px}
+.home-panel-next{display:block;width:100%;margin-top:12px;padding:13px;border-radius:13px;background:#047857;color:white;text-align:center;text-decoration:none;font-size:12px;font-weight:900}
+.home-panel.hidden{display:none}
+@media(min-width:700px){.home-main-actions button{padding:18px}.home-main-actions strong{font-size:14px}}
+
 </style>
 </head>
 <body data-page="home" class="h-full">
@@ -61,63 +77,81 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 <main class="app-main">
 <div class="p-4 space-y-4">
   <section class="home-intro">
-    <div class="home-kicker">🌿 ДОМАЋЕ ИЗ ВЕЛИКЕ ПЛАНЕ</div>
+    <div class="home-kicker">🌿 НАРУЧИ ДОМАЋЕ · ИЗ ВЕЛИКЕ ПЛАНЕ</div>
     <h1>Домаће од произвођача до тебе.</h1>
-    <p>Изабери где преузимаш и шта желиш да наручиш. Ми организујемо доставу.</p>
+    <p>Повезујемо те са домаћим произвођачима и организујемо преузимање и доставу.</p>
+    <button type="button" class="home-more" onclick="showHomePanel('about')">Види више <span>↓</span></button>
   </section>
 
-  <section class="app-card" id="nextDelivery" style="border-color:#a7f3d0;background:#ecfdf5;">
+  <section class="app-card home-tour" id="nextDelivery">
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center text-xl">🚚</div>
       <div class="min-w-0">
-        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">Следећа тура</div>
+        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">Када је следећа достава?</div>
         <div id="deliveryTitle" class="text-base font-black text-gray-900">Учитавање туре…</div>
         <p id="deliveryInfo" class="text-[11px] text-gray-600 mt-1"></p>
       </div>
     </div>
   </section>
 
-  <section class="app-card space-y-3" id="punktovi" style="border-color:#a7f3d0;">
+  <nav class="home-main-actions" aria-label="Главни мени">
+    <button type="button" onclick="showHomePanel('delivery')"><span>📍</span><strong>Достава</strong><small>Где преузимамо?</small></button>
+    <button type="button" onclick="showHomePanel('products')"><span>🧺</span><strong>Производи</strong><small>Погледај понуду</small></button>
+    <button type="button" onclick="showHomePanel('about')"><span>🌱</span><strong>О пројекту</strong><small>Ко смо и како радимо</small></button>
+  </nav>
+
+  <section class="app-card space-y-3 home-panel hidden" id="homeDeliveryPanel">
     <div>
-      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 Где можеш да преузмеш?</div>
-      <h2 class="text-base font-black text-gray-900 mt-1">Изабери место преузимања</h2>
-      <p class="text-xs text-gray-600 mt-1">Пунктове за следећу туру видиш одмах испод. Не мораш да уносиш адресу да би изабрао место.</p>
+      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 ГДЕ ПРЕУЗИМАМО?</div>
+      <h2 class="text-base font-black text-gray-900 mt-1">Изабери пункт који ти одговара</h2>
+      <p class="text-xs text-gray-600 mt-1">Погледај места преузимања за следећу туру и изабери свој пункт.</p>
     </div>
     <div id="homePointStatus" class="text-xs text-gray-500" aria-live="polite">Учитавање пунктова…</div>
     <div id="homePoints" class="home-points"></div>
     <div id="homePointSelected" class="home-point-selected hidden" aria-live="polite"></div>
-    <p class="text-[11px] text-gray-500 m-0">Ако ти ниједан пункт не одговара, у следећем кораку можеш да предложиш место у близини изабраног пункта.</p>
+    <p class="text-[11px] text-gray-500 m-0">Ако ти ниједан пункт не одговара, у следећем кораку можеш да предложиш место у близини.</p>
+    <a class="home-panel-next" href="index.html#proizvodi" onclick="showHomePanel('products');return false;">Настави на производе →</a>
   </section>
 
-  <section class="app-card space-y-3" id="proizvodi">
-    <div class="flex items-center justify-between">
-      <div><div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🧺 Шта достављамо?</div><div class="text-[11px] text-gray-600 mt-1">Понуда зависи од тога шта је доступно на газдинствима за ову туру.</div></div>
+  <section class="app-card space-y-3 home-panel hidden" id="homeProductsPanel">
+    <div>
+      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🧺 ШТА ДОСТАВЉАМО?</div>
+      <h2 class="text-base font-black text-gray-900 mt-1">Изабери домаће производе</h2>
+      <p class="text-xs text-gray-600 mt-1">Произвођачи формирају понуду и одређују цене. Изабери паковања и количине.</p>
     </div>
     <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-      <div class="flex items-center gap-2"><span class="text-lg">🧺</span><h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Изаберите производе</h2></div>
       <span id="productStatus" class="text-[10px] text-gray-500">Учитавање...</span>
     </div>
     <div id="productFilter" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
     <div id="products" class="space-y-4"></div>
+    <a class="home-panel-next" href="korpa.html">Погледај корпу и настави →</a>
   </section>
 
-  <section class="app-card space-y-3">
-    <h2 class="text-base font-black text-gray-900 font-serif">Како функционише?</h2>
-    <div class="grid gap-2">
-      <div class="bg-gray-50 rounded-xl p-3"><b class="text-xs block">1. Изабери производе</b><span class="text-[11px] text-gray-600">Сваки производ има своја паковања и засебну количину.</span></div>
-      <div class="bg-gray-50 rounded-xl p-3"><b class="text-xs block">2. Изабери место</b><span class="text-[11px] text-gray-600">Изабери пункт за преузимање или место по договору.</span></div>
-      <div class="bg-gray-50 rounded-xl p-3"><b class="text-xs block">3. Пошаљи поруџбину</b><span class="text-[11px] text-gray-600">Остави контакт податке, а ми потврђујемо поруџбину.</span></div>
+  <section class="app-card home-panel hidden" id="homeAboutPanel">
+    <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">🌱 О ПРОЈЕКТУ</div>
+    <h2 class="text-lg font-black text-gray-900 mt-2">Домаће од произвођача до тебе.</h2>
+    <div class="story-text mt-3">
+      <p>„Наручи домаће“ повезује домаће пољопривредне произвођаче из Велике Плане и околних села са купцима.</p>
+      <p>Произвођачи припремају своје производе, одређују понуду и цене. Ми организујемо преузимање и доставу до договорених пунктова.</p>
+      <p>Тако подржавамо домаћу производњу и олакшавамо да квалитетни производи стигну до твог дома.</p>
     </div>
+    <button type="button" class="home-panel-next" onclick="showHomePanel('delivery')">Погледај где достављамо →</button>
   </section>
 </div>
 </main>
 
-<nav class="home-bottom-nav" aria-label="Брза навигација">
-  <a href="#punktovi">📍 Пунктови</a>
-  <a href="#proizvodi">🧺 Производи</a>
-  <a href="korpa.html">🛒 Корпа <b id="homeCartCount">0</b></a>
-</nav>
+
 </div>
+<script>
+function showHomePanel(name){
+  const ids={delivery:'homeDeliveryPanel',products:'homeProductsPanel',about:'homeAboutPanel'};
+  Object.values(ids).forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+  const target=document.getElementById(ids[name]);
+  if(!target)return;
+  target.classList.remove('hidden');
+  target.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
 <script src="app.js?v=20261104-6"></script>
 </body>
 </html>
