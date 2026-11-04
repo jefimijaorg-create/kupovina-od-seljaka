@@ -120,16 +120,13 @@ async function renderHomePoints(){
     showConfirmed();
   };
   const selectPoint=p=>{
-    const changedPoint=String(state.point?.id||'')!==String(p.id);
     state.point=p;
     state.delivery='punkt';
-    if(changedPoint){state.pickupMode='main';state.proposalAddress='';}
-    else state.pickupMode=state.pickupMode||'main';
-    state.homePickupConfirmed=false;
+    state.pickupMode='main';
+    state.proposalAddress='';
+    state.homePickupConfirmed=true;
     save();
-    renderPointList();
-    renderSelected();
-    showConfirmed();
+    showHomePanel('products');
   };
   const renderPointList=(list=active)=>{
     box.innerHTML=list.map(p=>{
@@ -150,46 +147,7 @@ async function renderHomePoints(){
       return;
     }
     selected.classList.remove('hidden');
-    selected.innerHTML=
-      '<div class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3">'+
-      '<span class="text-[10px] uppercase tracking-wider font-black text-emerald-800">Изабран пункт</span>'+
-      '<strong class="block text-lg text-gray-900 mt-1">'+esc(p.name||'Пункт')+'</strong>'+
-      '<span class="block text-xs text-gray-600 mt-1">'+esc([p.address,p.city].filter(Boolean).join(', ')||p.description||'Оквирна дестинација')+'</span>'+
-      '<div class="mt-3 text-sm font-extrabold text-gray-900">Где желиш да преузмеш пошиљку?</div>'+
-      '<label class="home-nearby-option"><input type="radio" name="homePickupMode" value="main" '+(state.pickupMode!=='proposal'?'checked':'')+'><span><strong>Желим баш на овом пункту</strong><small>Преузимам поруџбину на означеној дестинацији.</small></span></label>'+
-      '<label class="home-nearby-option"><input type="radio" name="homePickupMode" value="proposal" '+(state.pickupMode==='proposal'?'checked':'')+'><span><strong>Одговара ми неко место у близини</strong><small>Сам/а предлажем улицу, објекат или место.</small></span></label>'+
-      (state.pickupMode==='proposal'?'<label class="block text-xs font-bold text-gray-700 mt-3">Које место ти одговара?<input id="homeNearbyAddress" class="home-nearby-field" type="text" maxlength="180" placeholder="Нпр. Устаничка код Дедла" value="'+esc(state.proposalAddress||'')+'"></label>':'')+
-      '<p class="text-[11px] leading-relaxed text-gray-600 mt-3">Пункт је оквирна дестинација. Предложено место у близини проверавамо и накнадно потврђујемо.</p>'+
-      '<button id="homeConfirmPickup" type="button" class="home-panel-next">Потврди избор места</button>'+
-      '</div>';
-    selected.querySelectorAll('input[name="homePickupMode"]').forEach(input=>input.addEventListener('change',()=>{
-      state.pickupMode=input.value;
-      if(input.value==='main')state.proposalAddress='';
-      clearConfirmation();
-      save();
-      renderSelected();
-    }));
-    selected.querySelector('#homeNearbyAddress')?.addEventListener('input',e=>{
-      state.proposalAddress=e.target.value;
-      clearConfirmation();
-      save();
-    });
-    selected.querySelector('#homeConfirmPickup')?.addEventListener('click',()=>{
-      if(state.pickupMode==='proposal'&&String(state.proposalAddress||'').trim().length<3){
-        const field=selected.querySelector('#homeNearbyAddress');
-        field?.focus();
-        if(field)field.setCustomValidity('Унеси место које ти одговара.');
-        field?.reportValidity();
-        return;
-      }
-      state.homePickupConfirmed=true;
-      save();
-      showConfirmed();
-      if(searchStatus)searchStatus.textContent=state.pickupMode==='proposal'
-        ?'Предлог места је сачуван уз изабрани пункт. Могућност преузимања ћемо потврдити.'
-        :'Преузимање на изабраном пункту је забележено.';
-      confirmed?.scrollIntoView({behavior:'smooth',block:'nearest'});
-    });
+    selected.innerHTML='<div class="home-point-selected"><strong>Изабрано место:</strong> '+esc(p.name||p.address||'Пункт')+'<br><span>'+esc([p.address,p.city].filter(Boolean).join(', ')||p.description||'')+'</span></div>';
   };
 
   const showSearchResults=ordered=>{
