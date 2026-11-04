@@ -3,66 +3,177 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#17633b">
-<meta name="description" content="Упознај пројекат Наручи домаће и сазнај како да наручиш производе домаћих произвођача.">
-<title>Наручи домаће — пробна страница</title>
+<meta name="theme-color" content="#496a3f">
+<meta name="description" content="Упознај пројекат Наручи домаће — обједињена понуда домаћих произвођача, групна куповина и заједничка достава.">
+<title>О пројекту — Наручи домаће</title>
 <link rel="stylesheet" href="style.css">
 <style>
-:root{--green:#17633b;--deep:#173d2a;--soft:#edf6ed;--line:#dce8dc;--ink:#203027;--muted:#657268}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f4f7f2;color:var(--ink);font-family:Arial,sans-serif}.site-head{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding:11px 15px}.head-inner{max-width:900px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:13px;font-weight:950;color:var(--green);text-decoration:none;white-space:nowrap}.head-note{font-size:10px;color:var(--muted)}.page{width:min(100% - 28px,760px);margin:auto;padding:18px 0 44px}.hero{position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(145deg,#174d32,#287348);color:white;padding:26px 21px 24px;box-shadow:0 12px 30px #174d3220}.hero:after{content:"🌿";position:absolute;right:10px;bottom:-24px;font-size:116px;opacity:.13;transform:rotate(-18deg)}.kicker{font-size:10px;letter-spacing:1.5px;font-weight:900;color:#cde8d0}.hero h1{position:relative;z-index:1;font-family:Georgia,serif;font-size:34px;line-height:1.08;margin:10px 0 12px;max-width:520px}.hero p{position:relative;z-index:1;font-size:14px;line-height:1.6;color:#e4f1e6;max-width:520px;margin:0}.hero-actions{position:relative;z-index:1;display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:12px 16px;border-radius:13px;background:#fff;color:var(--green);font-size:12px;font-weight:900;text-decoration:none;border:1px solid transparent}.btn.ghost{background:#ffffff15;color:#fff;border-color:#ffffff70}.section{margin-top:23px}.section-head{margin-bottom:12px}.eyebrow{font-size:10px;letter-spacing:1.4px;color:var(--green);font-weight:950}.section h2{font-family:Georgia,serif;font-size:26px;line-height:1.15;margin:6px 0}.intro{font-size:13px;line-height:1.65;color:var(--muted);margin:0}.story-card{background:#fff;border:1px solid var(--line);border-radius:19px;padding:17px;margin-top:10px;box-shadow:0 3px 12px #173d2a08}.story-card p{font-size:13px;line-height:1.7;color:#4e5c52;margin:0 0 11px}.story-card p:last-child{margin-bottom:0}.story-card strong{color:#203d2a}.quote{padding:16px;border-left:4px solid #68a878;background:var(--soft);border-radius:0 14px 14px 0;font-family:Georgia,serif;font-size:19px;line-height:1.35;color:var(--deep);margin-top:12px}.founder{font-size:12px;color:var(--muted);margin-top:13px}.founder strong{color:var(--green)}.steps{display:grid;gap:10px}.step{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden}.step-toggle{width:100%;border:0;background:transparent;display:flex;align-items:center;gap:12px;text-align:left;padding:14px;color:var(--ink);cursor:pointer}.step-no{width:35px;height:35px;flex:0 0 35px;border-radius:12px;background:var(--soft);color:var(--green);display:grid;place-items:center;font-weight:950}.step-title{flex:1;min-width:0}.step-title strong{display:block;font-size:13px}.step-title small{display:block;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.4}.chevron{font-size:18px;color:var(--green);transition:transform .2s}.step-body{display:none;padding:0 15px 15px 61px;color:#56645a;font-size:12px;line-height:1.65}.step.open .step-body{display:block}.step.open .chevron{transform:rotate(180deg)}.step-body p{margin:0}.step-body strong{color:var(--deep)}.viber-box{margin-top:12px;padding:16px;border:1px solid #d5e7d6;background:#edf6ed;border-radius:17px}.viber-box h3{font-size:15px;margin:0 0 7px;color:var(--deep)}.viber-box p{font-size:12px;line-height:1.65;color:#526257;margin:0}.deadline{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;color:var(--green);margin-top:10px}.end-links{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:12px}.end-link{min-height:126px;display:flex;flex-direction:column;justify-content:space-between;padding:16px;border-radius:18px;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink);box-shadow:0 3px 12px #173d2a08}.end-link .emoji{font-size:25px}.end-link strong{font-size:14px}.end-link small{font-size:11px;line-height:1.4;color:var(--muted)}.end-link span:last-child{font-size:11px;color:var(--green);font-weight:950}.footer-note{text-align:center;color:#7a867d;font-size:10px;line-height:1.6;margin:24px 0 0}
-@media(min-width:600px){.hero{padding:38px}.hero h1{font-size:42px}.story-card{padding:22px}.end-link{min-height:145px}}
-@media(max-width:360px){.hero h1{font-size:29px}.end-links{grid-template-columns:1fr}.head-note{display:none}}
+:root{--green:#496a3f;--deep:#263b2b;--soft:#edf3e9;--line:#e4ded2;--ink:#263126;--muted:#62675f}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:#f5f1e8;color:var(--ink)}
+.site-head{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding:0 16px}
+.head-inner{width:min(980px,100%);min-height:60px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:14px;font-weight:900;color:var(--green);text-decoration:none;white-space:nowrap}
+.head-note{font-size:11px;color:var(--muted)}
+.page{width:min(920px,92%);margin:auto;padding:22px 0 50px}
+.hero{position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(135deg,#344d32,#668052);color:#fff;padding:34px 27px;box-shadow:0 12px 28px #263b2b18}
+.hero:after{content:"🌿";position:absolute;right:15px;bottom:-32px;font-size:150px;opacity:.12;transform:rotate(-18deg);pointer-events:none}
+.kicker{position:relative;z-index:1;font-size:10px;letter-spacing:1.7px;font-weight:900;color:#e0ead8}
+.hero h1{position:relative;z-index:1;font-family:Georgia,serif;font-size:clamp(36px,7vw,56px);line-height:1.04;letter-spacing:-1.1px;margin:12px 0;max-width:650px}
+.hero p{position:relative;z-index:1;max-width:610px;color:#f0f3e9;font-size:15px;line-height:1.65;margin:0}
+.hero-line{position:relative;z-index:1;margin-top:17px;font-size:12px;line-height:1.6;font-weight:800;color:#fff}
+.section{margin-top:30px}
+.section-head{display:block;margin-bottom:15px}
+.eyebrow{font-size:10px;letter-spacing:1.5px;color:var(--green);font-weight:950}
+.section h2{font-family:Georgia,serif;font-size:clamp(25px,4vw,33px);line-height:1.15;margin:7px 0 9px}
+.intro{font-size:14px;line-height:1.7;color:var(--muted);margin:0;max-width:700px}
+.story{background:#fff;border:1px solid var(--line);border-radius:19px;padding:20px;box-shadow:0 4px 16px #263b2b08}
+.story p{font-size:14px;line-height:1.75;color:#505b50;margin:0 0 12px}
+.story p:last-child{margin-bottom:0}
+.story strong{color:#263b2b}
+.pullquote{margin-top:16px;padding:16px 17px;border-left:4px solid #78966a;border-radius:0 13px 13px 0;background:var(--soft);font-family:Georgia,serif;font-size:20px;line-height:1.35;color:#344d32}
+.model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.model-card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:17px;min-height:155px}
+.model-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:var(--soft);font-size:21px;margin-bottom:12px}
+.model-card h3{font-size:15px;margin:0 0 7px;color:#2f4430}
+.model-card p{font-size:12px;line-height:1.6;color:var(--muted);margin:0}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:13px}
+.flow-item{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 11px}
+.flow-num{font-size:10px;font-weight:900;color:var(--green);letter-spacing:1px}
+.flow-item strong{display:block;font-size:13px;line-height:1.3;margin:7px 0 5px}
+.flow-item span:last-child{display:block;font-size:11px;line-height:1.5;color:var(--muted)}
+.mission{border-radius:20px;background:#e9efe4;border:1px solid #d7e1d0;padding:21px}
+.mission h2{font-family:Georgia,serif;font-size:27px;margin:0 0 9px;color:#30462f}
+.mission p{font-size:14px;line-height:1.7;color:#52604f;margin:0}
+.cta-section{margin-top:31px}
+.cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.cta{min-height:172px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:12px;padding:19px;border-radius:19px;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink);box-shadow:0 5px 18px #263b2b0a;transition:transform .18s,border-color .18s}
+.cta:hover{transform:translateY(-2px);border-color:#b8c9ae}
+.cta-top{display:flex;align-items:center;justify-content:space-between;width:100%}
+.cta-icon{width:44px;height:44px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:23px}
+.cta-arrow{font-size:21px;color:var(--green)}
+.cta strong{font-size:17px;color:#2f4430}
+.cta small{display:block;color:var(--muted);font-size:12px;line-height:1.55;margin-top:5px}
+.cta-label{font-size:11px;font-weight:900;color:var(--green)}
+.footer{text-align:center;font-size:10px;line-height:1.7;color:#7b8177;margin:27px 0 0}
+@media(max-width:620px){
+ .page{width:92%;padding-top:13px}
+ .hero{padding:27px 20px;border-radius:20px}
+ .hero h1{font-size:39px;max-width:440px}
+ .hero p{font-size:14px}
+ .section{margin-top:25px}
+ .story{padding:17px}
+ .story p{font-size:13px}
+ .model-grid{grid-template-columns:1fr 1fr;gap:9px}
+ .model-card{padding:13px;min-height:166px}
+ .model-card h3{font-size:13px}
+ .model-card p{font-size:11px}
+ .flow{grid-template-columns:1fr 1fr;gap:8px}
+ .flow-item{min-height:118px;padding:12px}
+ .mission{padding:18px}
+ .cta-grid{grid-template-columns:1fr;gap:10px}
+ .cta{min-height:142px;padding:16px}
+ .head-note{font-size:10px;text-align:right}
+}
+@media(max-width:370px){.head-note{display:none}.model-grid{grid-template-columns:1fr}.model-card{min-height:auto}}
 </style>
 </head>
 <body>
-<header class="site-head"><div class="head-inner"><a class="brand" href="index.html">🌱 НАРУЧИ ДОМАЋЕ</a><span class="head-note">Домаће од произвођача до тебе</span></div></header>
+<header class="site-head">
+ <div class="head-inner">
+  <a class="brand" href="index.html">🌱 НАРУЧИ ДОМАЋЕ</a>
+  <span class="head-note">Домаће од произвођача до тебе</span>
+ </div>
+</header>
+
 <main class="page">
-<section class="hero">
- <div class="kicker">ИЗ ВЕЛИКЕ ПЛАНЕ ДО ТЕБЕ</div>
- <h1>Домаће од произвођача до тебе.</h1>
- <p>На једном месту упознај понуду више домаћих произвођача, наручи оно што ти треба и изабери где ти одговара да преузмеш поруџбину.</p>
- <div class="hero-actions"><a class="btn" href="ponuda.html">Погледај производе →</a><a class="btn ghost" href="#kako">Како функционише?</a></div>
-</section>
+ <section class="hero">
+  <div class="kicker">О ПРОЈЕКТУ · ВЕЛИКА ПЛАНА И ОКОЛИНА</div>
+  <h1>Заједно повољније. Домаће доступније.</h1>
+  <p>Повезујемо домаће произвођаче и купце кроз обједињену понуду, групну куповину и заједничку доставу.</p>
+  <div class="hero-line">Више произвођача. Једна понуда. Заједнички организована достава.</div>
+ </section>
 
-<section class="section" id="projekat">
- <div class="section-head"><div class="eyebrow">ЗАШТО ПОСТОЈИМО</div><h2>Једна понуда. Више произвођача. Заједничка достава.</h2><p class="intro">Идеја је једноставна: да домаћи производи различитих газдинстава стигну до купаца без потребе да сваки произвођач организује посебан пут.</p></div>
- <article class="story-card">
-  <p>У Великој Плани и околним селима постоје газдинства која производе квалитетну домаћу храну. У градовима постоје људи који желе да те производе купе.</p>
-  <p>Између њих често стоји један практичан проблем — достава. Једна поруџбина понекад није довољна да би се организовао посебан пут.</p>
-  <p><strong>Зато обједињујемо понуду више произвођача и поруџбине више купаца.</strong> Тако различити производи и газдинства могу да буду део исте организоване туре.</p>
-  <p>Произвођачи сами одређују шта нуде, паковања и цене и продају своје производе. „Наручи домаће“ повезује понуду, прикупља поруџбине и организује преузимање и доставу.</p>
-  <div class="quote">Не мора свака поруџбина да има свој пут. Могу да путују заједно.</div>
-  <div class="founder">Пројекат покреће <strong>Јовица Вратница</strong>.</div>
- </article>
-</section>
+ <section class="section" id="zasto">
+  <div class="section-head">
+   <div class="eyebrow">ЗАШТО ПОСТОЈИМО</div>
+   <h2>Добри производи заслужују пут до купаца.</h2>
+   <p class="intro">Малим газдинствима често није исплативо да због неколико поруџбина организују посебан превоз до удаљених купаца.</p>
+  </div>
+  <article class="story">
+   <p>У селима и мањим местима постоје произвођачи који нуде млеко, сир, јаја, поврће и друге домаће производе. Истовремено, купци желе да до тих производа дођу једноставно и поуздано.</p>
+   <p>Проблем настаје када свако газдинство мора самостално да организује превоз малих количина. Посебан пут за сваку појединачну поруџбину често ствара непотребан трошак и отежава доступност производа.</p>
+   <p><strong>Зато смо направили модел у коме се понуда више произвођача и поруџбине више купаца обједињују, а достава организује заједнички.</strong></p>
+   <div class="pullquote">Не мора свака поруџбина да има свој пут. Могу да путују заједно.</div>
+  </article>
+ </section>
 
-<section class="section" id="kako">
- <div class="section-head"><div class="eyebrow">ОД ИЗБОРА ДО ПРЕУЗИМАЊА</div><h2>Како функционише наручивање?</h2><p class="intro">Прођи кроз кораке. Отвори сваку целину и сазнај шта треба да урадиш.</p></div>
- <div class="steps">
-  <article class="step open"><button class="step-toggle" type="button" aria-expanded="true"><span class="step-no">1</span><span class="step-title"><strong>Погледај понуду и изабери производе</strong><small>Производи различитих домаћинстава на једном месту.</small></span><span class="chevron">⌄</span></button><div class="step-body"><p>Отвори страницу производа, прегледај понуду и изабери паковања и количине. Своју поруџбину можеш да саставиш од производа више произвођача.</p></div></article>
-  <article class="step"><button class="step-toggle" type="button" aria-expanded="false"><span class="step-no">2</span><span class="step-title"><strong>Наручи у року за следећу туру</strong><small>Провери да ли је наручивање отворено.</small></span><span class="chevron">⌄</span></button><div class="step-body"><p>За викенд туру поруџбине се примају до <strong>среде у 22 часа</strong>. На сајту провери информацију о следећој тури и тренутном року за наручивање.</p></div></article>
-  <article class="step"><button class="step-toggle" type="button" aria-expanded="false"><span class="step-no">3</span><span class="step-title"><strong>Изабери пункт или предложи ближе место</strong><small>Преузимање треба да ти буде приступачно.</small></span><span class="chevron">⌄</span></button><div class="step-body"><p>Можеш да изабереш један од понуђених пунктова. Ако ти ниједан није близу, упиши адресу или место у близини које ти више одговара. Пунктови су оквирне дестинације — предлог ћемо размотрити у складу са рутом и могућностима туре.</p></div></article>
-  <article class="step"><button class="step-toggle" type="button" aria-expanded="false"><span class="step-no">4</span><span class="step-title"><strong>Остави број телефона који користиш за Viber</strong><small>Тако можемо да те обавестимо о преузимању.</small></span><span class="chevron">⌄</span></button><div class="step-body"><p>Број нам је потребан да бисмо те контактирали и упутили у Viber групу купаца за туру. У групи објављујемо распоред, време и место преузимања и јављамо ако дође до измена. Зато је важно да оставиш број на коме користиш Viber.</p></div></article>
-  <article class="step"><button class="step-toggle" type="button" aria-expanded="false"><span class="step-no">5</span><span class="step-title"><strong>Прати распоред и преузми поруџбину</strong><small>Све важне информације добијаш у Viber групи.</small></span><span class="chevron">⌄</span></button><div class="step-body"><p>У петак увече објављујемо распоред предстојеће туре. У Viber групи добијаш информацију када стижемо на твој пункт или договорено место и шта да урадиш ако се распоред промени.</p></div></article>
- </div>
- <div class="viber-box"><h3>Зашто је Viber број важан?</h3><p>Достава је заједничка и распоред може да зависи од пута, броја поруџбина и преузимања код произвођача. Зато нам је потребан директан канал комуникације са купцима. Viber група служи да сви који су наручили на време добију исте, јасне информације.</p><span class="deadline">Рок за викенд туру: среда у 22:00</span></div>
-</section>
+ <section class="section" id="model">
+  <div class="section-head">
+   <div class="eyebrow">КАКО ЈЕ ПОСТАВЉЕН МОДЕЛ</div>
+   <h2>Три ствари које мењају организацију куповине.</h2>
+   <p class="intro">Сваки део има своју улогу. Произвођач остаје продавац својих производа, а ми организујемо повезивање и логистику.</p>
+  </div>
+  <div class="model-grid">
+   <article class="model-card">
+    <div class="model-icon">🧺</div>
+    <h3>Обједињена понуда</h3>
+    <p>На једном месту представљамо производе различитих газдинстава. Купац може да погледа више понуда без тражења сваког произвођача посебно.</p>
+   </article>
+   <article class="model-card">
+    <div class="model-icon">🛒</div>
+    <h3>Групна куповина</h3>
+    <p>Поруџбине више купаца прикупљају се и организују заједно, како би се планирала набавка и заједничка тура.</p>
+   </article>
+   <article class="model-card">
+    <div class="model-icon">🚚</div>
+    <h3>Заједничка достава</h3>
+    <p>Производи различитих газдинстава превозе се у оквиру организоване туре и испоручују до пунктова и договорених места.</p>
+   </article>
+   <article class="model-card">
+    <div class="model-icon">🤝</div>
+    <h3>Јасна подела улога</h3>
+    <p>Произвођачи нуде и продају своје производе и одређују цене. „Наручи домаће“ повезује понуду, прикупља поруџбине и организује доставу.</p>
+   </article>
+  </div>
+  <div class="flow" aria-label="Ток наручивања">
+   <div class="flow-item"><span class="flow-num">01 · ПРОИЗВОЂАЧИ</span><strong>Нуде производе</strong><span>Свако газдинство одређује своју понуду и цене.</span></div>
+   <div class="flow-item"><span class="flow-num">02 · ОБЈЕДИЊАВАЊЕ</span><strong>Понуда на једном месту</strong><span>Купци прегледају производе различитих газдинстава.</span></div>
+   <div class="flow-item"><span class="flow-num">03 · ПОРУЏБИНЕ</span><strong>Куповина се организује</strong><span>Поруџбине се прикупљају заједно за планирану туру.</span></div>
+   <div class="flow-item"><span class="flow-num">04 · ДОСТАВА</span><strong>Преузимање на пункту</strong><span>Организујемо превоз и обавештавамо купце о преузимању.</span></div>
+  </div>
+ </section>
 
-<section class="section" id="nastavi">
- <div class="section-head"><div class="eyebrow">НАСТАВИ ДАЉЕ</div><h2>Шта желиш да погледаш?</h2><p class="intro">Погледај шта је тренутно у понуди или пронађи место на ком можеш да преузмеш своју поруџбину.</p></div>
- <div class="end-links">
-  <a class="end-link" href="ponuda.html"><span class="emoji">🧺</span><strong>Види производе</strong><small>Погледај понуду домаћих произвођача.</small><span>Отвори понуду →</span></a>
-  <a class="end-link" href="mesta-preuzimanja.html"><span class="emoji">📍</span><strong>Види пунктове</strong><small>Изабери пункт или предложи место у близини.</small><span>Пронађи пункт →</span></a>
- </div>
-</section>
-<p class="footer-note">НАРУЧИ ДОМАЋЕ · ИЗ ВЕЛИКЕ ПЛАНЕ<br>Домаће од произвођача до тебе.</p>
+ <section class="section">
+  <div class="mission">
+   <div class="eyebrow">НАША МИСИЈА</div>
+   <h2>Да домаће буде ближе свима.</h2>
+   <p>Желимо да малим произвођачима олакшамо приступ купцима, а купцима омогућимо једноставнији приступ домаћим производима. Заједничка организација превоза ствара услове за рационалније трошкове и приступачнију куповину — без обећања да је сваки производ аутоматски јефтинији.</p>
+  </div>
+ </section>
+
+ <section class="cta-section" id="nastavi">
+  <div class="section-head">
+   <div class="eyebrow">ИЗАБЕРИ СЛЕДЕЋИ КОРАК</div>
+   <h2>Шта те занима?</h2>
+   <p class="intro">Погледај шта домаћи произвођачи нуде или провери где можеш да преузмеш своју поруџбину.</p>
+  </div>
+  <div class="cta-grid">
+   <a class="cta" href="ponuda.html">
+    <span class="cta-top"><span class="cta-icon">🧺</span><span class="cta-arrow">↗</span></span>
+    <span><strong>Види производе</strong><small>Прегледај обједињену понуду домаћих произвођача.</small></span>
+    <span class="cta-label">ПОГЛЕДАЈ ПОНУДУ →</span>
+   </a>
+   <a class="cta" href="mesta-preuzimanja.html">
+    <span class="cta-top"><span class="cta-icon">📍</span><span class="cta-arrow">↗</span></span>
+    <span><strong>Види где достављамо</strong><small>Погледај пунктове и провери могућности преузимања у свом месту.</small></span>
+    <span class="cta-label">ПРОВЕРИ ДОСТАВУ →</span>
+   </a>
+  </div>
+ </section>
+
+ <p class="footer">НАРУЧИ ДОМАЋЕ · ДОМАЋЕ ОД ПРОИЗВОЂАЧА ДО ТЕБЕ</p>
 </main>
-<script>
-document.querySelectorAll('.step-toggle').forEach(button=>button.addEventListener('click',()=>{
- const card=button.closest('.step');
- const open=card.classList.toggle('open');
- button.setAttribute('aria-expanded',String(open));
-}));
-</script>
 </body>
 </html>
