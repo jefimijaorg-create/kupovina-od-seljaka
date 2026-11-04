@@ -8,7 +8,7 @@
 <title>Наручи домаће</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="style.css?v=20261104-8">
+<link rel="stylesheet" href="style.css?v=20261104-9">
 <style>
 body{font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#111827}
 h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
@@ -57,6 +57,8 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 body.sheet-active{overflow:hidden}
 @media(min-width:700px){.app-shell{height:92vh;height:92dvh;border-radius:36px;margin:auto;border:8px solid #1f2937}.home-main-actions button{padding:18px}.home-main-actions strong{font-size:14px}#homeBottomSheet{border-radius:25px 25px 20px 20px;max-height:84%}}
 @media(max-width:370px){.home-intro h1{font-size:26px}.home-main-actions{gap:6px}.home-main-actions button{padding:11px 7px}.home-main-actions strong{font-size:11px}}
+
+.home-nearby-option{display:flex;gap:10px;align-items:flex-start;padding:13px;border:1.5px solid #e5e7eb;border-radius:14px;background:#fff;margin-top:8px;cursor:pointer}.home-nearby-option:has(input:checked){border-color:#047857;background:#ecfdf5}.home-nearby-option input{width:19px;height:19px;margin:2px 0 0;accent-color:#047857}.home-nearby-option span{font-size:13px;line-height:1.4}.home-nearby-option small{display:block;color:#6b7280;font-size:11px;margin-top:4px}.home-nearby-field{width:100%;margin-top:12px;padding:12px;border:1px solid #d1d5db;border-radius:12px}.home-nearby-field:focus{outline:2px solid #a7f3d0}.home-nearest-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px;border:1.5px solid #e5e7eb;border-radius:13px;background:#fff}.home-nearest-item.active{border-color:#047857;background:#ecfdf5}.home-nearest-item strong,.home-nearest-item small{display:block}.home-nearest-item small{font-size:11px;color:#6b7280;margin-top:3px}.home-distance{font-size:11px;font-weight:800;color:#047857;white-space:nowrap}
 </style>
 </head>
 <body data-page="home" class="h-full">
@@ -106,17 +108,28 @@ body.sheet-active{overflow:hidden}
         <div><div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 ДОСТАВА</div><h2 class="text-lg font-black text-gray-900 mt-1">Где преузимаш своју поруџбину?</h2></div>
         <button type="button" class="sheet-close" onclick="closeHomePanel()" aria-label="Затвори">×</button>
       </div>
-      <p class="text-xs text-gray-600 mb-3">Изабери пункт који ти највише одговара.</p>
-      <div id="homePointStatus" class="text-xs text-gray-500 mb-2" aria-live="polite">Учитавање пунктова…</div>
-      <div id="homePoints" class="home-points"></div>
-      <div id="homePointSelected" class="home-point-selected hidden mt-3" aria-live="polite"></div>
-      <div class="sheet-proposal">
-        <strong class="text-sm">Не одговара ти ниједан пункт?</strong>
-        <p class="text-xs text-gray-600">Напиши нам место у близини које ти одговара.</p>
-        <input id="homeProposalAddress" type="text" maxlength="180" placeholder="Унеси место, насеље или улицу">
-        <button type="button" class="home-panel-next" onclick="saveHomeProposal()">Сачувај предлог места</button>
+
+      <p class="text-xs text-gray-600 mb-3">Прво проверимо који пункт ти је најближи. Унеси адресу или место где се налазиш.</p>
+      <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-3 mb-3">
+        <label for="homeAddressInput" class="block text-sm font-extrabold text-gray-800 mb-2">Твоја адреса или насеље</label>
+        <input id="homeAddressInput" type="text" maxlength="180" autocomplete="street-address" placeholder="Нпр. Устаничка  упиши број и град" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-3 text-sm outline-none focus:border-emerald-600">
+        <button id="findHomeNearest" type="button" class="home-panel-next mt-2"><i class="fa-solid fa-location-dot mr-2"></i>Пронађи најближе пунктове</button>
+        <p id="homeAddressStatus" class="text-xs text-gray-600 mt-2" role="status" aria-live="polite">Приказаћемо пунктове поређане према близини унете адресе.</p>
       </div>
-      <button type="button" class="home-panel-next" onclick="showHomePanel('products')">Настави на производе →</button>
+      <div id="homeNearestResults" class="space-y-2 hidden" aria-live="polite"></div>
+      <div class="flex items-center justify-between gap-2 mt-3">
+        <strong class="text-sm">Или изабери пункт са списка</strong>
+        <button id="homeToggleAllPoints" type="button" class="text-xs font-extrabold text-emerald-800 underline">Прикажи све</button>
+      </div>
+      <div id="homePointStatus" class="text-xs text-gray-500 mt-2 mb-2" aria-live="polite">Учитавање пунктова…</div>
+      <div id="homePoints" class="home-points hidden"></div>
+      <div id="homePointSelected" class="hidden mt-3" aria-live="polite"></div>
+      <div id="homePickupConfirmed" class="hidden mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3" aria-live="polite">
+        <strong class="block text-sm text-emerald-900">Избор места је потврђен.</strong>
+        <p class="text-xs text-emerald-800 mt-1">Сада можеш да погледаш понуду производа и наставиш наручивање.</p>
+        <button type="button" class="home-panel-next" onclick="showHomePanel('products')">Настави на производе →</button>
+      </div>
+      <p class="text-[11px] text-gray-500 mt-3">Пунктови су оквирне дестинације. Ако ти више одговара друго место у близини, можеш да га предложиш. Потврдићемо да ли можемо да организујемо преузимање.</p>
     </section>
 
     <section class="home-panel hidden" id="homeProductsPanel">
@@ -194,6 +207,6 @@ function saveHomeProposal(){
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeHomePanel();});
 </script>
-<script src="app.js?v=20261104-8"></script>
+<script src="app.js?v=20261104-9"></script>
 </body>
 </html>
