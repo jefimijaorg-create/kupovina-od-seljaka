@@ -466,29 +466,29 @@ async function saveOrderEdit(orderId,lineIds){
 async function savePointTime(pointKey,inputId){
  try{
   if(pointKey==='none')throw Error('Прво додели пункт поруџбинама, па онда унеси сатницу.');
-  const time=document.getElementById(inputId).value;
-  if(!time)throw Error('Унеси сатницу.');
+  const input=document.getElementById(inputId),time=String(input?.value||'').trim();
+  if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time))throw Error('Унеси исправну сатницу.');
   const payload={tura_id:tourId,punkt_id:Number(pointKey),vreme:time,aktivan:true};
   await api('tura_punktovi?on_conflict=tura_id,punkt_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(payload)});
+  const check=await api('tura_punktovi?select=tura_id,punkt_id,vreme,aktivan&tura_id=eq.'+tourId+'&punkt_id=eq.'+Number(pointKey));
+  if(!check.length||String(check[0].vreme||'').slice(0,5)!==time)throw Error('База није потврдила упис сатнице. Покушај поново.');
+  tourPoints=await api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme&tura_id=eq.'+tourId);
+  const sorted=tourPoints.filter(t=>t.aktivan).sort((x,y)=>{
+   const tx=String(x.vreme||'').slice(0,5),ty=String(y.vreme||'').slice(0,5);
+   if(tx&&ty&&tx!==ty)return tx.localeCompare(ty);
+   if(tx)return -1;if(ty)return 1;
+   return Number(x.redosled||999999)-Number(y.redosled||999999);
+  });
+  for(let i=0;i<sorted.length;i++){
+   if(Number(sorted[i].redosled)!==i+1){
+    await api('tura_punktovi?tura_id=eq.'+tourId+'&punkt_id=eq.'+sorted[i].punkt_id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({redosled:i+1})});
+   }
+  }
   tourPoints=await api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme&tura_id=eq.'+tourId);
   await loadTour();
-  say('Сатница за пункт је сачувана: '+time+'.');
+  say('Сатница '+time+' је сачувана и редослед пунктова је ажуриран.');
  }catch(e){say('Сатница није сачувана: '+e.message,true)}
 }
-async function addCatalogPointToTour(pointId,inputId){
- try{
-  const p=points.find(x=>String(x.id)===String(pointId));
-  if(!p)throw Error('Пункт није пронађен у бази.');
-  const time=document.getElementById(inputId)?.value||null;
-  await api('punktovi?id=eq.'+pointId,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({is_active:true,aktivan:true})});
-  await api('tura_punktovi?on_conflict=tura_id,punkt_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify({tura_id:tourId,punkt_id:Number(pointId),vreme:time,aktivan:true})});
-  p.is_active=true;p.aktivan=true;
-  tourPoints=await api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme&tura_id=eq.'+tourId);
-  await loadTour();
-  say('Пункт „'+(p.name||pointId)+'“ је активиран и додат у туру'+(time?' за '+time:'')+'.');
- }catch(e){say('Пункт није додат у туру: '+e.message,true)}
-}
-
 function farmLabel(id){return farmName(farms.find(f=>String(f.id)===String(id))?.name||'Газдинство '+id)}
 async function allocateGroup(product,size,unit,farmId,productOnly=false){
  try{
