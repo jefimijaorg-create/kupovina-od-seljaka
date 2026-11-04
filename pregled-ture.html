@@ -58,7 +58,7 @@ async function loadData(){
   const core=await Promise.all([
    api('ture?select=id,naziv,datum,status&order=id.desc&limit=300'),
    api('gazdinstva?select=id,name&order=name.asc'),
-   api('punktovi?select=id,name,city,address'),
+   api('punktovi?select=id,name,city,address,is_active,aktivan'),
    api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave&limit=3000'),
    api('kupci?select=id,ime_prezime,telefon'),
    api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme')
@@ -396,6 +396,21 @@ function renderOrders(){
   const pointOptions=points.map(p=>'<option value="'+p.id+'" '+(String(k)===String(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join('');
   return '<section class="border-2 border-slate-200 rounded-2xl mb-5 overflow-hidden bg-slate-50"><header class="p-4 bg-slate-100"><div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-lg sm:text-xl font-black uppercase">📍 '+esc(g.p.name||'Пункт није одређен')+'</h3><span class="rounded-lg bg-emerald-100 text-emerald-900 px-3 py-1 font-black">'+esc(g.time?String(g.time).slice(0,5):'Сатница није унета')+'</span></div><div class="text-sm text-slate-600 mt-1">'+esc(g.p.address||g.p.city||'')+'</div><div class="mt-3 flex flex-wrap gap-2 items-end no-print"><label class="text-xs font-bold text-slate-600">Сатница пункта<input id="'+timeId+'" type="time" value="'+esc(String(g.time||'').slice(0,5))+'" class="block border rounded-lg px-3 py-2 mt-1 bg-white"></label><button type="button" onclick="savePointTime('+JSON.stringify(k)+','+JSON.stringify(timeId)+')" class="bg-slate-800 text-white rounded-lg px-3 py-2 text-sm font-bold">Сачувај сатницу</button></div></header><div class="p-3"><div class="text-xs uppercase font-bold text-slate-500 mb-2">'+ids.length+' поруџбина</div>'+ordersHtml+'<div class="text-right font-black text-base border-t pt-3">Укупно за пункт: '+cash(pointTotal)+'</div></div></section>';
  }).join('');
+ const tourPointIds=new Set(tourPoints.filter(t=>Number(t.tura_id)===tourId&&t.aktivan).map(t=>String(t.punkt_id)));
+ const catalogPoints=points.slice().sort((a,b)=>{
+  const ta=tourPoints.find(t=>Number(t.tura_id)===tourId&&String(t.punkt_id)===String(a.id)&&t.aktivan)?.vreme||'';
+  const tb=tourPoints.find(t=>Number(t.tura_id)===tourId&&String(t.punkt_id)===String(b.id)&&t.aktivan)?.vreme||'';
+  if(ta&&tb&&String(ta).slice(0,5)!==String(tb).slice(0,5))return String(ta).localeCompare(String(tb));
+  if(ta)return -1;if(tb)return 1;
+  return String(a.name||'').localeCompare(String(b.name||''),'sr');
+ });
+ html+='<section class="bg-white border-2 border-emerald-200 rounded-2xl p-4 mt-6"><div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><h3 class="font-black text-lg">Сви пунктови у бази ('+catalogPoints.length+')</h3><p class="text-sm text-slate-500">Изабери пункт, додај га у ову туру и подеси сатницу. Пунктови са поруџбинама приказани су и изнад.</p></div></div><div class="space-y-2">'+catalogPoints.map(p=>{
+  const tp=tourPoints.find(t=>Number(t.tura_id)===tourId&&String(t.punkt_id)===String(p.id)&&t.aktivan);
+  const active=p.is_active===true||p.aktivan===true||String(p.is_active)==='true'||String(p.aktivan)==='true';
+  const timeId='catalog-point-time-'+p.id;
+  const inTour=!!tp;
+  return '<div class="border rounded-xl p-3 flex flex-col sm:flex-row sm:items-end gap-3"><div class="flex-1 min-w-0"><div class="font-bold">'+esc(p.name||('Пункт '+p.id))+'</div><div class="text-xs text-slate-500">'+esc([p.address,p.city].filter(Boolean).join(' · ')||'Адреса није унета')+'</div><div class="mt-1 text-xs font-bold '+(active?'text-emerald-700':'text-amber-700')+'">'+(active?'Активан у бази':'Неактиван у бази')+' · '+(inTour?'Додат у ову туру':'Није додат у туру')+'</div></div><label class="text-xs font-bold text-slate-600">Сатница<input id="'+timeId+'" type="time" value="'+esc(String(tp?.vreme||'').slice(0,5))+'" class="block border rounded-lg px-3 py-2 mt-1 bg-white"></label><button type="button" onclick="addCatalogPointToTour('+p.id+',\''+timeId+'\')" class="bg-emerald-700 text-white rounded-lg px-3 py-2 text-sm font-bold">'+(inTour?'Сачувај сатницу':'Активирај и додај у туру')+'</button></div>';
+ }).join('')+'</div></section>';
  document.getElementById('orders-summary').innerHTML=html||'<p class="text-sm text-slate-500">Нема поруџбина за приказ.</p>';
 }
 function toggleNewPointForm(orderId){
@@ -455,10 +470,25 @@ async function savePointTime(pointKey,inputId){
   if(!time)throw Error('Унеси сатницу.');
   const payload={tura_id:tourId,punkt_id:Number(pointKey),vreme:time,aktivan:true};
   await api('tura_punktovi?on_conflict=tura_id,punkt_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(payload)});
+  tourPoints=await api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme&tura_id=eq.'+tourId);
   await loadTour();
   say('Сатница за пункт је сачувана: '+time+'.');
  }catch(e){say('Сатница није сачувана: '+e.message,true)}
 }
+async function addCatalogPointToTour(pointId,inputId){
+ try{
+  const p=points.find(x=>String(x.id)===String(pointId));
+  if(!p)throw Error('Пункт није пронађен у бази.');
+  const time=document.getElementById(inputId)?.value||null;
+  await api('punktovi?id=eq.'+pointId,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({is_active:true,aktivan:true})});
+  await api('tura_punktovi?on_conflict=tura_id,punkt_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify({tura_id:tourId,punkt_id:Number(pointId),vreme:time,aktivan:true})});
+  p.is_active=true;p.aktivan=true;
+  tourPoints=await api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme&tura_id=eq.'+tourId);
+  await loadTour();
+  say('Пункт „'+(p.name||pointId)+'“ је активиран и додат у туру'+(time?' за '+time:'')+'.');
+ }catch(e){say('Пункт није додат у туру: '+e.message,true)}
+}
+
 function farmLabel(id){return farmName(farms.find(f=>String(f.id)===String(id))?.name||'Газдинство '+id)}
 async function allocateGroup(product,size,unit,farmId,productOnly=false){
  try{
