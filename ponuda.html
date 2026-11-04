@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Погледај актуелну понуду домаћих производа различитих произвођача.">
+<title>Производи — Наручи домаће</title>
+<link rel="stylesheet" href="style.css">
+<style>
+:root{--green:#17633b;--line:#dfe8df}body{background:#f4f7f2;color:#1d2b21}.public-head{background:#fff;border-bottom:1px solid var(--line);padding:12px 14px;position:sticky;top:0;z-index:5}.brand{font-weight:950;color:var(--green);text-decoration:none}.tabs{display:flex;gap:6px;overflow-x:auto;margin-top:10px}.tabs a{white-space:nowrap;text-decoration:none;color:#435247;background:#f3f6f1;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800}.tabs a.active{background:var(--green);color:#fff;border-color:var(--green)}.wrap{width:min(100% - 28px,900px);margin:auto;padding:20px 0 105px}.eyebrow{font-size:10px;letter-spacing:1.3px;font-weight:900;color:var(--green)}h1{font-size:30px;line-height:1.12;margin:7px 0}.lead{color:#5d695f;font-size:14px;line-height:1.55}.filters{display:flex;gap:7px;overflow-x:auto;padding:12px 0}.filter{white-space:nowrap;border:1px solid #d9e4d8;background:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:850}.filter.active{background:var(--green);color:#fff;border-color:var(--green)}.grid{display:grid;grid-template-columns:1fr;gap:11px}.product{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;overflow:hidden}.product img{width:100%;height:170px;object-fit:cover;border-radius:12px;background:#edf2eb}.product h2{font-size:16px;margin:10px 0 3px}.meta{font-size:12px;color:#68766b;line-height:1.45}.producer{font-size:11px;color:#286342;font-weight:800;margin-top:5px}.price{font-size:14px;font-weight:950}.variants{border-top:1px solid #edf1ec;margin-top:10px;padding-top:8px}.variant{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #f0f3ef}.variant:last-child{border:0}.qty{display:flex;align-items:center;gap:9px}.qty button{width:31px;height:31px;border:0;border-radius:9px;background:#eaf4ea;color:#185d38;font-size:18px;font-weight:900}.qty b{min-width:15px;text-align:center}.status{padding:20px 8px;text-align:center;color:#68766b;font-size:13px}.basketbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:6}.basketbar small{display:block;color:#68766b;font-size:10px}.basketbar strong{font-size:14px}.btn{border:0;border-radius:12px;padding:12px 16px;background:var(--green);color:#fff;text-decoration:none;font-size:12px;font-weight:900}.empty{background:#fff;border:1px dashed #cbd9ca;border-radius:15px;padding:20px;text-align:center;color:#68766b}
+@media(min-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.product img{height:190px}}
+</style>
+</head>
+<body>
+<header class="public-head">
+ <a class="brand" href="index.html">🌱 НАРУЧИ ДОМАЋЕ</a>
+ <nav class="tabs" aria-label="Главна навигација">
+  <a href="index.html">Почетна</a><a href="mesta-preuzimanja.html">Пунктови</a><a class="active" href="ponuda.html">Производи</a><a href="dostava-kupci.html">Достава</a><a href="o-projektu.html">О пројекту</a>
+ </nav>
+</header>
+<main class="wrap">
+ <div class="eyebrow">ШТА ДОСТАВЉАМО?</div><h1>Понуда домаћих производа.</h1>
+ <p class="lead">На једном месту прегледаш производе различитих газдинстава. Произвођачи самостално одређују понуду, паковања и цене. Изабери шта желиш, па настави на наручивање.</p>
+ <div id="filters" class="filters" aria-label="Категорије"></div>
+ <div id="status" class="status" role="status" aria-live="polite">Учитавање понуде из базе…</div>
+ <div id="products" class="grid"></div>
+</main>
+<div class="basketbar"><div><small>ТВОЈА КОРПА</small><strong id="basketCount">0 производа</strong></div><a class="btn" href="index.html?open=cart">Прегледај поруџбину →</a></div>
+<script>
+const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const headers={apikey:KEY,Authorization:'Bearer '+KEY};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(Number(n)||0)+' дин.';
+const api=async p=>{const r=await fetch(URL+'/rest/v1/'+p,{headers,cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()};
+function readState(){try{return JSON.parse(localStorage.getItem('seljaciState')||'{}')}catch{return {}}}
+function saveCart(item,delta){
+ const s=readState();s.cart=Array.isArray(s.cart)?s.cart:[];
+ const id=String(item.id)+(item.variant?'::'+item.variant.id:'');
+ let row=s.cart.find(x=>String(x.cartId||x.id)===id);
+ if(delta>0){if(row)row.qty+=delta;else s.cart.push({cartId:id,id:item.id,variant_id:item.variant?.id||null,variant_name:item.variant?.name||'',name:item.name,price:Number(item.variant?.price??item.price)||0,unit:item.unit||'ком',qty:delta})}
+ else if(row){row.qty+=delta;if(row.qty<=0)s.cart.splice(s.cart.indexOf(row),1)}
+ localStorage.setItem('seljaciState',JSON.stringify(s));updateBasket();
+}
+function getQty(id){const s=readState();return (s.cart||[]).reduce((n,x)=>n+(String(x.cartId||x.id)===id?Number(x.qty||0):0),0)}
+function updateBasket(){const s=readState(),n=(s.cart||[]).reduce((a,x)=>a+Number(x.qty||0),0);document.getElementById('basketCount').textContent=n+' '+(n===1?'производ':n%10>=2&&n%10<=4?'производа':'производа')}
+let products=[],variants={},filter='all';
+function render(){
+ const rows=products.filter(p=>filter==='all'||String(p.category||'Остало')===filter);
+ document.getElementById('products').innerHTML=rows.map(p=>{
+  const vs=variants[p.id]||[];
+  const controls=vs.length?'<div class="variants">'+vs.map(v=>{const id=String(p.id)+'::'+String(v.id);return '<div class="variant"><div><b>'+esc(v.name)+'</b><div class="meta">'+money(v.price)+'</div></div><div class="qty"><button type="button" data-dec="'+esc(p.id)+'" data-variant="'+esc(v.id)+'" aria-label="Смањи">−</button><b>'+getQty(id)+'</b><button type="button" data-inc="'+esc(p.id)+'" data-variant="'+esc(v.id)+'" aria-label="Повећај">+</button></div></div>'}).join('')+'</div>':
+  '<div class="variants"><div class="variant"><div><span class="price">'+money(p.price)+'</span><div class="meta">'+esc(p.unit||'ком')+'</div></div><div class="qty"><button type="button" data-dec="'+esc(p.id)+'" aria-label="Смањи">−</button><b>'+getQty(String(p.id))+'</b><button type="button" data-inc="'+esc(p.id)+'" aria-label="Повећај">+</button></div></div></div>';
+  return '<article class="product">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'" loading="lazy">':'')+'<h2>'+esc(p.name||'Производ')+'</h2>'+(p.description?'<div class="meta">'+esc(p.description)+'</div>':'')+(p.producer_name?'<div class="producer">Произвођач: '+esc(p.producer_name)+'</div>':'')+controls+'</article>';
+ }).join('')||'<div class="empty">У овој категорији тренутно нема активних производа.</div>';
+ document.querySelectorAll('[data-inc],[data-dec]').forEach(b=>b.onclick=()=>{
+  const p=products.find(x=>String(x.id)===b.dataset.inc||String(x.id)===b.dataset.dec);if(!p)return;
+  const v=(variants[p.id]||[]).find(x=>String(x.id)===b.dataset.variant);
+  saveCart({id:p.id,name:p.name,price:p.price,unit:p.unit,variant:v||null},b.hasAttribute('data-inc')?1:-1);render();
+ });
+ updateBasket();
+}
+async function load(){
+ try{
+  const [ps,vs]=await Promise.all([
+   api('products?select=id,name,description,category,price,currency,stock,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants&is_active=eq.true&order=name.asc&limit=100'),
+   api('product_variants?select=id,product_id,name,price,is_active&is_active=eq.true&limit=200')
+  ]);
+  products=ps;vs.forEach(v=>(variants[v.product_id]??=[]).push(v));
+  const cats=[...new Set(ps.map(p=>String(p.category||'Остало').trim()||'Остало'))];
+  document.getElementById('filters').innerHTML='<button class="filter active" data-filter="all">Сви производи</button>'+cats.map(c=>'<button class="filter" data-filter="'+esc(c)+'">'+esc(c)+'</button>').join('');
+  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));render()});
+  document.getElementById('status').textContent=ps.length+' активних производа у понуди.';
+  render();
+ }catch(e){document.getElementById('status').textContent='Понуду тренутно није могуће учитати из базе.';document.getElementById('products').innerHTML='<div class="empty">Покушај поново касније.</div>';console.error(e)}
+}
+load();updateBasket();
+</script>
+</body></html>
