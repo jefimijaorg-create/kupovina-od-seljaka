@@ -66,6 +66,17 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
     <p>Изабери где преузимаш и шта желиш да наручиш. Ми организујемо доставу.</p>
   </section>
 
+  <section class="app-card" id="nextDelivery" style="border-color:#a7f3d0;background:#ecfdf5;">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center text-xl">🚚</div>
+      <div class="min-w-0">
+        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">Следећа тура</div>
+        <div id="deliveryTitle" class="text-base font-black text-gray-900">Учитавање туре…</div>
+        <p id="deliveryInfo" class="text-[11px] text-gray-600 mt-1"></p>
+      </div>
+    </div>
+  </section>
+
   <section class="app-card space-y-3" id="punktovi" style="border-color:#a7f3d0;">
     <div>
       <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 Где можеш да преузмеш?</div>
@@ -76,29 +87,6 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
     <div id="homePoints" class="home-points"></div>
     <div id="homePointSelected" class="home-point-selected hidden" aria-live="polite"></div>
     <p class="text-[11px] text-gray-500 m-0">Ако ти ниједан пункт не одговара, у следећем кораку можеш да предложиш место у близини изабраног пункта.</p>
-  </section>
-
-  <section class="app-card space-y-3" id="punktovi" style="border-color:#a7f3d0;">
-    <div>
-      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 ГДЕ ПРЕУЗИМАМО?</div>
-      <h2 class="text-base font-black text-gray-900 mt-1">Изабери свој пункт</h2>
-      <p class="text-xs text-gray-600 mt-1">Изабери место које ти највише одговара. Адресу не мораш да уносиш.</p>
-    </div>
-    <div id="homePointStatus" class="text-xs text-gray-500" aria-live="polite">Учитавање пунктова…</div>
-    <div id="homePoints" class="home-points"></div>
-    <div id="homePointSelected" class="home-point-selected hidden" aria-live="polite"></div>
-    <p class="text-[11px] text-gray-500 m-0">Ако ти ниједан пункт не одговара, у следећем кораку можеш да предложиш место у близини изабраног пункта.</p>
-  </section>
-
-  <section class="app-card" id="nextDelivery" style="border-color:#a7f3d0;background:#ecfdf5;">
-    <div class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center text-xl">🚚</div>
-      <div class="min-w-0">
-        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">Следећа тура</div>
-        <div id="deliveryTitle" class="text-base font-black text-gray-900">Учитавање туре…</div>
-        <p id="deliveryInfo" class="text-[11px] text-gray-600 mt-1"></p>
-      </div>
-    </div>
   </section>
 
   <section class="app-card space-y-3" id="proizvodi">
