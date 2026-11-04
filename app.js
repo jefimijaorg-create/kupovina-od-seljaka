@@ -542,14 +542,30 @@ function renderCart(){
 
   const cont=document.getElementById('cartContinue');
   if(cont){
+    const hasConfirmedPickup=!!(state.point?.id&&state.homePickupConfirmed);
     cont.disabled=false;
-    cont.onclick=()=>{if(cartQty())location.href='mapa.html'};
+    cont.textContent=hasConfirmedPickup?'Настави на податке за доставу →':'Изабери место преузимања →';
+    cont.onclick=()=>{
+      if(!cartQty())return;
+      // Ако је пункт већ изабран и потврђен на почетној страници, не тражимо га поново.
+      if(state.point?.id&&state.homePickupConfirmed){
+        save();
+        location.href='potvrdi.html';
+      }else{
+        location.href='mapa.html';
+      }
+    };
   }
 }
 
 function initMap(){
   if(!cartQty()){
     location.href='index.html';
+    return;
+  }
+  // Пункт који је већ потврђен на почетној страници не сме поново да се бира.
+  if(state.point?.id&&state.homePickupConfirmed){
+    location.replace('potvrdi.html');
     return;
   }
   state.delivery='punkt';
@@ -691,6 +707,7 @@ function initConfirm(){
       state.point=null;
       state.pickupMode='main';
       state.proposalAddress='';
+      state.homePickupConfirmed=false;
       state.delivery='punkt';
       save();
 
