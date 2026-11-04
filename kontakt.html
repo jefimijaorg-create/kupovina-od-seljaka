@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Контактирајте пројекат Наручи домаће из Велике Плане. Питања о понуди, поруџбинама и преузимању.">
+<title>Контакт — Наручи домаће из Велике Плане</title>
+<link rel="stylesheet" href="style.css">
+<style>
+:root{--green:#17633b;--line:#dfe8df;--muted:#68766b}
+*{box-sizing:border-box}body{margin:0;background:#f4f7f2;color:#1d2b21;font-family:Arial,sans-serif;line-height:1.55}
+.public-head{background:#fff;border-bottom:1px solid var(--line);padding:12px 14px;position:sticky;top:0;z-index:5}
+.head-inner{width:min(100% - 28px,900px);margin:auto}.brand{font-weight:950;color:var(--green);text-decoration:none}.tabs{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px}.tabs a{white-space:nowrap;text-decoration:none;color:#435247;background:#f3f6f1;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800}.tabs a.active{background:var(--green);color:#fff;border-color:var(--green)}
+.wrap{width:min(100% - 28px,760px);margin:auto;padding:24px 0 50px}.eyebrow{font-size:10px;letter-spacing:1.3px;font-weight:900;color:var(--green)}h1{font-size:clamp(29px,6vw,42px);line-height:1.1;margin:8px 0 10px}.lead{color:#5d695f;font-size:14px;line-height:1.65;max-width:620px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:clamp(16px,4vw,25px);margin-top:18px;box-shadow:0 3px 14px #183d2510}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:850}.field input,.field textarea,.field select{width:100%;padding:12px;border:1px solid #ccd9cc;border-radius:11px;background:#fff;font:inherit;color:#1d2b21}.field textarea{min-height:140px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{outline:2px solid #b7dfc0;border-color:var(--green)}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 18px;border-radius:12px;background:var(--green);color:white;border:0;font-weight:900;font-size:13px;cursor:pointer}.btn:disabled{opacity:.55;cursor:wait}.hint{font-size:11px;color:var(--muted);margin:5px 0 0}.status{display:none;padding:12px 14px;border-radius:12px;margin-top:14px;font-size:13px}.status.show{display:block}.status.ok{background:#eaf6eb;border:1px solid #c8e5ca;color:#185d38}.status.err{background:#fff0ed;border:1px solid #f1c8bf;color:#8a2d20}.contact-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.contact-links a{color:var(--green);font-weight:800;font-size:13px}.hp{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header class="public-head"><div class="head-inner">
+<a class="brand" href="index.html">🌱 НАРУЧИ ДОМАЋЕ ИЗ ВЕЛИКЕ ПЛАНЕ</a>
+<nav class="tabs" aria-label="Главна навигација">
+<a href="index.html">Почетна</a><a href="mesta-preuzimanja.html">Где преузимамо</a><a href="ponuda.html">Производи</a><a href="o-projektu.html">О пројекту</a><a class="active" href="kontakt.html">Контакт</a><a href="korpa.html">Корпа</a>
+</nav></div></header>
+<main class="wrap">
+<div class="eyebrow">ТУ СМО ЗА ВАС</div>
+<h1>Имате питање? Јавите нам се.</h1>
+<p class="lead">Пишите нам ако вас занима понуда, поруџбина, место преузимања или желите да предложите сарадњу. Одговорићемо вам чим будемо у могућности.</p>
+<section class="panel">
+<form id="contactForm" class="grid">
+<div class="field"><label for="name">Име и презиме *</label><input id="name" name="ime_prezime" autocomplete="name" maxlength="120" required></div>
+<div class="field"><label for="phone">Телефон *</label><input id="phone" name="telefon" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" required></div>
+<div class="field full"><label for="email">Имејл (опционо)</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254"></div>
+<div class="field full"><label for="subject">Тема *</label><select id="subject" name="tema" required><option value="">Изаберите тему</option><option>Питање о производима</option><option>Постојећа поруџбина</option><option>Место преузимања</option><option>Сарадња са газдинством</option><option>Остало</option></select></div>
+<div class="field full"><label for="message">Порука *</label><textarea id="message" name="poruka" minlength="10" maxlength="5000" required placeholder="Напишите нам шта вас занима..."></textarea></div>
+<div class="hp" aria-hidden="true"><label for="website">Не попуњавајте ово поље</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+<div class="field full"><button class="btn" id="sendBtn" type="submit">ПОШАЉИ ПОРУКУ</button><p class="hint">Подаци се користе само да бисмо одговорили на вашу поруку.</p></div>
+</form>
+<div id="formStatus" class="status" role="status" aria-live="polite"></div>
+</section>
+<section class="panel"><h2 style="margin:0 0 6px;font-size:19px">Пратите актуелну понуду</h2><p class="lead" style="font-size:13px;margin:0">У Viber групи објављујемо шта је тренутно доступно, када примамо поруџбине и информације о преузимању.</p><div class="contact-links"><a href="https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04" target="_blank" rel="noopener">Отвори Viber групу →</a><a href="ponuda.html">Погледај производе →</a></div></section>
+</main>
+<script>
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const SUPABASE_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const form=document.getElementById('contactForm'),button=document.getElementById('sendBtn'),statusBox=document.getElementById('formStatus');
+function showStatus(message,type){statusBox.textContent=message;statusBox.className='status show '+type}
+form.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const data=new FormData(form);
+ if(String(data.get('website')||'').trim())return;
+ const payload={ime_prezime:String(data.get('ime_prezime')||'').trim(),telefon:String(data.get('telefon')||'').trim(),email:String(data.get('email')||'').trim()||null,tema:String(data.get('tema')||'').trim(),poruka:String(data.get('poruka')||'').trim()};
+ if(payload.ime_prezime.length<2||payload.telefon.length<5||payload.tema.length<2||payload.poruka.length<10){showStatus('Проверите унете податке. Порука треба да има најмање 10 карактера.','err');return}
+ button.disabled=true;button.textContent='ШАЉЕМ ПОРУКУ...';statusBox.className='status';
+ try{
+  const response=await fetch(SUPABASE_URL+'/rest/v1/kontakt_poruke',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(payload)});
+  if(!response.ok){let detail='Порука тренутно није послата. Покушајте поново.';try{const e=await response.json();detail=e.message||e.details||detail}catch{}throw new Error(detail)}
+  form.reset();showStatus('Хвала! Ваша порука је успешно послата. Јавићемо вам се.','ok');
+ }catch(error){showStatus(error.message||'Дошло је до грешке. Покушајте поново.','err')}
+ finally{button.disabled=false;button.textContent='ПОШАЉИ ПОРУКУ'}
+});
+</script>
+</body></html>
