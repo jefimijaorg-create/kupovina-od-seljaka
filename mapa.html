@@ -38,6 +38,8 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
 .bottom-action{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);padding:10px 14px 14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid #e5e7eb;z-index:1000;display:flex;gap:8px}.bottom-action>*{flex:1}.bottom-action a{display:flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid #d1d5db;border-radius:14px;padding:12px;color:#374151;background:#fff;font-size:12px;font-weight:800}.bottom-action button{border:0;border-radius:14px;padding:12px;background:#047857;color:#fff;font-size:12px;font-weight:900}.bottom-action button:disabled{background:#d1d5db;color:#6b7280}
 .hidden{display:none!important}
 @media(min-width:700px){.app-shell{height:92vh;border-radius:36px;margin:auto;border:8px solid #1f2937}.app-main{border-radius:28px}.bottom-action{bottom:4vh;border-radius:0 0 28px 28px}}
+
+.sheet-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:2000;display:flex;align-items:flex-end;justify-content:center}.sheet-backdrop.hidden{display:none!important}.points-sheet{width:min(560px,100%);max-height:82vh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:10px 16px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -8px 35px rgba(0,0,0,.2);animation:sheetUp .22s ease-out}.sheet-handle{width:42px;height:5px;border-radius:9px;background:#d1d5db;margin:0 auto 14px}.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.sheet-kicker{font-size:9px;font-weight:900;letter-spacing:.1em;color:#047857}.sheet-head h2{font-size:22px;font-weight:900;margin:3px 0 0;color:#111827}.sheet-head button{width:36px;height:36px;border:0;border-radius:50%;background:#f3f4f6;font-size:18px}.sheet-help{font-size:12px;color:#6b7280;line-height:1.45;margin:10px 0 14px}.points-sheet-list{max-height:58vh;overflow:auto;padding-bottom:4px}.points-sheet-list .point{padding:13px 14px}.points-sheet-list .point strong{font-size:14px}.points-sheet-list .point small{font-size:11px}.selected-summary .nearby-label{display:block;text-transform:none;letter-spacing:0;color:#374151;font-size:12px;font-weight:800;margin-top:12px}.selected-summary .nearby-help{font-size:11px;color:#6b7280;line-height:1.4;margin:4px 0 7px}.selected-summary input{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:12px;padding:12px;font-size:13px;background:#fff;color:#111827}.selected-summary input:focus{outline:2px solid #a7f3d0;border-color:#047857}@keyframes sheetUp{from{transform:translateY(30px);opacity:.7}to{transform:translateY(0);opacity:1}}@media(min-width:700px){.sheet-backdrop{align-items:center;padding:20px}.points-sheet{border-radius:24px;max-height:75vh}}
 </style>
 </head>
 <body data-page="map" class="h-full">
@@ -77,8 +79,8 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
     </div>
     <div id="addressSuggestions" class="address-suggestions hidden"></div>
     <div id="searchResult" class="search-result hidden"></div>
-    <div class="point-list-toggle"><button id="togglePoints" type="button">☰ Листа свих пунктова</button></div>
-    <div id="pointsPanel" class="points-panel hidden"><div id="points" class="points"></div></div>
+    <div class="point-list-toggle"><button id="togglePoints" type="button">☰ Изабери пункт са листе</button></div>
+    <p class="text-[10px] text-gray-500 -mt-2">Изабери један од активних пунктова или предложи место у близини.</p>
     <div class="map-wrap"><div id="map" class="map"></div><div id="mapCard" class="map-card hidden"></div></div>
     <div id="selectedPoint" class="selected-summary hidden"></div>
   </section>
@@ -91,6 +93,14 @@ h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
 </div>
 </main>
 <div class="bottom-action"><a href="index.html">← Производи</a><button id="continue" disabled type="button">Настави →</button></div>
+</div>
+<div id="pointsSheet" class="sheet-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pointsSheetTitle">
+  <section class="points-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><div><span class="sheet-kicker">МЕСТА ПРЕУЗИМАЊА</span><h2 id="pointsSheetTitle">Изаберите пункт</h2></div><button id="closePointsSheet" type="button" aria-label="Затвори">✕</button></div>
+    <p class="sheet-help">Изаберите место које вам највише одговара. Након избора враћате се на поруџбину.</p>
+    <div id="points" class="points points-sheet-list"></div>
+  </section>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="app.js?v=20261003-1"></script>
