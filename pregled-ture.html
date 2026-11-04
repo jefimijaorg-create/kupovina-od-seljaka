@@ -467,7 +467,7 @@ async function savePointTime(pointKey,inputId){
  try{
   if(pointKey==='none')throw Error('Прво додели пункт поруџбинама, па онда унеси сатницу.');
   const input=document.getElementById(inputId),time=String(input?.value||'').trim();
-  if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time))throw Error('Унеси исправну сатницу.');
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('Унеси исправну сатницу.');
   const payload={tura_id:tourId,punkt_id:Number(pointKey),vreme:time,aktivan:true};
   await api('tura_punktovi?on_conflict=tura_id,punkt_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(payload)});
   const check=await api('tura_punktovi?select=tura_id,punkt_id,vreme,aktivan&tura_id=eq.'+tourId+'&punkt_id=eq.'+Number(pointKey));
