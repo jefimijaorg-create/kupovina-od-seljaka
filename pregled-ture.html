@@ -388,7 +388,7 @@ function renderOrders(){
   const ordersHtml=ids.sort((a,b)=>(g.orders[a].buyer.ime_prezime||'').localeCompare(g.orders[b].buyer.ime_prezime||'','sr')).map(oid=>{
    const row=g.orders[oid],o=row.order,b=row.buyer,its=row.items,sum=its.reduce((a,x)=>a+price(x),0);pointTotal+=sum;
    const orderPrice=o.ukupna_cena!==null&&o.ukupna_cena!==undefined&&o.ukupna_cena!==''?o.ukupna_cena:'';
-   const lineInputs=its.map(x=>'<label class="block border rounded-lg p-2 bg-white"><span class="block text-sm font-bold">'+esc(x.proizvod||'Производ')+' · '+esc(textPack(x))+'</span><span class="text-xs text-slate-500">Укупна цена ставке (дин.)</span><input id="line-price-'+x.id+'" type="number" min="0" step="0.01" value="'+(price(x)>0?esc(price(x)):'')+'" placeholder="Унеси цену" class="w-full border rounded-lg px-3 py-2 mt-1"></label>').join('');
+   const lineInputs=its.map(x=>'<div class="border rounded-lg p-3 bg-white space-y-2"><label class="block"><span class="block text-xs font-bold text-slate-500">Производ</span><input id="line-product-'+x.id+'" value="'+esc(x.proizvod||'')+'" class="w-full border rounded-lg px-3 py-2 mt-1"></label><div class="grid grid-cols-2 gap-2"><label><span class="block text-xs font-bold text-slate-500">Количина</span><input id="line-qty-'+x.id+'" type="number" min="0" step="0.001" value="'+esc(x.kolicina)+'" class="w-full border rounded-lg px-3 py-2 mt-1"></label><label><span class="block text-xs font-bold text-slate-500">Јединица</span><input id="line-unit-'+x.id+'" value="'+esc(x.jedinica||'')+'" class="w-full border rounded-lg px-3 py-2 mt-1"></label></div><label class="block"><span class="block text-xs font-bold text-slate-500">Укупна цена ставке (дин.)</span><input id="line-price-'+x.id+'" type="number" min="0" step="0.01" value="'+(price(x)>0?esc(price(x)):'')+'" placeholder="Унеси цену" class="w-full border rounded-lg px-3 py-2 mt-1"></label></div>').join('');
    const pointOptions='<option value="">— Изабери пункт —</option>'+points.map(p=>'<option value="'+p.id+'" '+(String(o.punkt_id||'')===String(p.id)?'selected':'')+'>'+esc(p.name)+(p.address?' — '+esc(p.address):'')+'</option>').join('');
    return '<details class="border rounded-xl mb-2 overflow-hidden bg-white"><summary class="list-none cursor-pointer p-3 flex flex-wrap items-center justify-between gap-2"><div><div class="font-black text-base">'+esc(b.ime_prezime||'Поруџбина '+o.id)+'</div><div class="text-xs text-slate-600 mt-1">'+esc(o.telefon||b.telefon||'')+' · Поруџбина #'+o.id+'</div></div><div class="flex items-center gap-3"><b class="text-emerald-800">'+(orderPrice!==''?cash(orderPrice):'<span class="text-amber-700">Цена није унета</span>')+'</b><span class="text-slate-500">▼</span></div></summary><div class="p-3 space-y-3 border-t"><div class="font-black text-sm">Ставке и цене</div>'+lineInputs+'<label class="block"><span class="block text-sm font-bold">Укупна цена поруџбине (дин.)</span><input id="order-total-'+o.id+'" type="number" min="0" step="0.01" value="'+esc(orderPrice)+'" placeholder="Унеси укупну цену" class="w-full border rounded-lg px-3 py-2 mt-1"></label><label class="block"><span class="block text-sm font-bold">Пункт преузимања</span><select id="order-point-'+o.id+'" class="w-full border rounded-lg px-3 py-2 mt-1">'+pointOptions+'</select></label><button type="button" onclick="saveOrderEdit('+o.id+','+JSON.stringify(its.map(x=>x.id))+')" class="w-full bg-emerald-700 text-white font-bold rounded-lg px-4 py-3">Сачувај измене поруџбине</button><div class="text-xs text-slate-500">Можеш да измениш цену сваке ставке, укупну цену и пункт. Празна цена ставке се неће мењати.</div></div></details>';
   }).join('');
@@ -406,12 +406,14 @@ async function saveOrderEdit(orderId,lineIds){
   for(const id of lineIds){
    const el=document.getElementById('line-price-'+id);if(!el)continue;
    const raw=el.value.trim();
-   if(raw===''){allLinesPriced=false;continue}
-   const amount=Number(raw);if(!Number.isFinite(amount)||amount<0)throw Error('Цена ставке мора бити нула или већа.');
    const x=items.find(z=>Number(z.id)===Number(id));if(!x)throw Error('Ставка '+id+' није пронађена.');
-   const qty=n(x.kolicina||x.total_quantity); 
-   await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({cena_stavke:amount,unit_price:qty>0?amount/qty:amount})});
-   lineSum+=amount;changedLines++;
+   const product=document.getElementById('line-product-'+id).value.trim();
+   const qtyRaw=document.getElementById('line-qty-'+id).value.trim();
+   const qty=Number(qtyRaw);if(!product)throw Error('Назив производа не може бити празан.');if(!Number.isFinite(qty)||qty<=0)throw Error('Количина мора бити већа од нуле.');
+   const unit=document.getElementById('line-unit-'+id).value.trim();
+   const linePatch={proizvod:product,kolicina:qty,jedinica:unit||null};
+   if(raw===''){allLinesPriced=false}else{const amount=Number(raw);if(!Number.isFinite(amount)||amount<0)throw Error('Цена ставке мора бити нула или већа.');linePatch.cena_stavke=amount;linePatch.unit_price=amount/qty;lineSum+=amount;changedLines++}
+   await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(linePatch)});
   }
   const patch={};
   if(totalRaw!==''){const total=Number(totalRaw);if(!Number.isFinite(total)||total<0)throw Error('Укупна цена мора бити нула или већа.');patch.ukupna_cena=total}
