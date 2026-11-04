@@ -8,7 +8,7 @@
 <title>Наручи домаће из Велике Плане</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20261104-6">
 <style>
 body{font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#111827}
 h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
@@ -28,6 +28,20 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 .bottom-action{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);padding:10px 14px 14px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid #e5e7eb;z-index:30}
 .bottom-action button{width:100%;border:0;border-radius:15px;padding:13px;background:#047857;color:#fff;font-weight:900;font-size:13px}.bottom-action button:disabled{background:#d1d5db;color:#6b7280}
 @media(min-width:700px){.app-shell{height:92vh;border-radius:36px;margin:auto;border:8px solid #1f2937}.app-main{border-radius:28px}.bottom-action{bottom:4vh;border-radius:0 0 28px 28px}}
+ 
+.home-points{display:grid;grid-template-columns:1fr;gap:8px}
+.home-point{display:flex;align-items:center;gap:11px;width:100%;min-width:0;text-align:left;padding:13px;border:1.5px solid #e5e7eb;border-radius:14px;background:#fff;color:#111827}
+.home-point.active{border-color:#047857;background:#ecfdf5}
+.home-point .point-dot{width:20px;height:20px;flex:0 0 20px;border:1.5px solid #9ca3af;border-radius:50%;display:grid;place-items:center;color:#047857;font-size:13px;font-weight:900}
+.home-point.active .point-dot{border-color:#047857;background:#047857;color:#fff}
+.home-point .point-copy{display:block;min-width:0;flex:1}
+.home-point strong{display:block;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.home-point small{display:block;margin-top:3px;color:#6b7280;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.home-point-selected{padding:12px;border-radius:13px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:12px;line-height:1.45}
+.home-bottom-nav{position:fixed;z-index:1000;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:9px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid #e5e7eb;backdrop-filter:blur(12px)}
+.home-bottom-nav a{display:flex;justify-content:center;align-items:center;gap:5px;min-width:0;padding:11px 5px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#14532d;text-decoration:none;font-size:11px;font-weight:900;white-space:nowrap}
+.home-bottom-nav b{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#fef3c7;color:#78350f;font-size:10px}
+@media(min-width:700px){.home-bottom-nav{bottom:4vh;border-radius:16px}}
 </style>
 </head>
 <body data-page="home" class="h-full">
@@ -61,12 +75,16 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
       <a href="#proizvodi" class="flex-1 text-center bg-emerald-800 text-white rounded-xl py-3 px-2 text-xs font-extrabold">Види производе ↓</a>
     </div>
   </section>
-  <section class="app-card space-y-3" style="border-color:#dbeafe;background:#eff6ff;">
-    <div class="flex items-center justify-between">
-      <div><div class="text-[10px] font-black uppercase tracking-wider text-blue-800">📍 Где преузимате?</div><div class="text-xs text-gray-700 mt-1">Преузимање је на пунктовима који су део конкретне недељне туре.</div></div>
-      <a href="mapa.html" class="text-[11px] font-black text-blue-800 whitespace-nowrap">Види пунктове →</a>
+  <section class="app-card space-y-3" id="punktovi" style="border-color:#a7f3d0;">
+    <div>
+      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 Где можеш да преузмеш?</div>
+      <h2 class="text-base font-black text-gray-900 mt-1">Изабери место преузимања</h2>
+      <p class="text-xs text-gray-600 mt-1">Пунктове за следећу туру видиш одмах испод. Не мораш да уносиш адресу да би изабрао место.</p>
     </div>
-    <p class="text-[11px] text-gray-600 m-0">Није класична достава на адресу. Могуће је и преузимање успут, по договору.</p>
+    <div id="homePointStatus" class="text-xs text-gray-500" aria-live="polite">Учитавање пунктова…</div>
+    <div id="homePoints" class="home-points"></div>
+    <div id="homePointSelected" class="home-point-selected hidden" aria-live="polite"></div>
+    <p class="text-[11px] text-gray-500 m-0">Ако ти ниједан пункт не одговара, у следећем кораку можеш да предложиш место у близини изабраног пункта.</p>
   </section>
 
   <section class="app-card" id="nextDelivery" style="border-color:#a7f3d0;background:#ecfdf5;">
@@ -103,8 +121,12 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 </div>
 </main>
 
-<div class="bottom-action"><button id="homeContinue" disabled>Изабери производе</button></div>
+<nav class="home-bottom-nav" aria-label="Брза навигација">
+  <a href="#punktovi">📍 Пунктови</a>
+  <a href="#proizvodi">🧺 Производи</a>
+  <a href="korpa.html">🛒 Корпа <b id="homeCartCount">0</b></a>
+</nav>
 </div>
-<script src="app.js?v=20261017-1"></script>
+<script src="app.js?v=20261104-6"></script>
 </body>
 </html>
