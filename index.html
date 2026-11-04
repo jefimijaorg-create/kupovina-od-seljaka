@@ -8,7 +8,7 @@
 <title>Наручи домаће из Велике Плане</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="style.css?v=20261104-6">
+<link rel="stylesheet" href="style.css?v=20261104-7">
 <style>
 body{font-family:'Plus Jakarta Sans',Arial,sans-serif;background:#111827}
 h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
@@ -38,7 +38,7 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 .home-point strong{display:block;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
 .home-point small{display:block;margin-top:3px;color:#6b7280;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
 .home-point-selected{padding:12px;border-radius:13px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:12px;line-height:1.45}
-.home-bottom-nav{position:fixed;z-index:1000;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:9px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid #e5e7eb;backdrop-filter:blur(12px)}
+.home-bottom-nav{position:fixed;z-index:1000;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:8px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid #e5e7eb;backdrop-filter:blur(12px)}
 .home-bottom-nav a{display:flex;justify-content:center;align-items:center;gap:5px;min-width:0;padding:11px 5px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#14532d;text-decoration:none;font-size:11px;font-weight:900;white-space:nowrap}
 .home-bottom-nav b{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#fef3c7;color:#78350f;font-size:10px}
 @media(min-width:700px){.home-bottom-nav{bottom:4vh;border-radius:16px}}
@@ -60,26 +60,29 @@ h1,h2,h3,.font-serif{font-family:Georgia,'Times New Roman',serif}
 
 <main class="app-main">
 <div class="p-4 space-y-4">
-  <section class="story-card space-y-3">
-    <div class="text-center space-y-2">
-      <span class="text-[10px] font-bold tracking-widest uppercase text-emerald-800 bg-emerald-100/70 px-3 py-1 rounded-full inline-block">🌿 Наручи домаће из Велике Плане</span>
-      <h1 class="text-2xl font-black text-gray-900 leading-snug">Домаће из Велике Плане. До вас у Београду.</h1>
-      <p class="text-xs font-bold text-emerald-900">Ја сам Јовица Вратница.</p>
-    </div>
-    <div class="story-text">
-      <p>Повезујем газдинства из Велике Плане и околине са купцима у Београду. Прикупљам поруџбине и организујем заједничку доставу домаћих производа.</p>
-      <p><strong>Село производи.<br>Ви наручујете.<br>Ми достављамо.</strong></p>
-    </div>
-    <div class="flex gap-2">
-      <a href="o-projektu.html" class="flex-1 text-center bg-white border border-emerald-800 text-emerald-900 rounded-xl py-3 px-2 text-xs font-extrabold">Види више →</a>
-      <a href="#proizvodi" class="flex-1 text-center bg-emerald-800 text-white rounded-xl py-3 px-2 text-xs font-extrabold">Види производе ↓</a>
-    </div>
+  <section class="home-intro">
+    <div class="home-kicker">🌿 ДОМАЋЕ ИЗ ВЕЛИКЕ ПЛАНЕ</div>
+    <h1>Домаће од произвођача до тебе.</h1>
+    <p>Изабери где преузимаш и шта желиш да наручиш. Ми организујемо доставу.</p>
   </section>
+
   <section class="app-card space-y-3" id="punktovi" style="border-color:#a7f3d0;">
     <div>
       <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 Где можеш да преузмеш?</div>
       <h2 class="text-base font-black text-gray-900 mt-1">Изабери место преузимања</h2>
       <p class="text-xs text-gray-600 mt-1">Пунктове за следећу туру видиш одмах испод. Не мораш да уносиш адресу да би изабрао место.</p>
+    </div>
+    <div id="homePointStatus" class="text-xs text-gray-500" aria-live="polite">Учитавање пунктова…</div>
+    <div id="homePoints" class="home-points"></div>
+    <div id="homePointSelected" class="home-point-selected hidden" aria-live="polite"></div>
+    <p class="text-[11px] text-gray-500 m-0">Ако ти ниједан пункт не одговара, у следећем кораку можеш да предложиш место у близини изабраног пункта.</p>
+  </section>
+
+  <section class="app-card space-y-3" id="punktovi" style="border-color:#a7f3d0;">
+    <div>
+      <div class="text-[10px] font-black uppercase tracking-wider text-emerald-800">📍 ГДЕ ПРЕУЗИМАМО?</div>
+      <h2 class="text-base font-black text-gray-900 mt-1">Изабери свој пункт</h2>
+      <p class="text-xs text-gray-600 mt-1">Изабери место које ти највише одговара. Адресу не мораш да уносиш.</p>
     </div>
     <div id="homePointStatus" class="text-xs text-gray-500" aria-live="polite">Учитавање пунктова…</div>
     <div id="homePoints" class="home-points"></div>
