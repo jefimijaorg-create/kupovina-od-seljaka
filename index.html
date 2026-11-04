@@ -59,6 +59,8 @@ body.sheet-active{overflow:hidden}
 @media(max-width:370px){.home-intro h1{font-size:26px}.home-main-actions{gap:6px}.home-main-actions button{padding:11px 7px}.home-main-actions strong{font-size:11px}}
 
 .home-nearby-option{display:flex;gap:10px;align-items:flex-start;padding:13px;border:1.5px solid #e5e7eb;border-radius:14px;background:#fff;margin-top:8px;cursor:pointer}.home-nearby-option:has(input:checked){border-color:#047857;background:#ecfdf5}.home-nearby-option input{width:19px;height:19px;margin:2px 0 0;accent-color:#047857}.home-nearby-option span{font-size:13px;line-height:1.4}.home-nearby-option small{display:block;color:#6b7280;font-size:11px;margin-top:4px}.home-nearby-field{width:100%;margin-top:12px;padding:12px;border:1px solid #d1d5db;border-radius:12px}.home-nearby-field:focus{outline:2px solid #a7f3d0}.home-nearest-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px;border:1.5px solid #e5e7eb;border-radius:13px;background:#fff}.home-nearest-item.active{border-color:#047857;background:#ecfdf5}.home-nearest-item strong,.home-nearest-item small{display:block}.home-nearest-item small{font-size:11px;color:#6b7280;margin-top:3px}.home-distance{font-size:11px;font-weight:800;color:#047857;white-space:nowrap}
+ 
+.site-tabs{display:flex;gap:5px;overflow-x:auto;flex-shrink:0;padding:8px 10px;background:#fff;border-bottom:1px solid #f3f4f6;scrollbar-width:none}.site-tabs::-webkit-scrollbar{display:none}.site-tabs a{flex:1 0 auto;text-align:center;text-decoration:none;padding:8px 9px;border-radius:999px;background:#f3f6f1;color:#3f5144;font-size:10px;font-weight:900;white-space:nowrap}.site-tabs a.active{background:#166534;color:#fff}
 </style>
 </head>
 <body data-page="home" class="h-full">
@@ -71,6 +73,7 @@ body.sheet-active{overflow:hidden}
   </a>
   <button id="cartLink" type="button" onclick="showHomePanel('cart')" class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center relative" aria-label="Отвори корпу"><i class="fa-solid fa-cart-shopping text-sm"></i><span id="cartCount" class="absolute -top-1 -right-1 bg-amber-400 text-gray-900 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">0</span></button>
 </header>
+<nav class="site-tabs" aria-label="Главна навигација"><a class="active" href="index.html">Почетна</a><a href="mesta-preuzimanja.html">Пунктови</a><a href="ponuda.html">Производи</a><a href="dostava-kupci.html">Достава</a><a href="o-projektu.html">О пројекту</a></nav>
 
 <main class="app-main" id="homeMain">
 <div class="p-4 space-y-4">
@@ -92,9 +95,9 @@ body.sheet-active{overflow:hidden}
   </section>
 
   <nav class="home-main-actions" aria-label="Главни мени">
-    <button type="button" onclick="showHomePanel('delivery')"><span>📍</span><strong>ДОСТАВА</strong><small>Изабери место преузимања</small></button>
-    <button type="button" onclick="showHomePanel('products')"><span>🧺</span><strong>ПРОИЗВОДИ</strong><small>Погледај понуду</small></button>
-    <button type="button" onclick="location.href='kako-funkcionise.html'"><span>❔</span><strong>КАКО ФУНКЦИОНИШЕ</strong><small>Од избора до преузимања</small></button>
+    <button type="button" onclick="location.href='mesta-preuzimanja.html'"><span>📍</span><strong>ДОСТАВА</strong><small>Изабери место преузимања</small></button>
+    <button type="button" onclick="location.href='ponuda.html'"><span>🧺</span><strong>ПРОИЗВОДИ</strong><small>Погледај понуду</small></button>
+    <button type="button" onclick="location.href='o-projektu.html#kako-funkcionise'"><span>❔</span><strong>КАКО ФУНКЦИОНИШЕ</strong><small>Од избора до преузимања</small></button>
   </nav>
 </div>
 </main>
@@ -208,5 +211,6 @@ function saveHomeProposal(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeHomePanel();});
 </script>
 <script src="app.js?v=20261104-10"></script>
+<script>const openPanel=new URLSearchParams(location.search).get("open");if(["delivery","products","cart"].includes(openPanel))showHomePanel(openPanel);</script>
 </body>
 </html>
