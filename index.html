@@ -183,7 +183,7 @@ function showHomePanel(name){
   document.body.classList.add('sheet-active');
   requestAnimationFrame(()=>layer.classList.add('visible'));
   if(name==='cart'&&typeof renderCart==='function')renderCart();
-  if(name==='delivery')document.getElementById('homeProposalAddress').value=(typeof state!=='undefined'?state.proposalAddress:(window.homeProposalValue||''));
+  if(name==='delivery'&&typeof renderHomePoints==='function')document.getElementById('homeAddressInput')?.focus({preventScroll:true});
 }
 function closeHomePanel(){
   const layer=document.getElementById('homeSheetLayer');
