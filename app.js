@@ -358,7 +358,7 @@ function renderCart(){
   const total=state.cart.reduce((s,x)=>s+Number(x.price||0)*Number(x.qty||0),0);
 
   if(!count){
-    box.innerHTML='<div class="card cart-empty-box"><h2>Корпа је празна</h2><p>Изабери производе које желиш, па се врати овде да провериш поруџбину.</p><a href="index.html" class="btn primary">Погледај производе →</a></div>';
+    box.innerHTML='<div class="card cart-empty-box"><h2>Корпа је празна</h2><p>Изабери производе које желиш, па се врати овде да провериш поруџбину.</p><button type="button" class="btn primary" onclick="showHomePanel(\'products\')">Погледај производе →</button></div>';
     const cont=document.getElementById('cartContinue');
     if(cont)cont.disabled=true;
     return;
