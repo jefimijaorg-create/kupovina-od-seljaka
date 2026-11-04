@@ -92,42 +92,185 @@ async function renderHomePoints(){
   const box=document.getElementById('homePoints');
   const status=document.getElementById('homePointStatus');
   const selected=document.getElementById('homePointSelected');
+  const searchInput=document.getElementById('homeAddressInput');
+  const searchButton=document.getElementById('findHomeNearest');
+  const searchStatus=document.getElementById('homeAddressStatus');
+  const results=document.getElementById('homeNearestResults');
+  const toggle=document.getElementById('homeToggleAllPoints');
+  const confirmed=document.getElementById('homePickupConfirmed');
   if(!box)return;
+
+  let active=[];
+  let allVisible=false;
+  const distanceKm=(a,b)=>{
+    const rad=Math.PI/180,R=6371;
+    const dLat=(b.lat-a.lat)*rad,dLon=(b.lng-a.lng)*rad;
+    const x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.sqrt(x));
+  };
+  const coords=p=>Number.isFinite(Number(p.latitude))&&Number.isFinite(Number(p.longitude))&&p.latitude!==null&&p.longitude!==null;
+
+  const showConfirmed=()=>{
+    if(!confirmed)return;
+    confirmed.classList.toggle('hidden',!state.homePickupConfirmed);
+  };
+  const clearConfirmation=()=>{
+    state.homePickupConfirmed=false;
+    save();
+    showConfirmed();
+  };
+  const selectPoint=p=>{
+    state.point=p;
+    state.delivery='punkt';
+    state.pickupMode=state.pickupMode||'main';
+    state.proposalAddress=state.pickupMode==='proposal'?(state.proposalAddress||''):'';
+    state.homePickupConfirmed=false;
+    save();
+    renderPointList();
+    renderSelected();
+    showConfirmed();
+  };
+  const renderPointList=(list=active)=>{
+    box.innerHTML=list.map(p=>{
+      const chosen=String(state.point?.id)===String(p.id);
+      return '<button type="button" class="home-point '+(chosen?'active':'')+'" data-home-point="'+esc(p.id)+'"><span class="point-dot">'+(chosen?'✓':'')+'</span><span class="point-copy"><strong>'+esc(p.name||p.address||'Пункт')+'</strong><small>'+esc([p.address,p.city].filter(Boolean).join(', ')||p.description||'Оквирна дестинација')+'</small></span></button>';
+    }).join('');
+    box.querySelectorAll('[data-home-point]').forEach(btn=>btn.addEventListener('click',()=>{
+      const p=active.find(x=>String(x.id)===btn.dataset.homePoint);
+      if(p)selectPoint(p);
+    }));
+  };
+  const renderSelected=()=>{
+    if(!selected)return;
+    const p=state.point;
+    if(!p||!active.some(x=>String(x.id)===String(p.id))){
+      selected.classList.add('hidden');
+      selected.innerHTML='';
+      return;
+    }
+    selected.classList.remove('hidden');
+    selected.innerHTML=
+      '<div class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3">'+
+      '<span class="text-[10px] uppercase tracking-wider font-black text-emerald-800">Изабран пункт</span>'+
+      '<strong class="block text-lg text-gray-900 mt-1">'+esc(p.name||'Пункт')+'</strong>'+
+      '<span class="block text-xs text-gray-600 mt-1">'+esc([p.address,p.city].filter(Boolean).join(', ')||p.description||'Оквирна дестинација')+'</span>'+
+      '<div class="mt-3 text-sm font-extrabold text-gray-900">Где желиш да преузмеш пошиљку?</div>'+
+      '<label class="home-nearby-option"><input type="radio" name="homePickupMode" value="main" '+(state.pickupMode!=='proposal'?'checked':'')+'><span><strong>Желим баш на овом пункту</strong><small>Преузимам поруџбину на означеној дестинацији.</small></span></label>'+
+      '<label class="home-nearby-option"><input type="radio" name="homePickupMode" value="proposal" '+(state.pickupMode==='proposal'?'checked':'')+'><span><strong>Одговара ми неко место у близини</strong><small>Сам/а предлажем улицу, објекат или место.</small></span></label>'+
+      (state.pickupMode==='proposal'?'<label class="block text-xs font-bold text-gray-700 mt-3">Које место ти одговара?<input id="homeNearbyAddress" class="home-nearby-field" type="text" maxlength="180" placeholder="Нпр. Устаничка код Дедла" value="'+esc(state.proposalAddress||'')+'"></label>':'')+
+      '<p class="text-[11px] leading-relaxed text-gray-600 mt-3">Пункт је оквирна дестинација. Предложено место у близини проверавамо и накнадно потврђујемо.</p>'+
+      '<button id="homeConfirmPickup" type="button" class="home-panel-next">Потврди избор места</button>'+
+      '</div>';
+    selected.querySelectorAll('input[name="homePickupMode"]').forEach(input=>input.addEventListener('change',()=>{
+      state.pickupMode=input.value;
+      if(input.value==='main')state.proposalAddress='';
+      clearConfirmation();
+      save();
+      renderSelected();
+    }));
+    selected.querySelector('#homeNearbyAddress')?.addEventListener('input',e=>{
+      state.proposalAddress=e.target.value;
+      clearConfirmation();
+      save();
+    });
+    selected.querySelector('#homeConfirmPickup')?.addEventListener('click',()=>{
+      if(state.pickupMode==='proposal'&&String(state.proposalAddress||'').trim().length<3){
+        const field=selected.querySelector('#homeNearbyAddress');
+        field?.focus();
+        if(field)field.setCustomValidity('Унеси место које ти одговара.');
+        field?.reportValidity();
+        return;
+      }
+      state.homePickupConfirmed=true;
+      save();
+      showConfirmed();
+      if(searchStatus)searchStatus.textContent=state.pickupMode==='proposal'
+        ?'Предлог места је сачуван уз изабрани пункт. Могућност преузимања ћемо потврдити.'
+        :'Преузимање на изабраном пункту је забележено.';
+      confirmed?.scrollIntoView({behavior:'smooth',block:'nearest'});
+    });
+  };
+
+  const showSearchResults=ordered=>{
+    if(!results)return;
+    results.classList.remove('hidden');
+    results.innerHTML=ordered.map((item,index)=>{
+      const p=item.point,chosen=String(state.point?.id)===String(p.id);
+      return '<button type="button" class="home-nearest-item '+(chosen?'active':'')+'" data-near-point="'+esc(p.id)+'"><span class="point-dot">'+(chosen?'✓':(index+1))+'</span><span class="flex-1 min-w-0"><strong class="text-sm">'+esc(p.name||'Пункт')+'</strong><small>'+esc([p.address,p.city].filter(Boolean).join(', ')||p.description||'Оквирна дестинација')+'</small></span><span class="home-distance">'+item.distance.toFixed(1)+' км</span></button>';
+    }).join('');
+    results.querySelectorAll('[data-near-point]').forEach(btn=>btn.addEventListener('click',()=>{
+      const p=active.find(x=>String(x.id)===btn.dataset.nearPoint);
+      if(p){selectPoint(p);selected?.scrollIntoView({behavior:'smooth',block:'nearest'});}
+    }));
+  };
+
   try{
     const tour=await getCurrentTour();
-    if(!tour){status.textContent='Пунктови ће бити приказани када објавимо следећу туру.';return;}
+    if(!tour){
+      status.textContent='Пунктови ће бити приказани када буде објављена следећа тура.';
+      searchStatus.textContent='Тренутно нема активне туре за избор места преузимања.';
+      return;
+    }
     const config=await getTourConfig(tour.id);
     const ids=config.pointIds;
-    if(!ids.length){status.textContent='Пунктови за ову туру још нису објављени.';return;}
+    if(!ids.length){
+      status.textContent='Пунктови за ову туру још нису објављени.';
+      return;
+    }
     const rows=await api('punktovi?select=id,name,city,address,latitude,longitude,is_active,description,vreme,aktivan,slug&order=sort_order.asc&limit=100&id=in.('+ids.join(',')+')');
-    const active=rows.filter(p=>ids.includes(String(p.id))&&String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
+    active=rows.filter(p=>ids.includes(String(p.id))&&String(p.is_active).toLowerCase()!=='false'&&String(p.aktivan).toLowerCase()!=='false');
     if(!active.length){status.textContent='Пунктови за ову туру још нису доступни.';return;}
-    status.textContent='Изабери један од '+active.length+' места преузимања:';
-    const render=()=>{
-      box.innerHTML=active.map(p=>'<button type="button" class="home-point '+(String(state.point?.id)===String(p.id)?'active':'')+'" data-home-point="'+esc(p.id)+'"><span class="point-dot">'+(String(state.point?.id)===String(p.id)?'✓':'')+'</span><span class="point-copy"><strong>'+esc(p.name||p.address||'Пункт')+'</strong><small>'+esc([p.address,p.city].filter(Boolean).join(', ')||p.description||'Место преузимања')+'</small></span></button>').join('');
-      box.querySelectorAll('[data-home-point]').forEach(b=>b.onclick=()=>{
-        const p=active.find(x=>String(x.id)===b.dataset.homePoint);
-        if(!p)return;
-        state.point=p;state.delivery='punkt';state.pickupMode='main';state.proposalAddress='';save();
-        render();
-        selected.classList.remove('hidden');
-        selected.innerHTML='<strong>✓ Изабран пункт: '+esc(p.name||'Пункт')+'</strong><br>Избор је сачуван. Сада можеш да изабереш производе или да промениш пункт.';
-      });
-    };
+    status.textContent=active.length+' оквирних дестинација доступно у овој тури.';
     if(state.point){
       const match=active.find(p=>String(p.id)===String(state.point.id));
       if(match)state.point=match;
-      else state.point=null;
+      else{state.point=null;state.pickupMode='main';state.proposalAddress='';state.homePickupConfirmed=false;}
       save();
     }
-    render();
-    if(state.point&&active.some(p=>String(p.id)===String(state.point.id))){
-      selected.classList.remove('hidden');
-      selected.innerHTML='<strong>✓ Изабран пункт: '+esc(state.point.name||'Пункт')+'</strong><br>Избор је сачуван.';
-    }
-  }catch(e){
+    renderPointList();
+    renderSelected();
+    showConfirmed();
+
+    searchButton?.addEventListener('click',async()=>{
+      const query=String(searchInput?.value||'').trim();
+      if(query.length<3){searchStatus.textContent='Унеси улицу, број, насеље или град.';searchInput?.focus();return;}
+      searchButton.disabled=true;
+      searchButton.textContent='Тражим адресу…';
+      searchStatus.textContent='Проналазим адресу и рачунам удаљеност до пунктова…';
+      results?.classList.add('hidden');
+      try{
+        const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=rs&accept-language=sr&q='+encodeURIComponent(query);
+        const response=await fetch(url,{headers:{Accept:'application/json'}});
+        if(!response.ok)throw new Error('Геокодер тренутно није доступан.');
+        const found=await response.json();
+        if(!found.length){searchStatus.textContent='Нисмо пронашли ту адресу. Провери унос или изабери пункт са списка.';box.classList.remove('hidden');return;}
+        const geocoded=active.filter(coords);
+        if(!geocoded.length){searchStatus.textContent='Пунктови још немају унете координате. Можеш ручно да изабереш пункт са списка.';box.classList.remove('hidden');return;}
+        const location={lat:Number(found[0].lat),lng:Number(found[0].lon)};
+        const ordered=geocoded.map(point=>({point,distance:distanceKm(location,{lat:Number(point.latitude),lng:Number(point.longitude)})})).sort((x,y)=>x.distance-y.distance);
+        showSearchResults(ordered);
+        searchStatus.textContent='Пунктови су поређани од најближег ка најудаљенијем за: '+(found[0].display_name||query);
+      }catch(error){
+        console.error(error);
+        searchStatus.textContent='Претрага адресе тренутно није доступна. Можеш ручно да изабереш пункт са списка.';
+        box.classList.remove('hidden');
+      }finally{
+        searchButton.disabled=false;
+        searchButton.innerHTML='<i class="fa-solid fa-location-dot mr-2"></i>Пронађи најближе пунктове';
+      }
+    });
+    searchInput?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchButton?.click();}});
+    toggle?.addEventListener('click',()=>{
+      allVisible=!allVisible;
+      box.classList.toggle('hidden',!allVisible);
+      toggle.textContent=allVisible?'Сакриј списак':'Прикажи све';
+    });
+    box.classList.add('hidden');
+    if(state.point)box.classList.add('hidden');
+  }catch(error){
     status.textContent='Нисмо успели да учитамо пунктове. Покушај поново.';
-    console.error(e);
+    searchStatus.textContent='Пунктови тренутно нису доступни.';
+    console.error(error);
   }
 }
 
