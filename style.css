@@ -274,3 +274,102 @@ textarea{resize:vertical}
 .project-story p strong{color:#202a20}
 .story-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:42px;padding-top:24px;border-top:1px solid #e2ddd2}
 @media(max-width:650px){.project-story{margin-top:18px}.project-story h1{font-size:34px}.project-story h2{font-size:23px}.project-story p{font-size:17px;line-height:1.65}.story-actions .btn{width:100%}}
+
+
+/* Избор пункта — исправка мобилног распореда */
+#selectedPoint.selected-summary{
+  display:block;
+  width:100%;
+  min-width:0;
+  margin-top:0;
+  padding:18px;
+  overflow:hidden;
+}
+#selectedPoint .eyebrow{display:block;margin-bottom:5px}
+#selectedPoint h2{display:block;margin:4px 0 6px;font-size:clamp(19px,4vw,24px);line-height:1.2;overflow-wrap:anywhere}
+#selectedPoint .muted{display:block;margin:0;line-height:1.5;overflow-wrap:anywhere}
+#selectedPoint .pickup-options{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:10px;
+  width:100%;
+  margin-top:16px;
+}
+#selectedPoint .pickup-option{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  width:100%;
+  min-width:0;
+  margin:0;
+  padding:14px;
+  border:1.5px solid #d1d5db;
+  border-radius:15px;
+  background:#fff;
+  cursor:pointer;
+}
+#selectedPoint .pickup-option:has(input:checked){
+  border-color:#047857;
+  background:#ecfdf5;
+}
+#selectedPoint .pickup-option input{
+  display:block;
+  flex:0 0 19px;
+  width:19px;
+  height:19px;
+  margin:2px 0 0;
+  padding:0;
+  accent-color:#047857;
+}
+#selectedPoint .pickup-option span{display:block;flex:1;min-width:0}
+#selectedPoint .pickup-option strong{
+  display:block;
+  margin:0;
+  font-size:14px;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+#selectedPoint .pickup-option small{
+  display:block;
+  margin-top:5px;
+  font-size:12px;
+  line-height:1.45;
+  color:#6b7280;
+  overflow-wrap:anywhere;
+}
+#selectedPoint .nearby-field{
+  display:block;
+  width:100%;
+  min-width:0;
+  margin-top:14px;
+}
+#selectedPoint .nearby-field.hidden{display:none!important}
+#selectedPoint .nearby-field label{margin:0 0 6px;font-size:13px}
+#selectedPoint .nearby-field p{margin:0 0 9px;font-size:12px;line-height:1.5}
+#selectedPoint .nearby-field textarea{
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:100px;
+  margin:0;
+  box-sizing:border-box;
+  font-size:14px;
+  line-height:1.45;
+}
+#selectedPoint .selection-note{
+  display:block;
+  width:100%;
+  margin-top:12px;
+  padding:12px;
+  border-radius:12px;
+  background:#f9fafb;
+  color:#4b5563;
+  font-size:12px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+@media(max-width:650px){
+  #selectedPoint.selected-summary{padding:15px;border-radius:18px}
+  #selectedPoint .pickup-option{padding:13px}
+  #selectedPoint .pickup-option strong{font-size:13px}
+}
