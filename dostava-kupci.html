@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Сазнај када и како функционише заједничка достава домаћих производа.">
+<title>Достава — Наручи домаће</title>
+<link rel="stylesheet" href="style.css">
+<style>
+:root{--green:#17633b;--line:#dfe8df}body{background:#f4f7f2;color:#1d2b21}.public-head{background:#fff;border-bottom:1px solid var(--line);padding:12px 14px;position:sticky;top:0;z-index:5}.brand{font-weight:950;color:var(--green);text-decoration:none}.tabs{display:flex;gap:6px;overflow-x:auto;margin-top:10px}.tabs a{white-space:nowrap;text-decoration:none;color:#435247;background:#f3f6f1;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800}.tabs a.active{background:var(--green);color:#fff;border-color:var(--green)}.wrap{width:min(100% - 28px,760px);margin:auto;padding:20px 0 45px}.eyebrow{font-size:10px;letter-spacing:1.3px;font-weight:900;color:var(--green)}h1{font-size:30px;line-height:1.12;margin:7px 0}.lead{color:#5d695f;font-size:14px;line-height:1.55}.panel{background:#fff;border:1px solid var(--line);border-radius:17px;padding:16px;margin:13px 0}.tour{background:#edf6ed;border-color:#d6e8d5}.tour strong{font-size:18px;display:block;margin:5px 0}.muted{font-size:12px;color:#68766b;line-height:1.55}.steps{display:grid;gap:10px}.step{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:13px;background:#fff}.num{width:31px;height:31px;flex:0 0 31px;border-radius:10px;background:#e9f4e9;color:#185d38;display:grid;place-items:center;font-weight:900}.step b{display:block;font-size:13px}.step p{font-size:12px;color:#68766b;margin:3px 0 0;line-height:1.5}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:11px 15px;border-radius:12px;background:var(--green);color:white;text-decoration:none;font-weight:850;font-size:13px}.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.links .secondary{background:#fff;color:var(--green);border:1px solid #cbdccb}
+</style>
+</head>
+<body>
+<header class="public-head">
+ <a class="brand" href="index.html">🌱 НАРУЧИ ДОМАЋЕ</a>
+ <nav class="tabs" aria-label="Главна навигација">
+  <a href="index.html">Почетна</a><a href="mesta-preuzimanja.html">Пунктови</a><a href="ponuda.html">Производи</a><a class="active" href="dostava-kupci.html">Достава</a><a href="o-projektu.html">О пројекту</a>
+ </nav>
+</header>
+<main class="wrap">
+ <div class="eyebrow">КАДА И КАКО ДО ТЕБЕ СТИЖЕ ДОМАЋЕ?</div><h1>Заједничка наруџбина. Организована достава.</h1>
+ <p class="lead">Повезујемо наруџбине више купаца и производе различитих газдинстава, а затим организујемо преузимање и доставу према објављеној тури.</p>
+ <section class="panel tour">
+  <div class="eyebrow">СЛЕДЕЋА ОБЈАВЉЕНА ТУРА</div>
+  <strong id="tourDate">Учитавање датума…</strong>
+  <div id="tourInfo" class="muted" role="status" aria-live="polite"></div>
+ </section>
+ <section class="panel">
+  <h2 style="font-size:19px;margin:0 0 12px">Како се одвија достава?</h2>
+  <div class="steps">
+   <div class="step"><span class="num">1</span><div><b>Изабереш производе</b><p>Прегледаш понуду различитих произвођача и саставиш своју наруџбину.</p></div></div>
+   <div class="step"><span class="num">2</span><div><b>Одабереш место преузимања</b><p>Бираш пункт или предлажеш адресу у његовој близини. Пунктови су оквирне дестинације, а не обавезне фиксне локације.</p></div></div>
+   <div class="step"><span class="num">3</span><div><b>Ми организујемо туру</b><p>Повезујемо поруџбине и преузимање производа од произвођача, па планирамо редослед доставе.</p></div></div>
+   <div class="step"><span class="num">4</span><div><b>Добијаш информације о преузимању</b><p>Након наручивања комуницирамо са купцима о времену и месту преузимања, укључујући измене у распореду.</p></div></div>
+  </div>
+ </section>
+ <section class="panel">
+  <h2 style="font-size:18px;margin:0 0 6px">Рок за наручивање</h2>
+  <p class="muted">За викенд туре наруџбине примамо до среде у 22:00. Датум следеће туре и доступност наручивања приказујемо према објављеним подацима туре.</p>
+  <p class="muted">У петак увече објављујемо распоред предстојеће доставе и редослед пунктова.</p>
+ </section>
+ <section class="panel">
+  <h2 style="font-size:18px;margin:0 0 6px">Комуникација преко Viber-а</h2>
+  <p class="muted">Број телефона који оставиш приликом наручивања користимо за слање информација о преузимању и позива за Viber групу купаца који су наручили. У групи објављујемо сатницу, редослед пунктова и евентуалне промене.</p>
+ </section>
+ <div class="links"><a class="btn" href="mesta-preuzimanja.html">Изабери пункт →</a><a class="btn secondary" href="ponuda.html">Погледај производе</a></div>
+</main>
+<script>
+const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+async function loadTour(){
+ const dateEl=document.getElementById('tourDate'),info=document.getElementById('tourInfo');
+ try{
+  const today=new Date().toISOString().slice(0,10);
+  const r=await fetch(URL+'/rest/v1/ture?select=id,naziv,datum,status&status=in.(open,scheduled)&datum=gte.'+today+'&order=datum.asc,id.desc&limit=1',{cache:'no-store',headers:{apikey:KEY,Authorization:'Bearer '+KEY}});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const rows=await r.json();
+  if(!rows.length){dateEl.textContent='Тренутно нема објављене туре';info.textContent='Поново провери када буде објављен следећи датум доставе.';return}
+  const t=rows[0],d=new Date(t.datum+'T12:00:00');
+  dateEl.textContent=d.toLocaleDateString('sr-RS',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const day=d.getDay();
+  if(day===6||day===0){const deadline=new Date(d);deadline.setDate(d.getDate()-(day===6?3:4));info.textContent='Рок за наручивање: среда, '+deadline.toLocaleDateString('sr-RS',{day:'numeric',month:'long'})+' до 22:00. '+(t.naziv||'')}
+  else{info.textContent=(t.naziv||'Објављена тура')+'. Рок за наручивање биће приказан уз објаву туре.'}
+ }catch(e){dateEl.textContent='Датум туре тренутно није доступан';info.textContent='Подаци ће бити приказани када база буде доступна.';console.error(e)}
+}
+loadTour();
+</script>
+</body></html>
