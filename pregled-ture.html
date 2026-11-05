@@ -653,36 +653,63 @@ function renderSupplierSheet(){
  box.innerHTML=html;
  renderSupplierLiveSummary();
 }
+let savingSupplierAllocations=false;
 async function saveSupplierAllocations(){
+ if(savingSupplierAllocations)return;
+ savingSupplierAllocations=true;
  try{
   if(!tourId)throw Error('Прво изабери туру.');
   if(!supplierSheetFarmId)throw Error('Изабери газдинство.');
-  const farmId=String(supplierSheetFarmId),existing=(tourAllocations||[]).filter(a=>String(a.gazdinstvo_id)===farmId),editableExisting=existing.filter(a=>farmOffers.some(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===String(a.variant_id)&&String(o.product_id)===String(a.product_id)&&o.is_active!==false)),selected=Object.entries(supplierSheetDraft).filter(([id,d])=>d.selected&&farmOffers.some(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===String(id)&&o.is_active!==false&&String(variantCatalog.find(v=>String(v.id)===String(id))?.product_id)===String(o.product_id)));
-  if(!selected.length&&!existing.length)throw Error('Означи бар једно паковање.');
+  const farmId=String(supplierSheetFarmId);
+  tourAllocations=await api('tura_nabavka_dodele?select=*&tura_id=eq.'+encodeURIComponent(tourId)+'&order=id.asc');
+  const existing=tourAllocations.filter(a=>String(a.gazdinstvo_id)===farmId);
+  const editableExisting=existing.filter(a=>farmOffers.some(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===String(a.variant_id)&&String(o.product_id)===String(a.product_id)&&o.is_active!==false));
+  const selected=Object.entries(supplierSheetDraft).filter(([id,d])=>d.selected&&farmOffers.some(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===String(id)&&o.is_active!==false&&String(variantCatalog.find(v=>String(v.id)===String(id))?.product_id)===String(o.product_id)));
+  if(!selected.length&&!existing.length)throw Error('Нема изабраних паковања за чување.');
   const payload=selected.map(([variantId,d])=>{
-   const offer=farmOffers.find(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===variantId&&o.is_active!==false),variant=variantCatalog.find(v=>String(v.id)===variantId);
+   const offer=farmOffers.find(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===String(variantId)&&o.is_active!==false&&String(o.product_id)===String(variantCatalog.find(v=>String(v.id)===String(variantId))?.product_id));
+   const variant=variantCatalog.find(v=>String(v.id)===String(variantId));
    if(!offer||!variant)throw Error('Понуда или варијанта више није активна. Освежи страницу.');
    const count=Number(d.count),available=supplierVariantRemaining(variantId,farmId,offer.product_id);
-   if(!Number.isInteger(count)||count<1)throw Error('Број паковања мора бити цео број већи од нуле.');
+   if(!Number.isInteger(count)||count<1)throw Error('Број паковања за '+(variant.name||variant.size_label)+' мора бити цео број већи од нуле.');
    if(count>available)throw Error('За '+(variant.name||variant.size_label)+' доступно је још само '+available+' паковања.');
-   return {tura_id:tourId,product_id:offer.product_id,variant_id:offer.variant_id,gazdinstvo_id:Number(farmId),broj_pakovanja:count,nabavna_cena:Number(offer.purchase_price)};
+   return {tura_id:Number(tourId),product_id:offer.product_id,variant_id:offer.variant_id,gazdinstvo_id:Number(farmId),broj_pakovanja:count,nabavna_cena:Number(offer.purchase_price)};
   });
-  if(payload.length){
-   const result=await api('tura_nabavka_dodele?on_conflict=tura_id,variant_id,gazdinstvo_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(payload)});
-   if(!Array.isArray(result)||result.length!==payload.length)throw Error('База није потврдила чување свих изабраних паковања.');
+  const keep=new Set(payload.map(x=>String(x.variant_id)));
+  for(const row of payload){
+   const current=existing.find(a=>String(a.product_id)===String(row.product_id)&&String(a.variant_id)===String(row.variant_id));
+   if(current){
+    const result=await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(current.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({broj_pakovanja:row.broj_pakovanja,nabavna_cena:row.nabavna_cena})});
+    if(!Array.isArray(result)||!result.some(x=>String(x.id)===String(current.id)))throw Error('База није потврдила измену паковања '+row.variant_id+'.');
+   }else{
+    const result=await api('tura_nabavka_dodele',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)});
+    if(!Array.isArray(result)||result.length!==1)throw Error('База није потврдила додавање паковања '+row.variant_id+'.');
+   }
   }
-  const keep=new Set(payload.map(x=>String(x.variant_id))),remove=editableExisting.filter(a=>!keep.has(String(a.variant_id)));
+  const remove=editableExisting.filter(a=>!keep.has(String(a.variant_id)));
   for(const row of remove){
    const result=await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(row.id),{method:'DELETE',headers:{Prefer:'return=representation'}});
    if(!Array.isArray(result)||!result.some(x=>String(x.id)===String(row.id)))throw Error('База није потврдила уклањање паковања '+row.id+'.');
   }
-  tourAllocations=await api('tura_nabavka_dodele?select=*&tura_id=eq.'+tourId+'&order=id.asc');
+  tourAllocations=await api('tura_nabavka_dodele?select=*&tura_id=eq.'+encodeURIComponent(tourId)+'&order=id.asc');
+  const savedRows=tourAllocations.filter(a=>String(a.gazdinstvo_id)===farmId);
+  for(const row of payload){
+   const saved=savedRows.find(a=>String(a.product_id)===String(row.product_id)&&String(a.variant_id)===String(row.variant_id));
+   if(!saved||n(saved.broj_pakovanja)!==row.broj_pakovanja)throw Error('Провера после чувања није прошла за варијанту '+row.variant_id+'. Освежи приказ и провери стање.');
+  }
   supplierSheetDraft={};
-  tourAllocations.filter(a=>String(a.gazdinstvo_id)===farmId).forEach(a=>{supplierSheetDraft[String(a.variant_id)]={selected:true,count:String(a.broj_pakovanja||'')}});
+  savedRows.forEach(a=>{supplierSheetDraft[String(a.variant_id)]={selected:true,count:String(a.broj_pakovanja||'')}});
   renderSupplierAllocationSummary();
   if(view==='procurement')renderProcurement();
-  say('Набавка је сачувана. Преостала амбалажа за друга газдинства је аутоматски прерачуната.');
- }catch(e){say('Набавка није сачувана: '+e.message,true);renderSupplierSheet()}
+  say('Набавка је сачувана и проверена у бази. Преостала амбалажа је прерачуната.');
+ }catch(e){
+  say('Набавка није у потпуности сачувана: '+e.message,true);
+  renderSupplierSheet();
+ }finally{
+  savingSupplierAllocations=false;
+  const button=document.querySelector('#supplier-sheet-content button[onclick="saveSupplierAllocations()"]');
+  if(button){button.disabled=false;button.textContent='Сачувај набавку за ово газдинство';}
+ }
 }
 async function removeSupplierAllocation(id){
  const row=tourAllocations.find(a=>String(a.id)===String(id));if(!row)return;
