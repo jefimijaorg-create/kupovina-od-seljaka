@@ -472,7 +472,6 @@ async function createPointForOrder(orderId){
 async function saveOrderEdit(orderId,lineIds){
  try{
   const pointValue=document.getElementById('order-point-'+orderId).value;
-  let lineSum=0,allLinesPriced=true,changedLines=0;
   for(const id of lineIds){
    const el=document.getElementById('line-price-'+id);if(!el)continue;
    const raw=el.value.trim();
@@ -481,7 +480,7 @@ async function saveOrderEdit(orderId,lineIds){
    const qty=Number(qtyRaw);if(!x.product_id||!catalogProduct(x))throw Error('Ставка нема важећи производ из каталога (product_id).');if(!Number.isFinite(qty)||qty<=0)throw Error('Количина мора бити већа од нуле.');
    const unit=document.getElementById('line-unit-'+id).value.trim();
    const linePatch={kolicina:qty,jedinica:unit||null};
-   if(raw===''){allLinesPriced=false}else{const amount=Number(raw);if(!Number.isFinite(amount)||amount<0)throw Error('Цена ставке мора бити нула или већа.');linePatch.cena_stavke=amount;linePatch.unit_price=amount/qty;lineSum+=amount;changedLines++}
+   if(raw!==''){const amount=Number(raw);if(!Number.isFinite(amount)||amount<0)throw Error('Цена ставке мора бити нула или већа.');linePatch.cena_stavke=amount;linePatch.unit_price=amount/qty}
    await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(linePatch)});
   }
   const patch={};
