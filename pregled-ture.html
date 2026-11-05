@@ -602,13 +602,25 @@ function setSupplierDraftCount(variantId,value,input){
 }
 function renderSupplierLiveSummary(){
  const box=document.getElementById('supplier-live-summary');if(!box)return;
- const offers=supplierOfferRows(supplierSheetFarmId).filter(o=>String(o.product_id)===String(supplierSheetProductId));
- const variants=offers.map(o=>({offer:o,variant:variantCatalog.find(v=>String(v.id)===String(o.variant_id))})).filter(x=>x.variant);
+ const productId=String(supplierSheetProductId||'');
+ const offers=supplierOfferRows(supplierSheetFarmId).filter(o=>String(o.product_id)===productId);
+ const offeredIds=new Set(offers.map(o=>String(o.variant_id)));
+ const variants=variantCatalog.filter(v=>String(v.product_id)===productId&&supplierVariantOrderCount(v.id,productId)>0).map(variant=>({variant,offered:offeredIds.has(String(variant.id))}));
  if(!variants.length){box.innerHTML='';return}
- box.innerHTML='<div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-3"><div class="text-xs font-black tracking-wide text-emerald-950 mb-2">СТАЊЕ ЗА ИЗАБРАНИ ПРОИЗВОД · АЖУРИРА СЕ УЖИВО</div><div class="space-y-2">'+variants.map(({variant})=>{
-  const key=String(variant.id),d=supplierSheetDraft[key]||{},ordered=supplierVariantOrderCount(key,supplierSheetProductId),other=supplierVariantAllocated(key,supplierSheetFarmId,supplierSheetProductId),chosen=d.selected?Math.max(0,n(d.count)):0,size=n(variant.package_value)||1,u=normUnit(variant.package_unit||variant.unit||'ком');
+ const totals={};
+ variants.forEach(({variant})=>{
+  const key=String(variant.id),d=supplierSheetDraft[key]||{},ordered=supplierVariantOrderCount(key,productId),other=supplierVariantAllocated(key,supplierSheetFarmId,productId),chosen=d.selected?Math.max(0,n(d.count)):0,size=n(variant.package_value)||1,u=normUnit(variant.package_unit||variant.unit||'ком');
+  if(!totals[u])totals[u]={ordered:0,other:0,chosen:0,left:0};
+  totals[u].ordered+=ordered*size;
+  totals[u].other+=other*size;
+  totals[u].chosen+=chosen*size;
+  totals[u].left+=Math.max(0,ordered-other-chosen)*size;
+ });
+ const totalHtml=Object.entries(totals).map(([u,t])=>'<div class="rounded-xl bg-white border border-emerald-200 p-3"><div class="font-black text-sm mb-2">УКУПНО НАРУЧЕНО · '+esc(u)+'</div><div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center"><div class="rounded-lg bg-slate-50 p-2"><b class="block text-xl">'+fmt(t.ordered)+'</b><span class="text-[10px] text-slate-500">НАРУЧЕНО '+esc(u)+'</span></div><div class="rounded-lg bg-blue-50 p-2"><b class="block text-xl">'+fmt(t.other)+'</b><span class="text-[10px] text-slate-500">ДРУГА ГАЗДИНСТВА</span></div><div class="rounded-lg bg-emerald-50 p-2"><b class="block text-xl text-emerald-800">'+fmt(t.chosen)+'</b><span class="text-[10px] text-slate-500">ОВО ГАЗДИНСТВО</span></div><div class="rounded-lg bg-amber-50 p-2"><b class="block text-xl text-amber-800">'+fmt(t.left)+'</b><span class="text-[10px] text-slate-500">ПРЕОСТАЛО '+esc(u)+'</span></div></div></div>').join('');
+ box.innerHTML='<div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-3"><div class="text-xs font-black tracking-wide text-emerald-950 mb-2">УКУПНА КОЛИЧИНА ЗА ИЗАБРАНИ ПРОИЗВОД · АЖУРИРА СЕ УЖИВО</div><div class="space-y-2 mb-3">'+totalHtml+'</div><div class="text-xs font-bold text-slate-600 mb-2">РАСПОДЕЛА ПО АМБАЛАЖИ</div><div class="space-y-2">'+variants.map(({variant,offered})=>{
+  const key=String(variant.id),d=supplierSheetDraft[key]||{},ordered=supplierVariantOrderCount(key,productId),other=supplierVariantAllocated(key,supplierSheetFarmId,productId),chosen=d.selected?Math.max(0,n(d.count)):0,size=n(variant.package_value)||1,u=normUnit(variant.package_unit||variant.unit||'ком');
   const needed=ordered*size,elsewhere=other*size,selected=chosen*size,left=Math.max(0,(ordered-other-chosen)*size);
-  return '<div class="rounded-xl bg-white border p-3"><div class="font-bold text-sm mb-2">'+esc(variant.name||variant.size_label||'Паковање')+'</div><div class="grid grid-cols-4 gap-1 text-center"><div class="rounded-lg bg-slate-50 p-2"><b class="block text-base">'+fmt(needed)+'</b><span class="text-[9px] text-slate-500">ПОТРЕБНО '+esc(u)+'</span></div><div class="rounded-lg bg-blue-50 p-2"><b class="block text-base">'+fmt(elsewhere)+'</b><span class="text-[9px] text-slate-500">ДРУГИ '+esc(u)+'</span></div><div class="rounded-lg bg-emerald-50 p-2"><b class="block text-base text-emerald-800">'+fmt(selected)+'</b><span class="text-[9px] text-slate-500">ИЗАБРАНО '+esc(u)+'</span></div><div class="rounded-lg bg-amber-50 p-2"><b class="block text-base text-amber-800">'+fmt(left)+'</b><span class="text-[9px] text-slate-500">ОСТАЛО '+esc(u)+'</span></div></div></div>';
+  return '<div class="rounded-xl bg-white border p-3"><div class="font-bold text-sm mb-2">'+esc(variant.name||variant.size_label||'Паковање')+(!offered?' · није у понуди овог газдинства':'')+'</div><div class="grid grid-cols-4 gap-1 text-center"><div class="rounded-lg bg-slate-50 p-2"><b class="block text-base">'+fmt(needed)+'</b><span class="text-[9px] text-slate-500">ПОТРЕБНО '+esc(u)+'</span></div><div class="rounded-lg bg-blue-50 p-2"><b class="block text-base">'+fmt(elsewhere)+'</b><span class="text-[9px] text-slate-500">ДРУГИ '+esc(u)+'</span></div><div class="rounded-lg bg-emerald-50 p-2"><b class="block text-base text-emerald-800">'+fmt(selected)+'</b><span class="text-[9px] text-slate-500">ИЗАБРАНО '+esc(u)+'</span></div><div class="rounded-lg bg-amber-50 p-2"><b class="block text-base text-amber-800">'+fmt(left)+'</b><span class="text-[9px] text-slate-500">ОСТАЛО '+esc(u)+'</span></div></div></div>';
  }).join('')+'</div></div>';
 }
 function renderSupplierSheet(){
