@@ -21,11 +21,12 @@ function packageOf(x){
  unit=({l:'л',kg:'кг',kom:'ком',pcs:'ком',g:'г'})[unit]||unit;
  const raw=String(x.package_info||x.velicina_pakovanja||x.variant_name||'');
  if(!size){const m=raw.match(/(\d+(?:[.,]\d+)?)\s*(л|l|кг|kg|г|g|ком)/i);if(m){size=parseFloat(m[1].replace(',','.'));unit=({'l':'л','л':'л','kg':'кг','кг':'кг','g':'г','г':'г','ком':'ком'})[m[2].toLowerCase()]||unit}}
- if(!count&&size)count=num(x.total_quantity||x.kolicina)/size;
- if(!size&&count)size=num(x.total_quantity||x.kolicina)/count;
- if(!count)count=num(x.kolicina||x.total_quantity);
- const label=fmt(size)+' '+unit;
- return {count,size,unit,label,total:count*size,key:fmt(size)+'|'+unit};
+ const total=num(x.total_quantity)||num(x.kolicina);
+ if(!count&&size&&total)count=total/size;
+ if(!size&&count&&total)size=total/count;
+ if(!count&&!size)count=total;
+ const label=size?fmt(size)+' '+unit:'Паковање није дефинисано';
+ return {count,size,unit,label,total:size?count*size:total,key:size?fmt(size)+'|'+unit:'без-паковања|'+unit};
 }
 function valid(x){return !['otkazano','отказано','cancelled','canceled','obrisano','deleted'].includes(String(x.status||'').toLowerCase())&&!['otkazano','отказано','cancelled','canceled','obrisano','deleted'].includes(String(x.status_stavke||'').toLowerCase())}
 function groups(){const out={};items.filter(valid).forEach(x=>{const name=String(x.proizvod||'Непознат производ').trim(),p=packageOf(x);if(!out[name])out[name]={name,rows:[],packs:{},count:0};const g=out[name];g.rows.push(x);g.count+=p.count;if(!g.packs[p.key])g.packs[p.key]={...p,rows:[]};g.packs[p.key].count+=p.count;g.packs[p.key].rows.push(x)});return Object.values(out).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'sr'))}
