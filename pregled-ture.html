@@ -73,8 +73,13 @@ async function loadData(){
   await loadDebts();
   let sel=document.getElementById('tour-select'),prev=sel.value;
   tours.sort((a,b)=>String(b.datum||'').localeCompare(String(a.datum||''))||Number(b.id)-Number(a.id));
-  sel.innerHTML=tours.map(t=>'<option value="'+t.id+'">'+(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+t.id)+'</option>').join('');
-  tourId=prev&&tours.some(t=>String(t.id)===prev)?Number(prev):Number(tours[0]?.id||0);
+  const selectableTours=tours.filter(t=>['open','full','scheduled','processing'].includes(String(t.status||'').toLowerCase()));
+  sel.innerHTML=selectableTours.map(t=>{
+   const status=String(t.status||'').toLowerCase();
+   const statusLabel=status==='processing'?' · У ОБРАДИ':status==='open'?' · АКТИВНА':' · АКТИВНА';
+   return '<option value="'+t.id+'">'+(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+t.id)+statusLabel+'</option>';
+  }).join('');
+  tourId=prev&&selectableTours.some(t=>String(t.id)===prev)?Number(prev):Number(selectableTours[0]?.id||0);
   sel.value=String(tourId);
   await loadTour()
  }catch(e){say('Грешка при учитавању основних података: '+e.message,true);console.error('loadData',e)}
