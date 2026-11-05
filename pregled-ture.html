@@ -634,6 +634,8 @@ function renderSupplierSheet(){
  const products=Object.values(grouped).sort((a,b)=>String(a.product.name).localeCompare(String(b.product.name),'sr'));
  if(!products.some(g=>String(g.product.id)===supplierSheetProductId))supplierSheetProductId='';
  html+='<label class="block text-xs font-black text-slate-600">2. ИЗАБЕРИ ПРОИЗВОД<select class="block w-full mt-1 border-2 border-emerald-300 rounded-xl px-3 py-4 text-base font-bold bg-white" onchange="setSupplierProduct(this.value)"><option value="">— Изабери производ —</option>'+products.map(g=>'<option value="'+esc(g.product.id)+'" '+(String(g.product.id)===supplierSheetProductId?'selected':'')+'>'+esc(g.product.name)+'</option>').join('')+'</select></label>';
+ const staleRows=tourAllocations.filter(a=>String(a.gazdinstvo_id)===supplierSheetFarmId&&!farmOffers.some(o=>String(o.gazdinstvo_id)===supplierSheetFarmId&&String(o.variant_id)===String(a.variant_id)&&String(o.product_id)===String(a.product_id)&&o.is_active!==false));
+ if(staleRows.length)html+='<div class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm"><b class="text-amber-900">Постојеће расподеле без активне понуде</b><p class="text-amber-800 text-xs mt-1">Ове ставке неће бити аутоматски обрисане приликом чувања новог избора.</p>'+staleRows.map(a=>'<div class="flex items-center justify-between gap-2 border-t border-amber-200 mt-2 pt-2"><span>'+esc(productCatalog.find(p=>String(p.id)===String(a.product_id))?.name||'Производ')+' · '+esc(variantCatalog.find(v=>String(v.id)===String(a.variant_id))?.name||'Паковање')+' ('+fmt(a.broj_pakovanja)+' пак.)</span><button type="button" class="text-red-700 underline text-xs font-bold shrink-0" onclick="removeSupplierAllocation(\''+a.id+'\')">Уклони</button></div>').join('')+'</div>';
  if(!products.length){html+='<div class="rounded-xl bg-slate-50 border p-4 text-sm text-slate-600">Ово газдинство нема активну понуду за производе који су потребни у овој тури.</div>';box.innerHTML=html+'</div>';return}
  if(!supplierSheetProductId){html+='<div class="rounded-xl border border-dashed p-4 text-center text-sm text-slate-500">Изабери производ да видиш потребну количину, стање расподеле и паковања.</div>';box.innerHTML=html+'</div>';return}
  const product=products.find(g=>String(g.product.id)===supplierSheetProductId);
@@ -653,7 +655,7 @@ async function saveSupplierAllocations(){
  try{
   if(!tourId)throw Error('Прво изабери туру.');
   if(!supplierSheetFarmId)throw Error('Изабери газдинство.');
-  const farmId=String(supplierSheetFarmId),existing=(tourAllocations||[]).filter(a=>String(a.gazdinstvo_id)===farmId),selected=Object.entries(supplierSheetDraft).filter(([id,d])=>d.selected);
+  const farmId=String(supplierSheetFarmId),existing=(tourAllocations||[]).filter(a=>String(a.gazdinstvo_id)===farmId),editableExisting=existing.filter(a=>farmOffers.some(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===String(a.variant_id)&&String(o.product_id)===String(a.product_id)&&o.is_active!==false)),selected=Object.entries(supplierSheetDraft).filter(([id,d])=>d.selected&&farmOffers.some(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===String(id)&&o.is_active!==false&&String(variantCatalog.find(v=>String(v.id)===String(id))?.product_id)===String(o.product_id)));
   if(!selected.length&&!existing.length)throw Error('Означи бар једно паковање.');
   const payload=selected.map(([variantId,d])=>{
    const offer=farmOffers.find(o=>String(o.gazdinstvo_id)===farmId&&String(o.variant_id)===variantId&&o.is_active!==false),variant=variantCatalog.find(v=>String(v.id)===variantId);
@@ -667,7 +669,7 @@ async function saveSupplierAllocations(){
    const result=await api('tura_nabavka_dodele?on_conflict=tura_id,variant_id,gazdinstvo_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(payload)});
    if(!Array.isArray(result)||result.length!==payload.length)throw Error('База није потврдила чување свих изабраних паковања.');
   }
-  const keep=new Set(payload.map(x=>String(x.variant_id))),remove=existing.filter(a=>!keep.has(String(a.variant_id)));
+  const keep=new Set(payload.map(x=>String(x.variant_id))),remove=editableExisting.filter(a=>!keep.has(String(a.variant_id)));
   for(const row of remove){
    const result=await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(row.id),{method:'DELETE',headers:{Prefer:'return=representation'}});
    if(!Array.isArray(result)||!result.some(x=>String(x.id)===String(row.id)))throw Error('База није потврдила уклањање паковања '+row.id+'.');
