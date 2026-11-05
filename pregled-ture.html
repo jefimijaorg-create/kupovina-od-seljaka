@@ -544,15 +544,17 @@ async function allocateGroup(product,size,unit,farmId,productOnly=false){
 function renderProcurement(){
  const products={};
  items.forEach(x=>{
-  const p=pack(x),catalogEntry=catalogProduct(x),name=productName(x);
-  // Product identity and displayed name come only from products.id via product_id.
+  const p=pack(x),name=productName(x),variant=variantFor(x);
   const productKey=x.product_id?'product:'+String(x.product_id):'unlinked-line:'+String(x.id);
   if(!products[productKey])products[productKey]={id:x.product_id||null,name,rows:[],packages:{},packageCount:0,totalQuantity:0,value:0,missingPrices:0,orders:new Set()};
-  const g=products[productKey],label=String(x.variant_name||p.label||('Паковање '+fmt(p.size)+' '+p.unit)).trim(),unitName=String(p.unit||'').trim(),packageKey=x.variant_id?'variant:'+String(x.variant_id):'unlinked-line:'+String(x.id),value=purchaseValue(x);
+  const g=products[productKey],label=String(variant?.name||variant?.size_label||p.label||('Паковање '+fmt(p.size)+' '+p.unit)).trim(),unitName=String(p.unit||'').trim(),packageKey=x.variant_id?'variant:'+String(x.variant_id):'unlinked-line:'+String(x.id),value=purchaseValue(x);
   g.rows.push(x);g.packageCount+=p.count;g.totalQuantity+=p.total;g.orders.add(String(x.porudzbina_id||''));
   if(value===null)g.missingPrices++;else g.value+=value;
-  if(!g.packages[packageKey])g.packages[packageKey]={label,size:p.size,unit:unitName,count:0,quantity:0,rows:[],value:0,missingPrices:0};
+  if(!g.packages[packageKey])g.packages[packageKey]={label,size:p.size,unit:unitName,count:0,quantity:0,rows:[],customers:{},value:0,missingPrices:0};
   const pg=g.packages[packageKey];pg.count+=p.count;pg.quantity+=p.total;pg.rows.push(x);
+  const o=ord(x),b=buyer(o),customerKey=o.kupac_id?'customer:'+String(o.kupac_id):'order:'+String(x.porudzbina_id||x.id);
+  if(!pg.customers[customerKey])pg.customers[customerKey]={name:b.ime_prezime||'Купац није наведен',orders:new Set(),count:0,quantity:0,unit:p.unit};
+  const cg=pg.customers[customerKey];cg.orders.add(String(x.porudzbina_id||''));cg.count+=p.count;cg.quantity+=p.total;
   if(value===null)pg.missingPrices++;else pg.value+=value;
  });
  const productList=Object.values(products).sort((a,b)=>a.name.localeCompare(b.name,'sr'));
@@ -565,10 +567,11 @@ function renderProcurement(){
   const packageList=Object.values(g.packages).sort((a,b)=>a.label.localeCompare(b.label,'sr',{numeric:true})||a.size-b.size);
   html+='<details class="group border-2 border-slate-200 rounded-2xl overflow-hidden mb-3 bg-white"><summary class="list-none cursor-pointer p-4 bg-slate-100 flex flex-wrap justify-between items-center gap-3 min-h-20"><div class="min-w-0 flex-1"><div class="text-lg sm:text-xl font-black">'+esc(g.name)+'</div><div class="text-sm text-slate-600 mt-1">'+packageList.length+' '+(packageList.length===1?'врста паковања':'врсте паковања')+' · '+g.orders.size+' поруџбина'+(g.id?'':' · СТАВКА НИЈЕ ПОВЕЗАНА СА КАТАЛОГОМ')+'</div></div><div class="flex items-center gap-3"><div class="text-right"><span class="block text-sm font-black">'+fmt(g.packageCount)+' паковања</span><span class="block text-sm font-bold text-emerald-800">'+fmt(g.totalQuantity)+' '+esc(packageList[0]?.unit||'')+'</span></div><span class="text-xl text-slate-500 transition-transform group-open:rotate-180">⌄</span></div></summary><div class="p-3 sm:p-4 space-y-2 bg-white"><button type="button" onclick="copySupplierViber(\''+esc(g.id||'')+'\')" '+(g.id?'':'disabled')+' class="w-full sm:w-auto bg-purple-700 text-white font-bold text-sm px-4 py-3 rounded-xl disabled:opacity-40"><i class="fa-brands fa-viber mr-2"></i>Копирај Viber поруку за добављача</button>';
   packageList.forEach(pg=>{
-   html+='<details class="group/package rounded-xl border border-slate-200 overflow-hidden"><summary class="list-none cursor-pointer p-3 sm:p-4 flex flex-wrap justify-between items-center gap-3 min-h-16"><div class="min-w-0 flex-1"><div class="font-black">'+esc(pg.label)+'</div><div class="text-xs text-slate-500 mt-1">'+fmt(pg.size)+' '+esc(pg.unit)+' по паковању</div></div><div class="flex items-center gap-3"><div class="text-right"><div class="text-lg font-black">'+fmt(pg.count)+' <span class="text-sm">пак.</span></div><div class="text-sm font-bold text-slate-700">Укупно: '+fmt(pg.quantity)+' '+esc(pg.unit)+'</div>'+(pg.missingPrices===pg.rows.length?'<div class="text-xs text-amber-700">Набавна цена није унета</div>':'<div class="text-xs font-bold text-emerald-800">'+cash(pg.value)+(pg.missingPrices?' · '+pg.missingPrices+' без цене':'')+'</div>')+'</div><span class="text-lg text-slate-500 transition-transform group-open/package:rotate-180">⌄</span></div></summary><div class="border-t bg-slate-50 p-3"><div class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Купци и поруџбине ('+pg.rows.length+')</div><div class="space-y-2">';
-   pg.rows.slice().sort((a,b)=>String(a.porudzbina_id||'').localeCompare(String(b.porudzbina_id||''),'sr',{numeric:true})).forEach(x=>{
-    const o=ord(x),b=buyer(o),p=pack(x);
-    html+='<div class="flex flex-wrap justify-between gap-2 rounded-lg bg-white border border-slate-200 p-3 text-sm"><div class="min-w-0"><b>'+esc(b.ime_prezime||'Купац није наведен')+'</b><div class="text-xs text-slate-500 mt-1">Поруџбина #'+esc(x.porudzbina_id||'')+'</div></div><div class="text-right"><b>'+fmt(p.count)+' × '+esc(p.label)+'</b><div class="text-xs text-slate-500">'+fmt(p.total)+' '+esc(p.unit)+'</div></div></div>';
+   const customerList=Object.values(pg.customers).sort((a,b)=>a.name.localeCompare(b.name,'sr'));
+   html+='<details class="group/package rounded-xl border border-slate-200 overflow-hidden"><summary class="list-none cursor-pointer p-3 sm:p-4 flex flex-wrap justify-between items-center gap-3 min-h-16"><div class="min-w-0 flex-1"><div class="font-black">'+esc(pg.label)+'</div><div class="text-xs text-slate-500 mt-1">'+fmt(pg.size)+' '+esc(pg.unit)+' по паковању</div></div><div class="flex items-center gap-3"><div class="text-right"><div class="text-lg font-black">'+fmt(pg.count)+' <span class="text-sm">пак.</span></div><div class="text-sm font-bold text-slate-700">Укупно: '+fmt(pg.quantity)+' '+esc(pg.unit)+'</div>'+(pg.missingPrices===pg.rows.length?'<div class="text-xs text-amber-700">Набавна цена није унета</div>':'<div class="text-xs font-bold text-emerald-800">'+cash(pg.value)+(pg.missingPrices?' · '+pg.missingPrices+' без цене':'')+'</div>')+'</div><span class="text-lg text-slate-500 transition-transform group-open/package:rotate-180">⌄</span></div></summary><div class="border-t bg-slate-50 p-3"><div class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Коме је потребно · '+customerList.length+' купаца</div><div class="space-y-2">';
+   customerList.forEach(cg=>{
+    const orderText=Array.from(cg.orders).filter(Boolean).map(id=>'#'+id).join(', ');
+    html+='<div class="flex flex-wrap justify-between gap-2 rounded-lg bg-white border border-slate-200 p-3 text-sm"><div class="min-w-0"><b>'+esc(cg.name)+'</b>'+(orderText?'<div class="text-xs text-slate-500 mt-1">Поруџбина '+esc(orderText)+'</div>':'')+'</div><div class="text-right"><b>'+fmt(cg.count)+' паковања</b><div class="text-xs text-slate-500">'+fmt(cg.quantity)+' '+esc(cg.unit)+'</div></div></div>';
    });
    html+='</div></div></details>';
   });
