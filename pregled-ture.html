@@ -516,41 +516,44 @@ async function allocateGroup(product,size,unit,farmId,productOnly=false){
  }catch(e){say('Додела није сачувана: '+e.message,true)}
 }
 function renderProcurement(){
- const farmGroups={},allPackages={};
+ const farmGroups={};
  items.forEach(x=>{
   const p=pack(x),fid=assignedFarmId(x),farmKey=fid?String(fid):'none';
   const product=String(x.proizvod||'Непознат производ');
   const key=product+'|'+p.size+'|'+p.unit;
-  if(!farmGroups[farmKey])farmGroups[farmKey]={name:fid?farmLabel(fid):'НЕДОДЕЉЕНО ГАЗДИНСТВО',rows:[],packages:{},count:0};
-  const fg=farmGroups[farmKey];fg.rows.push(x);fg.count+=p.count;
-  if(!fg.packages[key])fg.packages[key]={product,size:p.size,unit:p.unit,label:p.label,count:0,rows:[]};
-  fg.packages[key].count+=p.count;fg.packages[key].rows.push(x);
-  if(!allPackages[key])allPackages[key]={product,size:p.size,unit:p.unit,count:0};
-  allPackages[key].count+=p.count;
+  if(!farmGroups[farmKey])farmGroups[farmKey]={name:fid?farmLabel(fid):'НЕДОДЕЉЕНО ГАЗДИНСТВО',rows:[],packages:{},count:0,value:0,missing:0};
+  const fg=farmGroups[farmKey],value=purchaseValue(x);
+  fg.rows.push(x);fg.count+=p.count;
+  if(value===null)fg.missing++;else fg.value+=value;
+  if(!fg.packages[key])fg.packages[key]={product,size:p.size,unit:p.unit,label:p.label,count:0,rows:[],value:0,missing:0};
+  const pg=fg.packages[key];pg.count+=p.count;pg.rows.push(x);
+  if(value===null)pg.missing++;else pg.value+=value;
  });
  const farmKeys=Object.keys(farmGroups).sort((a,b)=>{
   if(a==='none')return 1;if(b==='none')return -1;
   return farmGroups[a].name.localeCompare(farmGroups[b].name,'sr');
  });
  const totalPackages=items.reduce((s,x)=>s+pack(x).count,0);
-  const totalMilk=items.reduce((s,x)=>String(x.proizvod||"").toLowerCase().includes("млеко")?s+pack(x).total:s,0);
- let html='<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4"><div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3"><div class="text-xs text-emerald-800 font-bold uppercase">Пунктова добављача</div><div class="text-2xl font-black">'+farmKeys.length+'</div></div><div class="rounded-xl bg-blue-50 border border-blue-200 p-3"><div class="text-xs text-blue-800 font-bold uppercase">Паковања у тури</div><div class="text-2xl font-black">'+fmt(totalPackages)+'</div></div><div class="rounded-xl bg-cyan-50 border border-cyan-200 p-3"><div class="text-xs text-cyan-800 font-bold uppercase">Укупно млека</div><div class="text-2xl font-black">'+fmt(totalMilk)+' л</div></div></div>';
- farmKeys.forEach((fk,fi)=>{
+ const totalMilk=items.reduce((s,x)=>String(x.proizvod||"").toLowerCase().includes("млеко")?s+pack(x).total:s,0);
+ const totalValue=items.reduce((s,x)=>s+(purchaseValue(x)??0),0);
+ const missingPrices=items.filter(x=>purchaseValue(x)===null).length;
+ let html='<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"><div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3"><div class="text-xs text-emerald-800 font-bold uppercase">Газдинстава</div><div class="text-2xl font-black">'+farmKeys.length+'</div></div><div class="rounded-xl bg-blue-50 border border-blue-200 p-3"><div class="text-xs text-blue-800 font-bold uppercase">Паковања у тури</div><div class="text-2xl font-black">'+fmt(totalPackages)+'</div></div><div class="rounded-xl bg-cyan-50 border border-cyan-200 p-3"><div class="text-xs text-cyan-800 font-bold uppercase">Укупно млека</div><div class="text-2xl font-black">'+fmt(totalMilk)+' л</div></div><div class="rounded-xl bg-amber-50 border border-amber-200 p-3"><div class="text-xs text-amber-800 font-bold uppercase">Вредност набавке</div><div class="text-xl font-black">'+cash(totalValue)+'</div><div class="text-xs text-amber-800 mt-1">'+(missingPrices?missingPrices+' ставки без набавне цене':'Све ставке имају цену')+'</div></div></div>';
+ farmKeys.forEach(fk=>{
   const fg=farmGroups[fk],unassigned=fk==='none';
-   const farmMilk=fg.rows.reduce((s,x)=>String(x.proizvod||"").toLowerCase().includes("млеко")?s+pack(x).total:s,0);
-  html+='<section class="border-2 '+(unassigned?'border-amber-300':'border-slate-200')+' rounded-2xl overflow-hidden mb-5 bg-white"><header class="p-4 '+(unassigned?'bg-amber-50':'bg-slate-100')+'"><div class="flex flex-wrap justify-between items-center gap-2"><h3 class="text-lg sm:text-xl font-black">'+esc(fg.name)+'</h3><span class="text-sm font-black">'+fmt(fg.count)+' паковања</span></div><div class="text-sm text-slate-600 mt-1">'+Object.keys(fg.packages).length+' типова паковања'+(farmMilk?' · Укупно млека: '+fmt(farmMilk)+' л':'')+'</div></header><div class="p-3 space-y-3">';
+  const farmMilk=fg.rows.reduce((s,x)=>String(x.proizvod||"").toLowerCase().includes("млеко")?s+pack(x).total:s,0);
+  html+='<section class="border-2 '+(unassigned?'border-amber-300':'border-slate-200')+' rounded-2xl overflow-hidden mb-5 bg-white"><header class="p-4 '+(unassigned?'bg-amber-50':'bg-slate-100')+'"><div class="flex flex-wrap justify-between items-center gap-2"><h3 class="text-lg sm:text-xl font-black">'+esc(fg.name)+'</h3><div class="text-right"><span class="block text-sm font-black">'+fmt(fg.count)+' паковања</span><span class="block text-sm font-black text-emerald-800">'+cash(fg.value)+'</span></div></div><div class="text-sm text-slate-600 mt-1">'+Object.keys(fg.packages).length+' типова паковања'+(farmMilk?' · Укупно млека: '+fmt(farmMilk)+' л':'')+(fg.missing?' · '+fg.missing+' ставки без цене':'')+'</div></header><div class="p-3 space-y-3">';
   const packageKeys=Object.keys(fg.packages).sort((a,b)=>fg.packages[a].product.localeCompare(fg.packages[b].product,'sr')||fg.packages[a].size-fg.packages[b].size);
   packageKeys.forEach(pk=>{
    const g=fg.packages[pk];
-   html+='<details class="border rounded-xl overflow-hidden"><summary class="list-none cursor-pointer p-3 flex flex-wrap justify-between items-center gap-2 bg-white"><div><div class="font-black">'+esc(g.product)+'</div><div class="text-sm text-slate-600">'+esc(g.label)+'</div></div><div class="text-right"><div class="font-black text-lg">'+fmt(g.count)+' × '+fmt(g.size)+' '+esc(g.unit)+'</div><div class="text-sm text-slate-600">= '+fmt(g.count*g.size)+' '+esc(g.unit)+'</div></div></summary><div class="p-3 border-t bg-slate-50">';
+   html+='<details class="border rounded-xl overflow-hidden"><summary class="list-none cursor-pointer p-3 flex flex-wrap justify-between items-center gap-2 bg-white"><div><div class="font-black">'+esc(g.product)+'</div><div class="text-sm text-slate-600">'+esc(g.label)+'</div></div><div class="text-right"><div class="font-black text-lg">'+fmt(g.count)+' × '+fmt(g.size)+' '+esc(g.unit)+'</div><div class="text-sm text-slate-600">= '+fmt(g.count*g.size)+' '+esc(g.unit)+'</div><div class="text-sm font-black text-emerald-800">'+cash(g.value)+'</div></div></summary><div class="p-3 border-t bg-slate-50">';
    g.rows.sort((a,b)=>String(b.porudzbina_id||'').localeCompare(String(a.porudzbina_id||''),'sr',{numeric:true}));
    g.rows.forEach(x=>{
-    const p=pack(x),o=ord(x),b=buyer(o),fid=assignedFarmId(x);
-    html+='<div class="border rounded-lg p-3 mb-2 bg-white"><div class="flex flex-wrap justify-between gap-2"><div><b>'+esc(b.ime_prezime||'Поруџбина '+x.porudzbina_id)+'</b><div class="text-xs text-slate-600 mt-1">'+esc(textPack(x))+' · '+fmt(p.count)+' × '+fmt(p.size)+' '+esc(p.unit)+' = '+fmt(p.total)+' '+esc(p.unit)+'</div></div></div><select aria-label="Добављач за ставку '+esc(x.id)+'" onchange="assignFarm('+x.id+',this.value)" class="no-print mt-3 w-full border rounded-lg p-2 text-sm"><option value="" '+(!fid?'selected':'')+'>Недодељено газдинство</option>'+farms.map(f=>'<option value="'+f.id+'" '+(String(fid)===String(f.id)?'selected':'')+'>'+esc(farmLabel(f.id))+'</option>').join('')+'</select></div>';
+    const p=pack(x),o=ord(x),b=buyer(o),fid=assignedFarmId(x),value=purchaseValue(x);
+    html+='<div class="border rounded-lg p-3 mb-2 bg-white"><div class="flex flex-wrap justify-between gap-2"><div><b>'+esc(b.ime_prezime||'Поруџбина '+x.porudzbina_id)+'</b><div class="text-xs text-slate-600 mt-1">'+esc(textPack(x))+' · '+fmt(p.count)+' × '+fmt(p.size)+' '+esc(p.unit)+' = '+fmt(p.total)+' '+esc(p.unit)+'</div><div class="text-xs font-bold mt-1 '+(value===null?'text-amber-700':'text-emerald-800')+'">'+esc(purchaseText(x))+'</div></div><b class="text-sm '+(value===null?'text-amber-700':'text-emerald-800')+'">'+(value===null?'Цена није унета':cash(value))+'</b></div><select aria-label="Добављач за ставку '+esc(x.id)+'" onchange="assignFarm('+x.id+',this.value)" class="no-print mt-3 w-full border rounded-lg p-2 text-sm"><option value="" '+(!fid?'selected':'')+'>Недодељено газдинство</option>'+farms.map(f=>'<option value="'+f.id+'" '+(String(fid)===String(f.id)?'selected':'')+'>'+esc(farmLabel(f.id))+'</option>').join('')+'</select></div>';
    });
    html+='</div></details>';
   });
-  html+='</div></section>';
+  html+='<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 flex flex-wrap justify-between gap-2"><b>Укупна набавка за газдинство</b><b class="text-emerald-900">'+cash(fg.value)+'</b></div></div></section>';
  });
  document.getElementById('procurement-summary').innerHTML=html||'<div class="p-4 bg-white rounded-xl">Нема ставки за ову туру.</div>';
 }
