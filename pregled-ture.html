@@ -208,6 +208,28 @@ async function copyAllPointsViber(){
   say('Порука је копирана.');
  }catch(e){say('Не могу да копирам туру: '+e.message,true)}
 }
+async function copySupplierViber(productId){
+ try{
+  const rows=items.filter(x=>String(x.product_id||'')===String(productId));
+  if(!rows.length)throw Error('Нема ставки овог производа у изабраној тури.');
+  const tour=tours.find(t=>Number(t.id)===tourId),rawDate=tour?.datum?String(tour.datum).split('T')[0]:'';
+  const date=rawDate&&rawDate.includes('-')?rawDate.split('-').reverse().join('. '):rawDate;
+  const name=productName(rows[0]),variants={};
+  rows.forEach(x=>{
+   const p=pack(x),key=x.variant_id?'variant:'+String(x.variant_id):'unlinked-line:'+String(x.id);
+   if(!variants[key])variants[key]={count:0,quantity:0,size:p.size,unit:p.unit,label:String(x.variant_name||p.label)};
+   variants[key].count+=p.count;variants[key].quantity+=p.total;
+  });
+  const groups=Object.values(variants),total=groups.reduce((a,p)=>a+p.quantity,0);
+  const lines=['Здраво!','', 'За туру'+(date?' у недељу, '+date:'')+' потребно нам је:',name+' — '+fmt(total)+' '+(groups[0]?.unit||'')];
+  groups.forEach(p=>lines.push('• '+fmt(p.count)+' паковања'+(p.size?' по '+fmt(p.size)+' '+p.unit:'')+' ('+fmt(p.quantity)+' '+p.unit+')'));
+  lines.push('','Молимо те да потврдиш да ли можеш да обезбедиш ову количину.','Хвала!');
+  const message=lines.join('\\n');
+  if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(message);
+  else{const area=document.createElement('textarea');area.value=message;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();if(!document.execCommand('copy'))throw Error('Копирање није успело.');area.remove()}
+  say('Viber порука за добављача је копирана. Отвори Viber и налепи поруку.');
+ }catch(e){say('Не могу да припремим Viber поруку: '+e.message,true)}
+}
 async function copyPointViber(pointId){
  try{
   const rows=items.filter(x=>String(ord(x).punkt_id||'none')===String(pointId));
@@ -538,7 +560,7 @@ function renderProcurement(){
  let html='<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"><div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3"><div class="text-xs text-emerald-800 font-bold uppercase">Различитих производа</div><div class="text-2xl font-black">'+productList.length+'</div></div><div class="rounded-xl bg-blue-50 border border-blue-200 p-3"><div class="text-xs text-blue-800 font-bold uppercase">Укупно паковања</div><div class="text-2xl font-black">'+fmt(totalPackages)+'</div></div><div class="rounded-xl bg-cyan-50 border border-cyan-200 p-3"><div class="text-xs text-cyan-800 font-bold uppercase">Поруџбина</div><div class="text-2xl font-black">'+totalOrders+'</div></div><div class="rounded-xl bg-amber-50 border border-amber-200 p-3"><div class="text-xs text-amber-800 font-bold uppercase">Позната набавна вредност</div><div class="text-xl font-black">'+cash(totalValue)+'</div><div class="text-xs text-amber-800 mt-1">'+(missingPrices?missingPrices+' ставки без цене':'Цена је позната за све ставке')+'</div></div></div>';
  productList.forEach(g=>{
   const packageList=Object.values(g.packages).sort((a,b)=>a.label.localeCompare(b.label,'sr',{numeric:true})||a.size-b.size);
-  html+='<details class="group border-2 border-slate-200 rounded-2xl overflow-hidden mb-3 bg-white"><summary class="list-none cursor-pointer p-4 bg-slate-100 flex flex-wrap justify-between items-center gap-3 min-h-20"><div class="min-w-0 flex-1"><div class="text-lg sm:text-xl font-black">'+esc(g.name)+'</div><div class="text-sm text-slate-600 mt-1">'+packageList.length+' '+(packageList.length===1?'врста паковања':'врсте паковања')+' · '+g.orders.size+' поруџбина'+(g.id?'':' · СТАВКА НИЈЕ ПОВЕЗАНА СА КАТАЛОГОМ')+'</div></div><div class="flex items-center gap-3"><div class="text-right"><span class="block text-sm font-black">'+fmt(g.packageCount)+' паковања</span><span class="block text-sm font-bold text-emerald-800">'+fmt(g.totalQuantity)+' '+esc(packageList[0]?.unit||'')+'</span></div><span class="text-xl text-slate-500 transition-transform group-open:rotate-180">⌄</span></div></summary><div class="p-3 sm:p-4 space-y-2 bg-white">';
+  html+='<details class="group border-2 border-slate-200 rounded-2xl overflow-hidden mb-3 bg-white"><summary class="list-none cursor-pointer p-4 bg-slate-100 flex flex-wrap justify-between items-center gap-3 min-h-20"><div class="min-w-0 flex-1"><div class="text-lg sm:text-xl font-black">'+esc(g.name)+'</div><div class="text-sm text-slate-600 mt-1">'+packageList.length+' '+(packageList.length===1?'врста паковања':'врсте паковања')+' · '+g.orders.size+' поруџбина'+(g.id?'':' · СТАВКА НИЈЕ ПОВЕЗАНА СА КАТАЛОГОМ')+'</div></div><div class="flex items-center gap-3"><div class="text-right"><span class="block text-sm font-black">'+fmt(g.packageCount)+' паковања</span><span class="block text-sm font-bold text-emerald-800">'+fmt(g.totalQuantity)+' '+esc(packageList[0]?.unit||'')+'</span></div><span class="text-xl text-slate-500 transition-transform group-open:rotate-180">⌄</span></div></summary><div class="p-3 sm:p-4 space-y-2 bg-white"><button type="button" onclick="copySupplierViber(\''+esc(g.id||'')+'\')" '+(g.id?'':'disabled')+' class="w-full sm:w-auto bg-purple-700 text-white font-bold text-sm px-4 py-3 rounded-xl disabled:opacity-40"><i class="fa-brands fa-viber mr-2"></i>Копирај Viber поруку за добављача</button>';
   packageList.forEach(pg=>{
    html+='<details class="group/package rounded-xl border border-slate-200 overflow-hidden"><summary class="list-none cursor-pointer p-3 sm:p-4 flex flex-wrap justify-between items-center gap-3 min-h-16"><div class="min-w-0 flex-1"><div class="font-black">'+esc(pg.label)+'</div><div class="text-xs text-slate-500 mt-1">'+fmt(pg.size)+' '+esc(pg.unit)+' по паковању</div></div><div class="flex items-center gap-3"><div class="text-right"><div class="text-lg font-black">'+fmt(pg.count)+' <span class="text-sm">пак.</span></div><div class="text-sm font-bold text-slate-700">Укупно: '+fmt(pg.quantity)+' '+esc(pg.unit)+'</div>'+(pg.missingPrices===pg.rows.length?'<div class="text-xs text-amber-700">Набавна цена није унета</div>':'<div class="text-xs font-bold text-emerald-800">'+cash(pg.value)+(pg.missingPrices?' · '+pg.missingPrices+' без цене':'')+'</div>')+'</div><span class="text-lg text-slate-500 transition-transform group-open/package:rotate-180">⌄</span></div></summary><div class="border-t bg-slate-50 p-3"><div class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Купци и поруџбине ('+pg.rows.length+')</div><div class="space-y-2">';
    pg.rows.slice().sort((a,b)=>String(a.porudzbina_id||'').localeCompare(String(b.porudzbina_id||''),'sr',{numeric:true})).forEach(x=>{
