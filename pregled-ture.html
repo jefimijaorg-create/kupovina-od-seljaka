@@ -495,7 +495,7 @@ async function addCatalogPointToTour(pointId,inputId){
   if(!p)throw Error('Пункт није пронађен у бази. Освежи страницу и покушај поново.');
   const input=document.getElementById(inputId);
   const time=String(input?.value||'').trim();
-  if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time))throw Error('Унеси исправну сатницу за пункт.');
+  if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(time))throw Error('Унеси исправну сатницу за пункт.');
   await savePointTime(String(p.id),inputId);
  }catch(e){say('Пункт није додат у туру: '+e.message,true)}
 }
