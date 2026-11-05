@@ -523,7 +523,7 @@ function renderProcurement(){
   // Product identity and displayed name come only from products.id via product_id.
   const productKey=x.product_id?'product:'+String(x.product_id):'unlinked-line:'+String(x.id);
   if(!products[productKey])products[productKey]={id:x.product_id||null,name,rows:[],packages:{},packageCount:0,totalQuantity:0,value:0,missingPrices:0,orders:new Set()};
-  const g=products[productKey],label=String(p.label||('Паковање '+fmt(p.size)+' '+p.unit)).trim(),unitName=String(p.unit||'').trim(),packageKey=label.toLocaleLowerCase('sr')+'|'+p.size+'|'+unitName.toLocaleLowerCase('sr'),value=purchaseValue(x);
+  const g=products[productKey],label=String(x.variant_name||p.label||('Паковање '+fmt(p.size)+' '+p.unit)).trim(),unitName=String(p.unit||'').trim(),packageKey=x.variant_id?'variant:'+String(x.variant_id):String(p.size)+'|'+unitName.toLocaleLowerCase('sr'),value=purchaseValue(x);
   g.rows.push(x);g.packageCount+=p.count;g.totalQuantity+=p.total;g.orders.add(String(x.porudzbina_id||''));
   if(value===null)g.missingPrices++;else g.value+=value;
   if(!g.packages[packageKey])g.packages[packageKey]={label,size:p.size,unit:unitName,count:0,quantity:0,rows:[],value:0,missingPrices:0};
