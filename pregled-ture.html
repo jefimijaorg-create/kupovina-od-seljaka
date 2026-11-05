@@ -593,7 +593,9 @@ function setSupplierDraftCount(variantId,value,input){
  const key=String(variantId),old=supplierSheetDraft[key]||{selected:false},available=supplierVariantRemaining(key,supplierSheetFarmId);
  let count=value===''?'':Math.max(0,Math.min(Math.floor(Number(value)||0),available));
  if(input&&count!==''&&String(count)!==String(value))input.value=String(count);
- supplierSheetDraft[key]={selected:old.selected,count:String(count)};
+ const selected=old.selected&&!(count!==''&&Number(count)===0);
+ supplierSheetDraft[key]={selected,count:String(count)};
+ if(input&&count!==''&&Number(count)===0){const row=input.closest('.rounded-xl');const checkbox=row?.querySelector('input[type="checkbox"]');if(checkbox)checkbox.checked=false;}
  renderSupplierLiveSummary();
  const target=document.getElementById('supplier-total-'+key),variant=variantCatalog.find(v=>String(v.id)===key),size=n(variant?.package_value)||1,u=normUnit(variant?.package_unit||variant?.unit||'ком');
  if(target)target.textContent=old.selected&&count!==''?'Тренутни избор: '+fmt(count)+' паковања · '+fmt(count*size)+' '+u:'Унеси број паковања';
