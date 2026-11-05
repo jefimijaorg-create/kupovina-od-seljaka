@@ -224,7 +224,7 @@ async function copySupplierViber(productId){
   const lines=['Здраво!','', 'За туру'+(date?' у недељу, '+date:'')+' потребно нам је:',name+' — '+fmt(total)+' '+(groups[0]?.unit||'')];
   groups.forEach(p=>lines.push('• '+fmt(p.count)+' паковања'+(p.size?' по '+fmt(p.size)+' '+p.unit:'')+' ('+fmt(p.quantity)+' '+p.unit+')'));
   lines.push('','Молимо те да потврдиш да ли можеш да обезбедиш ову количину.','Хвала!');
-  const message=lines.join('\\n');
+  const message=lines.join('\n');
   if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(message);
   else{const area=document.createElement('textarea');area.value=message;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();if(!document.execCommand('copy'))throw Error('Копирање није успело.');area.remove()}
   say('Viber порука за добављача је копирана. Отвори Viber и налепи поруку.');
