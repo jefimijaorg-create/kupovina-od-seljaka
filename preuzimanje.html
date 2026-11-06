@@ -420,28 +420,47 @@ function renderPickup(){
  const current=document.getElementById('pickupFarmFilter')?.value||'';
  const opts='<option value="">Сва газдинства</option>'+assigned.map(f=>'<option value="'+e(f.id)+'" '+(String(f.id)===current?'selected':'')+'>'+e(f.name)+'</option>').join('');
  const selected=current?assigned.filter(f=>String(f.id)===current):assigned;
- let html='<div class="filters" style="grid-template-columns:minmax(0,1fr) auto"><label class="hint">Прикажи списак за газдинство<select id="pickupFarmFilter">'+opts+'</select></label><button class="not" type="button" id="pickupPrint">ШТА ТРЕБА ДА ПРЕУЗМЕМ</button></div><p class="section-intro">Преузимање је могуће тек када је набавка за газдинство наручена и евидентирана у овој тури.</p>';
+ let html='<div class="filters" style="grid-template-columns:minmax(0,1fr) auto"><label class="hint">Прикажи списак за газдинство<select id="pickupFarmFilter">'+opts+'</select></label><button class="not" type="button" id="pickupPrint">ШТА ТРЕБА ДА ПРЕУЗМЕМ</button></div><p class="section-intro">Свака поруџбина је приказана засебно у оквиру газдинства. Унеси стварно преузету количину за сваку ставку или притисни „ПРЕУЗЕО“ када је преузета цела количина.</p>';
  html+=selected.map(f=>{
-  const gs=groups(f.id);
+  const farmRows=rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id));
   const ordered=procurementRows.filter(p=>String(p.gazdinstvo_id)===String(f.id)&&String(p.tura_id)===String(tour?.id));
-  if(!ordered.length){
-   return '<div class="farm"><div class="farmhead"><div><div class="farmname">'+e(f.name)+'</div><div class="hint">Набавка није наручена</div></div><span class="status warn">ПРЕУЗИМАЊЕ НИЈЕ ДОЗВОЉЕНО</span></div><div class="empty">За ово газдинство нема евидентиране набавке у овој тури. Прво наручи набавку, па ће се овде откључати евиденција преузимања.</div></div>';
-  }
-  const total=gs.reduce((sum,g)=>sum+g.planned*g.size,0);
-  const orderedLines=ordered.map(p=>'<div class="meta">'+e(p.proizvod)+' · '+e(p.broj_pakovanja||0)+' пак. · '+e(p.kolicina)+' '+e(p.jedinica_pakovanja||'')+'</div>').join('');
-  return '<div class="farm"><div class="farmhead"><div><div class="farmname">'+e(f.name)+'</div><div class="hint">Набавка наручена · '+ordered.length+' евидентираних ставки</div></div><span class="status ok">МОЖЕ ПРЕУЗИМАЊЕ</span></div><div class="meta" style="margin:8px 0 12px"><b>Наручено:</b>'+orderedLines+'</div><div class="farmhead"><div class="hint">'+gs.reduce((sum,g)=>sum+g.rs.length,0)+' ставки за преузимање</div><b>'+fmt(total)+' '+e(gs[0]?.unit||'')+'</b></div>'+gs.map((g,i)=>{
-   const key=f.id+'-'+i,cur=g.rs.reduce((sum,r)=>sum+Math.min(n(r.preuzeta_kolicina)/Math.max(g.size,1),n(r.package_count||r.broj_pakovanja)),0);
-   return '<div class="pickline"><div class="prodtop"><div><b>'+e(g.p)+'</b><div class="meta">'+g.planned+' × '+e(g.label)+' = '+fmt(g.planned*g.size)+' '+e(g.unit)+'</div></div><b>Набавна: '+fmt(price(g.rs[0]))+' дин./'+e(g.unit)+'</b></div><div class="meta">'+g.rs.map(r=>e(orderLabel(r.porudzbina_id,[r]))+' · поруџбина #'+e(r.porudzbina_id)+' — '+e(pack(r))).join('<br>')+'</div><div class="pickinputs"><label class="hint">Планирано<input value="'+g.planned+'" disabled></label><label class="hint">Преузето<input id="c-'+key+'" type="number" min="0" max="'+g.planned+'" value="'+cur+'"></label></div><div class="pickbuttons"><button class="taken" data-t="'+key+'">ПРЕУЗЕТО</button><button class="not" data-n="'+key+'">НИЈЕ ПРЕУЗЕТО</button></div><div class="result" id="r-'+key+'"></div></div>';
-  }).join('')+'</div>';
+  const taken=farmRows.reduce((sum,r)=>sum+n(r.preuzeta_kolicina),0);
+  const remaining=farmRows.reduce((sum,r)=>sum+Math.max(0,q(r)-n(r.preuzeta_kolicina)),0);
+  const complete=farmRows.length>0&&farmRows.every(r=>n(r.preuzeta_kolicina)>=q(r));
+  const lines=farmRows.map(r=>{
+   const qty=q(r),got=Math.max(0,Math.min(qty,n(r.preuzeta_kolicina))),left=Math.max(0,qty-got);
+   const lineStatus=got>=qty?'ПОТПУНО ПРЕУЗЕТО':got>0?'ДЕЛИМИЧНО ПРЕУЗЕТО':'ЧЕКА ПРЕУЗИМАЊЕ';
+   const key=String(r.id);
+   return '<div class="pickline"><div class="prodtop"><div><b>'+e(r.proizvod||'Производ')+'</b><div class="meta">Купац: '+e(orderLabel(r.porudzbina_id,[r]))+' · поруџбина #'+e(r.porudzbina_id)+'</div><div class="meta">Поручено: <b>'+fmt(qty)+' '+e(unit(r))+'</b> · Преузето: <b>'+fmt(got)+' '+e(unit(r))+'</b> · Остало: <b>'+fmt(left)+' '+e(unit(r))+'</b></div></div><span class="status '+(left===0?'ok':got>0?'warn':'bad')+'">'+lineStatus+'</span></div><div class="pickinputs" style="grid-template-columns:minmax(0,1fr)"><label class="hint">Количина која је стварно преузета<input id="pick-'+key+'" type="number" inputmode="decimal" min="0" max="'+e(qty)+'" step="any" value="'+e(got)+'"></label></div><div class="pickbuttons"><button class="taken" type="button" data-save-pick="'+e(key)+'">САЧУВАЈ КОЛИЧИНУ</button><button class="primary" type="button" data-pick-all="'+e(key)+'">ПРЕУЗЕО</button></div><div class="result" id="pick-result-'+e(key)+'">Највише можеш да евидентираш '+fmt(qty)+' '+e(unit(r))+'.</div></div>';
+  }).join('');
+  return '<div class="farm"><div class="farmhead"><div><div class="farmname">'+e(f.name)+'</div><div class="hint">'+farmRows.length+' ставки · Преузето '+fmt(taken)+' · Остало '+fmt(remaining)+'</div></div><span class="status '+(complete?'ok':'warn')+'">'+(complete?'СВЕ ПРЕУЗЕТО':'У ТОКУ')+'</span></div>'+(ordered.length?'<div class="meta" style="padding:10px 14px">Набавка наручена · '+ordered.length+' евидентираних ставки</div>':'<div class="notice">Набавка за ово газдинство није евидентирана у овој тури. Провери наруџбину пре евидентирања преузимања.</div>')+(lines||'<div class="empty">Нема ставки за ово газдинство.</div>')+'</div>';
  }).join('');
  if(!selected.length)html+='<div class="empty">Нема додељених ставки за изабрано газдинство.</div>';
  root.innerHTML=html;
  document.getElementById('pickupFarmFilter').onchange=renderPickup;
  document.getElementById('pickupPrint').onclick=()=>window.print();
- document.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>savePick(x.dataset.t,true));
- document.querySelectorAll('[data-n]').forEach(x=>x.onclick=()=>savePick(x.dataset.n,false));
+ document.querySelectorAll('[data-save-pick]').forEach(b=>b.onclick=()=>savePickLine(b.dataset.savePick,false));
+ document.querySelectorAll('[data-pick-all]').forEach(b=>b.onclick=()=>savePickLine(b.dataset.pickAll,true));
 }
-async function savePick(key,taken){const [fid,i]=key.split('-');if(!procurementRows.some(p=>String(p.gazdinstvo_id)===String(fid)&&String(p.tura_id)===String(tour?.id))){alert('Преузимање није дозвољено: набавка за ово газдинство није наручена у овој тури.');return}const g=groups(n(fid))[n(i)],input=document.getElementById('c-'+key),count=taken?Math.min(n(input.value),g.planned):0;let rem=count*g.size;try{const changed={};for(const r of g.rs){const av=n(r.package_count||r.broj_pakovanja)*n(r.package_size)||q(r),take=Math.max(0,Math.min(av,rem));rem=Math.max(0,rem-take);const status=take>=q(r)?'preuzeto':take?'delimicno_preuzeto':'nije_preuzeto';await api('stavke_porudzbine?id=eq.'+r.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:take,nabavna_cena:price(r),status_stavke:status})});changed[String(r.id)]=take}const amount=rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(fid)).reduce((sum,r)=>sum+(Object.prototype.hasOwnProperty.call(changed,String(r.id))?changed[String(r.id)]:n(r.preuzeta_kolicina))*price(r),0);const old=payouts.find(x=>String(x.producer_id)===String(fid)&&String(x.tura_id)===String(tour.id));if(old){await api('producer_payouts?id=eq.'+old.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({total_amount:amount,is_paid:false})})}else if(amount){await api('producer_payouts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({producer_id:n(fid),period:tour.datum,total_amount:amount,is_paid:false,tura_id:tour.id})})}await reload();show('pickup')}catch(x){alert('Није сачувано: '+x.message)}}
+async function savePickLine(id,all){
+ const r=rows.find(x=>String(x.id)===String(id));if(!r)return;
+ const input=document.getElementById('pick-'+id);
+ const requested=all?q(r):Number(input?.value);
+ if(!Number.isFinite(requested)||requested<0||requested>q(r)){alert('Унесена количина мора бити између 0 и поручене количине ('+q(r)+' '+unit(r)+').');return}
+ const count=all?q(r):requested;
+ const button=document.querySelector('[data-save-pick="'+id+'"],[data-pick-all="'+id+'"]');
+ if(button)button.disabled=true;
+ try{
+  await api('stavke_porudzbine?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:count,nabavna_cena:price(r),status_stavke:count>=q(r)?'preuzeto':count>0?'delimicno_preuzeto':'nije_preuzeto'})});
+  const farmId=String(r.dodijeljeno_gazdinstvo_id);
+  const updated=rows.map(x=>String(x.id)===String(id)?{...x,preuzeta_kolicina:count}:x);
+  const amount=updated.filter(x=>String(x.dodijeljeno_gazdinstvo_id)===farmId).reduce((sum,x)=>sum+n(x.preuzeta_kolicina)*price(x),0);
+  const old=payouts.find(x=>String(x.producer_id)===farmId&&String(x.tura_id)===String(tour.id));
+  if(old){await api('producer_payouts?id=eq.'+old.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({total_amount:amount,is_paid:false})})}
+  else if(amount){await api('producer_payouts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({producer_id:Number(farmId),period:tour.datum,total_amount:amount,is_paid:false,tura_id:tour.id})})}
+  await reload();show('pickup');
+ }catch(x){if(button)button.disabled=false;alert('Количина није сачувана: '+x.message)}
+}
 
 function orderGroups(){const by={};rows.forEach(r=>(by[String(r.porudzbina_id)]??=[]).push(r));return Object.entries(by).map(([id,rs])=>({id,rs,m:orderMeta.find(x=>String(x.id)===String(id))})).sort((a,b)=>Number(a.id)-Number(b.id))}
 function renderDeliverers(){const os=orderGroups();document.getElementById('deliverers').innerHTML=os.map(o=>'<div class="buyer"><div class="buyerhead"><div><div class="buyername">'+e(orderLabel(o.id,o.rs))+'</div><div class="hint">Поруџбина #'+e(o.id)+(o.m?.telefon?' · '+e(o.m.telefon):'')+'</div></div><b>'+e(pointNameForOrder(o.m))+'</b></div><div class="item"><label class="hint">Достављач<input data-deliverer="'+e(o.id)+'" value="'+e(o.m?.dostavljac||'')+'" placeholder="Унеси име достављача"></label><div class="point-actions"><button class="primary" data-save-deliverer="'+e(o.id)+'">Сачувај достављача</button></div></div></div>').join('')||'<div class="empty">Нема поруџбина у овој тури.</div>';document.querySelectorAll('[data-save-deliverer]').forEach(b=>b.onclick=()=>saveDeliverer(b.dataset.saveDeliverer))}
