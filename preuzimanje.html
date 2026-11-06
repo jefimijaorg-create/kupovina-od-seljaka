@@ -427,7 +427,7 @@ function pickupGroups(){
 }
 async function changePickupFarm(key){
  const group=pickupGroups().find(g=>g.key===key);if(!group)return;
- const select=document.querySelector('[data-pickup-farm="'+key+'"]'),farmId=select?.value;
+ const select=document.querySelector('[data-pickup-farm="'+encodeURIComponent(key)+'"]'),farmId=select?.value;
  if(!farmId||farmId===group.farmId)return;
  if(!confirm('Преместити паковање „'+group.product+' · '+group.packageLabel+'“ ('+group.rows.length+' поруџбина) са газдинства „'+fname(group.farmId)+'“ на „'+fname(farmId)+'“?')){renderPickup();return}
  try{
@@ -495,7 +495,7 @@ function renderPickup(){
  document.getElementById('pickupPrint').onclick=()=>window.print();
  document.querySelectorAll('[data-pickup-farm]').forEach(el=>el.onchange=()=>changePickupFarm(decodeURIComponent(el.dataset.pickupFarm)));
  document.querySelectorAll('[data-order-farm]').forEach(el=>el.onchange=()=>changePickupOrderFarm(el.closest('[data-pickup-people]')?decodeURIComponent(el.closest('[data-pickup-people]').dataset.pickupPeople):'',el.dataset.orderFarm));
- document.querySelectorAll('[data-expand-pickup]').forEach(el=>el.onclick=()=>{const key=el.dataset.expandPickup,box=document.querySelector('[data-pickup-people="'+key+'"]');if(box){box.hidden=!box.hidden;el.textContent=(box.hidden?'ОТВОРИ':'ЗATВОРИ')+' СПИСАК КУПАЦА ('+box.querySelectorAll('[data-order-farm]').length+')'}});
+ document.querySelectorAll('[data-expand-pickup]').forEach(el=>el.onclick=()=>{const key=el.dataset.expandPickup,box=document.querySelector('[data-pickup-people="'+key+'"]');if(box){box.hidden=!box.hidden;el.textContent=(box.hidden?'ОТВОРИ':'ЗАТВОРИ')+' СПИСАК КУПАЦА ('+box.querySelectorAll('[data-order-farm]').length+')'}});
  document.querySelectorAll('[data-toggle-pickup]').forEach(el=>el.onclick=()=>togglePickupGroup(decodeURIComponent(el.dataset.togglePickup)));
 }
 async function savePickLine(id,all){
