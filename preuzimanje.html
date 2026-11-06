@@ -218,7 +218,16 @@ select:focus,input:focus{border-color:#65a778;box-shadow:0 0 0 3px rgba(73,150,9
 .order-status-badge{display:inline-flex;align-items:center;margin-top:4px;padding:3px 7px;border-radius:7px;background:#edf2f7;color:#334155;font-size:10px;font-weight:900}.order-status-new{background:#fff0ec;color:#a33b25}.order-status-confirmed{background:#e8f3eb;color:#17633b}.order-status-cancelled{background:#f1f1f1;color:#555}
 @keyframes pendingBlink{to{opacity:.25;transform:scale(.92)}}
 @media(prefers-reduced-motion:reduce){.pending-pulse{animation:none}}
-/* Посебна страница за преузимање: остави само радни екран преузимања. */\n.workflow-tabs{display:none!important}\n</style></head><body>
+/* Посебна страница за преузимање: остави само радни екран преузимања. */\n.workflow-tabs{display:none!important}\n
+.allocation-row{margin-bottom:12px}
+.allocation-line{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0}
+.allocation-pack{justify-self:start;font-weight:600}
+.allocation-qty{justify-self:end;white-space:nowrap;font-variant-numeric:tabular-nums}
+.allocation-line button{justify-self:end;white-space:nowrap}
+.allocation-edit{margin-top:12px;padding:14px;border:1px solid var(--line,#ddd);border-radius:12px;background:var(--surface,#fafafa)}
+.allocation-edit [hidden]{display:none!important}
+@media(max-width:600px){.allocation-line{grid-template-columns:minmax(0,1fr) auto auto;gap:6px}.allocation-line button{padding:8px;font-size:12px}.allocation-edit{padding:10px}}
+</style></head><body>
 <div id="demoGate" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(13,32,21,.72);backdrop-filter:blur(7px);padding:18px;overflow:auto;align-items:center;justify-content:center">
  <form id="demoGateForm" style="width:min(100%,420px);margin:auto;background:#fff;border-radius:20px;padding:25px;box-shadow:0 20px 70px #0003;color:#173b27">
   <div style="font-size:11px;letter-spacing:1.5px;font-weight:900;color:#28734a">НАРУЧИ ДОМАЋЕ · ОПЕРАТИВА</div>
