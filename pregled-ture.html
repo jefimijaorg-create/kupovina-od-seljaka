@@ -20,7 +20,7 @@
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
 let tours=[],items=[],farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},tourId=68,view='orders',procurementMode='farm',procurementFarmFilter='all';
-async function api(path,opt={}){let r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...HEAD,...(opt.headers||{})}}),t=await r.text();if(!r.ok)throw Error(t||r.statusText);return t?JSON.parse(t):[]}
+async function api(path,opt={}){let r;try{r=await fetch(URL+'/rest/v1/'+path,{...opt,headers:{...HEAD,...(opt.headers||{})}})}catch(e){throw Error('Мрежна/CORS грешка · '+path+' · '+(e?.message||String(e)))}let t=await r.text();if(!r.ok)throw Error('Supabase HTTP '+r.status+' '+r.statusText+' · PUTANJA: '+path+' · ODGOVOR: '+(t||'(празан одговор)').slice(0,1200));try{return t?JSON.parse(t):[]}catch(e){throw Error('Неисправан JSON одговор · '+path+' · '+(t||'').slice(0,500))}}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=v=>Number(v||0),fmt=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:3}),cash=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.';
 function variantFor(x){return x?.variant_id?variantCatalog.find(v=>String(v.id)===String(x.variant_id))||null:null}
@@ -87,7 +87,7 @@ async function loadData(){
   const savedTour=tours.find(t=>String(t.id)===String(saved)),archivedStatuses=['closed','completed','cancelled'],fallbackTour=tours.find(t=>!archivedStatuses.includes(String(t.status||'').toLowerCase())),initial=savedTour||selectableTours[0]||fallbackTour||tours[0]||null;
   if(initial){tourId=Number(initial.id);sel.value=String(tourId);await loadTour();toggleTourPicker(false)}
   else{tourId=0;sel.value='';toggleTourPicker(true);say('Изабери туру да би отворио њене податке.')}
- }catch(e){say('Грешка при учитавању основних података: '+e.message,true);console.error('loadData',e)}
+ }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ТУРА\\n'+(e?.message||String(e))+'\\n\\nПровери: Supabase дозволе (RLS), назив табеле/колона и мрежну везу.\\nВреме: '+new Date().toLocaleString('sr-RS');say(detail,true);console.error('[PREGLED-TURE] loadData failed',e);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';}
 }
 async function loadTour(){
  const selected=document.getElementById('tour-select').value;if(!selected){say('Изабери туру пре наставка.',true);return}
@@ -98,7 +98,7 @@ async function loadTour(){
  say('Учитавање туре '+tourId+'…');[items,tourAllocations]=await Promise.all([api('stavke_porudzbine?select=*&tura_id=eq.'+tourId+'&order=id.asc'),api('tura_nabavka_dodele?select=*&tura_id=eq.'+tourId+'&order=id.asc').catch(e=>{console.warn('Расподела набавке није учитана:',e);return []})]);
  populateFilters();populatePickupSummaryFilters();renderAll();toggleTourPicker(false);
  say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки. Изабрана тура се чува и после освежавања странице.');
- }catch(e){say('Грешка при учитавању туре: '+e.message,true)}
+ }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ИЗАБРАНЕ ТУРЕ '+tourId+'\\n'+(e?.message||String(e))+'\\n\\nПровери да ли постоје ставке за туру и да ли база дозвољава читање табеле stavke_porudzbine.';say(detail,true);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';console.error('[PREGLED-TURE] loadTour failed',e)}
 }
 function switchTab(v){view=v;['orders','procurement','pickup','delivery','debts'].forEach(k=>{document.getElementById(k+'-tab').classList.toggle('hidden',k!==v);let b=document.getElementById('btn-'+k);b.className='py-3 px-2 font-bold text-sm rounded-lg '+(k===v?'text-emerald-800 bg-emerald-50':'text-slate-500')});if(v==='orders')renderOrders();if(v==='procurement')renderProcurement();if(v==='pickup')renderPickupSummary();if(v==='delivery')renderDelivery();if(v==='debts')renderDebts();window.scrollTo({top:document.getElementById('tour-select').getBoundingClientRect().top+window.scrollY-12,behavior:'smooth'})}
 function toggleUnassigned(){const panel=document.getElementById('unassigned-banner'),button=document.getElementById('unassigned-toggle');const opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);button.setAttribute('aria-expanded',String(opening));button.innerHTML='<i class="fa-solid fa-triangle-exclamation mr-2"></i>'+(opening?'Затвори недодељене ставке':'Недодељене ставке')+' <span id="unassigned-button-count" class="ml-1 rounded-full bg-amber-200 px-2 py-1 text-xs">'+(document.getElementById('unassigned-count')?.textContent||'0')+'</span><span class="float-right">'+(opening?'▼':'▲')+'</span>';if(opening)panel.scrollTop=0;}
