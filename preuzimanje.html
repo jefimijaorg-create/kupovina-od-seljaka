@@ -401,8 +401,10 @@ function renderNeeds(){
  };
  const allocationCard=(a)=>{
   const l=allocationLabel(a),count=n(a.broj_pakovanja),taken=n(a.preuzeto_pakovanja),done=count>0&&taken>=count;
-  const offerOptions=currentOffers.map(o=>{const x=offerLabel(o);return '<option value="'+o.id+'" '+(String(o.gazdinstvo_id)===String(a.gazdinstvo_id)&&String(o.product_id)===String(a.product_id)&&String(o.variant_id)===String(a.variant_id)?'selected':'')+'>'+e(x.farm+' · '+x.product+' · '+x.variant)+'</option>'}).join('');
-  return '<article class="summary-card"><div class="summary-head"><strong>'+e(l.product)+'</strong><div class="hint">'+e(l.farm)+' · '+e(l.variant)+'</div><div class="summary-line"><span>Наручено</span><b>'+fmt(count)+' паковања</b></div><div class="summary-line"><span>Преузето</span><b>'+fmt(taken)+' / '+fmt(count)+' паковања</b></div><span class="status '+(done?'ok':taken>0?'warn':'bad')+'">'+(done?'ПРЕУЗЕТО':taken>0?'ДЕЛИМИЧНО ПРЕУЗЕТО':'НИЈЕ ПРЕУЗЕТО')+'</span></div><div class="package-editor"><label>ПРОМЕНИ ГАЗДИНСТВО / ПРОИЗВОД / ПАКОВАЊЕ<select data-edit-allocation-offer="'+a.id+'">'+offerOptions+'</select></label><label>КОЛИЧИНА ПАКОВАЊА<input type="number" min="1" step="1" value="'+e(count)+'" data-edit-allocation-qty="'+a.id+'"></label><button type="button" data-save-allocation="'+a.id+'">САЧУВАЈ ИЗМЕНЕ</button><button type="button" class="'+(done?'not':'primary')+'" data-toggle-allocation="'+a.id+'">'+(done?'ОЗНАЧИ КАО НИЈЕ ПРЕУЗЕТО':'ОЗНАЧИ КАО ПРЕУЗЕТО')+'</button></div></article>';
+  const demand=rows.filter(r=>String(r.product_id||'')===String(a.product_id)&&String(r.variant_id||'')===String(a.variant_id));
+  const farmOptions=currentOffers.filter(o=>String(o.product_id)===String(a.product_id)&&String(o.variant_id)===String(a.variant_id)).map(o=>'<option value="'+o.id+'">'+e(fname(o.gazdinstvo_id))+'</option>').join('');
+  const customerRows=demand.map(r=>'<div class="package-editor" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,1fr);gap:8px;align-items:center"><div><b>'+e(orderLabel(r.porudzbina_id,[r]))+'</b><div class="hint">Поруџбина #'+e(r.porudzbina_id)+' · '+fmt(q(r))+' '+e(unit(r))+'</div></div><label class="hint">ДОДЕЛИ ГАЗДИНСТВУ<select data-individual-order-farm="'+r.id+'">'+opts(r.dodijeljeno_gazdinstvo_id)+'</select></label></div>').join('');
+  return '<article class="summary-card allocation-row"><div class="summary-head"><strong>'+e(l.product)+'</strong><div class="allocation-line"><span class="allocation-pack">'+e(l.variant)+'</span><b class="allocation-qty">'+fmt(count)+' пак.</b><button type="button" data-open-allocation-edit="'+a.id+'">ИЗМЕНИ</button></div><div class="hint">Газдинство од ког је наручено: <b>'+e(l.farm)+'</b></div><div class="summary-line"><span>Преузето</span><b>'+fmt(taken)+' / '+fmt(count)+' паковања</b></div><span class="status '+(done?'ok':taken>0?'warn':'bad')+'">'+(done?'ПРЕУЗЕТО':taken>0?'ДЕЛИМИЧНО ПРЕУЗЕТО':'НИЈЕ ПРЕУЗЕТО')+'</span></div><div class="allocation-edit" data-allocation-editor="'+a.id+'" hidden><div class="head"><h3>Измена набавке</h3><span class="hint">Изабери шта желиш да промениш</span></div><label class="hint">НАЧИН ИЗМЕНЕ<select data-allocation-scope="'+a.id+'"><option value="all">Промени цело газдинство за ову ставку</option><option value="part">Пребаци део количине другом газдинству</option><option value="orders">Промени газдинство појединачним поруџбинама</option></select></label><div data-scope-all="'+a.id+'"><label class="hint">НОВО ГАЗДИНСТВО<select data-target-offer="'+a.id+'">'+farmOptions+'</select></label><button type="button" class="primary" data-transfer-all="'+a.id+'">ПРЕБАЦИ ЦЕЛУ СТАВКУ</button></div><div data-scope-part="'+a.id+'" hidden><label class="hint">ГАЗДИНСТВО КОМЕ ПРЕБАЦУЈЕШ<select data-part-offer="'+a.id+'">'+farmOptions+'</select></label><label class="hint">БРОЈ ПАКОВАЊА КОЈА ПРЕБАЦУЈЕШ<input type="number" min="1" max="'+count+'" step="1" value="1" data-part-qty="'+a.id+'"></label><button type="button" class="primary" data-transfer-part="'+a.id+'">ПРЕБАЦИ ИЗАБРАНУ КОЛИЧИНУ</button></div><div data-scope-orders="'+a.id+'" hidden><p class="hint">Овде мењаш само појединачне поруџбине. Остали купци остају код садашњег газдинства.</p>'+(customerRows||'<div class="empty">Нема повезаних појединачних поруџбина за овај производ и паковање.</div>')+'<button type="button" class="primary" data-save-order-farms="'+a.id+'">САЧУВАЈ РАСПОДЕЛУ КУПЦИМА</button></div><button type="button" class="not" data-close-allocation-edit="'+a.id+'">ЗАТВОРИ ИЗМЕНУ</button></div><div class="package-editor"><button type="button" class="'+(done?'not':'primary')+'" data-toggle-allocation="'+a.id+'">'+(done?'ОЗНАЧИ КАО НИЈЕ ПРЕУЗЕТО':'ОЗНАЧИ КАО ПРЕУЗЕТО')+'</button></div></article>';
  };
  let content='';
  if(procurementViewMode==='farm'){
@@ -423,7 +425,12 @@ function renderNeeds(){
  document.getElementById('procurementMode').onchange=ev=>{procurementViewMode=ev.target.value;renderNeeds()};
  document.getElementById('procurementFarmFilter').onchange=ev=>{procurementFarmFilter=ev.target.value;renderNeeds()};
  document.querySelectorAll('[data-add-allocation]').forEach(b=>b.onclick=()=>addAllocation(b.dataset.addAllocation));
- document.querySelectorAll('[data-save-allocation]').forEach(b=>b.onclick=()=>saveAllocation(b.dataset.saveAllocation));
+ document.querySelectorAll('[data-open-allocation-edit]').forEach(b=>b.onclick=()=>{const box=document.querySelector('[data-allocation-editor="'+b.dataset.openAllocationEdit+'"]');if(box)box.hidden=!box.hidden});
+ document.querySelectorAll('[data-close-allocation-edit]').forEach(b=>b.onclick=()=>{const box=document.querySelector('[data-allocation-editor="'+b.dataset.closeAllocationEdit+'"]');if(box)box.hidden=true});
+ document.querySelectorAll('[data-allocation-scope]').forEach(el=>el.onchange=()=>{const id=el.dataset.allocationScope,mode=el.value;document.querySelector('[data-scope-all="'+id+'"]').hidden=mode!=='all';document.querySelector('[data-scope-part="'+id+'"]').hidden=mode!=='part';document.querySelector('[data-scope-orders="'+id+'"]').hidden=mode!=='orders'});
+ document.querySelectorAll('[data-transfer-all]').forEach(b=>b.onclick=()=>transferAllocation(b.dataset.transferAll,false));
+ document.querySelectorAll('[data-transfer-part]').forEach(b=>b.onclick=()=>transferAllocation(b.dataset.transferPart,true));
+ document.querySelectorAll('[data-save-order-farms]').forEach(b=>b.onclick=()=>saveIndividualOrderFarms(b.dataset.saveOrderFarms));
  document.querySelectorAll('[data-toggle-allocation]').forEach(b=>b.onclick=()=>toggleAllocation(b.dataset.toggleAllocation));
 }
 async function addAllocation(offerId){
@@ -448,6 +455,29 @@ async function saveAllocation(id){
   await api('tura_nabavka_dodele?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({gazdinstvo_id:Number(o.gazdinstvo_id),product_id:o.product_id,variant_id:o.variant_id,broj_pakovanja:count,nabavna_cena:n(o.purchase_price),preuzeto_pakovanja:changed?0:Math.min(n(a.preuzeto_pakovanja),count)})});
   await reload();show('procurement');
  }catch(x){alert('Измене нису сачуване: '+x.message)}
+}
+async function transferAllocation(id,partial){
+ const a=allocations.find(x=>String(x.id)===String(id));if(!a)return;
+ const selector=partial?'[data-part-offer="'+id+'"]':'[data-target-offer="'+id+'"]';
+ const offerId=document.querySelector(selector)?.value,o=offers.find(x=>String(x.id)===String(offerId));
+ if(!o)return alert('Изабери газдинство.');
+ if(String(o.gazdinstvo_id)===String(a.gazdinstvo_id))return alert('Изабрано је исто газдинство.');
+ const move=partial?Math.floor(n(document.querySelector('[data-part-qty="'+id+'"]')?.value)):n(a.broj_pakovanja);
+ if(move<1||move>n(a.broj_pakovanja))return alert('Унесена количина није исправна.');
+ const target=allocations.find(x=>String(x.id)!==String(a.id)&&String(x.tura_id)===String(a.tura_id)&&String(x.gazdinstvo_id)===String(o.gazdinstvo_id)&&String(x.product_id)===String(o.product_id)&&String(x.variant_id)===String(o.variant_id));
+ try{
+  if(partial&&move<n(a.broj_pakovanja))await api('tura_nabavka_dodele?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({broj_pakovanja:n(a.broj_pakovanja)-move,preuzeto_pakovanja:Math.min(n(a.preuzeto_pakovanja),n(a.broj_pakovanja)-move)})});
+  else await api('tura_nabavka_dodele?id=eq.'+id,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+  if(target)await api('tura_nabavka_dodele?id=eq.'+target.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({broj_pakovanja:n(target.broj_pakovanja)+move})});
+  else await api('tura_nabavka_dodele',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({tura_id:Number(a.tura_id),product_id:o.product_id,variant_id:o.variant_id,gazdinstvo_id:Number(o.gazdinstvo_id),broj_pakovanja:move,nabavna_cena:n(o.purchase_price),preuzeto_pakovanja:0,raspodela_kupcima:[]})});
+  await reload();show('procurement');
+ }catch(x){alert('Промена газдинства није сачувана: '+x.message);await reload();show('procurement')}
+}
+async function saveIndividualOrderFarms(id){
+ const a=allocations.find(x=>String(x.id)===String(id));if(!a)return;
+ const demand=rows.filter(r=>String(r.product_id||'')===String(a.product_id)&&String(r.variant_id||'')===String(a.variant_id));
+ try{for(const r of demand){const farmId=document.querySelector('[data-individual-order-farm="'+r.id+'"]')?.value;if(farmId&&String(farmId)!==String(r.dodijeljeno_gazdinstvo_id))await api('stavke_porudzbine?id=eq.'+r.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({dodijeljeno_gazdinstvo_id:Number(farmId)})})}await reload();show('procurement')}
+ catch(x){alert('Расподела поруџбина није сачувана: '+x.message);await reload();show('procurement')}
 }
 async function toggleAllocation(id){
  const a=allocations.find(x=>String(x.id)===String(id));if(!a)return;
