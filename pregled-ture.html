@@ -1,5 +1,81 @@
 <!DOCTYPE html>
-<html lang="sr" class="h-full bg-slate-50"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Тура — Преузимање и достава | Наручи домаће</title><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>@media print{.no-print{display:none!important}body{background:white;color:black;font-size:11pt}.card{break-inside:avoid;margin-bottom:1rem}}body{font-family:Arial,sans-serif}@media(min-width:768px){.unassigned-sheet{left:50%;transform:translateX(-50%);width:min(900px,calc(100% - 2rem))}} .unassigned-sheet{position:fixed!important;z-index:70;left:0;right:0;bottom:0;max-height:72dvh;overflow:auto;margin:0!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22)} .unassigned-sheet-toggle{position:fixed!important;z-index:65;left:1rem;right:1rem;bottom:1rem;width:auto;box-shadow:0 6px 20px rgba(15,23,42,.2)} body{padding-bottom:6rem!important}  .supplier-sheet-backdrop{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.48)}.supplier-sheet-panel{position:fixed!important;z-index:81;left:0;right:0;bottom:0;max-height:88dvh;overflow:auto;margin:0 auto!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22);width:100%;max-width:900px}@media(min-width:768px){.supplier-sheet-panel{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(900px,calc(100% - 2rem));border-radius:1.25rem!important;max-height:85dvh}} .supplier-sheet-backdrop[hidden],.supplier-sheet-panel[hidden]{display:none!important}</style></head>
+<html lang="sr" class="h-full bg-slate-50"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Тура — Преузимање и достава | Наручи домаће</title><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>@media print{.no-print{display:none!important}body{background:white;color:black;font-size:11pt}.card{break-inside:avoid;margin-bottom:1rem}}body{font-family:Arial,sans-serif}@media(min-width:768px){.unassigned-sheet{left:50%;transform:translateX(-50%);width:min(900px,calc(100% - 2rem))}} .unassigned-sheet{position:fixed!important;z-index:70;left:0;right:0;bottom:0;max-height:72dvh;overflow:auto;margin:0!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22)} .unassigned-sheet-toggle{position:fixed!important;z-index:65;left:1rem;right:1rem;bottom:1rem;width:auto;box-shadow:0 6px 20px rgba(15,23,42,.2)} body{padding-bottom:6rem!important}  .supplier-sheet-backdrop{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.48)}.supplier-sheet-panel{position:fixed!important;z-index:81;left:0;right:0;bottom:0;max-height:88dvh;overflow:auto;margin:0 auto!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22);width:100%;max-width:900px}@media(min-width:768px){.supplier-sheet-panel{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(900px,calc(100% - 2rem));border-radius:1.25rem!important;max-height:85dvh}} .supplier-sheet-backdrop[hidden],.supplier-sheet-panel[hidden]{display:none!important}
+/* Visual refresh only — all existing markup, IDs, handlers and application logic stay intact. */
+:root{color-scheme:light;--ui-ink:#172b27;--ui-muted:#64756f;--ui-line:#dce7e2;--ui-green:#087f5b;--ui-green-dark:#075c46;--ui-soft:#f2f8f5}
+html{scroll-behavior:smooth;background:#f3f7f5}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:#f3f7f5!important;color:var(--ui-ink);letter-spacing:-.01em}
+button,select,input,textarea{font:inherit}
+button{transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(16,185,129,.35);outline-offset:2px}
+button:not(:disabled):active{transform:translateY(1px)}
+input,select,textarea{border-color:#cbd9d2!important;border-radius:12px!important;min-height:44px}
+input:focus,select:focus,textarea:focus{border-color:#0b9b70!important;box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+header.sticky{background:linear-gradient(115deg,#064e3b 0%,#087b59 58%,#0b6b50 100%)!important;box-shadow:0 8px 24px rgba(6,78,59,.16)}
+header.sticky>div{max-width:1440px!important;padding-top:14px!important;padding-bottom:14px!important}
+header.sticky h1{letter-spacing:-.035em}
+header.sticky button{min-height:42px;border:1px solid rgba(255,255,255,.13);border-radius:12px;padding-left:14px;padding-right:14px}
+main{max-width:1440px!important;padding-top:22px!important}
+#message{border-radius:14px!important;box-shadow:0 2px 8px rgba(24,55,43,.035);overflow-wrap:anywhere}
+#tour-picker-panel{border:1px solid var(--ui-line)!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(24,55,43,.035)}
+#tour-picker-panel label{color:#53675f}
+#unassigned-toggle{border-radius:15px!important;box-shadow:0 8px 22px rgba(120,82,12,.12);min-height:54px}
+#unassigned-banner{border-radius:18px!important}
+#orders-tab>div,#procurement-tab>div,#delivery-tab>div,#debts-tab>div{border-color:var(--ui-line)!important;border-radius:18px!important;box-shadow:0 5px 20px rgba(25,55,43,.045)}
+#orders-tab h2,#procurement-tab h2,#debts-tab h2{letter-spacing:-.025em}
+#orders-summary>section,#points>section{border-radius:18px!important;box-shadow:0 5px 20px rgba(25,55,43,.045)}
+#orders-summary details,#points details{border-color:var(--ui-line)!important}
+#orders-summary summary,#points summary{transition:background .15s ease}
+#orders-summary summary:hover,#points summary:hover{background:#f3f8f5}
+#supplier-sheet-content button,#orders-summary button,#points button,#debts-list button{border-radius:11px}
+#supplier-sheet-content .grid button{min-height:76px}
+#supplier-sheet-content input[type=number]{border-radius:12px!important}
+#debts-summary>div>div{border-radius:14px}
+#debts-list>details{border-radius:17px!important}
+#bottom-tab-nav{background:rgba(255,255,255,.96)!important;backdrop-filter:blur(16px);border-color:#dce7e2!important}
+#bottom-tab-nav button{min-height:58px;border-radius:13px;font-size:12px!important}
+#bottom-tab-nav button.text-emerald-800{background:#e6f5ee!important;color:#075c46!important;box-shadow:inset 0 0 0 1px #c6e8d8}
+#bottom-tab-nav button.text-slate-500{color:#61736b!important}
+#bottom-tab-nav button i{font-size:18px}
+.unassigned-sheet-toggle{border-radius:14px!important}
+.supplier-sheet-panel{border:1px solid var(--ui-line)!important}
+@media(min-width:768px){
+ main{padding-left:24px!important;padding-right:24px!important}
+ #orders-summary>section,#points>section{margin-bottom:18px}
+ #debts-list>details>summary{padding:18px}
+}
+@media(min-width:900px) and (orientation:landscape){
+ body{padding-bottom:1.25rem!important}
+ main{padding-top:88px!important}
+ #bottom-tab-nav{position:fixed!important;top:88px!important;bottom:auto!important;left:50%!important;right:auto!important;transform:translateX(-50%);width:min(1392px,calc(100% - 48px));border:1px solid var(--ui-line)!important;border-radius:16px;box-shadow:0 8px 24px rgba(25,55,43,.10)!important}
+ #bottom-tab-nav>div{max-width:none!important;grid-template-columns:repeat(4,minmax(0,1fr));padding:6px!important;gap:8px!important}
+ #bottom-tab-nav button{min-height:48px;flex-direction:row!important;justify-content:center;gap:10px!important;font-size:13px!important}
+ #bottom-tab-nav button i{font-size:16px}
+ #tour-picker-panel{align-items:end}
+ #unassigned-toggle{max-width:360px}
+}
+@media(min-width:768px) and (max-width:1100px) and (orientation:portrait){
+ main{padding-top:18px!important}
+ #bottom-tab-nav>div{gap:5px!important}
+ #bottom-tab-nav button{min-height:64px;font-size:11px!important}
+}
+@media(max-width:767px){
+ header.sticky>div{padding:12px 14px!important;gap:10px!important}
+ header.sticky h1{font-size:22px!important}
+ header.sticky button{font-size:12px!important;padding:9px 10px}
+ main{padding-left:12px!important;padding-right:12px!important;padding-top:14px!important}
+ #tour-picker-panel{padding:13px!important}
+ #bottom-tab-nav>div{padding-left:6px!important;padding-right:6px!important}
+ #bottom-tab-nav button{min-height:56px;font-size:10px!important;line-height:1.15}
+ #bottom-tab-nav button i{font-size:17px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media print{
+ html,body{background:#fff!important}
+ header.sticky{position:static!important;background:#fff!important;color:#111!important;box-shadow:none!important}
+ main{padding-top:12px!important}
+ #bottom-tab-nav{display:none!important}
+}
+</style></head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div class="flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6"><div id="message" class="bg-white border border-slate-200 rounded-xl p-3 mb-5 text-sm">Повезивање са базом…</div>
