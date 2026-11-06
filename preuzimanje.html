@@ -414,33 +414,75 @@ async function saveOrderPackaging(id){const sel=document.querySelector('[data-pa
 
 function renderFarms(){const assigned=fs.filter(f=>rows.some(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id)));let html=assigned.map(f=>{const rr=rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id)),g={};rr.forEach(r=>(g[String(r.proizvod).toLowerCase()]??=[]).push(r));return'<div class="farm"><div class="farmhead"><div><div class="farmname">'+e(f.name)+'</div><div class="hint">'+rr.length+' додељених ставки · '+new Set(rr.map(r=>r.porudzbina_id)).size+' поруџбина</div></div></div>'+Object.values(g).map(rs=>'<div class="product"><div class="prodtop"><b>'+e(rs[0].proizvod)+'</b><b>'+fmt(rs.reduce((s,r)=>s+q(r),0))+' '+e(unit(rs[0]))+'</b></div><div class="meta">'+[...new Set(rs.map(pack))].map(x=>e(x)).join('<br>')+'</div><div class="customers">'+rs.map(r=>'<div class="customer"><b>'+e(orderLabel(r.porudzbina_id,[r]))+'</b><span>Поруџбина #'+e(r.porudzbina_id)+' · '+e(pack(r))+'</span><b>'+e(fmt(q(r))+' '+unit(r))+'</b></div>').join('')+'</div></div>').join('')+'</div>'}).join('');const un=rows.filter(r=>!r.dodijeljeno_gazdinstvo_id);if(un.length)html+='<div class="farm" style="padding:12px;background:var(--redbg)"><b>Није додељено</b>'+un.map(r=>'<div class="meta">'+e(orderLabel(r.porudzbina_id,[r]))+' · поруџбина #'+e(r.porudzbina_id)+' — '+e(r.proizvod)+' — '+e(pack(r))+'</div>').join('')+'</div>';document.getElementById('farms').innerHTML=html||'<div class="empty">Нема додељених ставки.</div>'}
 function groups(fid){const g={};rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(fid)).forEach(r=>{const k=String(r.proizvod).toLowerCase()+'|'+r.package_size+'|'+r.package_unit+'|'+r.velicina_pakovanja;(g[k]??={p:r.proizvod,label:r.velicina_pakovanja||'паковање',size:n(r.package_size),unit:r.package_unit||'л',planned:0,rs:[]});g[k].planned+=n(r.package_count||r.broj_pakovanja);g[k].rs.push(r)});return Object.values(g)}
+function pickupGroups(){
+ const map=new Map();
+ rows.filter(r=>r.dodijeljeno_gazdinstvo_id!==null&&r.dodijeljeno_gazdinstvo_id!==undefined&&String(r.dodijeljeno_gazdinstvo_id)!=='').forEach(r=>{
+  const packageLabel=pack(r)||'Стандардно паковање';
+  const product=String(r.proizvod||'Производ').trim();
+  const key=[String(r.dodijeljeno_gazdinstvo_id),String(r.product_id||product.toLocaleLowerCase('sr')),String(r.variant_id||''),String(packageLabel).toLocaleLowerCase('sr')].join('|');
+  if(!map.has(key))map.set(key,{key,farmId:String(r.dodijeljeno_gazdinstvo_id),product,packageLabel,unit:unit(r),rows:[]});
+  map.get(key).rows.push(r);
+ });
+ return [...map.values()];
+}
+async function changePickupFarm(key){
+ const group=pickupGroups().find(g=>g.key===key);if(!group)return;
+ const select=document.querySelector('[data-pickup-farm="'+key+'"]'),farmId=select?.value;
+ if(!farmId||farmId===group.farmId)return;
+ if(!confirm('Преместити паковање „'+group.product+' · '+group.packageLabel+'“ ('+group.rows.length+' поруџбина) са газдинства „'+fname(group.farmId)+'“ на „'+fname(farmId)+'“?')){renderPickup();return}
+ try{
+  for(const row of group.rows)await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({dodijeljeno_gazdinstvo_id:n(farmId)})});
+  await reload();show('pickup');
+ }catch(x){alert('Промена газдинства није у потпуности сачувана: '+x.message);await reload();show('pickup')}
+}
+async function togglePickupGroup(key){
+ const group=pickupGroups().find(g=>g.key===key);if(!group)return;
+ const isDone=group.rows.every(r=>n(r.preuzeta_kolicina)>=q(r));
+ const next=isDone?0:null;
+ if(!confirm(isDone?'Означити ово паковање као НЕПРЕУЗЕТО?':'Означити цело паковање као ПРЕУЗЕТО?'))return;
+ try{
+  for(const row of group.rows){
+   const count=next===0?0:q(row);
+   await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:count,nabavna_cena:price(row),status_stavke:count>=q(row)?'preuzeto':'nije_preuzeto'})});
+  }
+  const farmId=group.farmId;
+  const updated=rows.map(row=>group.rows.some(x=>String(x.id)===String(row.id))?{...row,preuzeta_kolicina:next===0?0:q(row)}:row);
+  const amount=updated.filter(x=>String(x.dodijeljeno_gazdinstvo_id)===farmId).reduce((sum,x)=>sum+n(x.preuzeta_kolicina)*price(x),0);
+  const old=payouts.find(x=>String(x.producer_id)===farmId&&String(x.tura_id)===String(tour.id));
+  if(old)await api('producer_payouts?id=eq.'+old.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({total_amount:amount,is_paid:false})});
+  else if(amount)await api('producer_payouts',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({producer_id:Number(farmId),period:tour.datum,total_amount:amount,is_paid:false,tura_id:tour.id})});
+  await reload();show('pickup');
+ }catch(x){alert('Статус није сачуван: '+x.message);await reload();show('pickup')}
+}
 function renderPickup(){
  const root=document.getElementById('pickup');
- const assigned=fs.filter(f=>rows.some(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id)));
+ const allGroups=pickupGroups();
+ const assigned=[...new Set(allGroups.map(g=>g.farmId))].map(id=>fs.find(f=>String(f.id)===id)).filter(Boolean);
  const current=document.getElementById('pickupFarmFilter')?.value||'';
- const opts='<option value="">Сва газдинства</option>'+assigned.map(f=>'<option value="'+e(f.id)+'" '+(String(f.id)===current?'selected':'')+'>'+e(f.name)+'</option>').join('');
+ const filterOptions='<option value="">Сва газдинства</option>'+assigned.map(f=>'<option value="'+e(f.id)+'" '+(String(f.id)===current?'selected':'')+'>'+e(f.name)+'</option>').join('');
  const selected=current?assigned.filter(f=>String(f.id)===current):assigned;
- let html='<div class="filters" style="grid-template-columns:minmax(0,1fr) auto"><label class="hint">Прикажи списак за газдинство<select id="pickupFarmFilter">'+opts+'</select></label><button class="not" type="button" id="pickupPrint">ШТА ТРЕБА ДА ПРЕУЗМЕМ</button></div><p class="section-intro">Свака поруџбина је приказана засебно у оквиру газдинства. Унеси стварно преузету количину за сваку ставку или притисни „ПРЕУЗЕО“ када је преузета цела количина.</p>';
+ let html='<div class="filters" style="grid-template-columns:minmax(0,1fr) auto"><label class="hint">Прикажи списак за газдинство<select id="pickupFarmFilter">'+filterOptions+'</select></label><button class="not" type="button" id="pickupPrint">ШТА ТРЕБА ДА ПРЕУЗМЕМ</button></div><p class="section-intro">Сваки производ и паковање приказани су у једном реду. Количина је збир поруџбина за то паковање. Газдинство можеш да промениш за сваки ред посебно.</p>';
  html+=selected.map(f=>{
-  const farmRows=rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id)===String(f.id));
-  const ordered=procurementRows.filter(p=>String(p.gazdinstvo_id)===String(f.id)&&String(p.tura_id)===String(tour?.id));
-  const taken=farmRows.reduce((sum,r)=>sum+n(r.preuzeta_kolicina),0);
-  const remaining=farmRows.reduce((sum,r)=>sum+Math.max(0,q(r)-n(r.preuzeta_kolicina)),0);
-  const complete=farmRows.length>0&&farmRows.every(r=>n(r.preuzeta_kolicina)>=q(r));
-  const lines=farmRows.map(r=>{
-   const qty=q(r),got=Math.max(0,Math.min(qty,n(r.preuzeta_kolicina))),left=Math.max(0,qty-got);
-   const lineStatus=got>=qty?'ПОТПУНО ПРЕУЗЕТО':got>0?'ДЕЛИМИЧНО ПРЕУЗЕТО':'ЧЕКА ПРЕУЗИМАЊЕ';
-   const key=String(r.id);
-   return '<div class="pickline"><div class="prodtop"><div><b>'+e(r.proizvod||'Производ')+'</b><div class="meta">Купац: '+e(orderLabel(r.porudzbina_id,[r]))+' · поруџбина #'+e(r.porudzbina_id)+'</div><div class="meta">Поручено: <b>'+fmt(qty)+' '+e(unit(r))+'</b> · Преузето: <b>'+fmt(got)+' '+e(unit(r))+'</b> · Остало: <b>'+fmt(left)+' '+e(unit(r))+'</b></div></div><span class="status '+(left===0?'ok':got>0?'warn':'bad')+'">'+lineStatus+'</span></div><div class="pickinputs" style="grid-template-columns:minmax(0,1fr)"><label class="hint">Количина која је стварно преузета<input id="pick-'+key+'" type="number" inputmode="decimal" min="0" max="'+e(qty)+'" step="any" value="'+e(got)+'"></label></div><div class="pickbuttons"><button class="taken" type="button" data-save-pick="'+e(key)+'">САЧУВАЈ КОЛИЧИНУ</button><button class="primary" type="button" data-pick-all="'+e(key)+'">ПРЕУЗЕО</button></div><div class="result" id="pick-result-'+e(key)+'">Највише можеш да евидентираш '+fmt(qty)+' '+e(unit(r))+'.</div></div>';
+  const groups=allGroups.filter(g=>g.farmId===String(f.id));
+  const total=groups.reduce((sum,g)=>sum+g.rows.reduce((a,r)=>a+q(r),0),0);
+  const taken=groups.reduce((sum,g)=>sum+g.rows.reduce((a,r)=>a+n(r.preuzeta_kolicina),0),0);
+  const complete=groups.length>0&&groups.every(g=>g.rows.every(r=>n(r.preuzeta_kolicina)>=q(r)));
+  const lines=groups.map((g,index)=>{
+   const qty=g.rows.reduce((sum,r)=>sum+q(r),0);
+   const got=g.rows.reduce((sum,r)=>sum+n(r.preuzeta_kolicina),0);
+   const done=g.rows.every(r=>n(r.preuzeta_kolicina)>=q(r));
+   const status=done?'ПРЕУЗЕТО':got>0?'ДЕЛИМИЧНО':'НИЈЕ ПРЕУЗЕТО';
+   const key=encodeURIComponent(g.key);
+   return '<div class="pickline"><div class="prodtop" style="align-items:center"><div style="flex:1;min-width:0"><b>'+e(g.product)+'</b></div><span class="status '+(done?'ok':got>0?'warn':'bad')+'">'+status+'</span></div><div class="pickinputs" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,.65fr) minmax(150px,1fr);gap:10px;align-items:end"><label class="hint">ПАКОВАЊЕ<div class="productname">'+e(g.packageLabel)+'</div></label><label class="hint">КОЛИЧИНА<div class="productname">'+fmt(qty)+' '+e(g.unit)+'</div></label><label class="hint">ГАЗДИНСТВО<select data-pickup-farm="'+e(key)+'">'+opts(g.farmId)+'</select></label></div><div class="meta">Преузето: '+fmt(got)+' од '+fmt(qty)+' '+e(g.unit)+' · '+g.rows.length+' поруџбина</div><div class="pickbuttons"><button class="'+(done?'not':'primary')+'" type="button" data-toggle-pickup="'+e(key)+'">'+(done?'ОЗНАЧИ КАО НЕПРЕУЗЕТО':'ОЗНАЧИ КАО ПРЕУЗЕТО')+'</button></div></div>';
   }).join('');
-  return '<div class="farm"><div class="farmhead"><div><div class="farmname">'+e(f.name)+'</div><div class="hint">'+farmRows.length+' ставки · Преузето '+fmt(taken)+' · Остало '+fmt(remaining)+'</div></div><span class="status '+(complete?'ok':'warn')+'">'+(complete?'СВЕ ПРЕУЗЕТО':'У ТОКУ')+'</span></div>'+(ordered.length?'<div class="meta" style="padding:10px 14px">Набавка наручена · '+ordered.length+' евидентираних ставки</div>':'<div class="notice">Набавка за ово газдинство није евидентирана у овој тури. Провери наруџбину пре евидентирања преузимања.</div>')+(lines||'<div class="empty">Нема ставки за ово газдинство.</div>')+'</div>';
+  return '<div class="farm"><div class="farmhead"><div><div class="farmname">'+e(f.name)+'</div><div class="hint">'+groups.length+' паковања · Преузето '+fmt(taken)+' од '+fmt(total)+'</div></div><span class="status '+(complete?'ok':'warn')+'">'+(complete?'СВЕ ПРЕУЗЕТО':'У ТОКУ')+'</span></div>'+(lines||'<div class="empty">Нема паковања за ово газдинство.</div>')+'</div>';
  }).join('');
- if(!selected.length)html+='<div class="empty">Нема додељених ставки за изабрано газдинство.</div>';
+ if(!selected.length)html+='<div class="empty">Нема додељених паковања за изабрано газдинство.</div>';
  root.innerHTML=html;
  document.getElementById('pickupFarmFilter').onchange=renderPickup;
  document.getElementById('pickupPrint').onclick=()=>window.print();
- document.querySelectorAll('[data-save-pick]').forEach(b=>b.onclick=()=>savePickLine(b.dataset.savePick,false));
- document.querySelectorAll('[data-pick-all]').forEach(b=>b.onclick=()=>savePickLine(b.dataset.pickAll,true));
+ document.querySelectorAll('[data-pickup-farm]').forEach(el=>el.onchange=()=>changePickupFarm(decodeURIComponent(el.dataset.pickupFarm)));
+ document.querySelectorAll('[data-toggle-pickup]').forEach(el=>el.onclick=()=>togglePickupGroup(decodeURIComponent(el.dataset.togglePickup)));
 }
 async function savePickLine(id,all){
  const r=rows.find(x=>String(x.id)===String(id));if(!r)return;
