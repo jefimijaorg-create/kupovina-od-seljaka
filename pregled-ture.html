@@ -11,7 +11,7 @@
 <section id="orders-tab" class="space-y-4"><div class="bg-white p-4 rounded-xl border shadow-sm"><h2 class="font-black text-xl">Поруџбине по купцима</h2><p class="text-sm text-slate-500 mt-1">Преглед шта је сваки купац наручио, по паковањима и цени.</p><div id="orders-summary" class="mt-4"></div></div></section>
 <section id="procurement-tab" class="hidden space-y-4"><div class="bg-white p-3 sm:p-4 rounded-xl border shadow-sm">
 <div class="flex items-center justify-between gap-2 mb-3"><div><h2 class="font-black text-xl">Набавка</h2><p class="text-sm text-slate-500">Преглед и расподела стварно наручених количина.</p></div><button type="button" onclick="window.print()" class="no-print border rounded-lg px-3 py-2 text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div>
-<div id="supplier-sheet-content"></div>
+<div id="procurement-summary" class="mb-4"></div><div id="supplier-sheet-content"></div>
 
 </div></section>
 <section id="pickup-tab" class="hidden space-y-6"><div class="bg-white p-4 rounded-xl border shadow-sm no-print"><h2 class="font-black text-lg mb-3">Преузимање по газдинству и паковањима</h2><label class="block max-w-xl text-xs font-bold text-slate-500">ИЗАБЕРИ ПРОИЗВОЂАЧА / ГАЗДИНСТВО<select id="pickup-farm-filter" onchange="renderPickupSummary()" class="block w-full mt-1 border rounded-lg px-3 py-2 text-sm"><option value="">Изабери газдинство</option><option value="none">Недодељено</option></select></label><div id="pickup-summary" class="mt-4"></div></div></section>
@@ -789,7 +789,27 @@ function renderSupplierAllocationSummary(){
  const groups={};(tourAllocations||[]).forEach(a=>{const k=String(a.gazdinstvo_id);(groups[k]||(groups[k]=[])).push(a)});
  box.innerHTML=Object.entries(groups).map(([id,rows])=>'<div class="border rounded-xl p-3 mb-2"><b>'+esc(farmName(farms.find(f=>String(f.id)===id)?.name||'Газдинство'))+'</b>'+rows.map(a=>'<div class="text-sm border-t py-2">'+esc(productCatalog.find(p=>String(p.id)===String(a.product_id))?.name||'Производ')+' · '+esc(variantCatalog.find(v=>String(v.id)===String(a.variant_id))?.name||'Паковање')+' — '+fmt(a.broj_pakovanja)+' пак.</div>').join('')+'</div>').join('');
 }
-function renderProcurement(){renderSupplierSheet()}
+function renderProcurement(){
+ const box=document.getElementById('procurement-summary');if(!box){renderSupplierSheet();return}
+ const rows=(tourAllocations||[]).filter(a=>a.naruceno===true);
+ if(!rows.length){box.innerHTML='<div class="rounded-xl border border-dashed bg-slate-50 p-4 text-sm text-slate-600">Још нема потврђених наруџбина од газдинстава за ову туру.</div>';renderSupplierSheet();return}
+ let totalCost=0,totalMilk=0,totalCheese=0,totalPackages=0;const byFarm={};
+ rows.forEach(a=>{
+  const product=productCatalog.find(p=>String(p.id)===String(a.product_id)),variant=variantCatalog.find(v=>String(v.id)===String(a.variant_id));
+  const productName=product?.name||'Производ',variantName=variant?.name||variant?.size_label||'Паковање';
+  const count=Math.max(0,n(a.broj_pakovanja)),size=Math.max(0,n(variant?.package_value)),unitName=normUnit(variant?.package_unit||variant?.unit||'ком'),cost=count*n(a.nabavna_cena);
+  totalCost+=cost;totalPackages+=count;
+  const lower=productName.toLocaleLowerCase('sr');
+  if(lower.includes('млеко')&&unitName==='л')totalMilk+=count*size;
+  if(lower.includes('сир')&&unitName==='кг')totalCheese+=count*size;
+  const farmId=String(a.gazdinstvo_id),farm=farmName(farms.find(f=>String(f.id)===farmId)?.name||('Газдинство '+farmId));
+  if(!byFarm[farm])byFarm[farm]={cost:0,rows:[]};
+  byFarm[farm].cost+=cost;byFarm[farm].rows.push({productName,variantName,count,size,unitName,cost,price:n(a.nabavna_cena),picked:n(a.preuzeto_pakovanja)});
+ });
+ const farmHtml=Object.entries(byFarm).map(([farm,data])=>'<section class="rounded-xl border bg-white p-3"><div class="flex flex-wrap justify-between gap-2 mb-2"><b>'+esc(farm)+'</b><b>'+cash(data.cost)+'</b></div><div class="divide-y">'+data.rows.map(x=>'<div class="py-2 text-sm flex flex-wrap justify-between gap-2"><div><b>'+esc(x.productName)+'</b><div class="text-xs text-slate-500">'+esc(x.variantName)+' · '+fmt(x.count)+' пак. × '+cash(x.price)+' · преузето '+fmt(x.picked)+'/'+fmt(x.count)+'</div></div><b>'+cash(x.cost)+'</b></div>').join('')+'</div></section>').join('');
+ box.innerHTML='<div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-3 sm:p-4"><div class="flex flex-wrap items-start justify-between gap-2"><div><div class="text-xs font-black tracking-wide text-emerald-900">ЕВИДЕНЦИЈА НАРУЧЕНЕ НАБАВКЕ · ОВА ТУРА</div><div class="text-xs text-slate-600 mt-1">Обрачун се аутоматски рачуна из потврђених наруџбина и набавне цене по паковању.</div></div><span class="rounded-full bg-white px-3 py-1 text-xs font-black text-emerald-800">'+rows.length+' ставки</span></div><div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"><div class="rounded-xl bg-white p-3 col-span-2 sm:col-span-1"><div class="text-[10px] text-slate-500 font-bold">УКУПАН ТРОШАК</div><div class="text-2xl font-black text-emerald-800">'+cash(totalCost)+'</div></div><div class="rounded-xl bg-white p-3"><div class="text-[10px] text-slate-500 font-bold">МЛЕКО</div><div class="text-2xl font-black">'+fmt(totalMilk)+' л</div></div><div class="rounded-xl bg-white p-3"><div class="text-[10px] text-slate-500 font-bold">СИР</div><div class="text-2xl font-black">'+fmt(totalCheese)+' кг</div></div><div class="rounded-xl bg-white p-3"><div class="text-[10px] text-slate-500 font-bold">ПАКОВАЊА</div><div class="text-2xl font-black">'+fmt(totalPackages)+'</div></div></div><div class="mt-3 space-y-2">'+farmHtml+'</div></div>';
+ renderSupplierSheet();
+}
 
 function renderAll(){stats();unassigned();renderPickupSummary();renderSupplierAllocationSummary();if(view==='orders')renderOrders();if(view==='procurement')renderProcurement();if(view==='pickup')renderPickupSummary();if(view==='delivery')renderDelivery();if(view==='debts')renderDebts()}
 function preview(id){let x=items.find(x=>Number(x.id)===Number(id)),p=pack(x),c=Math.max(0,Math.floor(n(document.getElementById('c'+id).value))),s=Math.max(0,n(document.getElementById('s'+id).value)),l=document.getElementById('l'+id).value||s+' '+p.unit;document.getElementById('v'+id).textContent=c+' × '+l+' = '+fmt(c*s)+' '+p.unit+' · '+purchaseText(x,c,s)}
