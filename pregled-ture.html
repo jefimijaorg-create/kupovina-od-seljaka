@@ -69,8 +69,8 @@ async function loadData(){
   say('Учитавање података из базе…');
   const core=await Promise.all([api('ture?select=id,naziv,datum,status&order=id.desc&limit=300'),api('gazdinstva?select=id,name&order=name.asc'),api('punktovi?select=id,name,city,address,is_active,aktivan'),api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave&limit=3000'),api('kupci?select=id,ime_prezime,telefon'),api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme')]);
   [tours,farms,points,orders,customers,tourPoints]=core;
-  const optional=await Promise.all([api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true').catch(()=>[]),api('products?select=id,name,purchase_price,unit,calc_unit').catch(()=>[]),api('product_variants?select=id,product_id,name,size_label,unit,package_value,package_unit,is_active'),api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true').catch(()=>[])]);
-  [farmOffers,productCatalog,variantCatalog,farmProducts]=optional;await loadDebts();
+  const optional=await Promise.all([api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true').catch(()=>[]),api('products?select=id,name,purchase_price,unit,calc_unit').catch(()=>[]),api('product_variants?select=id,product_id,name,size_label,unit,package_value,package_unit,is_active').catch(()=>[]),api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true').catch(()=>[])]);
+  [farmOffers,productCatalog,variantCatalog,farmProducts]=optional;try{await loadDebts()}catch(debtError){console.warn('Дуговања нису учитана; настављам са приказом тура:',debtError);procurementRows=[];producerPayouts=[];producerPayments=[];}
   const sel=document.getElementById('tour-select'),saved=savedTourId();
   tours.sort((a,b)=>String(b.datum||'').localeCompare(String(a.datum||''))||Number(b.id)-Number(a.id));
   const selectableTours=tours.filter(t=>['open','full','scheduled','processing'].includes(String(t.status||'').toLowerCase()));
