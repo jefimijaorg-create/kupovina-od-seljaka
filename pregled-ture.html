@@ -670,7 +670,7 @@ async function markSupplierPicked(id){
    renderSupplierSheet();
    return;
   }
-  const result=await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({preuzeto_pakovanja:planned,updated_at:new Date().toISOString()})});
+  const result=await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({preuzeto_pakovanja:planned})});
   if(!Array.isArray(result)||!result.some(x=>String(x.id)===String(id)&&n(x.preuzeto_pakovanja)===planned&&n(x.broj_pakovanja)===n(row.broj_pakovanja)))throw Error('База није потврдила преузету количину или проверу наручене количине.');
   row.preuzeto_pakovanja=planned;
   say('Преузимање евидентирано: '+planned+' од '+planned+' наручених паковања.');
