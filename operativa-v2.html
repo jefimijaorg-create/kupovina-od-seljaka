@@ -651,7 +651,7 @@ function renderMissingPackageEditor(){
 function renderNeeds(){
  const root=document.getElementById('needs');if(!root)return;
  const map=new Map();let missing=0;
- rows.filter(r=>selectedNeedProducts.has(needProductKey(r))).forEach(r=>{
+ rows.filter(r=>selectedNeedProducts.size===0||selectedNeedProducts.has(needProductKey(r))).forEach(r=>{
   const p=productFor(r),v=variantFor(r),name=String(r.proizvod||p?.name||'Непознат производ').trim();
   const count=n(r.package_count||r.broj_pakovanja),size=n(v?.package_value||r.package_size);
   const unitName=String(v?.package_unit||r.package_unit||r.quantity_unit||r.jedinica||p?.unit||'ком').toLowerCase();
@@ -701,17 +701,18 @@ function renderPickup(){
  const keyFor=(fid,pid,vid)=>[String(fid),String(pid||''),String(vid||'')].join('|');
  const ensure=(fid,pid,vid,productName,label,size,unitName,priceValue)=>{
   const key=keyFor(fid,pid,vid);
-  if(!grouped.has(key))grouped.set(key,{key,farmId:fid,productId:pid,variantId:vid,farmName:farm(fid)?.name||('Газдинство #'+fid),productName:productName||'Производ',label:label||'Паковање',size:n(size)||1,unit:unitName||'ком',price:n(priceValue),plannedRows:0,plannedAlloc:0,rs:[],allocationIds:[]});
+  if(!grouped.has(key))grouped.set(key,{key,farmId:fid,productId:pid,variantId:vid,farmName:String(fid)==='__unassigned__'?'НИЈЕ ДОДЕЉЕНО ГАЗДИНСТВО':(farm(fid)?.name||('Газдинство #'+fid)),productName:productName||'Производ',label:label||'Паковање',size:n(size)||1,unit:unitName||'ком',price:n(priceValue),plannedRows:0,plannedAlloc:0,rs:[],allocationIds:[]});
   return grouped.get(key);
  };
  // Полазна истина за наручено су ставке поруџбина које су повезане са газдинством.
- rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id||'')!=='').forEach(r=>{
+ rows.forEach(r=>{
+  const fid=String(r.dodijeljeno_gazdinstvo_id||'')||'__unassigned__';
   const p=productFor(r),v=variantFor(r);
   const size=n(v?.package_value||r.package_size)||(n(r.package_count||r.broj_pakovanja)?q(r)/n(r.package_count||r.broj_pakovanja):0);
   if(!size)return;
   const u=String(v?.package_unit||r.package_unit||r.quantity_unit||r.jedinica||'ком').toLowerCase();
   const label=v?.name||v?.size_label||r.variant_name||r.velicina_pakovanja||r.package_info||('Паковање '+fmt(size)+' '+u);
-  const g=ensure(r.dodijeljeno_gazdinstvo_id,p?.id||r.product_id||null,v?.id||r.variant_id||null,r.proizvod||p?.name,label,size,u,price(r));
+  const g=ensure(fid,p?.id||r.product_id||null,v?.id||r.variant_id||null,r.proizvod||p?.name,label,size,u,price(r));
   g.plannedRows+=n(r.package_count||r.broj_pakovanja)||(size?q(r)/size:0);
   g.rs.push(r);
  });
@@ -724,15 +725,15 @@ function renderPickup(){
  });
  let list=[...grouped.values()].filter(g=>g.plannedRows>0||g.plannedAlloc>0).map(g=>({...g,planned:Math.max(g.plannedRows,g.plannedAlloc)}));
  list.sort((a,b)=>a.farmName.localeCompare(b.farmName,'sr')||a.productName.localeCompare(b.productName,'sr')||a.label.localeCompare(b.label,'sr'));
- if(!list.length){root.innerHTML='<div class="empty">Нема додељених паковања за преузимање. Прво у „Паковања купаца“ додели производе газдинствима.</div>';return}
+ if(!list.length){root.innerHTML='<div class="empty">За ову туру нема наручених ставки са дефинисаним паковањем.</div>';return}
  const evsFor=g=>purchaseEvidence.filter(x=>String(x.tura_id)===tourId&&String(x.gazdinstvo_id)===String(g.farmId)&&String(x.product_id||'')===String(g.productId||'')&&String(x.variant_id||'')===String(g.variantId||''));
  const receivedFor=g=>{const evs=evsFor(g);if(evs.length)return evs.reduce((sum,x)=>sum+n(x.broj_pakovanja),0);return g.rs.reduce((sum,r)=>sum+(n(r.preuzeta_kolicina)>0?Math.min(n(r.package_count||r.broj_pakovanja)||(g.size?q(r)/g.size:0),n(r.preuzeta_kolicina)/g.size):0),0)};
  const totalPlanned=list.reduce((sum,g)=>sum+g.planned,0),totalReceived=list.reduce((sum,g)=>sum+Math.min(g.planned,receivedFor(g)),0),totalMissing=Math.max(0,totalPlanned-totalReceived);
  const missingList=list.filter(g=>Math.max(0,g.planned-receivedFor(g))>0).map(g=>'<div class="item"><div class="itemtop"><div><div class="productname">'+e(g.productName)+' · '+e(g.label)+'</div><div class="meta">Газдинство: '+e(g.farmName)+'</div></div><div class="qty">'+fmt(Math.max(0,g.planned-receivedFor(g)))+' пак. / '+fmt(Math.max(0,g.planned-receivedFor(g))*g.size)+' '+e(g.unit)+'</div></div></div>').join('');root.innerHTML='<div class="stats"><div class="stat"><b>'+fmt(totalPlanned)+'</b><span>планирано за преузимање</span></div><div class="stat"><b>'+fmt(totalReceived)+'</b><span>стварно преузето</span></div><div class="stat"><b>'+fmt(totalMissing)+'</b><span>недостаје паковања</span></div></div>'+(missingList?'<div class="buyer" style="border-color:var(--red)"><div class="buyername">НЕДОСТАЈЕ ЗА НАБАВКУ</div><div class="hint">Ово још није преузето од газдинстава. У достави се приказује само стварно преузета количина.</div>'+missingList+'</div>':'<div class="buyer"><div class="buyername">СВА ПЛАНИРАНА РОБА ЈЕ ПРЕУЗЕТА</div></div>')+'<div class="section-intro">'+(pickupMode==='ordered'?'<b>НАБАВКА — ШТА ЈЕ НАРУЧЕНО</b><br>Ово је план по газдинству, производу и паковању. Овде само провераваш шта треба да узмеш.':'<b>ПРЕУЗЕТО — ШТА ЈЕ СТВАРНО УЗЕТО</b><br>Унеси број паковања који си стварно преузео од сваког газдинства. Наручена количина остаје непромењена.')+'</div><div class="filters" style="grid-template-columns:minmax(0,1fr) auto"><label>Филтрирај газдинство<select id="pickupFarmFilter"><option value="">Сва газдинства</option>'+[...new Map(list.map(x=>[String(x.farmId),x.farmName])).entries()].map(([id,name])=>'<option value="'+e(id)+'">'+e(name)+'</option>').join('')+'</select></label><button class="not" type="button" id="pickupPrint">ШТА ТРЕБА ДА ПРЕУЗМЕМ</button></div><div id="pickupList">'+list.map(g=>{
   const evs=evsFor(g),received=receivedFor(g),missing=Math.max(0,g.planned-received),actual=Math.min(g.planned,received);
   const rowsCount=g.rs.reduce((sum,r)=>sum+n(r.package_count||r.broj_pakovanja)||(g.size?q(r)/g.size:0),0);
-  const plannedSource=g.plannedRows&&g.plannedAlloc?'План газдинства и повезане поруџбине':g.plannedRows?'Повезане поруџбине':'План набавке';
-  return '<article class="farm pickup-allocation" data-pickup-farm="'+e(g.farmId)+'"><div class="farmhead"><div><div class="farmname">'+e(g.farmName)+'</div><div class="hint">'+e(g.productName)+' · '+e(g.label)+'</div><div class="hint">'+plannedSource+'</div></div><b>'+fmt(g.planned*g.size)+' '+e(g.unit)+'</b></div><div class="pickline"><div class="prodtop"><div><b>Планирано: '+fmt(g.planned)+' паковања</b><div class="meta">Планирано '+fmt(g.planned*g.size)+' '+e(g.unit)+' · набавна цена '+fmt(g.price)+' дин./паковању</div></div><span class="status '+(actual>=g.planned?'ok':actual>0?'warn':'bad')+'">'+(actual>=g.planned?'СВЕ ПРЕУЗЕТО':actual>0?'ДЕЛИМИЧНО':(evs.length&&received===0?'НЕМА НА РАСПОЛАГАЊУ':'ЧЕКА ПРЕУЗИМАЊЕ'))+'</span></div>'+(pickupMode==='ordered'?'<div class="pickup-totals"><div><span>НАРУЧЕНО</span><strong>'+fmt(g.planned*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(g.planned)+' пак.</small></div></div>':'<div class="pickup-totals"><div><span>Наручено</span><strong>'+fmt(g.planned*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(g.planned)+' пак.</small></div><div><span>Преузето</span><strong>'+fmt(actual*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(actual)+' пак.</small></div><div><span>Недостаје</span><strong>'+fmt(missing*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(missing)+' пак.</small></div></div><div class="pickinputs"><label>НАРУЧЕНО — паковања<input value="'+fmt(g.planned)+'" disabled></label><label>СТВАРНО ПРЕУЗЕТО — паковања<input id="evidence-count-'+e(g.key)+'" type="number" min="0" max="'+fmt(g.planned)+'" step="1" value="'+fmt(actual)+'"></label></div><div class="pickbuttons"><button type="button" class="taken" data-pickup-all="'+e(g.key)+'">Преузми сва паковања</button><button type="button" class="primary" data-save-evidence="'+e(g.key)+'">Сачувај преузимање</button></div><div class="result" id="evidence-result-'+e(g.key)+'">Преузето '+fmt(actual)+' од '+fmt(g.planned)+' паковања · недостаје '+fmt(missing)+' паковања.</div>')+'</div></article>'
+  const unassigned=String(g.farmId)==='__unassigned__';const plannedSource=unassigned?'Потребно је доделити газдинство':(g.plannedRows&&g.plannedAlloc?'План газдинства и повезане поруџбине':g.plannedRows?'Повезане поруџбине':'План набавке');
+  return '<article class="farm pickup-allocation" data-pickup-farm="'+e(g.farmId)+'"><div class="farmhead"><div><div class="farmname">'+e(g.farmName)+'</div><div class="hint">'+e(g.productName)+' · '+e(g.label)+'</div><div class="hint">'+plannedSource+'</div></div><b>'+fmt(g.planned*g.size)+' '+e(g.unit)+'</b></div><div class="pickline"><div class="prodtop"><div><b>Планирано: '+fmt(g.planned)+' паковања</b><div class="meta">Планирано '+fmt(g.planned*g.size)+' '+e(g.unit)+' · набавна цена '+fmt(g.price)+' дин./паковању</div></div><span class="status '+(actual>=g.planned?'ok':actual>0?'warn':'bad')+'">'+(actual>=g.planned?'СВЕ ПРЕУЗЕТО':actual>0?'ДЕЛИМИЧНО':(evs.length&&received===0?'НЕМА НА РАСПОЛАГАЊУ':'ЧЕКА ПРЕУЗИМАЊЕ'))+'</span></div>'+(pickupMode==='ordered'?'<div class="pickup-totals"><div><span>НАРУЧЕНО</span><strong>'+fmt(g.planned*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(g.planned)+' пак.</small></div></div>':'<div class="pickup-totals"><div><span>Наручено</span><strong>'+fmt(g.planned*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(g.planned)+' пак.</small></div><div><span>Преузето</span><strong>'+fmt(actual*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(actual)+' пак.</small></div><div><span>Недостаје</span><strong>'+fmt(missing*g.size)+' '+e(g.unit)+'</strong><small>'+fmt(missing)+' пак.</small></div></div>(unassigned?'<div class="notice" style="margin-top:10px;border-color:#e8b5aa;background:#fff3f0;color:#8e3028">Ова ставка је наручена, али јој још није додељено газдинство. Отвори „Потребно” и додели добављача. Тек тада се може евидентирати преузимање.</div>':'<div class="pickinputs"><label>НАРУЧЕНО — паковања<input value="'+fmt(g.planned)+'" disabled></label><label>СТВАРНО ПРЕУЗЕТО — паковања<input id="evidence-count-'+e(g.key)+'" type="number" min="0" max="'+fmt(g.planned)+'" step="1" value="'+fmt(actual)+'"></label></div><div class="pickbuttons"><button type="button" class="taken" data-pickup-all="'+e(g.key)+'">Преузми сва паковања</button><button type="button" class="primary" data-save-evidence="'+e(g.key)+'">Сачувај преузимање</button></div><div class="result" id="evidence-result-'+e(g.key)+'">Преузето '+fmt(actual)+' од '+fmt(g.planned)+' паковања · недостаје '+fmt(missing)+' паковања.</div>')')+'</div></article>'
  }).join('')+'</div>';
  document.querySelectorAll('[data-pickup-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-pickup-mode]').forEach(x=>x.classList.toggle('active',x===b));renderPickup()});
   const filter=document.getElementById('pickupFarmFilter');if(filter)filter.onchange=()=>{const val=filter.value;root.querySelectorAll('[data-pickup-farm]').forEach(card=>card.classList.toggle('hidden',Boolean(val)&&String(card.dataset.pickupFarm)!==String(val)))};
@@ -933,7 +934,7 @@ function show(t){
  const target=document.getElementById('view-'+view);if(!target)return;target.classList.remove('hidden');
  if(t==='orders')safeRender('поручивање',renderOrders);
  if(t==='overview')safeRender('преглед туре',renderTourOverview);
- if(t==='procurement')setProcurementStep('order');
+ if(t==='procurement')setProcurementStep('needs');
  if(t==='farms')safeRender('газдинства',renderFarms);
  if(t==='vehicle')safeRender('стање у возилу',renderVehicleInventory);
  if(t==='deliverers')safeRender('достављачи',renderDeliverers);
