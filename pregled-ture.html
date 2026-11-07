@@ -750,7 +750,7 @@ function renderSupplierSheet(){
  if(!products.length){html+='<div class="rounded-xl bg-slate-50 border p-4 text-sm text-slate-600">Ово газдинство нема активну понуду за производе који су потребни у овој тури.</div>';box.innerHTML=html+'</div>';return}
  html+='<div class="text-sm font-black text-slate-700 mt-3">ПРОИЗВОДИ И ПАКОВАЊА</div><div class="space-y-3">';
  products.forEach(group=>{
-  html+='<section class="border rounded-xl overflow-hidden"><div class="bg-slate-100 px-3 py-3 font-black">'+esc(group.product.name)+'</div>'+supplierProductBalanceHtml(group.product.id)+'<div class="divide-y">
+  html+='<section class="border rounded-xl overflow-hidden"><div class="bg-slate-100 px-3 py-3 font-black">'+esc(group.product.name)+'</div>'+supplierProductBalanceHtml(group.product.id)+'<div class="divide-y">';
   group.variants.sort((a,b)=>String(a.variant.name||a.variant.size_label).localeCompare(String(b.variant.name||b.variant.size_label),'sr')).forEach(({offer,variant})=>{
    const key=String(variant.id),saved=tourAllocations.find(a=>String(a.variant_id)===key&&String(a.product_id)===String(group.product.id)&&String(a.gazdinstvo_id)===supplierSheetFarmId),ordered=supplierVariantOrderCount(key,group.product.id),available=supplierVariantRemaining(key,supplierSheetFarmId,group.product.id),max=available,d=supplierSheetDraft[key]||{selected:!!saved||available>0,count:String(saved?n(saved.broj_pakovanja):available)},size=n(variant.package_value)||1,u=normUnit(variant.package_unit||variant.unit||'ком'),count=Math.max(0,n(d.count));
    if(!supplierSheetDraft[key])supplierSheetDraft[key]=d;
