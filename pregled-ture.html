@@ -136,7 +136,7 @@ function viberItemPrice(x){return hasItemPrice(x)?cash(price(x)):'⚠️ цен�
 function say(t,bad=false){let e=document.getElementById('message');e.textContent=t;e.className='bg-white border rounded-xl p-3 mb-5 text-sm '+(bad?'border-red-300 text-red-700':'border-emerald-200 text-emerald-800')}
 function savedTourId(){try{return localStorage.getItem('naruci-domace-admin-tour-id')||''}catch(e){return ''}}
 function saveTourId(id){try{localStorage.setItem('naruci-domace-admin-tour-id',String(id))}catch(e){console.warn('Чување изабране туре није доступно',e)}}
-function toggleTourPicker(show){const panel=document.getElementById('tour-picker-panel'),cancel=document.getElementById('cancel-tour-change');if(!panel)return;panel.classList.toggle('hidden',!show);if(cancel)cancel.classList.toggle('hidden',!show||!tourId);if(show){document.getElementById('tour-select')?.focus();panel.scrollIntoView({behavior:'smooth',block:'start'})}}
+function toggleTourPicker(show){const panel=document.getElementById('tour-picker-panel'),cancel=document.getElementById('cancel-tour-change');if(!panel)return;panel.classList.remove('hidden');if(cancel)cancel.classList.add('hidden');if(show){document.getElementById('tour-select')?.focus();panel.scrollIntoView({behavior:'smooth',block:'start'})}}
 async function loadData(){
  try{
   say('Учитавање података из базе…');
