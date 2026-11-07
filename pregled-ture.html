@@ -682,7 +682,7 @@ function setSupplierDraftCount(variantId,value,input){
  supplierSheetDraft[key]={selected,count:String(count)};
  if(input&&count!==''&&Number(count)===0){const row=input.closest('.rounded-xl');const checkbox=row?.querySelector('input[type="checkbox"]');if(checkbox)checkbox.checked=false;}
  const target=document.getElementById('supplier-total-'+key),variant=variantCatalog.find(v=>String(v.id)===key),size=n(variant?.package_value)||1,u=normUnit(variant?.package_unit||variant?.unit||'ком');
- if(target)target.textContent=old.selected&&count!==''?'Тренутни избор: '+fmt(count)+' паковања · '+fmt(count*size)+' '+u:'Унеси број паковања';
+ if(target)target.textContent=old.selected&&count!==''?'Тренутни избор: '+fmt(count)+' паковања · '+fmt(count*size)+' '+u:'Унеси број паковања';refreshSupplierProductBalance(variant?.product_id);
 }
 function adjustSupplierDraftCount(variantId,delta){const key=String(variantId),offer=farmOffers.find(o=>String(o.gazdinstvo_id)===String(supplierSheetFarmId)&&String(o.variant_id)===key&&o.is_active!==false),available=supplierVariantRemaining(key,supplierSheetFarmId,offer?.product_id),old=supplierSheetDraft[key]||{},count=Math.max(0,Math.min(available,Math.floor(n(old.count))+delta));supplierSheetDraft[key]={selected:count>0,count:String(count)};renderSupplierSheet()}
 function renderSupplierLiveSummary(){
@@ -708,6 +708,26 @@ function renderSupplierLiveSummary(){
   return '<div class="rounded-xl bg-white border p-3"><div class="font-bold text-sm mb-1">'+esc(variant.name||variant.size_label||'Паковање')+(!offered?' · није у понуди овог газдинства':'')+'</div><div class="text-xs text-slate-500 mb-2">Наручено: '+fmt(ordered)+' × '+fmt(size)+' '+esc(u)+' = '+fmt(needed)+' '+esc(u)+'</div><div class="grid grid-cols-4 gap-1 text-center"><div class="rounded-lg bg-slate-50 p-2"><b class="block text-base">'+fmt(needed)+'</b><span class="text-[9px] text-slate-500">ПОТРЕБНО '+esc(u)+'</span></div><div class="rounded-lg bg-blue-50 p-2"><b class="block text-base">'+fmt(elsewhere)+'</b><span class="text-[9px] text-slate-500">ДРУГИ '+esc(u)+'</span></div><div class="rounded-lg bg-emerald-50 p-2"><b class="block text-base text-emerald-800">'+fmt(selected)+'</b><span class="text-[9px] text-slate-500">ИЗАБРАНО '+esc(u)+'</span></div><div class="rounded-lg bg-amber-50 p-2"><b class="block text-base text-amber-800">'+fmt(left)+'</b><span class="text-[9px] text-slate-500">ОСТАЛО '+esc(u)+'</span></div></div></div>';
  }).join('')+'</div></div>';
 }
+function supplierProductBalanceHtml(productId){
+ const variants=variantCatalog.filter(v=>String(v.product_id)===String(productId));
+ const ids=new Set(variants.map(v=>String(v.id)));
+ const demand=items.filter(x=>String(x.product_id)===String(productId)).reduce((sum,x)=>sum+Math.max(0,n(pack(x).total)),0);
+ const u=normUnit(variants[0]?.package_unit||variants[0]?.unit||items.find(x=>String(x.product_id)===String(productId))?.quantity_unit||'ком');
+ let planned=0,ordered=0;
+ variants.forEach(v=>{
+  const size=n(v.package_value)||1,key=String(v.id),draft=supplierSheetDraft[key];
+  const other=tourAllocations.filter(a=>String(a.product_id)===String(productId)&&String(a.variant_id)===key&&String(a.gazdinstvo_id)!==supplierSheetFarmId).reduce((z,a)=>z+Math.max(0,n(a.broj_pakovanja)),0);
+  const current=draft?Math.max(0,n(draft.count)):n(tourAllocations.find(a=>String(a.product_id)===String(productId)&&String(a.variant_id)===key&&String(a.gazdinstvo_id)===supplierSheetFarmId)?.broj_pakovanja);
+  planned+=(other+current)*size;
+  ordered+=tourAllocations.filter(a=>String(a.product_id)===String(productId)&&String(a.variant_id)===key&&a.naruceno===true).reduce((z,a)=>z+Math.max(0,n(a.broj_pakovanja))*size,0);
+ });
+ const remaining=Math.max(0,demand-planned);
+ return '<div id="supplier-balance-'+esc(productId)+'" class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-emerald-50 border-b border-emerald-100 text-center"><div class="rounded-lg bg-white p-2"><div class="text-[10px] font-bold text-slate-500">УКУПНО НАРУЧЕНО ОД КУПАЦА</div><b class="text-lg">'+fmt(demand)+' '+esc(u)+'</b></div><div class="rounded-lg bg-white p-2"><div class="text-[10px] font-bold text-slate-500">ПЛАНИРАНА НАБАВКА</div><b class="text-lg">'+fmt(planned)+' '+esc(u)+'</b></div><div class="rounded-lg bg-white p-2"><div class="text-[10px] font-bold text-slate-500">НАРУЧЕНО ОД ГАЗДИНСТАВА</div><b class="text-lg">'+fmt(ordered)+' '+esc(u)+'</b></div><div class="rounded-lg bg-white p-2"><div class="text-[10px] font-bold text-slate-500">ОСТАЛО ЗА ПЛАНИРАЊЕ</div><b class="text-lg '+(remaining?'text-amber-800':'text-emerald-800')+'">'+fmt(remaining)+' '+esc(u)+'</b></div></div>';
+}
+function refreshSupplierProductBalance(productId){
+ const old=document.getElementById('supplier-balance-'+productId);if(!old)return;
+ old.outerHTML=supplierProductBalanceHtml(productId);
+}
 function renderSupplierSheet(){
  const box=document.getElementById('supplier-sheet-content');if(!box)return;
  let html='<div class="space-y-3">';
@@ -730,7 +750,7 @@ function renderSupplierSheet(){
  if(!products.length){html+='<div class="rounded-xl bg-slate-50 border p-4 text-sm text-slate-600">Ово газдинство нема активну понуду за производе који су потребни у овој тури.</div>';box.innerHTML=html+'</div>';return}
  html+='<div class="text-sm font-black text-slate-700 mt-3">ПРОИЗВОДИ И ПАКОВАЊА</div><div class="space-y-3">';
  products.forEach(group=>{
-  html+='<section class="border rounded-xl overflow-hidden"><div class="bg-slate-100 px-3 py-3 font-black">'+esc(group.product.name)+'</div><div class="divide-y">';
+  html+='<section class="border rounded-xl overflow-hidden"><div class="bg-slate-100 px-3 py-3 font-black">'+esc(group.product.name)+'</div>'+supplierProductBalanceHtml(group.product.id)+'<div class="divide-y">
   group.variants.sort((a,b)=>String(a.variant.name||a.variant.size_label).localeCompare(String(b.variant.name||b.variant.size_label),'sr')).forEach(({offer,variant})=>{
    const key=String(variant.id),saved=tourAllocations.find(a=>String(a.variant_id)===key&&String(a.product_id)===String(group.product.id)&&String(a.gazdinstvo_id)===supplierSheetFarmId),ordered=supplierVariantOrderCount(key,group.product.id),available=supplierVariantRemaining(key,supplierSheetFarmId,group.product.id),max=available,d=supplierSheetDraft[key]||{selected:!!saved||available>0,count:String(saved?n(saved.broj_pakovanja):available)},size=n(variant.package_value)||1,u=normUnit(variant.package_unit||variant.unit||'ком'),count=Math.max(0,n(d.count));
    if(!supplierSheetDraft[key])supplierSheetDraft[key]=d;
