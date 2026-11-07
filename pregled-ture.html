@@ -731,7 +731,7 @@ function refreshSupplierProductBalance(productId){
 function renderSupplierSheet(){
  const box=document.getElementById('supplier-sheet-content');if(!box)return;
  let html='<div class="space-y-3">';
- const eligibleFarms=farms.filter(f=>farmOffers.some(o=>String(o.gazdinstvo_id)===String(f.id)&&o.is_active!==false&&o.variant_id&&supplierVariantOrderCount(o.variant_id,o.product_id)>0)||tourAllocations.some(a=>String(a.gazdinstvo_id)===String(f.id)));
+ const eligibleFarms=farms.filter(f=>String(f.id)==='2'||farmOffers.some(o=>String(o.gazdinstvo_id)===String(f.id)&&o.is_active!==false&&o.variant_id&&supplierVariantOrderCount(o.variant_id,o.product_id)>0)||tourAllocations.some(a=>String(a.gazdinstvo_id)===String(f.id)));
  const pickupPanel=document.getElementById('pickup-management-panel');
  if(!supplierSheetFarmId){
  
