@@ -866,10 +866,10 @@ function renderTourOverview(){
  const root=document.getElementById('tourOverview');if(!root)return;
  const orders=new Set(rows.map(r=>String(r.porudzbina_id)));
  const products=new Map();
- let ordered=0,assigned=0,unassigned=0,packages=0;
+ let packages=0,assignedLines=0,unassignedLines=0;
  rows.forEach(r=>{
   const total=q(r),farmId=r.dodijeljeno_gazdinstvo_id;
-  ordered+=total;if(farmId)assigned+=total;else unassigned+=total;
+  if(farmId)assignedLines++;else unassignedLines++;
   const count=n(r.package_count||r.broj_pakovanja);packages+=count;
   const p=productFor(r),v=variantFor(r),name=String(r.proizvod||p?.name||'Производ'),u=unit(r);
   const key=String(p?.id||name)+'|'+u;
@@ -880,17 +880,17 @@ function renderTourOverview(){
   if(!x.variants.has(vk))x.variants.set(vk,{label,unit:v?.package_unit||r.package_unit||u,count:0,qty:0});
   x.variants.get(vk).count+=count;x.variants.get(vk).qty+=total;
  });
- const pct=ordered?Math.round(assigned/ordered*100):0;
+ const pct=rows.length?Math.round(assignedLines/rows.length*100):0;
  const productRows=[...products.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr')).map(p=>'<tr><td><b>'+e(p.name)+'</b></td><td>'+fmt(p.qty)+' '+e(p.unit)+'</td><td>'+fmt(p.packages)+' пак.</td><td>'+fmt(p.assigned)+' '+e(p.unit)+'</td><td>'+fmt(Math.max(0,p.qty-p.assigned))+' '+e(p.unit)+'</td></tr>').join('');
  const packRows=[...products.values()].flatMap(p=>[...p.variants.values()].map(v=>'<tr><td>'+e(p.name)+'</td><td>'+e(v.label)+'</td><td>'+fmt(v.count)+' пак.</td><td>'+fmt(v.qty)+' '+e(p.unit)+'</td></tr>')).join('');
- root.innerHTML='<div class="stage-kpis"><div class="stage-kpi"><b>'+orders.size+'</b><span>купаца / поруџбина</span></div><div class="stage-kpi"><b>'+fmt(ordered)+'</b><span>укупно наручено</span></div><div class="stage-kpi"><b>'+fmt(packages)+'</b><span>наручених паковања</span></div><div class="stage-kpi"><b>'+pct+'%</b><span>количине додељено газдинствима</span></div></div>'+(unassigned>0?'<div class="stage-alert"><b>Недостаје додела:</b> '+fmt(unassigned)+' '+e(rows[0]?unit(rows[0]):'јединица')+' још није додељено газдинству. Ово није потврда да роба физички недостаје – већ да добављач још није одређен.</div>':'<div class="stage-good">Све наручене количине су додељене газдинствима.</div>')+'<h3>Укупно по производима</h3><div class="table-wrap"><table class="stage-table"><thead><tr><th>Производ</th><th>Наручено</th><th>Паковања</th><th>Додељено</th><th>Недодељено</th></tr></thead><tbody>'+(productRows||'<tr><td colspan="5">Нема поруџбина у овој тури.</td></tr>')+'</tbody></table></div><h3>Детаљ по паковањима</h3><div class="table-wrap"><table class="stage-table"><thead><tr><th>Производ</th><th>Паковање</th><th>Број паковања</th><th>Укупна количина</th></tr></thead><tbody>'+(packRows||'<tr><td colspan="4">Нема евидентираних паковања.</td></tr>')+'</tbody></table></div>';
+ root.innerHTML='<div class="stage-kpis"><div class="stage-kpi"><b>'+orders.size+'</b><span>поруџбина у тури</span></div><div class="stage-kpi"><b>'+rows.length+'</b><span>ставки поруџбина</span></div><div class="stage-kpi"><b>'+fmt(packages)+'</b><span>наручених паковања</span></div><div class="stage-kpi"><b>'+pct+'%</b><span>ставки додељено газдинствима</span></div></div>'+(unassignedLines>0?'<div class="stage-alert"><b>Недостаје додела:</b> '+unassignedLines+' ставки још није додељено газдинству. Ово није потврда да роба физички недостаје – већ да добављач још није одређен.</div>':'<div class="stage-good">Све ставке поруџбина су додељене газдинствима.</div>')+'<h3>Укупно по производима</h3><div class="table-wrap"><table class="stage-table"><thead><tr><th>Производ</th><th>Наручено</th><th>Паковања</th><th>Додељено</th><th>Недодељено</th></tr></thead><tbody>'+(productRows||'<tr><td colspan="5">Нема поруџбина у овој тури.</td></tr>')+'</tbody></table></div><h3>Детаљ по паковањима</h3><div class="table-wrap"><table class="stage-table"><thead><tr><th>Производ</th><th>Паковање</th><th>Број паковања</th><th>Укупна количина</th></tr></thead><tbody>'+(packRows||'<tr><td colspan="4">Нема евидентираних паковања.</td></tr>')+'</tbody></table></div>';
 }
 function renderVehicleInventory(){
  const root=document.getElementById('vehicleInventory');if(!root)return;
- const grouped=new Map();let totalPicked=0,totalDelivered=0,totalInVehicle=0;
+ const grouped=new Map();let pickedLines=0,deliveredLines=0,vehicleLines=0;
  rows.forEach(r=>{
   const ordered=Math.max(0,q(r)),picked=Math.min(ordered,Math.max(0,n(r.preuzeta_kolicina))),delivered=Math.min(picked,Math.max(0,n(r.isporucena_kolicina))),remaining=Math.max(0,picked-delivered);
-  totalPicked+=picked;totalDelivered+=delivered;totalInVehicle+=remaining;
+  if(picked>0)pickedLines++;if(delivered>0)deliveredLines++;if(remaining>0)vehicleLines++;
   if(remaining<=0)return;
   const p=productFor(r),v=variantFor(r),name=String(r.proizvod||p?.name||'Производ'),u=unit(r),label=v?.name||v?.size_label||r.variant_name||r.velicina_pakovanja||r.package_info||'Паковање';
   const key=[name,label,u].join('|');
@@ -900,14 +900,23 @@ function renderVehicleInventory(){
   x.customers.push({name:orderLabel(r.porudzbina_id,[r]),qty:remaining});
  });
  const body=[...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr')).map(x=>'<tr><td><b>'+e(x.name)+'</b><div class="hint">'+e(x.label)+'</div></td><td>'+fmt(x.qty)+' '+e(x.unit)+'</td><td>'+(x.packages?fmt(x.packages)+' пак.':'—')+'</td><td>'+x.customers.map(c=>e(c.name)+' · '+fmt(c.qty)+' '+e(x.unit)).join('<br>')+'</td></tr>').join('');
- root.innerHTML='<div class="stage-kpis"><div class="stage-kpi"><b>'+fmt(totalPicked)+'</b><span>укупно преузето од газдинстава</span></div><div class="stage-kpi"><b>'+fmt(totalDelivered)+'</b><span>већ испоручено купцима</span></div><div class="stage-kpi"><b>'+fmt(totalInVehicle)+'</b><span>преостало у возилу</span></div><div class="stage-kpi"><b>'+grouped.size+'</b><span>врста производа / паковања на стању</span></div></div><div class="table-wrap"><table class="stage-table"><thead><tr><th>Производ и паковање</th><th>У возилу</th><th>Паковања</th><th>Намењено купцима</th></tr></thead><tbody>'+(body||'<tr><td colspan="4">Тренутно нема преузете робе која чека испоруку.</td></tr>')+'</tbody></table></div><p class="hint">Стање је израчунато из стварно преузетих и стварно испоручених количина у евиденцији поруџбина.</p>';
+ root.innerHTML='<div class="stage-kpis"><div class="stage-kpi"><b>'+pickedLines+'</b><span>ставки са преузетом робом</span></div><div class="stage-kpi"><b>'+deliveredLines+'</b><span>ставки са евидентираном испоруком</span></div><div class="stage-kpi"><b>'+vehicleLines+'</b><span>ставки које још имају робу у возилу</span></div><div class="stage-kpi"><b>'+grouped.size+'</b><span>врста производа / паковања на стању</span></div></div><div class="table-wrap"><table class="stage-table"><thead><tr><th>Производ и паковање</th><th>У возилу</th><th>Паковања</th><th>Намењено купцима</th></tr></thead><tbody>'+(body||'<tr><td colspan="4">Тренутно нема преузете робе која чека испоруку.</td></tr>')+'</tbody></table></div><p class="hint">Стање је израчунато из стварно преузетих и стварно испоручених количина у евиденцији поруџбина.</p>';
 }
 function renderTourReport(){
  const root=document.getElementById('tourReport');if(!root)return;
- let ordered=0,picked=0,delivered=0,inVehicle=0,notPicked=0,purchaseValue=0,salesValue=0;
- rows.forEach(r=>{const qv=Math.max(0,q(r)),pv=Math.min(qv,Math.max(0,n(r.preuzeta_kolicina))),dv=Math.min(pv,Math.max(0,n(r.isporucena_kolicina)));ordered+=qv;picked+=pv;delivered+=dv;inVehicle+=Math.max(0,pv-dv);notPicked+=Math.max(0,qv-pv);purchaseValue+=pv*price(r);salesValue+=dv*salePrice(r)});
- const done=rows.length>0&&rows.every(r=>Math.min(q(r),Math.max(0,n(r.isporucena_kolicina)))>=q(r));
- root.innerHTML='<div class="stage-kpis"><div class="stage-kpi"><b>'+fmt(ordered)+'</b><span>наручено</span></div><div class="stage-kpi"><b>'+fmt(picked)+'</b><span>преузето</span></div><div class="stage-kpi"><b>'+fmt(delivered)+'</b><span>испоручено</span></div><div class="stage-kpi"><b>'+fmt(inVehicle)+'</b><span>остало у возилу</span></div></div><div class="'+(done?'stage-good':'stage-alert')+'"><b>'+(done?'Тура је потпуно испоручена.':'Тура још није затворена.')+'</b> '+(done?'Све наручене количине имају евидентирану испоруку.':'Потребно је проверити преосталу робу и недостајуће количине.')+'</div><div class="table-wrap"><table class="stage-table"><tbody><tr><th>Није преузето од газдинстава</th><td>'+fmt(notPicked)+'</td></tr><tr><th>Вредност стварно преузете робе</th><td>'+fmt(purchaseValue)+' дин.</td></tr><tr><th>Вредност стварно испоручене робе</th><td>'+fmt(salesValue)+' дин.</td></tr><tr><th>Разлика вредности</th><td><b>'+fmt(salesValue-purchaseValue)+' дин.</b></td></tr></tbody></table></div><p class="hint">Извештај користи стварно евидентиране количине. Финансијски износи су информативни и не замењују евиденцију наплате и исплата у Обрачуну.</p>';
+ let purchaseValue=0,salesValue=0,fullyDelivered=0,withVehicle=0,notStarted=0;
+ const totals=new Map();
+ rows.forEach(r=>{
+  const ordered=Math.max(0,q(r)),picked=Math.min(ordered,Math.max(0,n(r.preuzeta_kolicina))),delivered=Math.min(picked,Math.max(0,n(r.isporucena_kolicina))),remaining=Math.max(0,picked-delivered),notPicked=Math.max(0,ordered-picked);
+  const name=String(r.proizvod||productFor(r)?.name||'Производ'),u=unit(r),key=name+'|'+u;
+  if(!totals.has(key))totals.set(key,{name,unit:u,ordered:0,picked:0,delivered:0,remaining:0,notPicked:0});
+  const x=totals.get(key);x.ordered+=ordered;x.picked+=picked;x.delivered+=delivered;x.remaining+=remaining;x.notPicked+=notPicked;
+  purchaseValue+=picked*price(r);salesValue+=delivered*salePrice(r);
+  if(ordered>0&&delivered>=ordered)fullyDelivered++;if(remaining>0)withVehicle++;if(picked===0&&ordered>0)notStarted++;
+ });
+ const done=rows.length>0&&fullyDelivered===rows.filter(r=>q(r)>0).length;
+ const table=[...totals.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr')).map(x=>'<tr><td><b>'+e(x.name)+'</b></td><td>'+fmt(x.ordered)+' '+e(x.unit)+'</td><td>'+fmt(x.picked)+' '+e(x.unit)+'</td><td>'+fmt(x.delivered)+' '+e(x.unit)+'</td><td>'+fmt(x.remaining)+' '+e(x.unit)+'</td><td>'+fmt(x.notPicked)+' '+e(x.unit)+'</td></tr>').join('');
+ root.innerHTML='<div class="stage-kpis"><div class="stage-kpi"><b>'+rows.length+'</b><span>ставки поруџбина</span></div><div class="stage-kpi"><b>'+fullyDelivered+'</b><span>потпуно испоручених ставки</span></div><div class="stage-kpi"><b>'+withVehicle+'</b><span>ставки са робом у возилу</span></div><div class="stage-kpi"><b>'+notStarted+'</b><span>ставки без преузимања</span></div></div><div class="'+(done?'stage-good':'stage-alert')+'"><b>'+(done?'Тура је потпуно испоручена.':'Тура још није затворена.')+'</b> '+(done?'Све наручене количине имају евидентирану испоруку.':'Потребно је проверити преосталу робу и недостајуће количине.')+'</div><h3>Количински биланс по производима</h3><div class="table-wrap"><table class="stage-table"><thead><tr><th>Производ</th><th>Наручено</th><th>Преузето</th><th>Испоручено</th><th>У возилу</th><th>Није преузето</th></tr></thead><tbody>'+(table||'<tr><td colspan="6">Нема ставки у тури.</td></tr>')+'</tbody></table></div><div class="table-wrap"><table class="stage-table"><tbody><tr><th>Вредност стварно преузете робе</th><td>'+fmt(purchaseValue)+' дин.</td></tr><tr><th>Вредност стварно испоручене робе</th><td>'+fmt(salesValue)+' дин.</td></tr><tr><th>Разлика вредности</th><td><b>'+fmt(salesValue-purchaseValue)+' дин.</b></td></tr></tbody></table></div><p class="hint">Извештај користи стварно евидентиране количине. Финансијски износи су информативни и не замењују евиденцију наплате и исплата у Обрачуну.</p>';
 }
 
 function showMenu(){document.querySelectorAll('.workflow-tabs .tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('[id^="view-"]').forEach(x=>x.classList.add('hidden'));document.querySelector('.workflow-tabs')?.classList.remove('menu-collapsed');document.querySelector('.utility-tabs')?.classList.remove('menu-collapsed');document.getElementById('workNavBar')?.classList.remove('visible');window.scrollTo({top:0,behavior:'smooth'})}
