@@ -704,19 +704,30 @@ function renderPickup(){
   if(!grouped.has(key))grouped.set(key,{key,farmId:fid,productId:pid,variantId:vid,farmName:farm(fid)?.name||('Газдинство #'+fid),productName:productName||'Производ',label:label||'Паковање',size:n(size)||1,unit:unitName||'ком',price:n(priceValue),plannedRows:0,plannedAlloc:0,rs:[],allocationIds:[]});
   return grouped.get(key);
  };
- // Полазна истина за наручено су ставке поруџбина које су повезане са газдинством.
- rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id||'')!=='').forEach(r=>{
-  const fid=String(r.dodijeljeno_gazdinstvo_id);
-  const p=productFor(r),v=variantFor(r);
-  const rawSize=n(v?.package_value||r.package_size)||(n(r.package_count||r.broj_pakovanja)?q(r)/n(r.package_count||r.broj_pakovanja):0);
-  const size=rawSize||1;
-  const u=String(v?.package_unit||r.package_unit||r.quantity_unit||r.jedinica||p?.unit||'ком').toLowerCase();
-  const label=v?.name||v?.size_label||r.variant_name||r.velicina_pakovanja||r.package_info||(rawSize?('Паковање '+fmt(size)+' '+u):'Без дефинисаног паковања');
-  const g=ensure(fid,p?.id||r.product_id||null,v?.id||r.variant_id||null,r.proizvod||p?.name,label,size,u,price(r));
-  g.plannedRows+=n(r.package_count||r.broj_pakovanja)||(q(r)/size);
-  g.rs.push(r);
+ // Главни извор преузимања су стварне доделе набавке: производ/паковање које је наручено од конкретног газдинства.
+ // Повезујемо доделе са ставкама купаца преко расподеле, а не само преко старог поља dodijeljeno_gazdinstvo_id.
+ const allocationKeys=new Set();
+ allocations.filter(a=>String(a.tura_id)===tourId).forEach(a=>{
+  const v=variants.find(x=>String(x.id)===String(a.variant_id)),p=ps.find(x=>String(x.id)===String(a.product_id));
+  const size=n(v?.package_value)||1,u=String(v?.package_unit||v?.unit||p?.unit||'ком').toLowerCase();
+  const label=v?.name||v?.size_label||'Паковање '+fmt(size)+' '+u;
+  const g=ensure(a.gazdinstvo_id,a.product_id,a.variant_id,p?.name||'Производ',label,size,u,a.nabavna_cena);
+  g.plannedAlloc+=n(a.broj_pakovanja);g.allocationIds.push(a.id);
+  allocationKeys.add([String(a.gazdinstvo_id),String(a.product_id||''),String(a.variant_id||'')].join('|'));
+  const splits=Array.isArray(a.raspodela_kupcima)?a.raspodela_kupcima:[];
+  splits.forEach(x=>{const r=rows.find(z=>String(z.id)===String(x.stavka_id));if(r&&!g.rs.some(z=>String(z.id)===String(r.id)))g.rs.push(r)});
  });
- // Преузимање се заснива на стварним ставкама поруџбина из туре. Не додајемо непоручене вишкове из плана набавке.
+ // Подршка за старе доделе директно на ставци поруџбине, само ако за исто газдинство/производ/паковање нема нове доделе.
+ rows.filter(r=>String(r.dodijeljeno_gazdinstvo_id||'')!=='').forEach(r=>{
+  const p=productFor(r),v=variantFor(r),fid=String(r.dodijeljeno_gazdinstvo_id),pid=String(p?.id||r.product_id||''),vid=String(v?.id||r.variant_id||'');
+  if(allocationKeys.has([fid,pid,vid].join('|')))return;
+  const rawSize=n(v?.package_value||r.package_size)||(n(r.package_count||r.broj_pakovanja)?q(r)/n(r.package_count||r.broj_pakovanja):0),size=rawSize||1;
+  const u=String(v?.package_unit||r.package_unit||r.quantity_unit||r.jedinica||p?.unit||'ком').toLowerCase();
+  const label=v?.name||v?.size_label||r.variant_name||r.velicina_pakovanja||r.package_info||(rawSize?'Паковање '+fmt(size)+' '+u:'Без дефинисаног паковања');
+  const g=ensure(fid,p?.id||r.product_id||null,v?.id||r.variant_id||null,r.proizvod||p?.name,label,size,u,price(r));
+  g.plannedRows+=n(r.package_count||r.broj_pakovanja)||(q(r)/size);if(!g.rs.some(z=>String(z.id)===String(r.id)))g.rs.push(r);
+ });
+ // Преузимање приказује само робу која је стварно наручена од газдинства; не све поруџбине купаца.
  let list=[...grouped.values()].filter(g=>g.plannedRows>0||g.plannedAlloc>0).map(g=>({...g,planned:Math.max(g.plannedRows,g.plannedAlloc)}));
  list.sort((a,b)=>a.farmName.localeCompare(b.farmName,'sr')||a.productName.localeCompare(b.productName,'sr')||a.label.localeCompare(b.label,'sr'));
  if(!list.length){root.innerHTML='<div class="empty">За ову туру нема наручених ставки са дефинисаним паковањем.</div>';return}
