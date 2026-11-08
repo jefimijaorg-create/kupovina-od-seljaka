@@ -643,7 +643,8 @@ function supplierOfferRows(farmId){return farmOffers.filter(o=>{if(String(o.gazd
 function supplierVariantOrderCount(variantId,productId){return items.filter(x=>String(x.variant_id)===String(variantId)&&(productId===undefined||String(x.product_id)===String(productId))).reduce((sum,x)=>sum+Math.max(0,n(pack(x).count)),0)}
 function supplierVariantAllocated(variantId,excludeFarmId,productId){return (tourAllocations||[]).filter(a=>String(a.variant_id)===String(variantId)&&(productId===undefined||String(a.product_id)===String(productId))&&(excludeFarmId===undefined||String(a.gazdinstvo_id)!==String(excludeFarmId))).reduce((sum,a)=>sum+Math.max(0,n(a.broj_pakovanja)),0)}
 function supplierVariantRemaining(variantId,excludeFarmId,productId){return Math.max(0,supplierVariantOrderCount(variantId,productId)-supplierVariantAllocated(variantId,excludeFarmId,productId))}
-function setSupplierDemandFarmFilter(value){supplierDemandFarmFilter=String(value||'all');renderSupplierSheet()}\nfunction supplierDemandSummaryHtml(){
+function setSupplierDemandFarmFilter(value){supplierDemandFarmFilter=String(value||'all');renderSupplierSheet()}
+function supplierDemandSummaryHtml(){
  const groups={};
  items.forEach(x=>{if(!x.variant_id||!x.product_id)return;const key=String(x.product_id)+'|'+String(x.variant_id),p=productCatalog.find(z=>String(z.id)===String(x.product_id)),v=variantCatalog.find(z=>String(z.id)===String(x.variant_id));if(!p||!v)return;if(!groups[key])groups[key]={product:p,variant:v,ordered:0,quantity:0};const g=groups[key],pk=pack(x);g.ordered+=Math.max(0,n(pk.count));g.quantity+=Math.max(0,n(pk.total));});
  const list=Object.values(groups).sort((a,b)=>String(a.product.name).localeCompare(String(b.product.name),'sr')||String(a.variant.name||a.variant.size_label).localeCompare(String(b.variant.name||b.variant.size_label),'sr'));
