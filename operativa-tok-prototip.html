@@ -71,7 +71,7 @@ ${x.items.map((it,i)=>`<div class="row" style="padding:8px 0;border-bottom:1px s
 function changeQty(i,v){let x=person();x.items[i].qty=Math.max(0,Number(v)||0);x.items[i].delivered=Math.min(x.items[i].delivered||0,x.items[i].qty);if(x.status==='done')x.status='pending';renderOrder()}
 function changePrice(i,v){person().items[i].price=Math.max(0,Number(v)||0);renderOrder()}
 function changeDelivered(i,v){let x=person();x.items[i].delivered=Math.min(x.items[i].qty,Math.max(0,Number(v)||0));}
-function finishOrder(yes){let x=person();x.status=yes?'done':'pending';x.items.forEach(it=>it.delivered=yes?it.qty:0);renderOrder();if(layerStack.length>1){layerStack.pop().remove();personId=null;renderPeople();}}
+function finishOrder(yes){let x=person();x.status=yes?'done':'pending';x.items.forEach(it=>it.delivered=yes?it.qty:0);renderOrder();if(yes&&layerStack.length>1){layerStack.pop().remove();personId=null;renderPeople();}}
 function resetDelivery(){finishOrder(false)}
 render();
 </script></body></html>
