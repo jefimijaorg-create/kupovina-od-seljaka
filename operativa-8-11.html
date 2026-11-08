@@ -14,7 +14,7 @@ function buyerFor(id){const o=meta(id),c=customers.find(x=>String(x.id)===String
 function buyersAt(pid){const m=new Map();orders.filter(o=>String(o.punkt_id||'')===String(pid||'')).forEach(o=>{if(!lines(o.id).length)return;const b=buyerFor(o.id),k=String(b.id);if(!m.has(k))m.set(k,{...b,orders:[]});m.get(k).orders.push(o)});return [...m.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr'))}
 function active(){return stack.length?stack[stack.length-1].querySelector('.layerbody'):document.getElementById('view')}
 function push(title){const e=document.createElement('section');e.className='layer';e.innerHTML='<div class="layerhead"><b>'+esc(title)+'</b><button onclick="back()">← Назад</button></div><div class="layerbody"></div>';document.getElementById('layers').appendChild(e);stack.push(e)}
-function back(){if(!stack.length)return;stack.pop().remove();if(stack.length){buyerSel=null;renderPoint()}else{pointSel=null;buyerSel=null;renderRoute()}}
+function back(){if(!stack.length)return;stack.pop().remove();if(stack.length===2){renderBuyer()}else if(stack.length===1){buyerSel=null;renderPoint()}else{pointSel=null;buyerSel=null;renderRoute()}}
 function goHome(){while(stack.length)stack.pop().remove();pointSel=null;buyerSel=null;renderRoute()}
 function crumbs(){let s='<button onclick="goHome()">Тура 08.11.2026.</button>';if(pointSel)s+=' › <button onclick="renderPoint()">'+esc(pointSel.name)+'</button>';if(buyerSel)s+=' › <b>'+esc(buyerSel.name)+'</b>';document.getElementById('crumb').innerHTML=s}
 function stats(){return {buyers:new Set(orders.map(o=>String(o.kupac_id||'o'+o.id))).size,orders:orders.length,done:orders.filter(o=>done(o.id)).length}}
