@@ -962,7 +962,29 @@ function renderProcurement(){renderSupplierSheet();}
 function renderAll(){stats();unassigned();renderSupplierAllocationSummary();if(view==='orders')renderOrders();if(view==='procurement')renderProcurement();if(view==='delivery')renderDelivery();if(view==='debts')renderDebts()}
 function preview(id){let x=items.find(x=>Number(x.id)===Number(id)),p=pack(x),c=Math.max(0,Math.floor(n(document.getElementById('c'+id).value))),s=Math.max(0,n(document.getElementById('s'+id).value)),l=document.getElementById('l'+id).value||s+' '+p.unit;document.getElementById('v'+id).textContent=c+' × '+l+' = '+fmt(c*s)+' '+p.unit+' · '+purchaseText(x,c,s)}
 async function savePack(id){try{let x=items.find(x=>Number(x.id)===Number(id));if(!x)throw Error('Ставка није пронађена');let p=pack(x),c=Math.max(0,Math.floor(n(document.getElementById('c'+id).value))),s=Math.max(0,n(document.getElementById('s'+id).value)),l=document.getElementById('l'+id).value.trim()||'Паковање';if(!s||!c)throw Error('Број паковања и величина морају бити већи од нуле');let info=c+' × '+l,patch={package_count:c,broj_pakovanja:c,package_size:s,package_unit:p.unit,package_info:info,velicina_pakovanja:info};patch.preuzeta_kolicina=farm(x)?Math.min(n(x.preuzeta_kolicina),c*s):0;await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(patch)});Object.assign(x,patch);say('Подаци о паковању су сачувани. Оригинална наручена количина и цена нису мењане.');renderAll()}catch(e){say('Није сачувано: '+e.message,true)}}
-async function assignFarm(id,v){try{let x=items.find(x=>Number(x.id)===Number(id));if(!x)throw Error('Ставка није пронађена');let idFarm=v?Number(v):null,oldFarm=assignedFarmId(x),patch={dodijeljeno_gazdinstvo_id:idFarm};if(String(oldFarm||'')!==String(idFarm||''))patch.preuzeta_kolicina=0;await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(patch)});Object.assign(x,patch);say(idFarm?'Газдинство је додељено. Набавна цена ће се читати за изабрано газдинство.':'Ставка је недодељена и преузета количина враћена је на нулу.');renderAll()}catch(e){say('Додела није сачувана: '+e.message,true);renderAll()}}
+async function assignFarm(id,v){
+ const x=items.find(row=>Number(row.id)===Number(id));
+ if(!x){say('Ставка није пронађена.',true);return}
+ const idFarm=v?Number(v):null,previous={dodijeljeno_gazdinstvo_id:x.dodijeljeno_gazdinstvo_id,gazdinstvo_id:x.gazdinstvo_id,preuzeta_kolicina:x.preuzeta_kolicina};
+ const changed=String(assignedFarmId(x)||'')!==String(idFarm||'');
+ const patch={dodijeljeno_gazdinstvo_id:idFarm};
+ if(changed)patch.preuzeta_kolicina=0;
+ // Optimistic UI: show the selected farm immediately, then confirm it against the database.
+ Object.assign(x,patch);
+ renderAll();
+ say('Чувам доделу газдинства…');
+ try{
+  const result=await api('stavke_porudzbine?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(patch)});
+  if(!Array.isArray(result)||!result.some(row=>String(row.id)===String(id)&&String(row.dodijeljeno_gazdinstvo_id||'')===String(idFarm||'')))throw Error('База није потврдила изабрано газдинство.');
+  Object.assign(x,result.find(row=>String(row.id)===String(id)));
+  say(idFarm?'Газдинство је одмах промењено и сачувано.':'Ставка је недодељена и преузета количина враћена је на нулу.');
+  renderAll();
+ }catch(e){
+  Object.assign(x,previous);
+  say('Промена газдинства није сачувана: '+e.message+' Враћена је претходна додела.',true);
+  renderAll();
+ }
+}
 async function savePicked(id){try{let x=items.find(x=>Number(x.id)===Number(id));if(!x)throw Error('Ставка није пронађена');if(!farm(x))throw Error('Прво додели газдинство овој ставци.');let input=document.getElementById('got-'+id),count=Math.max(0,Math.floor(n(input?.value)));let ordered=pack(x).count;if(count>ordered)throw Error('Преузето не може бити више од наручене количине.');let actual=count*pack(x).size;await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({preuzeta_kolicina:actual})});x.preuzeta_kolicina=actual;say('Преузета количина је сачувана за ову ставку.');renderAll()}catch(e){say('Преузета количина није сачувана: '+e.message,true)}}
 async function markItemPicked(id){try{let x=items.find(x=>Number(x.id)===Number(id));if(!x)throw Error('Ставка није пронађена');if(!farm(x))throw Error('Прво додели газдинство овој ставци.');let count=pack(x).total;await api('stavke_porudzbine?id=eq.'+id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({preuzeta_kolicina:count})});x.preuzeta_kolicina=count;say('Цела ставка је означена као преузета: '+textPack(x));renderAll()}catch(e){say('Ставка није означена као преузета: '+e.message,true)}}
 async function setPicked(list){let saved=0;for(const x of list){let count=pack(x).total;let result=await api('stavke_porudzbine?id=eq.'+x.id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({preuzeta_kolicina:count})});if(!Array.isArray(result)||!result.some(row=>String(row.id)===String(x.id)))throw Error('База није потврдила измену ставке #'+x.id+'. Провери дозволе и доделу газдинства.');x.preuzeta_kolicina=count;saved++}return saved}
