@@ -3,76 +3,153 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Погледај актуелну понуду домаћих производа различитих произвођача.">
-<title>Производи — Наручи домаће</title>
+<meta name="description" content="Актуелна понуда домаћих производа из Велике Плане и околине. Изаберите паковање и количину и припремите поруџбину.">
+<meta name="theme-color" content="#174a32">
+<title>Наручи домаће из Велике Плане — понуда</title>
 <link rel="stylesheet" href="style.css">
 <style>
-:root{--green:#17633b;--line:#dfe8df}body{background:#f4f7f2;color:#1d2b21}.public-head{background:#fff;border-bottom:1px solid var(--line);padding:12px 14px;position:sticky;top:0;z-index:5}.brand{font-weight:950;color:var(--green);text-decoration:none}.tabs{display:flex;gap:6px;overflow-x:auto;margin-top:10px}.tabs a{white-space:nowrap;text-decoration:none;color:#435247;background:#f3f6f1;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800}.tabs a.active{background:var(--green);color:#fff;border-color:var(--green)}.wrap{width:min(100% - 28px,900px);margin:auto;padding:20px 0 105px}.eyebrow{font-size:10px;letter-spacing:1.3px;font-weight:900;color:var(--green)}h1{font-size:30px;line-height:1.12;margin:7px 0}.lead{color:#5d695f;font-size:14px;line-height:1.55}.filters{display:flex;gap:7px;overflow-x:auto;padding:12px 0}.filter{white-space:nowrap;border:1px solid #d9e4d8;background:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:850}.filter.active{background:var(--green);color:#fff;border-color:var(--green)}.grid{display:grid;grid-template-columns:1fr;gap:11px}.product{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;overflow:hidden}.product img{width:100%;height:170px;object-fit:cover;border-radius:12px;background:#edf2eb}.product h2{font-size:16px;margin:10px 0 3px}.meta{font-size:12px;color:#68766b;line-height:1.45}.producer{font-size:11px;color:#286342;font-weight:800;margin-top:5px}.price{font-size:14px;font-weight:950}.variants{border-top:1px solid #edf1ec;margin-top:10px;padding-top:8px}.variant{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #f0f3ef}.variant:last-child{border:0}.qty{display:flex;align-items:center;gap:9px}.qty button{width:31px;height:31px;border:0;border-radius:9px;background:#eaf4ea;color:#185d38;font-size:18px;font-weight:900}.qty b{min-width:15px;text-align:center}.status{padding:20px 8px;text-align:center;color:#68766b;font-size:13px}.basketbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:6}.basketbar small{display:block;color:#68766b;font-size:10px}.basketbar strong{font-size:14px}.btn{border:0;border-radius:12px;padding:12px 16px;background:var(--green);color:#fff;text-decoration:none;font-size:12px;font-weight:900}.empty{background:#fff;border:1px dashed #cbd9ca;border-radius:15px;padding:20px;text-align:center;color:#68766b}
-@media(min-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.product img{height:190px}}
+:root{--green:#174a32;--green2:#236b46;--mint:#edf5ed;--ink:#1c2a21;--muted:#657268;--line:#e0e8df;--paper:#f5f7f2}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.public-head{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:11px 14px}.head-inner{width:min(100%,1050px);margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:950;color:var(--green);text-decoration:none;letter-spacing:.2px}.tabs{display:flex;gap:6px;overflow:auto;margin-top:9px;scrollbar-width:none}.tabs a{white-space:nowrap;text-decoration:none;color:#435247;background:#f3f6f1;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800}.tabs a.active{background:var(--green);color:#fff;border-color:var(--green)}
+.wrap{width:min(100% - 28px,1050px);margin:auto;padding:20px 0 115px}.hero{background:linear-gradient(135deg,#143b29,#286b45);color:#fff;border-radius:22px;padding:22px 20px;box-shadow:0 8px 24px #143b291c}.hero-kicker{font-size:10px;letter-spacing:1.3px;font-weight:900;color:#cde7d2}.hero h1{font-size:clamp(24px,5vw,38px);line-height:1.12;margin:8px 0 9px}.hero p{font-size:14px;line-height:1.55;color:#e4efe5;margin:0;max-width:620px}.hero-note{display:inline-flex;margin-top:14px;padding:8px 11px;border-radius:999px;background:#ffffff18;border:1px solid #ffffff35;font-size:11px;font-weight:800}
+.intro{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:22px 0 8px}.intro h2{font-size:20px;margin:0}.intro p{font-size:12px;color:var(--muted);margin:4px 0 0}.filters{display:flex;gap:7px;overflow:auto;padding:12px 0;scrollbar-width:none}.filter{white-space:nowrap;border:1px solid #d9e4d8;background:#fff;border-radius:999px;padding:9px 13px;font-size:11px;font-weight:850;color:#435247}.filter.active{background:var(--green);color:#fff;border-color:var(--green)}
+.grid{display:grid;grid-template-columns:1fr;gap:12px}.product{display:grid;grid-template-columns:132px minmax(0,1fr);gap:13px;background:#fff;border:1px solid var(--line);border-radius:17px;padding:12px;box-shadow:0 2px 8px #1d38220a;min-width:0}.photo{width:132px;height:132px;object-fit:cover;border-radius:13px;background:#edf2eb}.photo-fallback{width:132px;height:132px;border-radius:13px;background:var(--mint);display:grid;place-items:center;font-size:34px}.product-main{min-width:0}.product h3{font-size:16px;line-height:1.25;margin:1px 0 5px}.description{font-size:12px;line-height:1.45;color:var(--muted)}.farm{font-size:11px;font-weight:800;color:var(--green2);margin-top:6px}.variant-list{grid-column:1/-1;border-top:1px solid #edf1ec;margin-top:2px;padding-top:8px;display:grid;gap:7px}.variant{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 8px;border:1px solid #edf1ec;border-radius:12px;background:#fbfcfa}.variant-copy{min-width:0}.variant-copy strong{display:block;font-size:12px}.variant-copy span{display:block;font-size:12px;color:var(--green2);font-weight:900;margin-top:2px}.variant-copy small{display:block;font-size:10px;color:var(--muted);margin-top:2px}.qty{display:flex;align-items:center;gap:8px;flex-shrink:0}.qty button{width:32px;height:32px;border:0;border-radius:10px;background:#eaf4ea;color:var(--green);font-size:18px;font-weight:900;cursor:pointer}.qty button:active{transform:scale(.95)}.qty b{min-width:16px;text-align:center;font-size:12px}.base-buy{grid-column:1/-1;border-top:1px solid #edf1ec;margin-top:2px;padding-top:9px;display:flex;align-items:center;justify-content:space-between;gap:12px}.base-price{font-size:17px;font-weight:950;color:var(--green)}.base-price small{font-size:11px;font-weight:650;color:var(--muted)}.status{padding:24px 8px;text-align:center;color:var(--muted);font-size:13px}.empty{background:#fff;border:1px dashed #cbd9ca;border-radius:15px;padding:22px;text-align:center;color:var(--muted);grid-column:1/-1}
+.basketbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:20;box-shadow:0 -6px 22px #14251a0b}.basket-info small{display:block;color:var(--muted);font-size:10px;font-weight:800}.basket-info strong{font-size:15px}.basket-info span{display:block;font-size:11px;color:var(--green2);font-weight:850}.btn{border:0;border-radius:12px;padding:13px 16px;background:var(--green);color:#fff;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap}.btn[aria-disabled=true]{opacity:.5;pointer-events:none}
+@media(min-width:650px){.wrap{padding-top:26px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.product{grid-template-columns:112px minmax(0,1fr);gap:11px}.photo,.photo-fallback{width:112px;height:112px}.variant-list,.base-buy{grid-column:1/-1}}
+@media(max-width:390px){.product{grid-template-columns:92px minmax(0,1fr);gap:10px;padding:10px}.photo,.photo-fallback{width:92px;height:104px}.product h3{font-size:14px}.hero{padding:18px 16px}.hero p{font-size:13px}}
 </style>
 </head>
 <body>
 <header class="public-head">
- <a class="brand" href="index.html">🌱 НАРУЧИ ДОМАЋЕ</a>
+ <div class="head-inner"><a class="brand" href="index.html">🌿 НАРУЧИ ДОМАЋЕ</a><a class="brand" href="index.html?open=cart" aria-label="Отвори корпу">🛒 <span id="headCount">0</span></a></div>
  <nav class="tabs" aria-label="Главна навигација">
   <a href="index.html">Почетна</a><a href="mesta-preuzimanja.html">Пунктови</a><a class="active" href="ponuda.html">Производи</a><a href="dostava-kupci.html">Достава</a><a href="o-projektu.html">О пројекту</a>
  </nav>
 </header>
 <main class="wrap">
- <div class="eyebrow">ШТА ДОСТАВЉАМО?</div><h1>Понуда домаћих производа.</h1>
- <p class="lead">На једном месту прегледаш производе различитих газдинстава. Произвођачи самостално одређују понуду, паковања и цене. Изабери шта желиш, па настави на наручивање.</p>
+ <section class="hero">
+  <div class="hero-kicker">🥛🧀🥚 ИЗ ВЕЛИКЕ ПЛАНЕ И ОКОЛИНЕ</div>
+  <h1>НАРУЧИ ДОМАЋЕ ИЗ ВЕЛИКЕ ПЛАНЕ</h1>
+  <p>Село производи. Ви наручујете. Ми достављамо!</p>
+  <span class="hero-note">Изаберите производе, паковања и количине.</span>
+ </section>
+ <section class="intro"><div><h2>Тренутна понуда</h2><p>Подаци и цене се учитавају директно из базе.</p></div></section>
  <div id="filters" class="filters" aria-label="Категорије"></div>
  <div id="status" class="status" role="status" aria-live="polite">Учитавање понуде из базе…</div>
  <div id="products" class="grid"></div>
 </main>
-<div class="basketbar"><div><small>ТВОЈА КОРПА</small><strong id="basketCount">0 производа</strong></div><a class="btn" href="index.html?open=cart">Прегледај поруџбину →</a></div>
+<div class="basketbar">
+ <div class="basket-info"><small>ТВОЈА КОРПА</small><strong id="basketCount">0 производа</strong><span id="basketTotal">0 дин.</span></div>
+ <a id="basketLink" class="btn" href="index.html?open=cart" aria-disabled="true">Прегледај поруџбину →</a>
+</div>
 <script>
-const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 const headers={apikey:KEY,Authorization:'Bearer '+KEY};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(Number(n)||0)+' дин.';
-const api=async p=>{const r=await fetch(URL+'/rest/v1/'+p,{headers,cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()};
+const api=async path=>{const r=await fetch(URL+'/rest/v1/'+path,{headers,cache:'no-store'});if(!r.ok){const t=await r.text();throw Error('HTTP '+r.status+': '+t.slice(0,180))}return r.json()};
 function readState(){try{return JSON.parse(localStorage.getItem('seljaciState')||'{}')}catch{return {}}}
-function saveCart(item,delta){
- const s=readState();s.cart=Array.isArray(s.cart)?s.cart:[];
- const id=String(item.id)+(item.variant?'::'+item.variant.id:'');
- let row=s.cart.find(x=>String(x.cartId||x.id)===id);
- if(delta>0){if(row)row.qty+=delta;else s.cart.push({cartId:id,id:item.id,variant_id:item.variant?.id||null,variant_name:item.variant?.name||'',name:item.name,price:Number(item.variant?.price??item.price)||0,unit:item.unit||'ком',qty:delta})}
- else if(row){row.qty+=delta;if(row.qty<=0)s.cart.splice(s.cart.indexOf(row),1)}
- localStorage.setItem('seljaciState',JSON.stringify(s));updateBasket();
+function writeState(s){localStorage.setItem('seljaciState',JSON.stringify(s))}
+let products=[],variantsByProduct={},offersByVariant={},farmsById={},filter='all';
+const categoryOf=p=>String(p.category||'Остало').trim()||'Остало';
+function cartRows(){const s=readState();return Array.isArray(s.cart)?s.cart:[]}
+function cartId(p,v){return String(p.id)+(v?'::'+String(v.id):'')}
+function quantity(id){const row=cartRows().find(x=>String(x.cartId||x.id)===id);return Number(row?.qty||0)}
+function fmtQty(n){return new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(Number(n)||0)}
+function updateBasket(){
+ const rows=cartRows(),count=rows.reduce((n,x)=>n+Number(x.qty||0),0),total=rows.reduce((n,x)=>n+Number(x.price||0)*Number(x.qty||0),0);
+ document.getElementById('basketCount').textContent=fmtQty(count)+' '+(count===1?'ставка':'ставки');
+ document.getElementById('basketTotal').textContent=money(total);
+ document.getElementById('headCount').textContent=fmtQty(count);
+ document.getElementById('basketLink').setAttribute('aria-disabled',count>0?'false':'true');
 }
-function getQty(id){const s=readState();return (s.cart||[]).reduce((n,x)=>n+(String(x.cartId||x.id)===id?Number(x.qty||0):0),0)}
-function updateBasket(){const s=readState(),n=(s.cart||[]).reduce((a,x)=>a+Number(x.qty||0),0);document.getElementById('basketCount').textContent=n+' '+(n===1?'производ':n%10>=2&&n%10<=4?'производа':'производа')}
-let products=[],variants={},filter='all';
+function changeQty(p,v,delta){
+ const s=readState();s.cart=Array.isArray(s.cart)?s.cart:[];
+ const id=cartId(p,v),step=v?1:Math.max(Number(p.order_step)||1,.001);
+ const row=s.cart.find(x=>String(x.cartId||x.id)===id);
+ if(delta>0){
+  if(row)row.qty=Number((Number(row.qty||0)+step).toFixed(3));
+  else s.cart.push({cartId:id,id:p.id,variant_id:v?.id||null,variant_name:v?.name||'',name:p.name,price:Number(v?.publicPrice??p.publicPrice??v?.price??p.price)||0,unit:v?.unit||p.unit||'ком',qty:step});
+ }else if(row){
+  row.qty=Number((Number(row.qty||0)-step).toFixed(3));
+  if(row.qty<=0)s.cart.splice(s.cart.indexOf(row),1);
+ }
+ writeState(s);updateBasket();render();
+}
+function getOfferPrice(p,v){
+ const rows=v?(offersByVariant[String(p.id)+'::'+String(v.id)]||[]):(offersByVariant[String(p.id)+'::base']||[]);
+ const values=[...new Set(rows.map(x=>x.sale_price).filter(x=>x!==null&&x!==undefined).map(Number))];
+ if(values.length===1)return values[0];
+ if(values.length>1)return Number(v?.price??p.price);
+ return Number(v?.price??p.price);
+}
+function getFarmLabel(p,v){
+ const rows=v?(offersByVariant[String(p.id)+'::'+String(v.id)]||[]):(offersByVariant[String(p.id)+'::base']||[]);
+ const ids=[...new Set(rows.map(x=>String(x.gazdinstvo_id)))];
+ const names=ids.map(id=>farmsById[id]?.name).filter(Boolean);
+ if(!names.length&&p.gazdinstvo_id&&farmsById[String(p.gazdinstvo_id)])names.push(farmsById[String(p.gazdinstvo_id)].name);
+ return [...new Set(names)].join(', ');
+}
 function render(){
- const rows=products.filter(p=>filter==='all'||String(p.category||'Остало')===filter);
- document.getElementById('products').innerHTML=rows.map(p=>{
-  const vs=variants[p.id]||[];
-  const controls=vs.length?'<div class="variants">'+vs.map(v=>{const id=String(p.id)+'::'+String(v.id);return '<div class="variant"><div><b>'+esc(v.name)+'</b><div class="meta">'+money(v.price)+'</div></div><div class="qty"><button type="button" data-dec="'+esc(p.id)+'" data-variant="'+esc(v.id)+'" aria-label="Смањи">−</button><b>'+getQty(id)+'</b><button type="button" data-inc="'+esc(p.id)+'" data-variant="'+esc(v.id)+'" aria-label="Повећај">+</button></div></div>'}).join('')+'</div>':
-  '<div class="variants"><div class="variant"><div><span class="price">'+money(p.price)+'</span><div class="meta">'+esc(p.unit||'ком')+'</div></div><div class="qty"><button type="button" data-dec="'+esc(p.id)+'" aria-label="Смањи">−</button><b>'+getQty(String(p.id))+'</b><button type="button" data-inc="'+esc(p.id)+'" aria-label="Повећај">+</button></div></div></div>';
-  return '<article class="product">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'" loading="lazy">':'')+'<h2>'+esc(p.name||'Производ')+'</h2>'+(p.description?'<div class="meta">'+esc(p.description)+'</div>':'')+(p.producer_name?'<div class="producer">Произвођач: '+esc(p.producer_name)+'</div>':'')+controls+'</article>';
+ const visible=products.filter(p=>filter==='all'||categoryOf(p)===filter);
+ document.getElementById('products').innerHTML=visible.map(p=>{
+  const vs=variantsByProduct[p.id]||[];
+  const farmNames=[...new Set([getFarmLabel(p,null),...vs.map(v=>getFarmLabel(p,v))].filter(Boolean))].join(', ');
+  const image=p.image_url?'<img class="photo" src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'" loading="lazy">':'<div class="photo-fallback" aria-hidden="true">'+esc(p.icon||'🌾')+'</div>';
+  const desc=p.description?'<div class="description">'+esc(p.description)+'</div>':'';
+  const farm=farmNames?'<div class="farm">Газдинство: '+esc(farmNames)+'</div>':'';
+  let controls='';
+  if(vs.length){
+   controls='<div class="variant-list">'+vs.map(v=>{
+    const id=cartId(p,v),price=getOfferPrice(p,v),label=v.size_label||v.package_info||v.name;
+    const farm=getFarmLabel(p,v);
+    return '<div class="variant"><div class="variant-copy"><strong>'+esc(label)+'</strong><span>'+money(price)+'</span>'+(farm?'<small>'+esc(farm)+'</small>':'')+'</div><div class="qty"><button type="button" data-dec="'+esc(p.id)+'" data-v="'+esc(v.id)+'" aria-label="Смањи">−</button><b>'+fmtQty(quantity(id))+'</b><button type="button" data-inc="'+esc(p.id)+'" data-v="'+esc(v.id)+'" aria-label="Повећај">+</button></div></div>';
+   }).join('')+'</div>';
+  }else{
+   const price=getOfferPrice(p,null),id=cartId(p,null);
+   controls='<div class="base-buy"><div class="base-price">'+money(price)+' <small>/ '+esc(p.unit||'ком')+'</small></div><div class="qty"><button type="button" data-dec="'+esc(p.id)+'" aria-label="Смањи">−</button><b>'+fmtQty(quantity(id))+'</b><button type="button" data-inc="'+esc(p.id)+'" aria-label="Повећај">+</button></div></div>';
+  }
+  return '<article class="product">'+image+'<div class="product-main"><h3>'+esc(p.name)+'</h3>'+desc+farm+'</div>'+controls+'</article>';
  }).join('')||'<div class="empty">У овој категорији тренутно нема активних производа.</div>';
- document.querySelectorAll('[data-inc],[data-dec]').forEach(b=>b.onclick=()=>{
-  const p=products.find(x=>String(x.id)===b.dataset.inc||String(x.id)===b.dataset.dec);if(!p)return;
-  const v=(variants[p.id]||[]).find(x=>String(x.id)===b.dataset.variant);
-  saveCart({id:p.id,name:p.name,price:p.price,unit:p.unit,variant:v||null},b.hasAttribute('data-inc')?1:-1);render();
- });
+ document.querySelectorAll('[data-inc],[data-dec]').forEach(btn=>btn.addEventListener('click',()=>{
+  const p=products.find(x=>String(x.id)===btn.dataset.inc||String(x.id)===btn.dataset.dec);
+  if(!p)return;
+  const v=(variantsByProduct[p.id]||[]).find(x=>String(x.id)===String(btn.dataset.v))||null;
+  changeQty(p,v,btn.hasAttribute('data-inc')?1:-1);
+ }));
  updateBasket();
 }
 async function load(){
  try{
-  const [ps,vs]=await Promise.all([
-   api('products?select=id,name,description,category,price,currency,stock,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants&is_active=eq.true&order=name.asc&limit=100'),
-   api('product_variants?select=id,product_id,name,price,is_active&is_active=eq.true&limit=200')
+  const [ps,vs,os,fs]=await Promise.all([
+   api('products?select=id,name,description,category,price,currency,unit,image_url,producer_name,is_active,gazdinstvo_id,has_variants,package_info,icon,order_step&is_active=eq.true&order=name.asc&limit=200'),
+   api('product_variants?select=id,product_id,name,size_label,unit,package_info,price,order_step,min_qty,is_active,sort_order,package_value,package_unit&is_active=eq.true&order=sort_order.asc&limit=500'),
+   api('product_offers?select=id,product_id,variant_id,gazdinstvo_id,sale_price,is_active&is_active=eq.true&limit=500'),
+   api('gazdinstva?select=id,name,city,is_active&is_active=eq.true&limit=200')
   ]);
-  products=ps;vs.forEach(v=>(variants[v.product_id]??=[]).push(v));
-  const cats=[...new Set(ps.map(p=>String(p.category||'Остало').trim()||'Остало'))];
-  document.getElementById('filters').innerHTML='<button class="filter active" data-filter="all">Сви производи</button>'+cats.map(c=>'<button class="filter" data-filter="'+esc(c)+'">'+esc(c)+'</button>').join('');
-  document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));render()});
-  document.getElementById('status').textContent=ps.length+' активних производа у понуди.';
+  products=ps;
+  const activeIds=new Set(ps.map(p=>String(p.id)));
+  vs.filter(v=>activeIds.has(String(v.product_id))).forEach(v=>(variantsByProduct[v.product_id]??=[]).push(v));
+  os.filter(o=>activeIds.has(String(o.product_id))).forEach(o=>{
+   const key=String(o.product_id)+'::'+(o.variant_id?String(o.variant_id):'base');
+   (offersByVariant[key]??=[]).push(o);
+  });
+  fs.forEach(f=>farmsById[String(f.id)]=f);
+  const cats=[...new Set(products.map(categoryOf))];
+  document.getElementById('filters').innerHTML='<button class="filter active" data-filter="all" type="button">Све категорије</button>'+cats.map(c=>'<button class="filter" data-filter="'+esc(c)+'" type="button">'+esc(c)+'</button>').join('');
+  document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{
+   filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));render();
+  }));
+  document.getElementById('status').textContent=products.length+' активних производа у понуди.';
   render();
- }catch(e){document.getElementById('status').textContent='Понуду тренутно није могуће учитати из базе.';document.getElementById('products').innerHTML='<div class="empty">Покушај поново касније.</div>';console.error(e)}
+ }catch(e){
+  document.getElementById('status').textContent='Понуду тренутно није могуће учитати из базе.';
+  document.getElementById('products').innerHTML='<div class="empty">Грешка при учитавању понуде. Покушај поново касније.</div>';
+  console.error(e);
+ }
 }
 load();updateBasket();
 </script>
-</body></html>
+</body>
+</html>
