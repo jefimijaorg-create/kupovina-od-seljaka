@@ -61,6 +61,17 @@ body.sheet-active{overflow:hidden}
 .home-nearby-option{display:flex;gap:10px;align-items:flex-start;padding:13px;border:1.5px solid #e5e7eb;border-radius:14px;background:#fff;margin-top:8px;cursor:pointer}.home-nearby-option:has(input:checked){border-color:#047857;background:#ecfdf5}.home-nearby-option input{width:19px;height:19px;margin:2px 0 0;accent-color:#047857}.home-nearby-option span{font-size:13px;line-height:1.4}.home-nearby-option small{display:block;color:#6b7280;font-size:11px;margin-top:4px}.home-nearby-field{width:100%;margin-top:12px;padding:12px;border:1px solid #d1d5db;border-radius:12px}.home-nearby-field:focus{outline:2px solid #a7f3d0}.home-nearest-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px;border:1.5px solid #e5e7eb;border-radius:13px;background:#fff}.home-nearest-item.active{border-color:#047857;background:#ecfdf5}.home-nearest-item strong,.home-nearest-item small{display:block}.home-nearest-item small{font-size:11px;color:#6b7280;margin-top:3px}.home-distance{font-size:11px;font-weight:800;color:#047857;white-space:nowrap}
  
 .site-tabs{display:flex;gap:5px;overflow-x:auto;flex-shrink:0;padding:8px 10px;background:#fff;border-bottom:1px solid #f3f4f6;scrollbar-width:none}.site-tabs::-webkit-scrollbar{display:none}.site-tabs a{flex:1 0 auto;text-align:center;text-decoration:none;padding:8px 9px;border-radius:999px;background:#f3f6f1;color:#3f5144;font-size:10px;font-weight:900;white-space:nowrap}.site-tabs a.active{background:#166534;color:#fff}
+
+.home-main-actions a{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;min-width:0;padding:13px 10px;border:1px solid #e5e7eb;border-radius:17px;background:#fff;color:#17231b;text-decoration:none;box-shadow:0 2px 8px #00000008}
+.home-main-actions a>span{font-size:22px}.home-main-actions a strong{font-size:12px;font-weight:900}.home-main-actions a small{font-size:9px;line-height:1.35;color:#6b7280}
+.home-main-actions a:active{transform:scale(.98)}
+.home-story h2{font-size:19px;font-weight:900;color:#17231b;margin:8px 0}.home-story p{font-size:12px;line-height:1.6;color:#59645c}.home-story>a{display:inline-block;margin-top:7px;color:#047857;font-size:12px;font-weight:900;text-decoration:none}
+.app-main{padding-bottom:96px}
+.home-bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;flex-shrink:0;background:#fff;border-top:1px solid #e5e7eb;padding:7px 5px max(7px,env(safe-area-inset-bottom));z-index:30}
+.home-bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;padding:5px 2px;color:#536158;text-decoration:none;font-size:9px;font-weight:800}
+.home-bottom-nav a span{font-size:18px;line-height:1.2}.home-bottom-nav a.active{color:#047857}
+@media(min-width:700px){.home-main-actions a{padding:18px}.home-main-actions a strong{font-size:13px}.home-bottom-nav{border-radius:0 0 28px 28px}}
+
 </style>
 </head>
 <body data-page="home" class="h-full">
@@ -94,11 +105,20 @@ body.sheet-active{overflow:hidden}
     </div>
   </section>
 
-  <nav class="home-main-actions" aria-label="Главни мени">
-    <button type="button" onclick="location.href='mesta-preuzimanja.html'"><span>📍</span><strong>ПУНКТОВИ</strong><small>Изабери место преузимања</small></button>
-    <button type="button" onclick="location.href='ponuda.html'"><span>🧺</span><strong>ПРОИЗВОДИ</strong><small>Погледај понуду</small></button>
-    <button type="button" onclick="location.href='o-projektu.html#kako-funkcionise'"><span>❔</span><strong>КАКО ФУНКЦИОНИШЕ</strong><small>Од избора до преузимања</small></button>
+  <nav class="home-main-actions" aria-label="Брзе пречице">
+    <a href="ponuda.html"><span>🧺</span><strong>ПОГЛЕДАЈ ПОНУДУ</strong><small>Производи, паковања и цене</small></a>
+    <a href="mesta-preuzimanja.html"><span>📍</span><strong>МЕСТА ПРЕУЗИМАЊА</strong><small>Пунктови за објављену туру</small></a>
+    <a href="dostava-kupci.html"><span>🚚</span><strong>КАКО СТИЖЕ ДО ТЕБЕ</strong><small>Тура, преузимање и договор</small></a>
+    <a href="o-projektu.html"><span>🌱</span><strong>О ПРОЈЕКТУ</strong><small>Ко повезује село и град</small></a>
+    <a href="index.html?open=cart"><span>🛒</span><strong>МОЈА КОРПА</strong><small>Погледај изабране производе</small></a>
+    <a href="https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04" target="_blank" rel="noopener"><span>💬</span><strong>VIBER ГРУПА</strong><small>Понуда и обавештења</small></a>
   </nav>
+  <section class="app-card home-story">
+    <div class="home-kicker">СЕЛО → ПРОИЗВОД → ПОРУЏБИНА → КУПАЦ</div>
+    <h2>Мање посредника. Више директне везе.</h2>
+    <p>Повезујемо газдинства из Велике Плане и околине са људима у Београду. Прикупљамо поруџбине и организујемо заједнички довоз према стварној рути.</p>
+    <a href="o-projektu.html">Прочитај причу о пројекту →</a>
+  </section>
 </div>
 </main>
 
@@ -172,6 +192,13 @@ body.sheet-active{overflow:hidden}
   </section>
 </div>
 </div>
+<nav class="home-bottom-nav" aria-label="Доња навигација">
+  <a class="active" href="index.html"><span>⌂</span>Почетна</a>
+  <a href="ponuda.html"><span>🧺</span>Понуда</a>
+  <a href="mesta-preuzimanja.html"><span>📍</span>Пунктови</a>
+  <a href="dostava-kupci.html"><span>🚚</span>Достава</a>
+  <a href="index.html?open=cart"><span>🛒</span>Корпа</a>
+</nav>
 
 <script>
 function showHomePanel(name){
