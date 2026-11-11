@@ -616,6 +616,7 @@ async function createPointForOrder(orderId){
   }
   const saved=await api('porudzbine?id=eq.'+orderId,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({punkt_id:p.id})});
   if(!Array.isArray(saved)||!saved.some(x=>String(x.id)===String(orderId)))throw Error('Пункт је додат, али база није потврдила доделу поруџбини. Освежи страницу и провери поруџбину.');
+  const savedOrder=saved.find(x=>String(x.id)===String(orderId)),localOrder=orders.find(x=>String(x.id)===String(orderId));if(localOrder)Object.assign(localOrder,savedOrder);else orders.push(savedOrder);
   await loadTour();
   say((p.id&&points.some(x=>String(x.id)===String(p.id))?'Пункт „'+p.name+'“ је сачуван и додељен поруџбини #'+orderId+'.':'Пункт је додељен поруџбини #'+orderId+'.'));
  }catch(e){say('Пункт није сачуван: '+e.message,true)}
@@ -659,6 +660,7 @@ async function saveOrderEdit(orderId,lineIds){
   const orderResult=await api('porudzbine?id=eq.'+encodeURIComponent(orderId),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(headerPatch)});
   const savedOrder=Array.isArray(orderResult)?orderResult.find(row=>String(row.id)===String(orderId)):null;
   if(!savedOrder||String(savedOrder.punkt_id??'')!==String(headerPatch.punkt_id??'')||Math.abs(Number(savedOrder.ukupna_cena)-headerPatch.ukupna_cena)>0.01)throw Error('База није потврдила пункт или укупан износ поруџбине.');
+  const localOrder=orders.find(row=>String(row.id)===String(orderId));if(localOrder)Object.assign(localOrder,savedOrder);else orders.push(savedOrder);
   const verifyLines=await api('stavke_porudzbine?select=id,porudzbina_id,tura_id,kolicina,cena_stavke&porudzbina_id=eq.'+encodeURIComponent(orderId)+'&order=id.asc');
   if(!Array.isArray(verifyLines)||verifyLines.length!==orderLines.length||verifyLines.some(row=>String(row.tura_id??'')!==String(nextTourId??'')))throw Error('Завршна провера ставки у бази није прошла.');
   const verifyOrder=await api('porudzbine?select=id,punkt_id,ukupna_cena&id=eq.'+encodeURIComponent(orderId));
