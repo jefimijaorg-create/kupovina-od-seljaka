@@ -705,7 +705,7 @@ function farmOrderPrepHtml(){
   if(!groups[farmId].products[key])groups[farmId].products[key]={sample:x,rows:[]};
   groups[farmId].products[key].rows.push(x);
  });
- const farmIds=Object.keys(groups).sort((a,b)=>farmName(groups[a].farm.name).localeCompare(farmName(groups[b].farm.name),'sr'));
+ const allFarmIds=Object.keys(groups).sort((a,b)=>farmName(groups[a].farm.name).localeCompare(farmName(groups[b].farm.name),'sr'));const farmIds=allFarmIds.filter(id=>supplierDemandFarmFilter==='all'||String(id)===String(supplierDemandFarmFilter));
  if(!farmIds.length)return '<section class="rounded-2xl border border-slate-200 bg-white p-4"><h3 class="text-lg font-black">1. ПРИПРЕМА ПО ГАЗДИНСТВИМА</h3><p class="text-sm text-slate-600 mt-1">Нема додељених ставки поруџбина за ову туру.</p></section>';
  const cards=farmIds.map(farmId=>{
   const group=groups[farmId],productGroups=Object.values(group.products).sort((a,b)=>productName(a.sample).localeCompare(productName(b.sample),'sr'));
@@ -722,7 +722,7 @@ function farmOrderPrepHtml(){
   }).join('');
   return '<article class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-3 mb-3"><div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><div class="text-xs font-black uppercase text-emerald-800">ГАЗДИНСТВО</div><h4 class="text-xl font-black">'+esc(farmName(group.farm.name))+'</h4><div class="text-sm text-slate-700">'+fmt(totalPackages)+' паковања · преузето '+fmt(totalPicked)+'</div></div><button type="button" onclick="printFarmPrep('+Number(farmId)+')" class="rounded-xl border-2 border-emerald-700 bg-white px-4 py-3 text-sm font-black text-emerald-900">ШТАМПАЈ СПИСАК</button></div>'+products+'</article>';
  }).join('');
- return '<section class="rounded-2xl border border-emerald-200 bg-white p-3 mb-4"><div class="mb-3"><div class="text-xl font-black text-slate-950">1. ПРИПРЕМА ПО ГАЗДИНСТВИМА</div><p class="text-sm text-slate-600 mt-1">Списак је направљен директно из наруџбина купаца. Исти производ у различитим паковањима приказује се одвојено.</p></div>'+cards+'</section>';
+ return '<section class="rounded-2xl border border-emerald-200 bg-white p-3 mb-4"><div class="mb-3"><div class="text-xl font-black text-slate-950">1. ПРИПРЕМА ПО ГАЗДИНСТВИМА</div><p class="text-sm text-slate-600 mt-1">Списак је направљен директно из наруџбина купаца. Исти производ у различитим паковањима приказује се одвојено.</p><label class="block mt-3 text-xs font-black text-slate-600">ФИЛТЕР ПО ГАЗДИНСТВУ<select onchange="setSupplierDemandFarmFilter(this.value)" class="mt-1 w-full rounded-xl border-2 border-emerald-200 bg-white px-3 py-3 text-sm font-bold"><option value="all" '+(supplierDemandFarmFilter==='all'?'selected':'')+'>СВА ГАЗДИНСТВА</option>'+allFarmIds.map(id=>'<option value="'+id+'" '+(String(supplierDemandFarmFilter)===String(id)?'selected':'')+'>'+esc(farmName(groups[id].farm.name))+'</option>').join('')+'</select></label></div>'+(cards||'<p class="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Нема ставки за изабрано газдинство.</p>')+'</section>';
 }
 function printFarmPrep(farmId){
  const f=farms.find(x=>Number(x.id)===Number(farmId)),list=items.filter(x=>String(assignedFarmId(x))===String(farmId));
