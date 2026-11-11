@@ -181,7 +181,8 @@ async function loadTour(){
  }
  populateFilters();populatePickupSummaryFilters();renderAll();toggleTourPicker(false);
  say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки. Изабрана тура се чува и после освежавања странице.');
- }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ИЗАБРАНЕ ТУРЕ '+tourId+'\\n'+(e?.message||String(e))+'\\n\\nПровери да ли постоје ставке за туру и да ли база дозвољава читање табеле stavke_porudzbine.';say(detail,true);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';console.error('[PREGLED-TURE] loadTour failed',e)}
+  return true;
+ }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ИЗАБРАНЕ ТУРЕ '+tourId+'\\n'+(e?.message||String(e))+'\\n\\nПровери да ли постоје ставке за туру и да ли база дозвољава читање табеле stavke_porudzbine.';say(detail,true);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';console.error('[PREGLED-TURE] loadTour failed',e);return false}
 }
 function setDeliveryListMode(mode){deliveryListMode=mode==='processed'?'processed':'pending';const a=document.getElementById('delivery-list-pending-btn'),b=document.getElementById('delivery-list-processed-btn');[a,b].forEach((el,i)=>{if(el)el.className='rounded-xl border-2 px-3 py-3 font-black text-sm '+((i===0&&deliveryListMode==='pending'||i===1&&deliveryListMode==='processed')?'border-emerald-700 bg-emerald-50 text-emerald-900':'border-slate-200 bg-white text-slate-600')});renderDelivery();}
 function setDeliveryPointMode(mode){deliveryPointMode=mode==='completed'?'completed':'active';const a=document.getElementById('delivery-point-active-btn'),b=document.getElementById('delivery-point-completed-btn');[a,b].forEach((el,i)=>{if(el)el.className='rounded-xl border-2 px-3 py-3 font-black text-sm '+((i===0&&deliveryPointMode==='active'||i===1&&deliveryPointMode==='completed')?'border-emerald-700 bg-emerald-50 text-emerald-900':'border-slate-200 bg-white text-slate-600')});renderDelivery();}
@@ -621,13 +622,13 @@ async function createPointForOrder(orderId){
 }
 async function saveOrderEdit(orderId,lineIds){
  const button=document.querySelector('button[onclick^="saveOrderEdit('+orderId+',"]');
- let savedLines=0;
+ let savedLines=0,databaseVerified=false;
  try{
   if(button){button.disabled=true;button.textContent='ЧУВАМ СВЕ ИЗМЕНЕ…'}
   const orderLines=orderItemsByOrder[String(orderId)]||items.filter(x=>String(x.porudzbina_id)===String(orderId));
   if(!orderLines.length)throw Error('Поруџбина нема учитаних ставки. Освежи страницу.');
   const expectedIds=new Set(orderLines.map(x=>String(x.id)));
-  if(lineIds.map(String).some(id=>!expectedIds.has(id)))throw Error('Списак ставки је промењен. Освежи страницу пре чувања.');
+  if(lineIds.length!==orderLines.length||lineIds.map(String).some(id=>!expectedIds.has(id)))throw Error('Списак ставки је промењен. Освежи страницу пре чувања.');
   const pointControl=document.getElementById('order-point-'+orderId),tourControl=document.getElementById('order-tour-'+orderId);
   if(!pointControl||!tourControl)throw Error('Поља за измену поруџбине нису доступна.');
   const tourValue=String(tourControl.value??'');
@@ -636,14 +637,13 @@ async function saveOrderEdit(orderId,lineIds){
   const prepared=orderLines.map(x=>{
    const id=String(x.id),priceEl=document.getElementById('line-price-'+id),qtyEl=document.getElementById('line-qty-'+id),unitEl=document.getElementById('line-unit-'+id);
    if(!priceEl||!qtyEl||!unitEl)throw Error('Недостају поља за ставку #'+id+'.');
-   if(!x.product_id||!catalogProduct(x))throw Error('Ставка #'+id+' нема важећи производ из каталога (product_id).');
    const qtyRaw=qtyEl.value.trim(),qty=Number(qtyRaw);
    if(!Number.isFinite(qty)||qty<=0)throw Error('Количина за ставку #'+id+' мора бити већа од нуле.');
    const unitValue=unitEl.value.trim(),raw=priceEl.value.trim(),patch={kolicina:qty,jedinica:unitValue||null};
    if(raw!==''){const amount=Number(raw);if(!Number.isFinite(amount)||amount<0)throw Error('Цена ставке #'+id+' мора бити нула или већа.');patch.cena_stavke=amount;patch.unit_price=amount/qty}
    return {id,x,patch,qty,unitValue};
   });
-  const expectedTotal=prepared.reduce((sum,item)=>sum+(item.patch.cena_stavke!==undefined?item.patch.cena_stavke:price(item.x)),0);
+  const expectedTotal=prepared.reduce((sum,item)=>sum+(item.patch.cena_stavke!==undefined?item.patch.cena_stavke:(item.x.cena_stavke!==null&&item.x.cena_stavke!==undefined&&item.x.cena_stavke!==''?n(item.x.cena_stavke):item.x.unit_price!==null&&item.x.unit_price!==undefined&&item.x.unit_price!==''?item.qty*n(item.x.unit_price):0)),0);
   for(const item of prepared){
    const result=await api('stavke_porudzbine?id=eq.'+encodeURIComponent(item.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(item.patch)});
    const saved=Array.isArray(result)?result.find(row=>String(row.id)===item.id):null;
@@ -663,10 +663,11 @@ async function saveOrderEdit(orderId,lineIds){
   if(!Array.isArray(verifyLines)||verifyLines.length!==orderLines.length||verifyLines.some(row=>String(row.tura_id??'')!==String(nextTourId??'')))throw Error('Завршна провера ставки у бази није прошла.');
   const verifyOrder=await api('porudzbine?select=id,punkt_id,ukupna_cena&id=eq.'+encodeURIComponent(orderId));
   if(!Array.isArray(verifyOrder)||!verifyOrder.some(row=>String(row.id)===String(orderId)&&String(row.punkt_id??'')===String(headerPatch.punkt_id??'')&&Math.abs(Number(row.ukupna_cena)-headerPatch.ukupna_cena)<=0.01))throw Error('Завршна провера пункта и укупне цене није прошла.');
-  await loadTour();
+  databaseVerified=true;
+  if(!await loadTour())throw Error('Подаци су потврђени у бази, али приказ није освежен. Притисни „Освежи“.');
   say('Поруџбина #'+orderId+' је сачувана и проверена у бази: '+verifyLines.length+' ставки · '+(nextTourId===null?'без туре':(tours.find(t=>Number(t.id)===nextTourId)?.naziv||'тура '+nextTourId))+' · пункт и укупан износ.');
  }catch(e){
-  say((savedLines?'Промене су делимично сачуване ('+savedLines+' ставки потврђено). ':'Измене нису сачуване. ')+e.message,true);
+  say((databaseVerified?'Подаци су сачувани и проверени у бази, али освежавање приказа није успело. ':savedLines?'Промене су делимично сачуване ('+savedLines+' ставки потврђено). ':'Измене нису сачуване. ')+e.message,true);
  }finally{if(button){button.disabled=false;button.textContent='Сачувај измене поруџбине'}}
 }
 
@@ -699,7 +700,7 @@ async function savePointTime(pointKey,inputId){
   const result=await api('tura_punktovi?tura_id=eq.'+tourId+'&punkt_id=eq.'+pointId,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({vreme:time})});
   if(!Array.isArray(result)||!result.some(row=>Number(row.tura_id)===tourId&&Number(row.punkt_id)===pointId&&String(row.vreme||'').slice(0,5)===time))throw Error('База није потврдила измену сатнице постојећег пункта.');
   await refreshTourPointOrder();
-  await loadTour();
+  if(!await loadTour())throw Error('Сатница је сачувана, али приказ није освежен. Притисни „Освежи“.');
   say('Сатница постојећег пункта је сачувана и проверена: '+time+'.');
  }catch(e){say('Сатница није сачувана: '+e.message,true)}
 }
@@ -720,7 +721,7 @@ async function addCatalogPointToTour(pointId,inputId){
    if(!Array.isArray(result)||!result.some(row=>Number(row.tura_id)===tourId&&Number(row.punkt_id)===Number(pointId)&&row.aktivan===true&&String(row.vreme||'').slice(0,5)===time))throw Error('База није потврдила додавање новог пункта у туру.');
   }
   await refreshTourPointOrder();
-  await loadTour();
+  if(!await loadTour())throw Error('Пункт је сачуван, али приказ није освежен. Притисни „Освежи“.');
   say('Пункт „'+(p.name||('Пункт '+pointId))+'“ је додат у туру са сатницом '+time+'.');
  }catch(e){say('Пункт није додат у туру: '+e.message,true)}
 }
