@@ -744,6 +744,7 @@ function renderManifest(){
  const cardsByPoint=new Map();os.forEach(o=>{const key=o.m?.punkt_id?String(o.m.punkt_id):'none';if(!cardsByPoint.has(key))cardsByPoint.set(key,[]);cardsByPoint.get(key).push(o)});
  const cards=[...cardsByPoint.entries()].sort((a,b)=>{const pa=stopOrder.get(a[0])||{i:9999},pb=stopOrder.get(b[0])||{i:9999};return pa.i-pb.i||a[0].localeCompare(b[0],undefined,{numeric:true})}).map(([pointId,pointOrders])=>{
   const p=stopOrder.get(pointId),point=pointMeta.find(x=>String(x.id)===pointId),pointTitle=point?.name||(pointId==='none'?'Пункт није одређен':'Пункт #'+pointId);
+  const pointCustomerCount=new Set(pointOrders.map(o=>o.m?.kupac_id?'kupac:'+o.m.kupac_id:'order:'+o.id)).size;
   const ordersHtml=pointOrders.map(o=>{
    const ready=o.rs.filter(r=>n(r.preuzeta_kolicina)>0),complete=isComplete(o);
    const orderRows=o.rs.filter(r=>view==='delivered'?n(r.isporucena_kolicina)>0:(n(r.preuzeta_kolicina)<=0||n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)));
@@ -808,7 +809,7 @@ function renderManifest(){
    if(!Number.isFinite(qty)||qty<0||qty>max){alert('Унеси количину од 0 до '+fmt(max)+' '+unit(row)+'.');input.value=String(Math.max(0,Math.min(max,Number(input.value)||0)));return}
    try{
     await api('stavke_porudzbine?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({kolicina_za_isporuku:qty,stavka_cekirana:qty>0?Boolean(row.stavka_cekirana):false})});
-    row.kolicina_za_isporuku=qty;if(qty===0){row.stavka_cekirana=false;input.closest('[data-deliver-item]')?.classList.remove('delivery-item-selected')}
+    row.kolicina_za_isporuku=qty;if(qty===0){row.stavka_cekirana=false;input.closest('[data-deliver-item]')?.classList.remove('delivery-item-selected');if(input.closest('[data-deliver-item]')){input.closest('[data-deliver-item]').style.borderColor='var(--line)';input.closest('[data-deliver-item]').style.background='#fff'}}
     updateSelectedSummary();
    }catch(err){alert('Количина за предају није сачувана: '+(err.message||err))}
   });
