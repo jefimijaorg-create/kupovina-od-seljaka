@@ -318,6 +318,7 @@ function setDeliveryItemChecked(id,checked){
  if(!(remaining>0)){say('Ова ставка је већ у потпуности испоручена.',true);refreshDeliveryKeepingContext();return}
  if(!deliveryDraftPackages.has(key))deliveryDraftPackages.set(key,remaining/Math.max(.000001,p.size));
  if(!checked){deliveryDraftSelection.delete(key);refreshDeliveryKeepingContext();return}
+ if(!(draftPackageCount(x)>0)){say('Унеси број паковања већи од нуле пре означавања.',true);refreshDeliveryKeepingContext();return}
  const available=deliveryAvailability(x)-deliveryDraftQuantityForKey(deliveryKey(x));
  const wanted=draftPackageCount(x)*p.size;
  if(available+0.000001<wanted){say('Нема довољно преузете робе за ову количину.',true);deliveryDraftSelection.delete(key);refreshDeliveryKeepingContext();return}
