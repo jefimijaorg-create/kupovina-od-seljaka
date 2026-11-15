@@ -93,7 +93,7 @@ main{max-width:1440px!important;padding-top:22px!important}
 <script>
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
-let tours=[],items=[],orderItemsByOrder={},farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},supplierDemandFarmFilter='all',supplierDemandExpanded={},tourId=68,view='orders',deliveryMode='stock',deliveryListMode='pending',deliveryPointMode='active',deliveryInvoicePrepared=new Set(),deliveryDraftSelection=new Set(),procurementMode='farm',procurementFarmFilter='all';
+let tours=[],items=[],orderItemsByOrder={},farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},supplierDemandFarmFilter='all',supplierDemandExpanded={},tourId=68,view='orders',deliveryMode='stock',deliveryListMode='pending',deliveryPointMode='active',deliveryInvoicePrepared=new Set(),deliveryDraftSelection=new Set(),deliveryDraftPackages=new Map(),procurementMode='farm',procurementFarmFilter='all';
 async function api(path,opt={}){let r;try{r=await fetch(URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}})}catch(e){throw Error('Мрежна/CORS грешка · '+path+' · '+(e?.message||String(e)))}let t=await r.text();if(!r.ok)throw Error('Supabase HTTP '+r.status+' '+r.statusText+' · PUTANJA: '+path+' · ODGOVOR: '+(t||'(празан одговор)').slice(0,1200));try{return t?JSON.parse(t):[]}catch(e){throw Error('Неисправан JSON одговор · '+path+' · '+(t||'').slice(0,500))}}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=v=>Number(v||0),fmt=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:3}),cash=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.';
@@ -254,10 +254,10 @@ function renderDelivery(){
    pointTotal+=sum;pointDelivered+=sum;
    const productCard=x=>{
     const p=pack(x),delivered=Math.max(0,Math.min(p.total,n(x.isporucena_kolicina))),remaining=Math.max(0,p.total-delivered),bill=p.total>0&&hasItemPrice(x)?price(x)*delivered/p.total:0;
-    const unitPrice=p.total>0&&hasItemPrice(x)?price(x)/p.total:null,selected=deliveryDraftSelection.has(String(x.id));
-    const canSelect=remaining>0&&deliveryAvailability(x)-deliveryDraftQuantityForKey(deliveryKey(x))+0.000001>=remaining;
-    const control=deliveryListMode==='pending'?'<label class="flex items-center gap-2 rounded-xl border-2 px-3 py-3 font-black '+(selected?'border-emerald-500 bg-emerald-50 text-emerald-800':'border-slate-300 bg-white text-slate-600')+'"><input aria-label="'+esc(productName(x))+' означи за упис испоруке" type="checkbox" '+(selected?'checked':'')+(!canSelect&&!selected?' disabled':'')+' onchange="setDeliveryItemChecked('+x.id+',this.checked)" class="h-6 w-6 accent-emerald-600"><span>'+(selected?'ОЗНАЧЕНО':'ОЗНАЧИ')+'</span></label>':'<span class="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-3 py-3 font-black text-xs">✓ ИСПОРУЧЕНО</span>';
-    return '<div class="rounded-xl border p-3 '+(selected?'border-emerald-400 bg-emerald-50':delivered>=p.total?'border-emerald-200 bg-emerald-50':'border-slate-200 bg-white')+'"><div class="flex items-center justify-between gap-3"><div class="min-w-0 flex-1"><b class="block text-base">'+esc(productName(x))+'</b><div class="mt-1 text-sm">Количина: <b>'+fmt(p.total)+' '+esc(p.unit)+'</b></div><div class="text-sm">Амбалажа: <b>'+esc(p.label)+'</b> · '+fmt(p.count)+' ком.</div><div class="text-sm">Цена по '+esc(p.unit)+': <b>'+(unitPrice===null?'<span class="text-amber-700">Није унета</span>':cash(unitPrice))+'</b></div><div class="mt-1 text-sm font-black">Вредност већ испорученог: '+(hasItemPrice(x)?cash(bill):'<span class="text-amber-700">Цена није унета</span>')+'</div>'+(remaining>0?'<div class="text-xs text-slate-500 mt-1">Преостало за испоруку: '+fmt(remaining)+' '+esc(p.unit)+'</div>':'')+'</div>'+control+'</div></div>';
+    const unitPrice=p.total>0&&hasItemPrice(x)?price(x)/p.total:null,selected=deliveryDraftSelection.has(String(x.id)),draftCount=draftPackageCount(x),draftQty=draftCount*p.size,draftAmount=unitPrice===null?null:unitPrice*draftQty;
+    const available=deliveryAvailability(x)-deliveryDraftQuantityForKey(deliveryKey(x))+(selected?draftQty:0),maxPackages=Math.max(0,Math.min(Math.floor((remaining+0.000001)/Math.max(.000001,p.size)),Math.floor((available+0.000001)/Math.max(.000001,p.size))));
+    const control=deliveryListMode==='pending'?'<div class="flex flex-col gap-2 min-w-[112px]"><label class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 font-black '+(selected?'border-emerald-500 bg-emerald-50 text-emerald-800':'border-slate-300 bg-white text-slate-600')+'"><input aria-label="'+esc(productName(x))+' означи за упис испоруке" type="checkbox" '+(selected?'checked':'')+' onchange="setDeliveryItemChecked('+x.id+',this.checked)" class="h-6 w-6 accent-emerald-600"><span>'+(selected?'ОЗНАЧЕНО':'ОЗНАЧИ')+'</span></label><label class="text-xs font-bold text-slate-600">Број паковања<input aria-label="Број паковања за '+esc(productName(x))+'" type="number" min="0" max="'+maxPackages+'" step="1" value="'+draftCount+'" onchange="setDeliveryDraftPackages('+x.id+',this.value)" class="mt-1 w-full rounded-lg border-2 border-slate-300 bg-white p-2 text-lg font-black text-center"></label></div>':'<span class="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-3 py-3 font-black text-xs">✓ ИСПОРУЧЕНО</span>';
+    return '<div class="rounded-xl border p-3 '+(selected?'border-emerald-400 bg-emerald-50':delivered>=p.total?'border-emerald-200 bg-emerald-50':'border-slate-200 bg-white')+'"><div class="flex items-center justify-between gap-3"><div class="min-w-0 flex-1"><b class="block text-base">'+esc(productName(x))+'</b><div class="mt-1 text-sm">Амбалажа: <b>'+esc(p.label)+'</b></div><div class="text-sm">Количина: <b>'+fmt(p.count)+' × '+fmt(p.size)+' '+esc(p.unit)+' = '+fmt(p.total)+' '+esc(p.unit)+'</b></div><div class="text-sm">Цена по '+esc(p.unit)+': <b>'+(unitPrice===null?'<span class="text-amber-700">Није унета</span>':cash(unitPrice))+'</b></div><div class="mt-1 text-sm font-black">Укупно за ову предају: '+(draftAmount===null?'<span class="text-amber-700">Цена није унета</span>':cash(draftAmount))+'</div><div class="text-xs text-slate-500 mt-1">Преостало за испоруку: '+fmt(remaining)+' '+esc(p.unit)+'</div></div>'+control+'</div></div>';
    };
    const pendingItems=deliveryListMode==='pending'?its.filter(x=>n(x.isporucena_kolicina)<pack(x).total):[];
    const pickedItems=deliveryListMode==='processed'?its.filter(x=>n(x.isporucena_kolicina)>0):[];
@@ -281,23 +281,22 @@ function deliveryDraftQuantityForKey(key){
  return [...deliveryDraftSelection].reduce((sum,id)=>{
   const x=items.find(row=>String(row.id)===String(id));
   if(!x||deliveryKey(x)!==key)return sum;
-  return sum+Math.max(0,pack(x).total-n(x.isporucena_kolicina));
+  const p=pack(x),count=deliveryDraftPackages.has(String(id))?n(deliveryDraftPackages.get(String(id))):Math.max(0,p.count-n(x.isporucena_kolicina)/Math.max(.000001,p.size));
+  return sum+Math.max(0,count)*p.size;
  },0);
+}
+function draftPackageCount(x){
+ const p=pack(x),key=String(x.id);
+ return deliveryDraftPackages.has(key)?Math.max(0,n(deliveryDraftPackages.get(key))):Math.max(0,(p.total-n(x.isporucena_kolicina))/Math.max(.000001,p.size));
 }
 function renderDeliveryDraftSummary(){
  const selected=items.filter(x=>deliveryDraftSelection.has(String(x.id)));
  const quantities={};
- selected.forEach(x=>{
-  const p=pack(x),remaining=Math.max(0,p.total-n(x.isporucena_kolicina)),u=p.unit||'ком';
-  quantities[u]=(quantities[u]||0)+remaining;
- });
+ selected.forEach(x=>{const p=pack(x),qty=draftPackageCount(x)*p.size,u=p.unit||'ком';quantities[u]=(quantities[u]||0)+qty});
  const quantityLabel=Object.entries(quantities).map(([u,value])=>fmt(value)+' '+u).join(' · ')||'0';
  const missing=selected.filter(x=>!hasItemPrice(x)).length;
- const total=selected.reduce((sum,x)=>{
-  const p=pack(x),remaining=Math.max(0,p.total-n(x.isporucena_kolicina));
-  return sum+(p.total>0&&hasItemPrice(x)?price(x)*remaining/p.total:0);
- },0);
- return '<section class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 mt-4 no-print"><h3 class="text-lg font-black text-emerald-950">ОБРАЧУН ОЗНАЧЕНЕ ИСПОРУКЕ</h3><p class="text-xs text-emerald-800 mt-1">Чекирање је привремено. База се мења тек после потврде.</p><div class="grid grid-cols-2 gap-2 mt-3"><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Означене ставке</span><b class="text-xl">'+selected.length+'</b></div><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Укупна количина</span><b class="text-xl">'+quantityLabel+'</b></div></div><div class="rounded-xl bg-white border border-emerald-200 p-3 mt-2"><span class="block text-xs font-bold text-slate-500">УКУПНО ЗА НАПЛАТУ</span><b class="text-2xl text-emerald-800">'+cash(total)+'</b>'+(missing?'<p class="text-xs text-red-700 font-bold mt-1">Недостаје цена за '+missing+' означених ставки. Потврда је онемогућена.</p>':'')+'</div><div class="flex flex-col sm:flex-row gap-2 mt-3"><button type="button" onclick="confirmDeliverySelection(this)" '+(!selected.length||missing?'disabled':'')+' class="flex-1 rounded-xl bg-emerald-700 text-white px-4 py-4 font-black text-base disabled:bg-slate-300 disabled:text-slate-500">✓ УПИШИ ИСПОРУКУ</button><button type="button" onclick="clearDeliverySelection()" '+(!selected.length?'disabled':'')+' class="rounded-xl border border-slate-300 bg-white px-4 py-4 font-bold text-slate-700 disabled:opacity-50">Поништи избор</button></div></section>';
+ const total=selected.reduce((sum,x)=>{const p=pack(x),qty=draftPackageCount(x)*p.size;return sum+(p.total>0&&hasItemPrice(x)?price(x)*qty/p.total:0)},0);
+ return '<section class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 mt-4 no-print"><h3 class="text-lg font-black text-emerald-950">ОБРАЧУН ОЗНАЧЕНЕ ИСПОРУКЕ</h3><p class="text-xs text-emerald-800 mt-1">Можеш да измениш број паковања. Чекирање је привремено; база се мења тек после потврде.</p><div class="grid grid-cols-2 gap-2 mt-3"><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Означене ставке</span><b class="text-xl">'+selected.length+'</b></div><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Укупна количина</span><b class="text-xl">'+quantityLabel+'</b></div></div><div class="rounded-xl bg-white border border-emerald-200 p-3 mt-2"><span class="block text-xs font-bold text-slate-500">УКУПНО ЗА НАПЛАТУ</span><b class="text-2xl text-emerald-800">'+cash(total)+'</b>'+(missing?'<p class="text-xs text-red-700 font-bold mt-1">Недостаје цена за '+missing+' означених ставки. Потврда је онемогућена.</p>':'')+'</div><div class="flex flex-col sm:flex-row gap-2 mt-3"><button type="button" onclick="confirmDeliverySelection(this)" '+(!selected.length||missing?'disabled':'')+' class="flex-1 rounded-xl bg-emerald-700 text-white px-4 py-4 font-black text-base disabled:bg-slate-300 disabled:text-slate-500">✓ УПИШИ ИСПОРУКУ</button><button type="button" onclick="clearDeliverySelection()" '+(!selected.length?'disabled':'')+' class="rounded-xl border border-slate-300 bg-white px-4 py-4 font-bold text-slate-700 disabled:opacity-50">Поништи избор</button></div></section>';
 }
 function refreshDeliveryKeepingContext(){
  const scrollTop=window.scrollY;
@@ -307,7 +306,7 @@ function refreshDeliveryKeepingContext(){
  window.scrollTo(0,scrollTop);
 }
 function clearDeliverySelection(){
- deliveryDraftSelection.clear();
+ deliveryDraftSelection.clear();deliveryDraftPackages.clear();
  refreshDeliveryKeepingContext();
  say('Привремени избор испоруке је поништен. База није мењана.');
 }
@@ -315,11 +314,30 @@ function setDeliveryItemChecked(id,checked){
  const x=items.find(row=>String(row.id)===String(id));
  if(!x){say('Ставка поруџбине није пронађена.',true);return}
  if(!checked){deliveryDraftSelection.delete(String(id));refreshDeliveryKeepingContext();return}
- const p=pack(x),remaining=Math.max(0,p.total-n(x.isporucena_kolicina));
+ const p=pack(x),key=String(id),remaining=Math.max(0,p.total-n(x.isporucena_kolicina));
  if(!(remaining>0)){say('Ова ставка је већ у потпуности испоручена.',true);refreshDeliveryKeepingContext();return}
+ if(!deliveryDraftPackages.has(key))deliveryDraftPackages.set(key,remaining/Math.max(.000001,p.size));
+ if(!checked){deliveryDraftSelection.delete(key);refreshDeliveryKeepingContext();return}
  const available=deliveryAvailability(x)-deliveryDraftQuantityForKey(deliveryKey(x));
- if(available+0.000001<remaining){say('Нема довољно преузете робе за ову ставку.',true);refreshDeliveryKeepingContext();return}
- deliveryDraftSelection.add(String(id));
+ const wanted=draftPackageCount(x)*p.size;
+ if(available+0.000001<wanted){say('Нема довољно преузете робе за ову количину.',true);deliveryDraftSelection.delete(key);refreshDeliveryKeepingContext();return}
+ deliveryDraftSelection.add(key);
+ refreshDeliveryKeepingContext();
+}
+function setDeliveryDraftPackages(id,value){
+ const x=items.find(row=>String(row.id)===String(id));
+ if(!x){say('Ставка поруџбине није пронађена.',true);return}
+ const p=pack(x),raw=String(value??'').trim(),count=Number(raw),key=String(id);
+ if(raw===''||!Number.isInteger(count)||count<0){say('Унеси цео број паковања.',true);refreshDeliveryKeepingContext();return}
+ const maxTotal=Math.max(0,p.total-n(x.isporucena_kolicina));
+ const max=Math.floor((maxTotal+0.000001)/Math.max(.000001,p.size));
+ if(count>max){say('Највише можеш да предаш '+max+' паковања за ову ставку.',true);refreshDeliveryKeepingContext();return}
+ deliveryDraftPackages.set(key,count);
+ if(count===0)deliveryDraftSelection.delete(key);
+ else if(deliveryDraftSelection.has(key)){
+  const other=deliveryDraftQuantityForKey(deliveryKey(x))-count*p.size;
+  if(deliveryAvailability(x)-other+0.000001<count*p.size){say('Нема довољно расположиве робе за ову количину.',true);refreshDeliveryKeepingContext();return}
+ }
  refreshDeliveryKeepingContext();
 }
 async function confirmDeliverySelection(button){
@@ -332,10 +350,10 @@ async function confirmDeliverySelection(button){
  let saved=0;
  try{
   for(const x of selected){
-   const p=pack(x),current=Math.max(0,n(x.isporucena_kolicina)),remaining=Math.max(0,p.total-current);
-   if(!(remaining>0)){deliveryDraftSelection.delete(String(x.id));continue}
-   if(deliveryAvailability(x)+0.000001<remaining)throw Error('Нема довољно преузете робе за ставку '+productName(x)+'.');
-   const next=Math.min(p.total,current+remaining);
+   const p=pack(x),current=Math.max(0,n(x.isporucena_kolicina)),count=draftPackageCount(x),quantity=count*p.size;
+   if(!(quantity>0)){deliveryDraftSelection.delete(String(x.id));continue}
+   if(deliveryAvailability(x)+0.000001<quantity)throw Error('Нема довољно преузете робе за ставку '+productName(x)+'.');
+   const next=Math.min(p.total,current+quantity);
    try{
     const result=await api('stavke_porudzbine?id=eq.'+encodeURIComponent(x.id)+'&tura_id=eq.'+encodeURIComponent(tourId),{
      method:'PATCH',
@@ -349,7 +367,7 @@ async function confirmDeliverySelection(button){
     if(!persisted||Math.abs(n(persisted.isporucena_kolicina)-next)>=0.000001)throw writeError;
    }
    x.isporucena_kolicina=next;
-   deliveryDraftSelection.delete(String(x.id));
+   deliveryDraftSelection.delete(String(x.id));deliveryDraftPackages.delete(String(x.id));
    deliveryInvoicePrepared.delete(String(ord(x).id));
    saved++;
   }
