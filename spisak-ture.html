@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="sr" class="bg-slate-50"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Списак за туру | Наручи домаће</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{color-scheme:light}body{font-family:Arial,system-ui,sans-serif;color:#18332b;background:#f3f7f5}
+button,input,select{font:inherit}input{min-width:0} .card{background:#fff;border:1px solid #dce8e1;border-radius:18px;box-shadow:0 3px 12px #173b2b0a}
+.num{font-variant-numeric:tabular-nums}.save{background:#087f5b;color:white}.save:disabled{opacity:.55}
+@media print{.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
+</style></head>
+<body class="min-h-screen">
+<header class="bg-emerald-900 text-white px-4 py-5">
+ <div class="max-w-4xl mx-auto"><div class="text-xs tracking-widest text-emerald-200 font-bold">НАРУЧИ ДОМАЋЕ · АДМИНИСТРАЦИЈА</div>
+ <h1 class="text-2xl font-black mt-1">Списак за туру</h1><p class="text-sm text-emerald-100 mt-1">Пункт · купац · производ · паковање · количина · цена · укупно</p></div>
+</header>
+<main class="max-w-4xl mx-auto p-3 sm:p-5">
+ <section class="card p-4 mb-4 no-print">
+  <label class="block text-sm font-bold mb-2" for="tour">Изабери туру</label>
+  <select id="tour" class="w-full border rounded-xl p-3 bg-white" onchange="loadTour(this.value)"><option value="">Учитавање тура…</option></select>
+  <div class="flex gap-2 mt-3"><button class="save rounded-xl px-4 py-3 font-bold flex-1" onclick="refresh()">Освежи податке</button><button class="rounded-xl border px-4 py-3 font-bold" onclick="window.print()">Штампај</button></div>
+ </section>
+ <div id="message" class="text-sm mb-3" role="status">Повезивање са базом…</div>
+ <section id="summary" class="grid grid-cols-3 gap-2 mb-4"></section>
+ <section class="card p-3 mb-4 no-print">
+  <input id="search" type="search" placeholder="Претражи купца, пункт или производ…" class="w-full border rounded-xl p-3" oninput="render()">
+  <div id="filters" class="flex flex-wrap gap-2 mt-3"></div>
+ </section>
+ <div id="list" class="space-y-4"></div>
+</main>
+<script>
+const URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+let tours=[],tourId=null,items=[],orders=[],customers=[],points=[],tourPoints=[],activePoint='all',busy=new Set();
+const $=id=>document.getElementById(id), num=v=>Number(v||0), fmt=v=>num(v).toLocaleString('sr-RS',{maximumFractionDigits:3}), money=v=>num(v).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path,opt={}){const r=await fetch(URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}});const t=await r.text();if(!r.ok)throw Error('Supabase '+r.status+': '+t.slice(0,500));return t?JSON.parse(t):[]}
+function say(t,bad=false){$('message').textContent=t;$('message').className='text-sm mb-3 '+(bad?'text-red-700':'text-emerald-800')}
+function getOrder(id){return orders.find(o=>String(o.id)===String(id))||{}}
+function getCustomer(id){return customers.find(c=>String(c.id)===String(id))||{}}
+function getPoint(id){return points.find(p=>String(p.id)===String(id))||{}}
+function pack(x){let count=num(x.package_count)||num(x.broj_pakovanja)||1;let total=num(x.total_quantity)||num(x.kolicina);let size=num(x.package_size);if(!size&&count)size=total/count;let unit=x.package_unit||x.quantity_unit||x.jedinica||'ком';let label=x.variant_name||x.velicina_pakovanja||x.package_info||((fmt(size)+' '+unit));return {count,size,unit,label,total:total||count*size}}
+function linePrice(x){const p=pack(x);return p.count?num(x.cena_stavke)/p.count:num(x.unit_price)*p.size}
+function pointSort(a,b){const aa=tourPoints.find(x=>String(x.punkt_id)===String(a)),bb=tourPoints.find(x=>String(x.punkt_id)===String(b));return num(aa?.redosled)-num(bb?.redosled)||String(getPoint(a).name).localeCompare(String(getPoint(b).name),'sr')}
+async function init(){try{say('Учитавање тура…');tours=await api('ture?select=id,naziv,datum,status&order=datum.desc,id.desc&limit=500');$('tour').innerHTML='<option value="">Изабери туру</option>'+tours.map(t=>'<option value="'+t.id+'">'+esc(t.datum||'')+' — '+esc(t.naziv||('Тура '+t.id))+'</option>').join('');const wanted=new URLSearchParams(location.search).get('tura');const initial=tours.find(t=>String(t.id)===wanted)||tours.find(t=>t.datum==='2026-11-15')||tours[0];if(initial){$('tour').value=String(initial.id);await loadTour(initial.id)}else say('У бази нема креираних тура.',true)}catch(e){say('Не могу да учитам туре: '+e.message,true)}}
+async function loadTour(id){if(!id)return;tourId=String(id);activePoint='all';say('Учитавање поруџбина за туру…');try{
+ const [rows,ord,pts,cust,tp]=await Promise.all([
+  api('stavke_porudzbine?select=*&tura_id=eq.'+encodeURIComponent(tourId)+'&order=id.asc'),
+  api('porudzbine?select=id,kupac_id,punkt_id,telefon,status,ukupna_cena&limit=5000'),
+  api('punktovi?select=id,name,sort_order'),
+  api('kupci?select=id,ime_prezime,telefon'),
+  api('tura_punktovi?select=tura_id,punkt_id,redosled,vreme,aktivan&tura_id=eq.'+encodeURIComponent(tourId))
+ ]);
+ items=rows;orders=ord;points=pts;customers=cust;tourPoints=tp;
+ say('Учитано '+items.length+' ставки. Измене количине и цене чувају се у бази.');
+ render();
+ }catch(e){say('Грешка при учитавању туре: '+e.message,true)}}
+async function refresh(){if(tourId)await loadTour(tourId);else await init()}
+function render(){
+ const q=$('search').value.trim().toLocaleLowerCase('sr');
+ const pointIds=[...new Set(items.map(x=>String(getOrder(x.porudzbina_id).punkt_id||'')).filter(Boolean))].sort(pointSort);
+ $('filters').innerHTML='<button class="rounded-full border px-3 py-2 text-xs font-bold '+(activePoint==='all'?'bg-emerald-900 text-white':'bg-white')+'" onclick="filterPoint(\'all\')">Сви пунктови</button>'+pointIds.map(id=>'<button class="rounded-full border px-3 py-2 text-xs font-bold '+(activePoint===id?'bg-emerald-900 text-white':'bg-white')+'" onclick="filterPoint(\''+id+'\')">'+esc(getPoint(id).name||'Пункт')+'</button>').join('');
+ const groups={};items.forEach(x=>{const o=getOrder(x.porudzbina_id),pid=String(o.punkt_id||'');const c=getCustomer(o.kupac_id);const text=[getPoint(pid).name,c.ime_prezime,x.proizvod,x.variant_name,x.velicina_pakovanja].join(' ').toLocaleLowerCase('sr');if((activePoint!=='all'&&activePoint!==pid)||(q&&!text.includes(q)))return;(groups[pid]||(groups[pid]=[])).push(x)});
+ const visible=Object.values(groups).flat(),buyers=new Set(visible.map(x=>String(x.porudzbina_id))).size,total=visible.reduce((s,x)=>s+num(x.cena_stavke),0);
+ $('summary').innerHTML=[['КУПАЦА',buyers],['СТАВКИ',visible.length],['ВРЕДНОСТ',money(total)]].map(([a,b])=>'<div class="card p-3"><div class="text-xl sm:text-2xl font-black num">'+b+'</div><div class="text-[10px] text-slate-500 font-bold mt-1">'+a+'</div></div>').join('');
+ $('list').innerHTML=Object.keys(groups).sort(pointSort).map(pid=>{const rows=groups[pid];const pointTotal=rows.reduce((s,x)=>s+num(x.cena_stavke),0);const byOrder={};rows.forEach(x=>(byOrder[x.porudzbina_id]??=[]).push(x));return '<section class="card overflow-hidden"><div class="bg-emerald-50 border-b border-emerald-100 p-3 flex justify-between gap-2"><div><h2 class="font-black text-lg">'+esc(getPoint(pid).name||'Непознат пункт')+'</h2><div class="text-xs text-slate-500">'+new Set(rows.map(x=>String(x.porudzbina_id))).size+' купаца</div></div><b class="text-emerald-900 num">'+money(pointTotal)+'</b></div><div class="p-3 space-y-3">'+Object.entries(byOrder).map(([oid,lines])=>{const o=getOrder(oid),c=getCustomer(o.kupac_id);return '<div class="border rounded-xl p-3"><div class="font-black mb-2">'+esc(c.ime_prezime||'Купац')+'</div>'+lines.map(rowHtml).join('')+'</div>'}).join('')+'</div></section>'}).join('')||'<div class="card p-6 text-center text-slate-500">Нема ставки за изабрани филтер.</div>';
+}
+function rowHtml(x){const p=pack(x),unitPrice=linePrice(x),disabled=busy.has(String(x.id));return '<div class="border-t first:border-0 py-3"><div class="font-bold text-sm">'+esc(x.proizvod||'Производ')+'</div><div class="text-xs text-slate-500 mt-1">'+esc(p.label)+' · '+fmt(p.size)+' '+esc(p.unit)+' по паковању</div><div class="grid grid-cols-2 gap-2 mt-3"><label class="text-xs text-slate-500 font-bold">КОЛИЧИНА ПАКОВАЊА<input id="qty-'+x.id+'" type="number" min="0" step="1" value="'+fmt(p.count)+'" class="block w-full mt-1 border rounded-xl p-3 text-base text-slate-900 font-bold"></label><label class="text-xs text-slate-500 font-bold">ЦЕНА ПО ПАКОВАЊУ (дин.)<input id="price-'+x.id+'" type="number" min="0" step="0.01" value="'+unitPrice.toFixed(2)+'" class="block w-full mt-1 border rounded-xl p-3 text-base text-slate-900 font-bold"></label></div><div class="flex items-center justify-between gap-2 mt-3"><div><div class="text-[10px] text-slate-500 font-bold">УКУПНА ЦЕНА</div><div id="total-'+x.id+'" class="font-black text-lg text-emerald-800 num">'+money(num(x.cena_stavke))+'</div></div><button class="save rounded-xl px-4 py-3 text-sm font-black" '+(disabled?'disabled':'')+' onclick="saveLine('+x.id+')">'+(disabled?'ЧУВАМ…':'САЧУВАЈ')+'</button></div></div>'}
+function filterPoint(id){activePoint=id;render()}
+async function saveLine(id){const x=items.find(a=>String(a.id)===String(id));if(!x)return;const qtyRaw=$('qty-'+id).value,priceRaw=$('price-'+id).value,qty=Number(qtyRaw),unitPrice=Number(priceRaw),p=pack(x);if(qtyRaw===''||!Number.isFinite(qty)||qty<0||!Number.isInteger(qty)){say('Количина мора бити цео број 0 или већи.',true);return}if(priceRaw===''||!Number.isFinite(unitPrice)||unitPrice<0){say('Цена мора бити 0 или већа.',true);return}if(!(p.size>0)){say('Није могуће утврдити величину паковања за ову ставку. Није сачувано.',true);return}
+ busy.add(String(id));render();
+ try{
+  const totalQty=qty*p.size,totalPrice=qty*unitPrice;
+  const patch={package_count:qty,broj_pakovanja:qty,package_size:p.size,package_unit:p.unit,package_info:qty+' × '+p.label,velicina_pakovanja:qty+' × '+p.label,total_quantity:totalQty,kolicina:totalQty,unit_price:p.size?unitPrice/p.size:0,cena_stavke:totalPrice};
+  const saved=await api('stavke_porudzbine?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(patch)});
+  if(!Array.isArray(saved)||!saved.some(r=>String(r.id)===String(id)&&num(r.package_count)===qty&&Math.abs(num(r.cena_stavke)-totalPrice)<0.01))throw Error('База није потврдила сачуване вредности.');
+  Object.assign(x,saved.find(r=>String(r.id)===String(id)));
+  const orderId=String(x.porudzbina_id),orderRows=await api('stavke_porudzbine?select=cena_stavke,porudzbina_id&porudzbina_id=eq.'+encodeURIComponent(orderId));
+  const orderTotal=orderRows.reduce((s,r)=>s+num(r.cena_stavke),0);
+  const updated=await api('porudzbine?id=eq.'+encodeURIComponent(orderId),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({ukupna_cena:orderTotal})});
+  if(!Array.isArray(updated)||!updated.some(o=>String(o.id)===orderId&&Math.abs(num(o.ukupna_cena)-orderTotal)<0.01))throw Error('Ставка је сачувана, али укупан износ поруџбине није потврђен. Освежи податке.');
+  say('Сачувано: '+fmt(qty)+' паковања × '+money(unitPrice)+' = '+money(totalPrice)+'. Укупна цена поруџбине је прерачуната.');
+  render();
+ }catch(e){say('Измена није у потпуности сачувана: '+e.message,true);await loadTour(tourId)}finally{busy.delete(String(id))}
+}
+init();
+</script></body></html>
