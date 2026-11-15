@@ -93,7 +93,7 @@ main{max-width:1440px!important;padding-top:22px!important}
 <script>
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
-let tours=[],items=[],orderItemsByOrder={},farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},supplierDemandFarmFilter='all',supplierDemandExpanded={},tourId=68,view='orders',deliveryMode='stock',deliveryListMode='pending',deliveryPointMode='active',deliveryInvoicePrepared=new Set(),procurementMode='farm',procurementFarmFilter='all';
+let tours=[],items=[],orderItemsByOrder={},farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},supplierDemandFarmFilter='all',supplierDemandExpanded={},tourId=68,view='orders',deliveryMode='stock',deliveryListMode='pending',deliveryPointMode='active',deliveryInvoicePrepared=new Set(),deliveryDraftSelection=new Set(),procurementMode='farm',procurementFarmFilter='all';
 async function api(path,opt={}){let r;try{r=await fetch(URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}})}catch(e){throw Error('Мрежна/CORS грешка · '+path+' · '+(e?.message||String(e)))}let t=await r.text();if(!r.ok)throw Error('Supabase HTTP '+r.status+' '+r.statusText+' · PUTANJA: '+path+' · ODGOVOR: '+(t||'(празан одговор)').slice(0,1200));try{return t?JSON.parse(t):[]}catch(e){throw Error('Неисправан JSON одговор · '+path+' · '+(t||'').slice(0,500))}}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=v=>Number(v||0),fmt=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:3}),cash=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.';
@@ -168,7 +168,7 @@ function chooseTour(id){const sel=document.getElementById('tour-select');if(sel)
 async function loadTour(){
  const selected=document.getElementById('tour-select').value;if(!selected){say('Изабери туру пре наставка.',true);return}
  const next=Number(selected);if(!Number.isFinite(next)||next<=0){say('Изабрана тура није исправна.',true);return}
- try{tourId=next;saveTourId(tourId);const t=tours.find(x=>Number(x.id)===tourId);
+ try{if(String(tourId)!==String(next))deliveryDraftSelection.clear();tourId=next;saveTourId(tourId);const t=tours.find(x=>Number(x.id)===tourId);
  document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';
  document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;
  say('Учитавање туре '+tourId+'…');[items,tourAllocations]=await Promise.all([api('stavke_porudzbine?select=*&tura_id=eq.'+tourId+'&order=id.asc'),api('tura_nabavka_dodele?select=*&tura_id=eq.'+tourId+'&order=id.asc').catch(e=>{console.warn('Расподела набавке није учитана:',e);return []})]);
@@ -253,10 +253,12 @@ function renderDelivery(){
    let its=g.orders[oid],o=ord(its[0]),c=buyer(o),sum=its.reduce((a,x)=>{const p=pack(x),q=Math.max(0,Math.min(p.total,n(x.isporucena_kolicina)));return a+(p.total>0&&hasItemPrice(x)?price(x)*q/p.total:0)},0),orderSum=its.reduce((a,x)=>a+(hasItemPrice(x)?price(x):0),0),done=Boolean(o.dostava_obradjena);
    pointTotal+=sum;pointDelivered+=sum;
    const productCard=x=>{
-    const p=pack(x),delivered=Math.max(0,Math.min(p.total,n(x.isporucena_kolicina))),bill=p.total>0&&hasItemPrice(x)?price(x)*delivered/p.total:0;
-    const unitPrice=p.total>0&&hasItemPrice(x)?price(x)/p.total:null;
-    return '<div class="rounded-xl border p-3 '+(delivered>=p.total?'border-emerald-200 bg-emerald-50':'border-slate-200 bg-white')+'"><div class="flex items-center justify-between gap-3"><div class="min-w-0 flex-1"><b class="block text-base">'+esc(productName(x))+'</b><div class="mt-1 text-sm">Количина: <b>'+fmt(p.total)+' '+esc(p.unit)+'</b></div><div class="text-sm">Амбалажа: <b>'+esc(p.label)+'</b> · '+fmt(p.count)+' ком.</div><div class="text-sm">Цена по '+esc(p.unit)+': <b>'+(unitPrice===null?'<span class="text-amber-700">Није унета</span>':cash(unitPrice))+'</b></div><div class="mt-1 text-sm font-black">Укупно: '+(hasItemPrice(x)?cash(bill):'<span class="text-amber-700">Цена није унета</span>')+'</div></div><label class="flex items-center gap-2 rounded-xl border-2 px-3 py-3 font-black '+(delivered>=p.total?'border-emerald-500 bg-emerald-50 text-emerald-800':'border-slate-300 bg-white text-slate-600')+'"><input aria-label="'+esc(productName(x))+' достављен" type="checkbox" '+(delivered>=p.total?'checked':'')+' onchange="setDeliveryItemChecked('+x.id+',this.checked)" class="h-6 w-6 accent-emerald-600">'+(delivered>=p.total?'<span>ДОСТАВЉЕНО</span>':'')+'</label></div></div>';
-   };
+    const p=pack(x),delivered=Math.max(0,Math.min(p.total,n(x.isporucena_kolicina))),remaining=Math.max(0,p.total-delivered),bill=p.total>0&&hasItemPrice(x)?price(x)*delivered/p.total:0;
+    const unitPrice=p.total>0&&hasItemPrice(x)?price(x)/p.total:null,selected=deliveryDraftSelection.has(String(x.id));
+    const canSelect=remaining>0&&deliveryAvailability(x)-deliveryDraftQuantityForKey(deliveryKey(x))+0.000001>=remaining;
+    const control=deliveryListMode==='pending'?'<label class="flex items-center gap-2 rounded-xl border-2 px-3 py-3 font-black '+(selected?'border-emerald-500 bg-emerald-50 text-emerald-800':'border-slate-300 bg-white text-slate-600')+'"><input aria-label="'+esc(productName(x))+' означи за упис испоруке" type="checkbox" '+(selected?'checked':'')+(!canSelect&&!selected?' disabled':'')+' onchange="setDeliveryItemChecked('+x.id+',this.checked)" class="h-6 w-6 accent-emerald-600"><span>'+(selected?'ОЗНАЧЕНО':'ОЗНАЧИ')+'</span></label>':'<span class="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-3 py-3 font-black text-xs">✓ ИСПОРУЧЕНО</span>';
+    return '<div class="rounded-xl border p-3 '+(selected?'border-emerald-400 bg-emerald-50':delivered>=p.total?'border-emerald-200 bg-emerald-50':'border-slate-200 bg-white')+'"><div class="flex items-center justify-between gap-3"><div class="min-w-0 flex-1"><b class="block text-base">'+esc(productName(x))+'</b><div class="mt-1 text-sm">Количина: <b>'+fmt(p.total)+' '+esc(p.unit)+'</b></div><div class="text-sm">Амбалажа: <b>'+esc(p.label)+'</b> · '+fmt(p.count)+' ком.</div><div class="text-sm">Цена по '+esc(p.unit)+': <b>'+(unitPrice===null?'<span class="text-amber-700">Није унета</span>':cash(unitPrice))+'</b></div><div class="mt-1 text-sm font-black">Вредност већ испорученог: '+(hasItemPrice(x)?cash(bill):'<span class="text-amber-700">Цена није унета</span>')+'</div>'+(remaining>0?'<div class="text-xs text-slate-500 mt-1">Преостало за испоруку: '+fmt(remaining)+' '+esc(p.unit)+'</div>':'')+'</div>'+control+'</div></div>';
+   };;
    const pendingItems=deliveryListMode==='pending'?its.filter(x=>n(x.isporucena_kolicina)<pack(x).total):[];
    const pickedItems=deliveryListMode==='processed'?its.filter(x=>n(x.isporucena_kolicina)>0):[];
    const lines=(pendingItems.length?'<div><h3 class="text-sm font-black text-slate-700 mb-2">ЗА ДОСТАВУ</h3><div class="space-y-3">'+pendingItems.map(productCard).join('')+'</div></div>':'')+(pickedItems.length?'<div><h3 class="text-sm font-black text-emerald-800 mb-2">ДОСТАВЉЕНИ ПРОИЗВОДИ</h3><div class="space-y-3">'+pickedItems.map(productCard).join('')+'</div></div>':'');
@@ -271,14 +273,90 @@ function renderDelivery(){
  document.getElementById('delivery-picked-panel').innerHTML=pickedHtml;
  html='<div class="no-print flex flex-col sm:flex-row gap-2 justify-end mb-3"><button onclick="copyAllPointsViber()" class="bg-emerald-700 text-white px-4 py-3 rounded-lg font-black text-base"><i class="fa-brands fa-viber mr-2"></i> Отвори Viber + копирај целу туру</button><button onclick="window.print()" class="bg-slate-100 border px-4 py-3 rounded-lg font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај списак доставе</button></div>'+html;
  if(pointKeys.length)html+='<div class="bg-emerald-950 text-white rounded-xl p-4 mb-4"><div class="text-sm text-emerald-100">'+(deliveryPointMode==='completed'?'ЗАВРШЕНИ ПУНКТОВИ':'АКТИВНИ ПУНКТОВИ')+' · УКУПНО ЗА ПРИКАЗАНЕ</div><div class="text-2xl font-black">'+cash(grandTotal)+'</div><div class="text-sm text-emerald-100 mt-1">Испоручено: '+cash(grandDelivered)+' · Преостало: '+cash(grandTotal-grandDelivered)+'</div></div>';
+ html+=renderDeliveryDraftSummary();
  document.getElementById('points').innerHTML=html;
  setDeliverySubtab(deliveryMode);
 }
-async function setDeliveryItemChecked(id,checked){
+function deliveryDraftQuantityForKey(key){
+ return [...deliveryDraftSelection].reduce((sum,id)=>{
+  const x=items.find(row=>String(row.id)===String(id));
+  if(!x||deliveryKey(x)!==key)return sum;
+  return sum+Math.max(0,pack(x).total-n(x.isporucena_kolicina));
+ },0);
+}
+function renderDeliveryDraftSummary(){
+ const selected=items.filter(x=>deliveryDraftSelection.has(String(x.id)));
+ const quantity=selected.reduce((sum,x)=>sum+Math.max(0,pack(x).total-n(x.isporucena_kolicina)),0);
+ const missing=selected.filter(x=>!hasItemPrice(x)).length;
+ const total=selected.reduce((sum,x)=>{
+  const p=pack(x),remaining=Math.max(0,p.total-n(x.isporucena_kolicina));
+  return sum+(p.total>0&&hasItemPrice(x)?price(x)*remaining/p.total:0);
+ },0);
+ return '<section class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 mt-4 no-print"><h3 class="text-lg font-black text-emerald-950">ОБРАЧУН ОЗНАЧЕНЕ ИСПОРУКЕ</h3><p class="text-xs text-emerald-800 mt-1">Чекирање је привремено. База се мења тек после потврде.</p><div class="grid grid-cols-2 gap-2 mt-3"><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Означене ставке</span><b class="text-xl">'+selected.length+'</b></div><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Укупна количина</span><b class="text-xl">'+fmt(quantity)+'</b></div></div><div class="rounded-xl bg-white border border-emerald-200 p-3 mt-2"><span class="block text-xs font-bold text-slate-500">УКУПНО ЗА НАПЛАТУ</span><b class="text-2xl text-emerald-800">'+cash(total)+'</b>'+(missing?'<p class="text-xs text-red-700 font-bold mt-1">Недостаје цена за '+missing+' означених ставки. Потврда је онемогућена.</p>':'')+'</div><div class="flex flex-col sm:flex-row gap-2 mt-3"><button type="button" onclick="confirmDeliverySelection(this)" '+(!selected.length||missing?'disabled':'')+' class="flex-1 rounded-xl bg-emerald-700 text-white px-4 py-4 font-black text-base disabled:bg-slate-300 disabled:text-slate-500">✓ УПИШИ ИСПОРУКУ</button><button type="button" onclick="clearDeliverySelection()" '+(!selected.length?'disabled':'')+' class="rounded-xl border border-slate-300 bg-white px-4 py-4 font-bold text-slate-700 disabled:opacity-50">Поништи избор</button></div></section>';
+}
+function refreshDeliveryKeepingContext(){
+ const scrollTop=window.scrollY;
+ const openStates=Array.from(document.querySelectorAll('#points details')).map(el=>el.open);
+ renderDelivery();
+ document.querySelectorAll('#points details').forEach((el,index)=>{el.open=Boolean(openStates[index])});
+ window.scrollTo(0,scrollTop);
+}
+function clearDeliverySelection(){
+ deliveryDraftSelection.clear();
+ refreshDeliveryKeepingContext();
+ say('Привремени избор испоруке је поништен. База није мењана.');
+}
+function setDeliveryItemChecked(id,checked){
  const x=items.find(row=>String(row.id)===String(id));
  if(!x){say('Ставка поруџбине није пронађена.',true);return}
- const p=pack(x),next=checked?p.total:0;
- await setDeliveryItem(id,next);
+ if(!checked){deliveryDraftSelection.delete(String(id));refreshDeliveryKeepingContext();return}
+ const p=pack(x),remaining=Math.max(0,p.total-n(x.isporucena_kolicina));
+ if(!(remaining>0)){say('Ова ставка је већ у потпуности испоручена.',true);refreshDeliveryKeepingContext();return}
+ const available=deliveryAvailability(x)-deliveryDraftQuantityForKey(deliveryKey(x));
+ if(available+0.000001<remaining){say('Нема довољно преузете робе за ову ставку.',true);refreshDeliveryKeepingContext();return}
+ deliveryDraftSelection.add(String(id));
+ refreshDeliveryKeepingContext();
+}
+async function confirmDeliverySelection(button){
+ const selectedIds=[...deliveryDraftSelection];
+ const selected=selectedIds.map(id=>items.find(x=>String(x.id)===String(id))).filter(Boolean);
+ if(!selected.length){say('Прво означи ставке које си физички предао купцима.',true);return}
+ if(selected.some(x=>!hasItemPrice(x))){say('За једну или више означених ставки није унета продајна цена.',true);return}
+ const oldText=button?.textContent;
+ if(button){button.disabled=true;button.textContent='УПИСУЈЕМ…'}
+ let saved=0;
+ try{
+  for(const x of selected){
+   const p=pack(x),current=Math.max(0,n(x.isporucena_kolicina)),remaining=Math.max(0,p.total-current);
+   if(!(remaining>0)){deliveryDraftSelection.delete(String(x.id));continue}
+   if(deliveryAvailability(x)+0.000001<remaining)throw Error('Нема довољно преузете робе за ставку '+productName(x)+'.');
+   const next=Math.min(p.total,current+remaining);
+   try{
+    const result=await api('stavke_porudzbine?id=eq.'+encodeURIComponent(x.id)+'&tura_id=eq.'+encodeURIComponent(tourId),{
+     method:'PATCH',
+     headers:{Prefer:'return=representation'},
+     body:JSON.stringify({isporucena_kolicina:next})
+    });
+    if(!Array.isArray(result)||!result.some(row=>String(row.id)===String(x.id)&&Math.abs(n(row.isporucena_kolicina)-next)<0.000001))throw Error('База није потврдила испоруку ставке '+x.id+'.');
+   }catch(writeError){
+    const check=await api('stavke_porudzbine?select=id,isporucena_kolicina&id=eq.'+encodeURIComponent(x.id)+'&tura_id=eq.'+encodeURIComponent(tourId));
+    const persisted=Array.isArray(check)?check.find(row=>String(row.id)===String(x.id)):null;
+    if(!persisted||Math.abs(n(persisted.isporucena_kolicina)-next)>=0.000001)throw writeError;
+   }
+   x.isporucena_kolicina=next;
+   deliveryDraftSelection.delete(String(x.id));
+   deliveryInvoicePrepared.delete(String(ord(x).id));
+   saved++;
+  }
+  refreshDeliveryKeepingContext();
+  say('Успешно уписана испорука: '+saved+' ставки. Обрачун је освежен.');
+ }catch(e){
+  refreshDeliveryKeepingContext();
+  say('Испорука није у потпуности уписана: '+(e?.message||String(e))+(saved?' Већ је сачувано '+saved+' ставки; остале су задржане у избору.':''),true);
+  console.error('[DOSTAVA] confirmDeliverySelection failed',e);
+ }finally{
+  if(button){button.disabled=false;button.textContent=oldText||'✓ УПИШИ ИСПОРУКУ'}
+ }
 }
 async function setDeliveryItemPackages(id,value){
  const x=items.find(row=>String(row.id)===String(id));
