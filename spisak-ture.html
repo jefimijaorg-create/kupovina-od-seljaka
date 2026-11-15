@@ -58,7 +58,8 @@ async function loadTour(id){if(!id)return;tourId=String(id);activePoint='all';ch
  render();
  }catch(e){say('Грешка при учитавању туре: '+e.message,true)}}
 async function refresh(){if(tourId)await loadTour(tourId);else await init()}
-function isLineDelivered(x){const p=pack(x);return p.total>0&&num(x.isporucena_kolicina)>=p.total-0.000001}\nfunction render(){
+function isLineDelivered(x){const p=pack(x);return p.total>0&&num(x.isporucena_kolicina)>=p.total-0.000001}
+function render(){
  const pendingItems=items.filter(x=>!isLineDelivered(x));
  const q=$('search').value.trim().toLocaleLowerCase('sr');
  const pointIds=[...new Set(pendingItems.map(x=>String(getOrder(x.porudzbina_id).punkt_id||'')).filter(Boolean))].sort(pointSort);
