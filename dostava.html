@@ -730,7 +730,7 @@ async function saveDeliverer(id){const input=document.querySelector('[data-deliv
 function renderManifest(){
  const stopOrder=new Map(routeStops.slice().sort((a,b)=>{const at=String(a.vreme||'').slice(0,5),bt=String(b.vreme||'').slice(0,5);if(at&&bt)return at.localeCompare(bt)||n(a.redosled)-n(b.redosled);if(at)return -1;if(bt)return 1;return n(a.redosled)-n(b.redosled)||n(a.punkt_id)-n(b.punkt_id)}).map((s,i)=>[String(s.punkt_id),{i,time:s.vreme||''}]));
  const allOrders=orderGroups().filter(o=>o.rs.length).sort((a,b)=>{const pa=stopOrder.get(String(a.m?.punkt_id))||{i:9999},pb=stopOrder.get(String(b.m?.punkt_id))||{i:9999};return pa.i-pb.i||String(a.id).localeCompare(String(b.id),undefined,{numeric:true})});
- const isComplete=o=>{const ready=o.rs.filter(r=>n(r.preuzeta_kolicina)>0);return ready.length>0&&o.rs.every(r=>{const picked=n(r.preuzeta_kolicina);return picked>0?n(r.isporucena_kolicina)>=picked:q(r)<=0})};
+ const isComplete=o=>{const ready=o.rs.filter(r=>n(r.preuzeta_kolicina)>0);return ready.length>0&&ready.every(r=>n(r.isporucena_kolicina)>=n(r.preuzeta_kolicina))};
  const view=window.manifestView==='delivered'?'delivered':'pending';
  const pending=allOrders.filter(o=>!isComplete(o));
  const delivered=allOrders.filter(o=>o.rs.some(r=>n(r.isporucena_kolicina)>0));
@@ -781,9 +781,10 @@ function renderManifest(){
  root.querySelectorAll('[data-deliver-order]').forEach(card=>card.addEventListener('click',async event=>{
   if(event.target.closest('input,button,select,textarea,a,label'))return;
   const orderId=card.dataset.deliverOrder,order=orderGroups().find(o=>String(o.id)===String(orderId));if(!order)return;
-  const isDelivered=order.rs.every(r=>n(r.preuzeta_kolicina)>0&&n(r.isporucena_kolicina)>=n(r.preuzeta_kolicina));
+  const readyRows=order.rs.filter(r=>n(r.preuzeta_kolicina)>0);
+  if(!readyRows.length){alert('Нема преузетих ставки за предају.');return}
+  const isDelivered=readyRows.every(r=>n(r.isporucena_kolicina)>=n(r.preuzeta_kolicina));
   const nextDelivered=!isDelivered;
-  if(nextDelivered&&order.rs.some(r=>n(r.preuzeta_kolicina)<=0)){alert('Пре предаје унеси преузету количину за сваку ставку поруџбине.');return}
   if(!confirm(nextDelivered?'Означити целу поруџбину као предату купцу?':'Вратити поруџбину на списак за предају?'))return;
   card.style.pointerEvents='none';
   try{for(const r of order.rs){await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({isporucena_kolicina:nextDelivered?n(r.preuzeta_kolicina):0})})}await reload();show('manifest');window.manifestView='pending';renderManifest()}
