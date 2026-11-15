@@ -791,7 +791,7 @@ function renderManifest(){
    if(!row)return;
    const qty=Math.max(0,n(row.preuzeta_kolicina)-n(row.isporucena_kolicina));
    if(qty<=0)return;
-   total+=qty*salePrice(row);count++;
+   total+=qty*manifestUnitPrice(row);count++;
   });
   const totalEl=document.getElementById('manifestSelectedTotal'),countEl=document.getElementById('manifestSelectedCount');
   if(totalEl)totalEl.textContent=total.toLocaleString('sr-RS')+' дин.';
