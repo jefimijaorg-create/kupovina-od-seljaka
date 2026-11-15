@@ -52,7 +52,7 @@ async function loadTour(id){if(!id)return;tourId=String(id);activePoint='all';ch
   api('kupci?select=id,ime_prezime,telefon'),
   api('tura_punktovi?select=tura_id,punkt_id,redosled,vreme,aktivan&tura_id=eq.'+encodeURIComponent(tourId))
  ]);
- items=rows;orders=ord;points=pts;customers=cust;tourPoints=tp;
+ items=rows;checkedLines=new Set(rows.filter(x=>x.stavka_cekirana===true).map(x=>String(x.id)));orders=ord;points=pts;customers=cust;tourPoints=tp;
  say('Учитано '+items.length+' ставки. Измене количине и цене чувају се у бази.');
  render();
  }catch(e){say('Грешка при учитавању туре: '+e.message,true)}}
@@ -72,9 +72,9 @@ async function saveLine(id){const x=items.find(a=>String(a.id)===String(id));if(
  busy.add(String(id));render();
  try{
   const totalQty=qty*p.size,totalPrice=qty*unitPrice;
-  const patch={package_count:qty,broj_pakovanja:qty,package_size:p.size,package_unit:p.unit,package_info:qty+' × '+p.label,velicina_pakovanja:qty+' × '+p.label,total_quantity:totalQty,kolicina:totalQty,unit_price:p.size?unitPrice/p.size:0,cena_stavke:totalPrice};
+  const isChecked=checkedLines.has(String(id));const patch={package_count:qty,broj_pakovanja:qty,package_size:p.size,package_unit:p.unit,package_info:qty+' × '+p.label,velicina_pakovanja:qty+' × '+p.label,total_quantity:totalQty,kolicina:totalQty,unit_price:p.size?unitPrice/p.size:0,cena_stavke:totalPrice,stavka_cekirana:isChecked};
   const saved=await api('stavke_porudzbine?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(patch)});
-  if(!Array.isArray(saved)||!saved.some(r=>String(r.id)===String(id)&&num(r.package_count)===qty&&Math.abs(num(r.cena_stavke)-totalPrice)<0.01))throw Error('База није потврдила сачуване вредности.');
+  if(!Array.isArray(saved)||!saved.some(r=>String(r.id)===String(id)&&num(r.package_count)===qty&&Math.abs(num(r.cena_stavke)-totalPrice)<0.01&&r.stavka_cekirana===isChecked))throw Error('База није потврдила сачуване вредности и чекирање.');
   Object.assign(x,saved.find(r=>String(r.id)===String(id)));
   const orderId=String(x.porudzbina_id),orderRows=await api('stavke_porudzbine?select=cena_stavke,porudzbina_id&porudzbina_id=eq.'+encodeURIComponent(orderId));
   const orderTotal=orderRows.reduce((s,r)=>s+num(r.cena_stavke),0);
