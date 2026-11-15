@@ -739,7 +739,7 @@ function renderManifest(){
  const shownRows=os.flatMap(o=>o.rs.filter(r=>view==='delivered'?n(r.isporucena_kolicina)>0:(n(r.preuzeta_kolicina)<=0||n(r.preuzeta_kolicina)>n(r.isporucena_kolicina))));
  const deliveredRows=allOrders.flatMap(o=>o.rs).filter(r=>n(r.isporucena_kolicina)>0);
  const totalDelivered=deliveredRows.reduce((sum,r)=>sum+manifestUnitPrice(r)*n(r.isporucena_kolicina),0);
- const selectedAmount=rows.filter(r=>Boolean(r.stavka_cekirana)&&n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)).reduce((sum,r)=>{const remaining=Math.max(0,n(r.preuzeta_kolicina)-n(r.isporucena_kolicina)),qty=r.kolicina_za_isporuku==null?remaining:Math.min(remaining,Math.max(0,n(r.kolicina_za_isporuku)));return sum+qty*manifestUnitPrice(r)},0);
+ const selectedAmount=rows.filter(r=>Boolean(r.stavka_cekirana)&&n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)).reduce((sum,r)=>{const remaining=Math.max(0,n(r.preuzeta_kolicina)-n(r.isporucena_kolicina));return sum+remaining*manifestUnitPrice(r)},0);
  const selectedCount=rows.filter(r=>Boolean(r.stavka_cekirana)&&n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)).length;
  const summary='<div class="stats"><div class="stat"><b>'+os.length+'</b><span>'+(view==='delivered'?'поруџбина са предатим ставкама':'поруџбина за предају')+'</span></div><div class="stat"><b>'+shownRows.length+'</b><span>'+(view==='delivered'?'предатих ставки':'ставки за предају')+'</span></div><div class="stat"><b>'+totalDelivered.toLocaleString('sr-RS')+' дин.</b><span>УКУПНО ПРЕДАТО КУПЦИМА</span></div></div>';
  const cardsByPoint=new Map();os.forEach(o=>{const key=o.m?.punkt_id?String(o.m.punkt_id):'none';if(!cardsByPoint.has(key))cardsByPoint.set(key,[]);cardsByPoint.get(key).push(o)});
