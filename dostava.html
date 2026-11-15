@@ -752,9 +752,9 @@ function renderManifest(){
     const packText=fmt(packCount)+'×'+(size?fmt(size)+' '+packUnit:fmt(ordered)+' '+unit(r));
     const pickedText=size?fmt(picked/size)+' пак. ('+fmt(picked)+' '+unit(r)+')':fmt(picked)+' '+unit(r);
     const amount=view==='delivered'?deliveredQty*unitPrice:remaining*unitPrice;
-    return '<div class="item"><div class="itemtop"><div><div class="productname">'+e(r.proizvod)+'</div><div class="meta">Наручено: <b>'+e(packText)+'</b> · Преузето: <b>'+e(pickedText)+'</b></div>'+(view==='pending'&&missing>0?'<div class="status '+(picked>0?'warn':'bad')+'">'+(picked>0?'Недостаје: ':'НИЈЕ ПРЕУЗЕТО — недостаје: ')+e(fmt(missing)+' '+unit(r))+'</div>':'')+(picked>0?'<div class="meta">Цена: '+e(unitPrice.toLocaleString('sr-RS'))+' дин./јед. · '+(view==='delivered'?'Предато':'За предају')+': '+e(amount.toLocaleString('sr-RS'))+' дин.</div>':'<div class="hint">Нема преузете робе — није урачуната у износ.</div>')+(deliveredQty>0?'<div class="status ok">Предато: '+e(fmt(deliveredQty)+' '+unit(r))+'</div>':'')+'</div><div class="qty">'+(amount>0?amount.toLocaleString('sr-RS')+' дин.':'—')+'</div></div>'+(view==='pending'?'<div class="pickinputs"><label>НАРУЧЕНО — БРОЈ ПАКОВАЊА / КОМАДА<input type="number" min="0" step="any" value="'+e(packCount)+'" id="manifest-ordered-count-'+e(r.id)+'" data-ordered-size="'+e(size)+'" data-ordered-unit="'+e(unit(r))+'"></label><div class="hint">Величина паковања: '+e(size?fmt(size)+' '+packUnit:'1 '+unit(r))+' · Укупно: <b id="manifest-ordered-total-'+e(r.id)+'">'+e(fmt(size?packCount*size:packCount)+' '+unit(r))+'</b></div></div><div class="point-actions"><button type="button" class="primary" data-save-ordered-pick="'+e(r.id)+'" style="width:100%;min-height:44px">САЧУВАЈ КОЛИЧИНУ И ОЗНАЧИ ПРЕУЗЕТО</button></div>'+(missing>0?'<div class="point-actions"><button type="button" data-delete-missing-item="'+e(r.id)+'" style="border:1px solid #efc6bd;background:#fff0ed;color:#9c3329">Обрисати — нема производа</button></div>':''):'')+(view==='pending'&&remaining>0?'<div class="point-actions"><button type="button" class="primary" data-delivery-item="'+e(r.id)+'" style="width:100%;min-height:44px">✓ ПРЕДАТО КУПЦУ</button></div>':'')+'</div>';
+    return '<div class="item"><div class="itemtop"><div><div class="productname">'+e(r.proizvod)+'</div><div class="meta">Наручено: <b>'+e(packText)+'</b> · Преузето: <b>'+e(pickedText)+'</b></div>'+(view==='pending'&&missing>0?'<div class="status '+(picked>0?'warn':'bad')+'">'+(picked>0?'Недостаје: ':'НИЈЕ ПРЕУЗЕТО — недостаје: ')+e(fmt(missing)+' '+unit(r))+'</div>':'')+(picked>0?'<div class="meta">Цена: '+e(unitPrice.toLocaleString('sr-RS'))+' дин./јед. · '+(view==='delivered'?'Предато':'За предају')+': '+e(amount.toLocaleString('sr-RS'))+' дин.</div>':'<div class="hint">Нема преузете робе — није урачуната у износ.</div>')+(deliveredQty>0?'<div class="status ok">Предато: '+e(fmt(deliveredQty)+' '+unit(r))+'</div>':'')+'</div><div class="qty">'+(amount>0?amount.toLocaleString('sr-RS')+' дин.':'—')+'</div></div>'+(view==='pending'?'<div class="pickinputs"><label>СТВАРНО ПРЕУЗЕТО — ПАКОВАЊА / КОМАДА<input type="number" min="0" max="'+e(packCount)+'" step="any" value="'+e(size?picked/size:picked)+'" id="manifest-picked-count-'+e(r.id)+'" data-picked-size="'+e(size)+'" data-picked-unit="'+e(unit(r))+'" data-picked-price="'+e(unitPrice)+'"></label><div class="hint">Наручено: '+e(fmt(ordered)+' '+unit(r))+' · Преузето: <b id="manifest-picked-total-'+e(r.id)+'">'+e(fmt(picked)+' '+unit(r))+'</b> · Износ: <b id="manifest-picked-amount-'+e(r.id)+'">'+e((picked*unitPrice).toLocaleString('sr-RS'))+' дин.</b></div></div><div class="point-actions"><button type="button" class="primary" data-save-picked="'+e(r.id)+'" style="width:100%;min-height:44px">САЧУВАЈ ПРЕУЗЕТУ КОЛИЧИНУ</button></div>'+(missing>0?'<div class="point-actions"><button type="button" data-delete-missing-item="'+e(r.id)+'" style="border:1px solid #efc6bd;background:#fff0ed;color:#9c3329">Обрисати — нема производа</button></div>':''):'')+''+'</div>';
    }).join('');
-   return '<div class="buyer"><div class="buyerhead"><div><div class="buyername">'+e(orderLabel(o.id,orderRows))+'</div><div class="hint">Поруџбина #'+e(o.id)+(o.m?.telefon?' · '+e(o.m.telefon):'')+'</div><div class="hint">'+e(pointNameForOrder(o.m))+(p?.time?' · Време: '+e(String(p.time).slice(0,5)):' · Време није подешено')+'</div><div class="hint">Достављач: <b>'+e(o.m?.dostavljac||tour?.dostavljac||'Није додељен')+'</b></div></div><div style="text-align:right"><b>'+orderTotal.toLocaleString('sr-RS')+' дин.</b><div class="status '+(view==='delivered'?'ok':complete?'ok':'warn')+'">'+(view==='delivered'?'ПРЕДАТО':complete?'ПРЕДАТО':'ЧЕКА ПРЕДАЈУ')+'</div></div></div><div class="hint" style="margin:8px 0">Свака ставка се предаје засебно. Укупна сума приказује новац за ставке у овом списку.</div>'+items+'</div>';
+   return '<div class="buyer"><div class="buyerhead"><div><div class="buyername">'+e(orderLabel(o.id,orderRows))+'</div><div class="hint">Поруџбина #'+e(o.id)+(o.m?.telefon?' · '+e(o.m.telefon):'')+'</div><div class="hint">'+e(pointNameForOrder(o.m))+(p?.time?' · Време: '+e(String(p.time).slice(0,5)):' · Време није подешено')+'</div><div class="hint">Достављач: <b>'+e(o.m?.dostavljac||tour?.dostavljac||'Није додељен')+'</b></div></div><div style="text-align:right"><b>'+orderTotal.toLocaleString('sr-RS')+' дин.</b><div class="status '+(view==='delivered'?'ok':complete?'ok':'warn')+'">'+(view==='delivered'?'ПРЕДАТО':complete?'ПРЕДАТО':'ЧЕКА ПРЕДАЈУ')+'</div></div></div>' +(view==='pending'?'<label class="item" style="display:flex;align-items:center;gap:12px;font-weight:700"><input type="checkbox" data-deliver-order="'+e(o.id)+'" '+(complete?'checked':'')+' style="width:24px;height:24px"> <span>Предато купцу — склони са списка за предају</span></label>':'')+items+'</div>';
   }).join('');
   return '<section class="point-group" style="border:2px solid var(--line);border-radius:14px;padding:10px;margin:12px 0;background:#fff"><div class="buyerhead" style="border-radius:10px;margin-bottom:8px"><div><div class="buyername">📍 '+e(pointTitle)+'</div><div class="hint">'+(p?.time?'Време доставе: '+e(String(p.time).slice(0,5)):'Тачно време није подешено')+'</div><div class="hint">Поруџбина: '+pointOrders.length+'</div></div></div>'+ordersHtml+'</section>';
  }).join('');
@@ -763,41 +763,28 @@ function renderManifest(){
  document.getElementById('manifestPendingTab').onclick=()=>{window.manifestView='pending';renderManifest()};
  document.getElementById('manifestDeliveredTab').onclick=()=>{window.manifestView='delivered';renderManifest()};
  document.getElementById('copyViberSchedule').onclick=copyViberSchedule;
- document.querySelectorAll('[data-delivery-item]').forEach(btn=>btn.onclick=async()=>{
-  const r=rows.find(x=>String(x.id)===String(btn.dataset.deliveryItem));
-  if(!r||n(r.preuzeta_kolicina)<=0){alert('Ова ставка нема евидентирано преузету количину.');return}
-  if(n(r.isporucena_kolicina)>=n(r.preuzeta_kolicina)){alert('Ова ставка је већ предата купцу.');return}
-  btn.disabled=true;btn.textContent='Чувам…';
-  try{
-   await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({isporucena_kolicina:n(r.preuzeta_kolicina)})});
-   await reload();show('manifest');window.manifestView='pending';renderManifest();
-  }catch(err){btn.disabled=false;btn.textContent='✓ ПРЕДАТО КУПЦУ';alert('Предаја ставке није сачувана: '+(err.message||err))}
+ document.querySelectorAll('[id^="manifest-picked-count-"]').forEach(input=>input.oninput=()=>{
+  const id=input.id.replace('manifest-picked-count-',''),size=n(input.dataset.pickedSize),qty=Number(input.value)*(size||1),priceValue=n(input.dataset.pickedPrice);
+  const total=document.getElementById('manifest-picked-total-'+id),amount=document.getElementById('manifest-picked-amount-'+id);
+  if(total)total.textContent=fmt(Number.isFinite(qty)?qty:0)+' '+input.dataset.pickedUnit;
+  if(amount)amount.textContent=(Number.isFinite(qty)?(qty*priceValue).toLocaleString('sr-RS'):'0')+' дин.';
  });
- document.querySelectorAll('[id^="manifest-ordered-count-"]').forEach(input=>input.oninput=()=>{
-  const total=document.getElementById('manifest-ordered-total-'+input.id.replace('manifest-ordered-count-',''));
-  if(!total)return;
-  const count=Number(input.value),size=n(input.dataset.orderedSize),qty=count*(size||1);
-  total.textContent=fmt(Number.isFinite(qty)?qty:0)+' '+input.dataset.orderedUnit;
- });
- document.querySelectorAll('[data-save-ordered-pick]').forEach(btn=>btn.onclick=async()=>{
-  const r=rows.find(x=>String(x.id)===String(btn.dataset.saveOrderedPick)),input=document.getElementById('manifest-ordered-count-'+btn.dataset.saveOrderedPick);
-  if(!r||!input)return;
-  const count=Number(input.value),v=variantFor(r),size=n(v?.package_value||r.package_size||r.velicina_pakovanja),newQty=size?count*size:count;
-  if(!Number.isFinite(count)||count<0||!Number.isFinite(newQty)){alert('Унеси исправан број паковања или комада.');return}
-  if(newQty<n(r.isporucena_kolicina)){alert('Наручена количина не може бити мања од већ предате количине ('+fmt(n(r.isporucena_kolicina))+' '+unit(r)+').');return}
-  if(!confirm('Сачувати наручену количину '+fmt(count)+' '+(size?'паковања':'комада')+' ('+fmt(newQty)+' '+unit(r)+') и означити исту количину као преузету?'))return;
+ document.querySelectorAll('[data-save-picked]').forEach(btn=>btn.onclick=async()=>{
+  const r=rows.find(x=>String(x.id)===String(btn.dataset.savePicked)),input=document.getElementById('manifest-picked-count-'+btn.dataset.savePicked);if(!r||!input)return;
+  const count=Number(input.value),size=n(input.dataset.pickedSize),picked=count*(size||1),ordered=q(r);
+  if(!Number.isFinite(count)||count<0||picked>ordered){alert('Унеси стварно преузету количину од 0 до '+fmt(ordered)+' '+unit(r)+'.');return}
+  if(picked<n(r.isporucena_kolicina)){alert('Преузета количина не може бити мања од већ предате количине.');return}
   btn.disabled=true;btn.textContent='Чувам…';
-  try{
-   const body={kolicina:newQty,total_quantity:newQty,package_count:count,preuzeta_kolicina:newQty,cena_stavke:salePrice(r)*newQty};
-   await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(body)});
-   await reload();show('manifest');window.manifestView='pending';renderManifest();
-  }catch(err){btn.disabled=false;btn.textContent='САЧУВАЈ КОЛИЧИНУ И ОЗНАЧИ ПРЕУЗЕТО';alert('Количина није сачувана: '+(err.message||err))}
+  try{await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:picked,status_stavke:picked<=0?'nije_preuzeto':picked>=ordered?'preuzeto':'delimicno_preuzeto'})});await reload();show('manifest');window.manifestView='pending';renderManifest()}
+  catch(err){btn.disabled=false;btn.textContent='САЧУВАЈ ПРЕУЗЕТУ КОЛИЧИНУ';alert('Количина није сачувана: '+(err.message||err))}
  });
- document.querySelectorAll('[data-save-item-pick]').forEach(btn=>btn.onclick=async()=>{
-  const r=rows.find(x=>String(x.id)===String(btn.dataset.saveItemPick)),input=document.getElementById('manifest-pick-'+btn.dataset.saveItemPick);if(!r||!input)return;
-  const ordered=q(r),picked=Number(input.value);if(!Number.isFinite(picked)||picked<0||picked>ordered){alert('Унеси стварно преузету количину од 0 до '+fmt(ordered)+' '+unit(r)+'.');return}
-  btn.disabled=true;btn.textContent='Чувам…';
-  try{const status=picked<=0?'nije_preuzeto':picked>=ordered?'preuzeto':'delimicno_preuzeto';await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:picked,status_preuzimanja:status})});await reload();show('manifest');window.manifestView='pending';renderManifest()}catch(err){btn.disabled=false;alert('Преузимање није сачувано: '+(err.message||err))}
+ document.querySelectorAll('[data-deliver-order]').forEach(input=>input.onchange=async()=>{
+  const orderId=input.dataset.deliverOrder,order=orderGroups().find(o=>String(o.id)===String(orderId));if(!order)return;
+  if(input.checked&&order.rs.some(r=>n(r.preuzeta_kolicina)<=0)){input.checked=false;alert('Пре означавања предаје унеси преузету количину за сваку ставку поруџбине.');return}
+  if(!confirm(input.checked?'Означити целу поруџбину као предату купцу?':'Вратити поруџбину на списак за предају?')){input.checked=!input.checked;return}
+  input.disabled=true;
+  try{for(const r of order.rs){await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({isporucena_kolicina:input.checked?n(r.preuzeta_kolicina):0})})}await reload();show('manifest');window.manifestView='pending';renderManifest()}
+  catch(err){input.disabled=false;alert('Статус предаје није сачуван: '+(err.message||err))}
  });
  document.querySelectorAll('[data-delete-missing-item]').forEach(btn=>btn.onclick=async()=>{
   const r=rows.find(x=>String(x.id)===String(btn.dataset.deleteMissingItem));if(!r)return;
