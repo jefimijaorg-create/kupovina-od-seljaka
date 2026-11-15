@@ -286,13 +286,18 @@ function deliveryDraftQuantityForKey(key){
 }
 function renderDeliveryDraftSummary(){
  const selected=items.filter(x=>deliveryDraftSelection.has(String(x.id)));
- const quantity=selected.reduce((sum,x)=>sum+Math.max(0,pack(x).total-n(x.isporucena_kolicina)),0);
+ const quantities={};
+ selected.forEach(x=>{
+  const p=pack(x),remaining=Math.max(0,p.total-n(x.isporucena_kolicina)),u=p.unit||'ком';
+  quantities[u]=(quantities[u]||0)+remaining;
+ });
+ const quantityLabel=Object.entries(quantities).map(([u,value])=>fmt(value)+' '+u).join(' · ')||'0';
  const missing=selected.filter(x=>!hasItemPrice(x)).length;
  const total=selected.reduce((sum,x)=>{
   const p=pack(x),remaining=Math.max(0,p.total-n(x.isporucena_kolicina));
   return sum+(p.total>0&&hasItemPrice(x)?price(x)*remaining/p.total:0);
  },0);
- return '<section class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 mt-4 no-print"><h3 class="text-lg font-black text-emerald-950">ОБРАЧУН ОЗНАЧЕНЕ ИСПОРУКЕ</h3><p class="text-xs text-emerald-800 mt-1">Чекирање је привремено. База се мења тек после потврде.</p><div class="grid grid-cols-2 gap-2 mt-3"><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Означене ставке</span><b class="text-xl">'+selected.length+'</b></div><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Укупна количина</span><b class="text-xl">'+fmt(quantity)+'</b></div></div><div class="rounded-xl bg-white border border-emerald-200 p-3 mt-2"><span class="block text-xs font-bold text-slate-500">УКУПНО ЗА НАПЛАТУ</span><b class="text-2xl text-emerald-800">'+cash(total)+'</b>'+(missing?'<p class="text-xs text-red-700 font-bold mt-1">Недостаје цена за '+missing+' означених ставки. Потврда је онемогућена.</p>':'')+'</div><div class="flex flex-col sm:flex-row gap-2 mt-3"><button type="button" onclick="confirmDeliverySelection(this)" '+(!selected.length||missing?'disabled':'')+' class="flex-1 rounded-xl bg-emerald-700 text-white px-4 py-4 font-black text-base disabled:bg-slate-300 disabled:text-slate-500">✓ УПИШИ ИСПОРУКУ</button><button type="button" onclick="clearDeliverySelection()" '+(!selected.length?'disabled':'')+' class="rounded-xl border border-slate-300 bg-white px-4 py-4 font-bold text-slate-700 disabled:opacity-50">Поништи избор</button></div></section>';
+ return '<section class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 mt-4 no-print"><h3 class="text-lg font-black text-emerald-950">ОБРАЧУН ОЗНАЧЕНЕ ИСПОРУКЕ</h3><p class="text-xs text-emerald-800 mt-1">Чекирање је привремено. База се мења тек после потврде.</p><div class="grid grid-cols-2 gap-2 mt-3"><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Означене ставке</span><b class="text-xl">'+selected.length+'</b></div><div class="rounded-xl bg-white border border-emerald-100 p-3"><span class="block text-xs text-slate-500">Укупна количина</span><b class="text-xl">'+quantityLabel+'</b></div></div><div class="rounded-xl bg-white border border-emerald-200 p-3 mt-2"><span class="block text-xs font-bold text-slate-500">УКУПНО ЗА НАПЛАТУ</span><b class="text-2xl text-emerald-800">'+cash(total)+'</b>'+(missing?'<p class="text-xs text-red-700 font-bold mt-1">Недостаје цена за '+missing+' означених ставки. Потврда је онемогућена.</p>':'')+'</div><div class="flex flex-col sm:flex-row gap-2 mt-3"><button type="button" onclick="confirmDeliverySelection(this)" '+(!selected.length||missing?'disabled':'')+' class="flex-1 rounded-xl bg-emerald-700 text-white px-4 py-4 font-black text-base disabled:bg-slate-300 disabled:text-slate-500">✓ УПИШИ ИСПОРУКУ</button><button type="button" onclick="clearDeliverySelection()" '+(!selected.length?'disabled':'')+' class="rounded-xl border border-slate-300 bg-white px-4 py-4 font-bold text-slate-700 disabled:opacity-50">Поништи избор</button></div></section>';
 }
 function refreshDeliveryKeepingContext(){
  const scrollTop=window.scrollY;
