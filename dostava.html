@@ -735,7 +735,7 @@ function renderManifest(){
  const pending=allOrders.filter(o=>!isComplete(o));
  const delivered=allOrders.filter(o=>o.rs.some(r=>n(r.isporucena_kolicina)>0));
  const os=view==='delivered'?delivered:pending;
- const shownRows=os.flatMap(o=>o.rs.filter(r=>view==='delivered'?n(r.isporucena_kolicina)>0:n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)));
+ const shownRows=os.flatMap(o=>o.rs.filter(r=>view==='delivered'?n(r.isporucena_kolicina)>0:(n(r.preuzeta_kolicina)<=0||n(r.preuzeta_kolicina)>n(r.isporucena_kolicina))));
  const deliveredRows=allOrders.flatMap(o=>o.rs).filter(r=>n(r.isporucena_kolicina)>0);
  const totalDelivered=deliveredRows.reduce((sum,r)=>sum+salePrice(r)*n(r.isporucena_kolicina),0);
  const summary='<div class="stats"><div class="stat"><b>'+os.length+'</b><span>'+(view==='delivered'?'поруџбина са предатим ставкама':'поруџбина за предају')+'</span></div><div class="stat"><b>'+shownRows.length+'</b><span>'+(view==='delivered'?'предатих ставки':'ставки за предају')+'</span></div><div class="stat"><b>'+totalDelivered.toLocaleString('sr-RS')+' дин.</b><span>УКУПНО ПРЕДАТО КУПЦИМА</span></div></div>';
@@ -744,7 +744,7 @@ function renderManifest(){
   const p=stopOrder.get(pointId),point=pointMeta.find(x=>String(x.id)===pointId),pointTitle=point?.name||(pointId==='none'?'Пункт није одређен':'Пункт #'+pointId);
   const ordersHtml=pointOrders.map(o=>{
    const ready=o.rs.filter(r=>n(r.preuzeta_kolicina)>0),complete=isComplete(o);
-   const orderRows=o.rs.filter(r=>view==='delivered'?n(r.isporucena_kolicina)>0:n(r.preuzeta_kolicina)>n(r.isporucena_kolicina));
+   const orderRows=o.rs.filter(r=>view==='delivered'?n(r.isporucena_kolicina)>0:(n(r.preuzeta_kolicina)<=0||n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)));
    const orderTotal=orderRows.reduce((sum,r)=>sum+salePrice(r)*(view==='delivered'?n(r.isporucena_kolicina):Math.max(0,n(r.preuzeta_kolicina)-n(r.isporucena_kolicina))),0);
    const items=orderRows.map(r=>{
     const ordered=q(r),picked=Math.max(0,Math.min(ordered,n(r.preuzeta_kolicina))),missing=Math.max(0,ordered-picked),unitPrice=salePrice(r),deliveredQty=n(r.isporucena_kolicina),remaining=Math.max(0,picked-deliveredQty),v=variantFor(r);
