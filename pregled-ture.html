@@ -445,7 +445,7 @@ main{padding-top:16px!important;padding-bottom:calc(108px + env(safe-area-inset-
 </style>
 <style id="tour-entry-visibility">#tour-search-label{display:none!important}body.tour-active #tour-search-label{display:block!important}</style>
 <style id="tour-workspace-exclusive">body.tour-active>header{display:none!important}body.tour-active #message{display:none!important}body.tour-active #tour-picker-panel{display:none!important}body.tour-active #tour-dashboard{display:block!important;margin-top:0!important;padding-top:0!important}body.tour-active main{padding-top:12px!important}body:not(.tour-active) #tour-dashboard{display:none!important}body:not(.tour-active)>header{display:block!important}</style>
-<style id="tour-dashboard-no-bottom-tabs">#bottom-tab-nav{display:none!important}#tour-dashboard{padding-bottom:calc(24px + env(safe-area-inset-bottom))}</style>
+<style id="tour-dashboard-bottom-tabs">body.tour-active #bottom-tab-nav:not(.hidden){display:block!important}body.tour-active #tour-dashboard{padding-bottom:calc(96px + env(safe-area-inset-bottom))}body.tour-active #orders-tab,body.tour-active #procurement-tab,body.tour-active #delivery-tab{padding-bottom:calc(100px + env(safe-area-inset-bottom))}</style>
 <style id="tour-dashboard-panels">
 #tour-dashboard{min-height:calc(100dvh - 170px)}
 .tour-dashboard-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:148px;padding:17px 14px;border:1px solid #334155;border-radius:18px;background:linear-gradient(145deg,#1b2940,#121d31);color:#f8fafc;box-shadow:0 8px 20px rgba(0,0,0,.18);-webkit-tap-highlight-color:transparent}
@@ -786,9 +786,12 @@ async function loadTour(options={}){
   document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';
   document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;
   populateFilters();populatePickupSummaryFilters();renderAll();renderTourDashboard();toggleTourPicker(false);
+  document.body.classList.add('tour-active');
   const bottomNav=document.getElementById('bottom-tab-nav');
-  if(bottomNav)bottomNav.classList.add('hidden');
-  document.body.classList.add('tour-active');document.getElementById('tour-actions')?.classList.remove('hidden');
+  if(bottomNav)bottomNav.classList.remove('hidden');
+  const bottomNavTour=document.getElementById('bottom-nav-tour-name');
+  if(bottomNavTour)bottomNavTour.textContent=t?.naziv||('Тура '+tourId);
+  document.getElementById('tour-actions')?.classList.remove('hidden');
   document.getElementById('unassigned-toggle-wrap')?.classList.remove('hidden');
   if(!options.preserveRoute){adminRouterNavigate('/ture',{replace:true});showTourDashboard()}
   else if(adminRouterPath()==='/nabavka')switchTab('procurement');
@@ -906,6 +909,7 @@ function openProcurementDemandDetail(productId){
 }
 function returnToTourPicker(){
  document.body.classList.remove('tour-active','tour-panel-open');
+ document.getElementById('bottom-tab-nav')?.classList.add('hidden');
  document.getElementById('tour-dashboard')?.classList.add('hidden');
  document.getElementById('tour-picker-panel')?.classList.remove('hidden');
  document.getElementById('tour-actions')?.classList.add('hidden');
