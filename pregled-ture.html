@@ -142,6 +142,16 @@ main{padding-top:12px!important;padding-bottom:90px!important}
 #bottom-tab-nav button{min-height:48px!important;border-radius:10px!important;font-size:10px!important;gap:3px!important}
 #bottom-tab-nav button i{font-size:15px!important}
 @media(min-width:768px){header button:nth-of-type(n+3){display:inline-flex!important}#tour-picker-panel label:nth-of-type(2){display:block!important}}
+</style>
+<style id="eight-step-procurement">
+.nw-wrap{background:#101b30;border:1px solid #334155;border-radius:14px;padding:12px;margin-bottom:12px}
+.nw-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.nw-kicker{font-size:9px;font-weight:800;letter-spacing:.12em;color:#fb923c}.nw-top h2{font-size:19px;font-weight:800;color:#f8fafc;margin-top:3px}.nw-count{font-size:12px;font-weight:800;color:#fdba74;background:#7c2d12;padding:6px 9px;border-radius:9px}
+.nw-progress{height:4px;background:#263449;border-radius:9px;margin:11px 0;overflow:hidden}.nw-progress i{display:block;height:100%;background:#f97316;border-radius:9px}
+.nw-steps{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.nw-step{text-align:center;min-width:0;color:#64748b}.nw-step span{display:grid;place-items:center;width:23px;height:23px;margin:0 auto 4px;border-radius:50%;background:#263449;font-size:10px;font-weight:800}.nw-step small{display:block;font-size:8px;line-height:1.1;overflow-wrap:anywhere}.nw-step.active{color:#fdba74}.nw-step.active span{background:#ea580c;color:white}.nw-step.done span{background:#065f46;color:#a7f3d0}
+.nw-panel{background:#0d1729;border:1px solid #334155;border-radius:13px;padding:13px;margin-top:10px}.nw-help{font-size:12px;line-height:1.5;color:#a7b4c7;margin-bottom:10px}.nw-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.nw-metrics>div{background:#17243b;border-radius:10px;padding:10px}.nw-metrics b{display:block;font-size:21px;color:#fb923c}.nw-metrics small,.nw-row small{display:block;font-size:10px;color:#94a3b8;margin-top:3px}
+.nw-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #263449;font-size:12px}.nw-row>span,.nw-row>strong{color:#fdba74;white-space:nowrap}.nw-row small{white-space:normal}
+.nw-products{display:grid;grid-template-columns:1fr;gap:8px}.nw-product,.nw-farm{display:block;width:100%;text-align:left;background:#17243b;border:1px solid #334155;border-radius:12px;padding:12px;color:#f8fafc}.nw-product>b,.nw-farm>b{display:block;font-size:14px}.nw-product span{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #334155;margin-top:7px;padding-top:6px;font-size:11px;color:#cbd5e1}.nw-product strong{color:#fdba74}.nw-farm{display:flex;justify-content:space-between;align-items:center;margin:7px 0}.nw-farm span{font-size:11px;font-weight:800;color:#fb923c}.nw-selected{font-weight:800;color:#fdba74;font-size:14px;margin-bottom:8px}.nw-actions{display:flex;justify-content:space-between;gap:9px;margin-top:12px}.nw-actions button{min-height:45px;padding:10px 15px;border-radius:11px;font-size:12px;font-weight:800}.nw-back{background:#263449;color:#cbd5e1}.nw-next{background:#ea580c;color:white;margin-left:auto}.nw-existing{max-height:52vh;overflow:auto}.nw-existing #supplier-sheet-content{display:none}
+@media(min-width:640px){.nw-products{grid-template-columns:repeat(2,minmax(0,1fr))}.nw-steps{gap:8px}.nw-step small{font-size:10px}}
 </style></head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div class="flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
@@ -1369,6 +1379,87 @@ async function setPicked(list){let saved=0;for(const x of list){let count=pack(x
 async function pickupOrder(id){try{let list=items.filter(x=>String(x.porudzbina_id)===String(id));if(!list.length)throw Error('Нема ставки у овој поруџбини.');if(list.some(x=>!farm(x)))throw Error('Поруџбина има недодељене ставке. Прво додели газдинство.');let pending=list.filter(x=>pickedPackages(x)<pack(x).count);if(!pending.length){say('Све ставке ове поруџбине су већ преузете.');return}await setPicked(pending);say('Успешно преузето: '+pending.length+' ставки.');renderAll()}catch(e){say('Преузимање није означено: '+e.message,true)}}
 async function pickupFarm(id){try{let list=items.filter(x=>String(assignedFarmId(x))===String(id));if(!list.length)throw Error('Нема ставки додељених овом газдинству у изабраној тури.');let pending=list.filter(x=>pickedPackages(x)<pack(x).count);if(!pending.length){say('Роба овог газдинства је већ у потпуности преузета ('+list.length+' ставки).');return}let saved=await setPicked(pending);let complete=list.length-pending.length+saved;say('Преузимање сачувано: '+saved+' нових ставки. Укупно преузето: '+complete+' од '+list.length+'.');renderAll()}catch(e){say('Грешка при преузимању: '+e.message,true)}}
 async function pickupAll(){if(!confirm('Означити као преузете све ставке са додељеним газдинством?'))return;try{await setPicked(items);say('Све ставке у овој тури су означене као преузете.');renderAll()}catch(e){say('Није све сачувано: '+e.message,true)}}
+
+
+/* ОСМОСТЕПЕНИ ТОК НАБАВКЕ — користи постојеће Supabase податке и постојеће операције. */
+let nabavkaKorak=2, nabavkaProizvodId='', nabavkaGazdinstvoId='';
+const renderSupplierSheetOriginal=renderSupplierSheet;
+function nabavkaGrupe(){
+ const groups={};
+ items.forEach(x=>{
+  if(!x.product_id||!x.variant_id)return;
+  const p=productCatalog.find(z=>String(z.id)===String(x.product_id)),v=variantCatalog.find(z=>String(z.id)===String(x.variant_id));
+  if(!p||!v)return;
+  const k=String(p.id),vk=String(v.id);
+  if(!groups[k])groups[k]={product:p,variants:{}};
+  if(!groups[k].variants[vk])groups[k].variants[vk]={variant:v,count:0};
+  groups[k].variants[vk].count+=Math.max(0,n(pack(x).count));
+ });
+ return Object.values(groups).sort((a,b)=>String(a.product.name).localeCompare(String(b.product.name),'sr'));
+}
+function nabavkaKorakHtml(){
+ const names=['Избор туре','Потребе','Производ','Амбалажа','Газдинство','Требовање','Активна газдинства','Преузимање'];
+ const current=nabavkaKorak;
+ const steps=names.slice(1).map((name,i)=>'<div class="nw-step '+(current===i+2?'active':current>i+2?'done':'')+'"><span>'+(i+2)+'</span><small>'+name+'</small></div>').join('');
+ return '<div class="nw-wrap"><div class="nw-top"><div><div class="nw-kicker">ТЕРЕНСКА НАБАВКА · ТУРА '+esc(tourId)+'</div><h2>'+esc(names[current-1])+'</h2></div><span class="nw-count">'+current+'/8</span></div><div class="nw-progress"><i style="width:'+((current-1)/7*100)+'%"></i></div><div class="nw-steps">'+steps+'</div></div>';
+}
+function nabavkaDugmad(back,next,nextLabel){
+ return '<div class="nw-actions">'+(back?'<button type="button" class="nw-back" onclick="nabavkaIdi('+back+')">← Назад</button>':'<span></span>')+(next?'<button type="button" class="nw-next" onclick="nabavkaIdi('+next+')">'+(nextLabel||'Настави')+' →</button>':'')+'</div>';
+}
+function nabavkaIdi(step){
+ if(step<2||step>8)return;
+ if(step===4&&!nabavkaProizvodId){say('Прво изабери производ.',true);return}
+ if((step===5||step===6)&&!nabavkaProizvodId){say('Прво изабери производ.',true);return}
+ if(step===6&&!nabavkaGazdinstvoId){say('Изабери газдинство за требовање.',true);return}
+ nabavkaKorak=step;
+ if(step===3){nabavkaProizvodId='';nabavkaGazdinstvoId='';supplierSheetFarmId='';supplierSheetProductId='';}
+ if(step===4){nabavkaGazdinstvoId='';}
+ if(step===7){supplierSheetFarmId='';supplierSheetProductId='';}
+ renderProcurement();
+}
+function nabavkaSadrzaj(){
+ const groups=nabavkaGrupe();
+ if(nabavkaKorak===2){
+  const total=items.length,products=groups.length;
+  return '<div class="nw-panel"><p class="nw-help">Потребе су учитане из ставки поруџбина изабране туре. Овде само прегледаш шта треба набавити.</p><div class="nw-metrics"><div><b>'+total+'</b><small>ставки поруџбина</small></div><div><b>'+products+'</b><small>различитих производа</small></div></div>'+groups.map(g=>'<div class="nw-row"><b>'+esc(g.product.name)+'</b><span>'+Object.values(g.variants).reduce((a,v)=>a+v.count,0).toLocaleString('sr-RS')+' пак.</span></div>').join('')+'</div>'+nabavkaDugmad(null,3,'Прикажи производе');
+ }
+ if(nabavkaKorak===3){
+  return '<div class="nw-panel"><p class="nw-help">Изабери један производ. На картици су одмах приказане тражене количине по амбалажи.</p><div class="nw-products">'+groups.map(g=>'<button type="button" class="nw-product" onclick="nabavkaIzaberiProizvod(\''+esc(g.product.id)+'\')"><b>'+esc(g.product.name)+'</b>'+Object.values(g.variants).map(v=>'<span>'+esc(v.variant.name||v.variant.size_label||'Паковање')+' <strong>'+fmt(v.count)+' пак.</strong></span>').join('')+'</button>').join('')+'</div>'+(groups.length?'':'<p class="nw-help">Нема препознатих производа и варијанти у поруџбинама ове туре.</p>')+'</div>'+nabavkaDugmad(2,null);
+ }
+ const group=groups.find(g=>String(g.product.id)===String(nabavkaProizvodId));
+ if(nabavkaKorak===4){
+  if(!group)return '<div class="nw-panel">Производ није пронађен.</div>'+nabavkaDugmad(3,null);
+  return '<div class="nw-panel"><div class="nw-selected">'+esc(group.product.name)+'</div><p class="nw-help">Спецификација тражене амбалаже за изабрани производ.</p>'+Object.values(group.variants).map(v=>'<div class="nw-row"><div><b>'+esc(v.variant.name||v.variant.size_label||'Паковање')+'</b><small>'+fmt(n(v.variant.package_value)||1)+' '+esc(normUnit(v.variant.package_unit||v.variant.unit||'ком'))+' по паковању</small></div><strong>'+fmt(v.count)+' пак.</strong></div>').join('')+'</div>'+nabavkaDugmad(3,5,'Изабери газдинство');
+ }
+ if(nabavkaKorak===5){
+  if(!group)return '<div class="nw-panel">Производ није пронађен.</div>'+nabavkaDugmad(4,null);
+  const variants=Object.values(group.variants);
+  const eligible=farms.filter(f=>farmOffers.some(o=>String(o.gazdinstvo_id)===String(f.id)&&o.is_active!==false&&variants.some(v=>String(v.variant.id)===String(o.variant_id)&&String(o.product_id)===String(group.product.id))));
+  return '<div class="nw-panel"><div class="nw-selected">'+esc(group.product.name)+'</div><p class="nw-help">Изабери газдинство које има активну понуду за овај производ.</p>'+eligible.map(f=>'<button type="button" class="nw-farm" onclick="nabavkaIzaberiGazdinstvo(\''+esc(f.id)+'\')"><b>'+esc(farmName(f.name))+'</b><span>Изабери →</span></button>').join('')+(eligible.length?'':'<p class="nw-help">Нема активних понуда за овај производ у каталогу газдинстава.</p>')+'</div>'+nabavkaDugmad(4,null);
+ }
+ if(nabavkaKorak===6){
+  if(!nabavkaGazdinstvoId)return '<div class="nw-panel">Није изабрано газдинство.</div>'+nabavkaDugmad(5,null);
+  supplierSheetFarmId=String(nabavkaGazdinstvoId);supplierSheetProductId=String(nabavkaProizvodId);
+  renderSupplierSheetOriginal();
+  const old=document.getElementById('supplier-sheet-content')?.innerHTML||'';
+  return '<div class="nw-panel"><p class="nw-help">Овде уноси количине за ово газдинство. Сачувај расподелу постојећим дугметом у форми.</p><div class="nw-selected">'+esc(farmName(farms.find(f=>String(f.id)===String(nabavkaGazdinstvoId))?.name||''))+' · '+esc(group?.product.name||'Производ')+'</div><div class="nw-existing">'+old+'</div></div>'+nabavkaDugmad(5,7,'Преглед додела');
+ }
+ if(nabavkaKorak===7){
+  const byFarm={};(tourAllocations||[]).forEach(a=>{const id=String(a.gazdinstvo_id);if(!byFarm[id])byFarm[id]=[];byFarm[id].push(a)});
+  const rows=Object.entries(byFarm);
+  return '<div class="nw-panel"><p class="nw-help">Провери коме је шта додељено у овој тури.</p>'+rows.map(([id,list])=>'<div class="nw-row"><div><b>'+esc(farmName(farms.find(f=>String(f.id)===id)?.name||'Газдинство '+id))+'</b><small>'+list.map(a=>esc(productCatalog.find(p=>String(p.id)===String(a.product_id))?.name||'Производ')+' · '+fmt(a.broj_pakovanja)+' пак.').join('<br>')+'</small></div><strong>'+list.length+' ставки</strong></div>').join('')+(rows.length?'':'<p class="nw-help">Још нема сачуваних додела за ову туру.</p>')+'</div>'+nabavkaDugmad(6,8,'Иди на преузимање');
+ }
+ const active=[...new Set((tourAllocations||[]).map(a=>String(a.gazdinstvo_id)))].map(id=>farms.find(f=>String(f.id)===id)).filter(Boolean);
+ return '<div class="nw-panel"><p class="nw-help">Приказана су само газдинства са задужењем у изабраној тури. Изабери газдинство за евиденцију стварног преузимања.</p>'+active.map(f=>'<button type="button" class="nw-farm" onclick="nabavkaIzaberiZaPreuzimanje(\''+esc(f.id)+'\')"><b>'+esc(farmName(f.name))+'</b><span>Преузимање →</span></button>').join('')+(active.length?'':'<p class="nw-help">Нема активних газдинстава у овој тури.</p>')+'</div>'+ (nabavkaGazdinstvoId?'<div class="nw-panel"><div class="nw-selected">'+esc(farmName(farms.find(f=>String(f.id)===String(nabavkaGazdinstvoId))?.name||''))+'</div><div id="nw-pickup-content"></div></div>':'')+nabavkaDugmad(7,null);
+}
+function nabavkaIzaberiProizvod(id){nabavkaProizvodId=String(id);nabavkaKorak=4;renderProcurement()}
+function nabavkaIzaberiGazdinstvo(id){nabavkaGazdinstvoId=String(id);supplierSheetFarmId=String(id);supplierSheetProductId=String(nabavkaProizvodId);nabavkaKorak=6;renderProcurement()}
+function nabavkaIzaberiZaPreuzimanje(id){nabavkaGazdinstvoId=String(id);supplierSheetFarmId=String(id);supplierSheetProductId='';renderSupplierSheetOriginal();const html=document.getElementById('supplier-sheet-content')?.innerHTML||'';const target=document.getElementById('nw-pickup-content');if(target)target.innerHTML=html}
+function renderProcurement(){
+ const box=document.getElementById('supplier-sheet-content');if(!box)return;
+ if(!tourId){box.innerHTML='<div class="nw-panel">Прво изабери туру.</div>';return}
+ box.innerHTML=nabavkaKorakHtml()+nabavkaSadrzaj();
+}
 
 document.addEventListener('DOMContentLoaded',loadData);
 </script></body></html>
