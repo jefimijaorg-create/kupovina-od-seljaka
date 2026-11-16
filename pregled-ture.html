@@ -272,7 +272,7 @@ async function loadData(){
   if(!Array.isArray(tours))throw Error('База није вратила списак тура.');
   const core=await Promise.all([
    api('gazdinstva?select=id,name&order=name.asc').catch(e=>{console.warn('Газдинства нису учитана:',e);return []}),
-   api('punktovi?select=id,name,city,address,is_active,aktivan').catch(e=>{console.warn('Пунктови нису учитани:',e);return []}),
+   api('punktovi?select=id,name,city,address,is_active,aktivan'),
    api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at&limit=3000').catch(e=>{console.warn('Поруџбине нису учитане:',e);return []}),
    api('kupci?select=id,ime_prezime,telefon').catch(e=>{console.warn('Купци нису учитани:',e);return []}),
    api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme').catch(e=>{console.warn('Распоред пунктова није учитан:',e);return []})
