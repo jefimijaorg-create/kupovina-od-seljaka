@@ -245,7 +245,7 @@ function chooseTour(id){const sel=document.getElementById('tour-select');if(sel)
 async function loadTour(){
  const selected=document.getElementById('tour-select').value;if(!selected){say('Изабери туру пре наставка.',true);return}
  const next=Number(selected);if(!Number.isFinite(next)||next<=0){say('Изабрана тура није исправна.',true);return}
- try{if(String(tourId)!==String(next))deliveryDraftSelection.clear();tourId=next;saveTourId(tourId);const t=tours.find(x=>Number(x.id)===tourId);
+ try{if(String(tourId)!==String(next))deliveryDraftSelection.clear();tourId=next;saveTourId(tourId);nabavkaKorak=2;nabavkaProizvodId='';nabavkaGazdinstvoId='';supplierSheetFarmId='';supplierSheetProductId='';const t=tours.find(x=>Number(x.id)===tourId);
  document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';
  document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;
  say('Учитавање туре '+tourId+'…');[items,tourAllocations]=await Promise.all([api('stavke_porudzbine?select=*&tura_id=eq.'+tourId+'&order=id.asc'),api('tura_nabavka_dodele?select=*&tura_id=eq.'+tourId+'&order=id.asc').catch(e=>{console.warn('Расподела набавке није учитана:',e);return []})]);
