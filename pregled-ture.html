@@ -767,8 +767,7 @@ async function loadData(){
   const selectableTours=tours.filter(t=>['open','full','scheduled','processing'].includes(String(t.status||'').toLowerCase()));
   sel.innerHTML='<option value="">Изабери туру</option>'+tours.map(t=>{const s=String(t.status||'').toLowerCase(),label=s==='processing'?' · У ОБРАДИ':s==='open'?' · АКТИВНА':s==='full'?' · ПОПУЊЕНА':s==='scheduled'?' · ПЛАНИРАНА':s?' · '+s.toUpperCase():'';return '<option value="'+t.id+'">'+(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+t.id)+label+' — '+esc(t.naziv||'Тура '+t.id)+'</option>'}).join('');
   const tl=document.getElementById('tour-list-items');if(tl)tl.innerHTML=tours.map(t=>'<button type="button" onclick="chooseTour('+Number(t.id)+')" class="text-left rounded-lg border px-3 py-3 bg-white"><b class="block text-sm">'+esc(t.naziv||('Тура '+t.id))+'</b><span class="text-xs text-slate-600">'+esc(t.datum||'')+' · '+esc(t.status||'')+'</span></button>').join('')||'<span>Нема тура.</span>';
-  // Почетни екран се увек отвара као избор тура; претходни избор не прескаче почетну.
-  if(saved)saveTourId('');
+  // Ако је тура већ изабрана, врати је после освежавања и задржи активну секцију.
   tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};sel.value='';
   document.body.classList.remove('tour-active');
   document.getElementById('bottom-tab-nav')?.classList.add('hidden');
@@ -776,6 +775,15 @@ async function loadData(){
   document.getElementById('tour-actions')?.classList.add('hidden');
   document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
   renderTourHome();
+  const savedTour=tours.find(t=>String(t.id)===String(saved));
+  if(savedTour){
+   sel.value=String(savedTour.id);
+   if(!['/ture','/porudzbine','/nabavka','/dostava'].includes(adminRouterPath()))adminRouterNavigate('/ture',{replace:true});
+   const restored=await loadTour({preserveRoute:true});
+   if(restored)return;
+  }
+  saveTourId('');
+  sel.value='';
   toggleTourPicker(true);
   say('Изабери туру за рад или отвори архиву затворених тура.');
  }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ТУРА\\n'+(e?.message||String(e))+'\\n\\nПровери: Supabase дозволе (RLS), назив табеле/колона и мрежну везу.\\nВреме: '+new Date().toLocaleString('sr-RS');say(detail,true);console.error('[PREGLED-TURE] loadData failed',e);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';}
