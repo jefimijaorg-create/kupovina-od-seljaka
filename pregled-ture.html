@@ -538,12 +538,71 @@ main section.tour-section-open{padding-bottom:calc(105px + env(safe-area-inset-b
 @media(min-width:700px){.proc-order-add{grid-template-columns:minmax(0,1fr) 130px auto}.proc-order-add button{grid-column:auto}.proc-order-message-actions{grid-template-columns:1fr 1fr}}
 @media(max-width:420px){.proc-order-add{grid-template-columns:1fr 100px}.proc-order-message-actions{grid-template-columns:1fr}}
 </style>
+<style id="tour-home-screen">
+#tour-picker-panel{display:block!important;padding:clamp(16px,3vw,28px)!important;border-radius:22px!important;background:#111c32!important;border:1px solid #334155!important;box-shadow:0 12px 32px rgba(0,0,0,.2)!important;max-width:900px;margin:clamp(28px,7vh,72px) auto 24px!important}
+.tour-home-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:22px}
+.tour-home-heading h2{font-size:clamp(25px,5vw,34px);font-weight:950;color:#f8fafc;margin:4px 0}
+.tour-home-heading p{font-size:13px;color:#a7b4c7;margin:0}
+.tour-home-eyebrow{font-size:10px!important;letter-spacing:.16em;font-weight:950;color:#fb923c!important}
+.tour-home-live{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid rgba(52,211,153,.3);background:rgba(16,185,129,.1);color:#6ee7b7;border-radius:999px;padding:7px 10px;font-size:9px;font-weight:900;letter-spacing:.06em}
+.tour-home-live i{font-size:7px}
+.tour-home-cards{display:grid;gap:13px}
+.tour-home-card{width:100%;min-height:112px;display:flex;align-items:center;gap:14px;text-align:left;padding:17px;border:1px solid #334155;border-radius:17px;background:linear-gradient(135deg,#1a2a40,#121d30);color:#f8fafc;cursor:pointer;box-shadow:0 5px 16px rgba(0,0,0,.16);transition:border-color .15s,transform .15s}
+.tour-home-card:active{transform:scale(.99)}
+.tour-home-card.processing{border-color:rgba(52,211,153,.42);background:linear-gradient(120deg,#17382f,#14263a)}
+.tour-home-card.open{border-color:rgba(96,165,250,.38);background:linear-gradient(120deg,#1b304b,#14243a)}
+.tour-home-card.archive{border-color:#475569;background:#202b3c}
+.tour-home-icon{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:14px;background:rgba(255,255,255,.07);font-size:21px}
+.tour-home-card.processing .tour-home-icon{color:#6ee7b7;background:rgba(16,185,129,.13)}
+.tour-home-card.open .tour-home-icon{color:#93c5fd;background:rgba(59,130,246,.13)}
+.tour-home-card.archive .tour-home-icon{color:#cbd5e1;background:rgba(148,163,184,.12)}
+.tour-home-copy{min-width:0;flex:1}
+.tour-home-copy small{display:block;font-size:10px;font-weight:950;letter-spacing:.1em;color:#aab8ca;margin-bottom:5px}
+.tour-home-copy strong{display:block;font-size:16px;line-height:1.35;font-weight:900;color:#f8fafc;overflow-wrap:anywhere}
+.tour-home-copy em{display:block;font-size:11px;font-style:normal;color:#a7b4c7;margin-top:5px}
+.tour-home-arrow{font-size:15px;color:#94a3b8}
+.tour-home-card.processing .tour-home-copy small{color:#6ee7b7}
+.tour-home-card.open .tour-home-copy small{color:#93c5fd}
+.tour-home-empty{border:1px dashed #475569;border-radius:14px;padding:16px;color:#a7b4c7;font-size:12px;text-align:center}
+.tour-home-loading{padding:22px;text-align:center;color:#a7b4c7;font-size:13px}
+.closed-tours-overlay{position:fixed;inset:0;z-index:160;background:rgba(2,6,23,.78);backdrop-filter:blur(7px);display:flex;align-items:flex-end;justify-content:center}
+.closed-tours-overlay.hidden{display:none!important}
+.closed-tours-sheet{width:100%;max-width:760px;max-height:min(88dvh,900px);overflow:auto;background:#111c32;border:1px solid #475569;border-bottom:0;border-radius:23px 23px 0 0;padding:12px 16px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -15px 50px rgba(0,0,0,.4);color:#f8fafc}
+.closed-tours-grab{width:42px;height:4px;border-radius:9px;background:#64748b;margin:1px auto 16px}
+.closed-tours-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.closed-tours-head h2{font-size:24px;font-weight:950;color:#f8fafc;margin:3px 0}
+.closed-tours-head p:not(.tour-home-eyebrow){font-size:12px;color:#a7b4c7;margin:0}
+.closed-tours-close{width:43px;height:43px;border:1px solid #475569;border-radius:13px;background:#202b3c;color:#f8fafc;font-size:18px}
+.closed-tours-search{width:100%;margin-bottom:12px;padding:13px 14px!important;background:#0b1222!important;color:#f8fafc!important;border:1px solid #334155!important;border-radius:12px!important}
+.closed-tours-list{display:grid;gap:8px}
+.closed-tour-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:13px;border:1px solid #334155;border-radius:13px;background:#17243b;color:#f8fafc}
+.closed-tour-row strong{display:block;font-size:13px;line-height:1.4}
+.closed-tour-row small{display:block;font-size:11px;color:#a7b4c7;margin-top:4px}
+.closed-tour-row .closed-tag{font-size:9px;font-weight:900;color:#cbd5e1;background:#334155;border-radius:999px;padding:5px 8px;white-space:nowrap}
+body.closed-tours-open{overflow:hidden!important}
+@media(min-width:700px){.closed-tours-overlay{align-items:center;padding:24px}.closed-tours-sheet{border:1px solid #475569;border-radius:23px;max-height:82vh;padding:20px}.tour-home-cards{grid-template-columns:1fr 1fr}.tour-home-card.archive{grid-column:1/-1;min-height:88px}.tour-home-card{min-height:140px}}
+@media(max-width:420px){.tour-home-heading{display:block}.tour-home-live{margin-top:13px}.tour-home-card{padding:14px;gap:11px}.tour-home-icon{width:43px;height:43px;flex-basis:43px}.tour-home-copy strong{font-size:14px}}
+</style>
 </head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div id="tour-actions" class="hidden flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6"><div id="message" class="bg-white border border-slate-200 rounded-xl p-3 mb-5 text-sm">Повезивање са базом…</div>
 <div class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print"><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Вредност набавке</span><strong id="stat-price" class="block mt-1 text-xl sm:text-2xl font-black text-emerald-700">—</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето млека</span><strong id="stat-milk" class="block mt-1 text-xl sm:text-2xl font-black text-blue-700">0 л</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето сира</span><strong id="stat-cheese" class="block mt-1 text-xl sm:text-2xl font-black text-amber-700">0 кг</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето јаја</span><strong id="stat-eggs" class="block mt-1 text-xl sm:text-2xl font-black text-yellow-600">0 ком</strong></div></div>
-<div id="tour-picker-panel" class="bg-white rounded-xl border p-4 mb-6 flex flex-col sm:flex-row gap-3 no-print"><label class="flex-1 text-xs font-bold text-orange-400">КОРАК 1 · ИЗАБЕРИ РАДНУ ТУРУ<select id="tour-select" class="block w-full mt-1 border rounded-lg px-3 py-3 text-base" onchange="loadTour()"><option value="">Изабери туру</option></select></label><label id="tour-search-label" class="flex-1 text-xs font-bold text-slate-500">ПРЕТРАГА КУПЦА / ТЕЛЕФОНА<input id="search" oninput="renderAll()" placeholder="Име или телефон…" class="block w-full mt-1 border rounded-lg px-3 py-3 text-base"></label><button id="cancel-tour-change" type="button" onclick="toggleTourPicker(false)" class="hidden self-end bg-slate-100 border rounded-lg px-4 py-3 text-sm font-bold">Одустани</button></div>
+<section id="tour-picker-panel" class="mb-6 no-print">
+ <div class="tour-home-heading"><div><p class="tour-home-eyebrow">НАРУЧИ ДОМАЋЕ · ADMIN</p><h2>Избор туре</h2><p>Изабери туру за наставак рада.</p></div><span class="tour-home-live"><i class="fa-solid fa-circle"></i> ПОВЕЗАНО СА БАЗОМ</span></div>
+ <div id="tour-home-cards" class="tour-home-cards"><div class="tour-home-loading"><i class="fa-solid fa-spinner fa-spin"></i> Учитавање тура из базе…</div></div>
+ <select id="tour-select" class="hidden" aria-hidden="true" tabindex="-1" onchange="loadTour()"><option value="">Изабери туру</option></select>
+ <input id="search" class="hidden" aria-hidden="true" tabindex="-1" oninput="renderAll()">
+ <button id="cancel-tour-change" type="button" onclick="toggleTourPicker(false)" class="hidden">Одустани</button>
+</section>
+<div id="closed-tours-overlay" class="closed-tours-overlay hidden" onclick="closeClosedTours()" aria-hidden="true">
+ <section class="closed-tours-sheet" role="dialog" aria-modal="true" aria-labelledby="closed-tours-title" onclick="event.stopPropagation()">
+  <div class="closed-tours-grab"></div>
+  <div class="closed-tours-head"><div><p class="tour-home-eyebrow">АРХИВА</p><h2 id="closed-tours-title">Затворене туре</h2><p id="closed-tours-count">Учитавање затворених тура…</p></div><button type="button" class="closed-tours-close" onclick="closeClosedTours()" aria-label="Затвори архиву"><i class="fa-solid fa-xmark"></i></button></div>
+  <input id="closed-tours-search" class="closed-tours-search" type="search" placeholder="Претражи затворене туре…" oninput="renderClosedTours()">
+  <div id="closed-tours-list" class="closed-tours-list"></div>
+ </section>
+</div>
 <section id="tour-dashboard" class="hidden mb-6 space-y-4" aria-label="Operativni pregled izabrane ture">
  <div class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-6 shadow-xl">
   <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
@@ -633,7 +692,7 @@ function viberItemPrice(x){return hasItemPrice(x)?cash(price(x)):'⚠️ цен�
 function say(t,bad=false){let e=document.getElementById('message');e.textContent=t;e.className='bg-white border rounded-xl p-3 mb-5 text-sm '+(bad?'border-red-300 text-red-700':'border-emerald-200 text-emerald-800')}
 function savedTourId(){try{return localStorage.getItem('naruci-domace-admin-tour-id')||''}catch(e){return ''}}
 function saveTourId(id){try{localStorage.setItem('naruci-domace-admin-tour-id',String(id))}catch(e){console.warn('Чување изабране туре није доступно',e)}}
-function toggleTourPicker(show){const panel=document.getElementById('tour-picker-panel'),cancel=document.getElementById('cancel-tour-change');if(!panel)return;panel.classList.toggle('hidden',!show);if(cancel)cancel.classList.toggle('hidden',!show||!tourId);if(show){document.getElementById('tour-select')?.focus();panel.scrollIntoView({behavior:'smooth',block:'start'})}}
+function toggleTourPicker(show){const panel=document.getElementById('tour-picker-panel'),cancel=document.getElementById('cancel-tour-change');if(!panel)return;panel.classList.toggle('hidden',!show);if(cancel)cancel.classList.toggle('hidden',!show||!tourId);if(show){document.querySelector('#tour-home-cards button')?.focus();panel.scrollIntoView({behavior:'smooth',block:'start'})}}
 async function loadData(){
  try{
   say('Учитавање података из базе…');
@@ -655,35 +714,43 @@ async function loadData(){
   const selectableTours=tours.filter(t=>['open','full','scheduled','processing'].includes(String(t.status||'').toLowerCase()));
   sel.innerHTML='<option value="">Изабери туру</option>'+tours.map(t=>{const s=String(t.status||'').toLowerCase(),label=s==='processing'?' · У ОБРАДИ':s==='open'?' · АКТИВНА':s==='full'?' · ПОПУЊЕНА':s==='scheduled'?' · ПЛАНИРАНА':s?' · '+s.toUpperCase():'';return '<option value="'+t.id+'">'+(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+t.id)+label+' — '+esc(t.naziv||'Тура '+t.id)+'</option>'}).join('');
   const tl=document.getElementById('tour-list-items');if(tl)tl.innerHTML=tours.map(t=>'<button type="button" onclick="chooseTour('+Number(t.id)+')" class="text-left rounded-lg border px-3 py-3 bg-white"><b class="block text-sm">'+esc(t.naziv||('Тура '+t.id))+'</b><span class="text-xs text-slate-600">'+esc(t.datum||'')+' · '+esc(t.status||'')+'</span></button>').join('')||'<span>Нема тура.</span>';
-  // Vrati poslednju validnu turu pre inicijalizacije SPA rutera.
-  const savedKey=String(saved||'');
-  const savedTour=tours.find(t=>String(t.id)===savedKey);
-  if(savedTour){
-   sel.value=savedKey;
-   const restored=await loadTour({preserveRoute:true});
-   if(!restored){
-    tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};sel.value='';
-    document.body.classList.remove('tour-active');
-    document.getElementById('bottom-tab-nav')?.classList.add('hidden');
-    document.getElementById('tour-actions')?.classList.add('hidden');
-    document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
-    toggleTourPicker(true);
-    throw Error('Poslednja izabrana tura nije mogla da se učita. Pokušaj ponovo kada veza sa bazom bude dostupna.');
-   }
-  }else{
-   if(saved)saveTourId('');
-   tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};sel.value='';
-   document.body.classList.remove('tour-active');
-   document.getElementById('bottom-tab-nav')?.classList.add('hidden');
-   document.getElementById('procurement-tab')?.classList.add('hidden');
-   document.getElementById('tour-actions')?.classList.add('hidden');
-   document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
-   toggleTourPicker(true);
-   say('КОРАК 1: Изабери туру. Након избора отвориће се мени и сви подаци за ту туру.');
-  }
+  // Почетни екран се увек отвара као избор тура; претходни избор не прескаче почетну.
+  if(saved)saveTourId('');
+  tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};sel.value='';
+  document.body.classList.remove('tour-active');
+  document.getElementById('bottom-tab-nav')?.classList.add('hidden');
+  document.getElementById('procurement-tab')?.classList.add('hidden');
+  document.getElementById('tour-actions')?.classList.add('hidden');
+  document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
+  renderTourHome();
+  toggleTourPicker(true);
+  say('Изабери туру за рад или отвори архиву затворених тура.');
  }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ТУРА\\n'+(e?.message||String(e))+'\\n\\nПровери: Supabase дозволе (RLS), назив табеле/колона и мрежну везу.\\nВреме: '+new Date().toLocaleString('sr-RS');say(detail,true);console.error('[PREGLED-TURE] loadData failed',e);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';}
 }
-function chooseTour(id){const sel=document.getElementById('tour-select');if(sel)sel.value=String(id);loadTour();}
+function renderTourHome(){
+ const root=document.getElementById('tour-home-cards');if(!root)return;
+ const byStatus=status=>tours.filter(t=>String(t.status||'').toLowerCase()===status);
+ const processing=byStatus('processing'),opened=byStatus('open'),closed=byStatus('closed');
+ const dateLabel=t=>t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'long',year:'numeric'}):'Датум није наведен';
+ const card=(t,kind,label,icon,description)=>'<button type="button" class="tour-home-card '+kind+'" onclick="chooseTour('+Number(t.id)+')"><span class="tour-home-icon"><i class="fa-solid '+icon+'"></i></span><span class="tour-home-copy"><small>'+label+'</small><strong>'+esc(t.naziv||('Тура '+t.id))+'</strong><em>'+dateLabel(t)+' · Тура #'+Number(t.id)+(description?' · '+description:'')+'</em></span><i class="fa-solid fa-chevron-right tour-home-arrow"></i></button>';
+ const cards=[];
+ if(processing.length)processing.forEach(t=>cards.push(card(t,'processing','ТУРА У ОБРАДИ','fa-gear','Наставак рада')));
+ else cards.push('<div class="tour-home-empty">Тренутно нема туре са статусом „У обради“.</div>');
+ if(opened.length)opened.forEach(t=>cards.push(card(t,'open','ОТВОРЕНА ТУРА','fa-folder-open','Спремна за обраду')));
+ else cards.push('<div class="tour-home-empty">Тренутно нема отворене туре.</div>');
+ cards.push('<button type="button" class="tour-home-card archive" onclick="openClosedTours()"><span class="tour-home-icon"><i class="fa-solid fa-box-archive"></i></span><span class="tour-home-copy"><small>АРХИВА ТУРА</small><strong>Затворене туре</strong><em>'+closed.length+' '+(closed.length===1?'затворена тура':closed.length%10>=2&&closed.length%10<=4&&!(closed%100>=12&&closed%100<=14)?'затворене туре':'затворених тура')+' · Преглед целокупне архиве</em></span><i class="fa-solid fa-chevron-right tour-home-arrow"></i></button>');
+ root.innerHTML=cards.join('');
+}
+function renderClosedTours(){
+ const root=document.getElementById('closed-tours-list'),count=document.getElementById('closed-tours-count');if(!root)return;
+ const q=String(document.getElementById('closed-tours-search')?.value||'').trim().toLocaleLowerCase('sr');
+ const closed=tours.filter(t=>String(t.status||'').toLowerCase()==='closed').filter(t=>[t.naziv,t.datum,String(t.id)].join(' ').toLocaleLowerCase('sr').includes(q));
+ if(count)count.textContent=closed.length+' тура у архиви';
+ root.innerHTML=closed.length?closed.map(t=>'<button type="button" class="closed-tour-row" onclick="chooseTour('+Number(t.id)+')"><span><strong>'+esc(t.naziv||('Тура '+t.id))+'</strong><small>'+esc(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'long',year:'numeric'}):'Датум није наведен')+' · Тура #'+Number(t.id)+'</small></span><span class="closed-tag">ЗАТВОРЕНА</span></button>').join(''):'<div class="tour-home-empty">Нема затворених тура које одговарају претрази.</div>';
+}
+function openClosedTours(){renderClosedTours();document.getElementById('closed-tours-overlay')?.classList.remove('hidden');document.body.classList.add('closed-tours-open');}
+function closeClosedTours(){document.getElementById('closed-tours-overlay')?.classList.add('hidden');document.body.classList.remove('closed-tours-open');}
+function chooseTour(id){closeClosedTours();const sel=document.getElementById('tour-select');if(sel)sel.value=String(id);loadTour();}
 async function loadTour(options={}){
  const select=document.getElementById('tour-select'),selected=select?.value;
  if(!selected){say('Изабери туру пре наставка.',true);return false}
