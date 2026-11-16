@@ -543,24 +543,48 @@ main section.tour-section-open{padding-bottom:calc(105px + env(safe-area-inset-b
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6"><div id="message" class="bg-white border border-slate-200 rounded-xl p-3 mb-5 text-sm">Повезивање са базом…</div>
 <div class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print"><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Вредност набавке</span><strong id="stat-price" class="block mt-1 text-xl sm:text-2xl font-black text-emerald-700">—</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето млека</span><strong id="stat-milk" class="block mt-1 text-xl sm:text-2xl font-black text-blue-700">0 л</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето сира</span><strong id="stat-cheese" class="block mt-1 text-xl sm:text-2xl font-black text-amber-700">0 кг</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето јаја</span><strong id="stat-eggs" class="block mt-1 text-xl sm:text-2xl font-black text-yellow-600">0 ком</strong></div></div>
 <div id="tour-picker-panel" class="bg-white rounded-xl border p-4 mb-6 flex flex-col sm:flex-row gap-3 no-print"><label class="flex-1 text-xs font-bold text-orange-400">КОРАК 1 · ИЗАБЕРИ РАДНУ ТУРУ<select id="tour-select" class="block w-full mt-1 border rounded-lg px-3 py-3 text-base" onchange="loadTour()"><option value="">Изабери туру</option></select></label><label id="tour-search-label" class="flex-1 text-xs font-bold text-slate-500">ПРЕТРАГА КУПЦА / ТЕЛЕФОНА<input id="search" oninput="renderAll()" placeholder="Име или телефон…" class="block w-full mt-1 border rounded-lg px-3 py-3 text-base"></label><button id="cancel-tour-change" type="button" onclick="toggleTourPicker(false)" class="hidden self-end bg-slate-100 border rounded-lg px-4 py-3 text-sm font-bold">Одустани</button></div>
-<section id="tour-dashboard" class="hidden mb-6" aria-label="Контролна табла изabrane ture"><div class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-6 shadow-xl"><div class="flex items-center justify-between gap-3 mb-5"><div><p class="text-[11px] font-black tracking-widest text-orange-300">РАДНИ ПРОСТОР ТУРЕ</p><h2 class="text-xl sm:text-2xl font-black text-white mt-1">Шта желиш да отвoриш?</h2></div><span class="rounded-full bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 px-3 py-1 text-xs font-bold">Изабрана тура</span></div><div class="grid grid-cols-2 gap-3 sm:gap-4"><button type="button" onclick="switchTab('orders')" class="tour-dashboard-card text-left"><span class="tour-dashboard-icon"><i class="fa-solid fa-clipboard-list"></i></span><strong>Поруџбине</strong><small>Купци и наручени производи</small><i class="fa-solid fa-arrow-up-right-from-square tour-card-arrow"></i></button><button type="button" onclick="switchTab('procurement')" class="tour-dashboard-card text-left"><span class="tour-dashboard-icon"><i class="fa-solid fa-boxes-stacked"></i></span><strong>Набавка</strong><small>Потребни производи и газдинства</small><i class="fa-solid fa-arrow-up-right-from-square tour-card-arrow"></i></button><button type="button" onclick="switchTab('delivery')" class="tour-dashboard-card text-left"><span class="tour-dashboard-icon"><i class="fa-solid fa-truck-fast"></i></span><strong>Достава</strong><small>Пунктови, термини и реализација</small><i class="fa-solid fa-arrow-up-right-from-square tour-card-arrow"></i></button><button type="button" onclick="switchTab('debts')" class="tour-dashboard-card text-left"><span class="tour-dashboard-icon"><i class="fa-solid fa-wallet"></i></span><strong>Дуговања</strong><small>Набавка и неизмирени износи</small><i class="fa-solid fa-arrow-up-right-from-square tour-card-arrow"></i></button></div></div></section><div id="tour-section-backdrop" class="hidden" onclick="closeTourSection()" aria-hidden="true"></div><div id="tour-overlay-header" class="hidden"><button type="button" onclick="closeTourSection()" class="tour-back-button"><i class="fa-solid fa-arrow-left"></i><span>Назад на туру</span></button><strong id="tour-overlay-title">Одељак туре</strong><span class="tour-overlay-spacer"></span></div>
+<section id="tour-dashboard" class="hidden mb-6 space-y-4" aria-label="Operativni pregled izabrane ture">
+ <div class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-6 shadow-xl">
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+   <div><p class="text-[11px] font-black tracking-widest text-orange-300">OPERATIVNI PREGLED TURE</p><h2 class="text-xl sm:text-2xl font-black text-white mt-1" id="tour-dashboard-title">Izabrana tura</h2><p id="tour-dashboard-date" class="text-xs text-slate-400 mt-1"></p></div>
+   <div class="text-right"><span id="tour-dashboard-status" class="inline-flex rounded-full border px-3 py-1.5 text-xs font-bold">Učitavanje statusa…</span><p id="tour-dashboard-status-detail" class="text-[11px] text-slate-400 mt-2 max-w-[220px]"></p></div>
+  </div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+   <div class="rounded-xl border border-slate-700 bg-slate-950/70 p-3"><span class="text-[10px] tracking-wider text-slate-400 uppercase">Porudžbine</span><strong id="tour-dashboard-orders" class="block text-2xl font-black mt-1">—</strong><small class="text-xs text-slate-500">u ovoj turi</small></div>
+   <div class="rounded-xl border border-slate-700 bg-slate-950/70 p-3"><span class="text-[10px] tracking-wider text-slate-400 uppercase">Kupci</span><strong id="tour-dashboard-customers" class="block text-2xl font-black mt-1">—</strong><small class="text-xs text-slate-500">različitih kupaca</small></div>
+   <div class="rounded-xl border border-slate-700 bg-slate-950/70 p-3"><span class="text-[10px] tracking-wider text-slate-400 uppercase">Vrednost porudžbina</span><strong id="tour-dashboard-value" class="block text-xl font-black mt-1">—</strong><small class="text-xs text-slate-500">RSD</small></div>
+   <div class="rounded-xl border border-slate-700 bg-slate-950/70 p-3"><span class="text-[10px] tracking-wider text-slate-400 uppercase">Aktivni punktovi</span><strong id="tour-dashboard-points" class="block text-2xl font-black mt-1">—</strong><small class="text-xs text-slate-500">u rasporedu ture</small></div>
+  </div>
+  <div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4">
+   <div class="flex items-center justify-between gap-3"><div><p class="text-[10px] tracking-widest font-black text-orange-300">PREGLED NABAVKE</p><h3 class="font-bold text-white mt-1">Šta je naručeno i koliko</h3></div><div class="text-right"><strong id="tour-dashboard-products" class="block text-xl font-black">—</strong><small class="text-[10px] text-slate-500">proizvoda</small></div></div>
+   <p id="tour-dashboard-packages" class="text-xs text-slate-400 mt-1"></p><div id="tour-dashboard-demand-preview" class="mt-3 space-y-2"></div>
+   <button type="button" onclick="switchTab('procurement')" class="mt-4 w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-3 text-sm font-bold text-white">Otvori nabavku <i class="fa-solid fa-arrow-right ml-1"></i></button>
+  </div>
+  <div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+   <p id="tour-dashboard-next-step" class="text-xs text-slate-400">Izaberi jednu od tri celine u donjoj navigaciji.</p>
+   <button id="tour-status-action" type="button" onclick="advanceTourStatus()" class="hidden rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-black px-5 py-3 text-sm">Promeni status ture</button>
+  </div>
+ </div>
+</section><div id="tour-section-backdrop" class="hidden" onclick="closeTourSection()" aria-hidden="true"></div><div id="tour-overlay-header" class="hidden"><button type="button" onclick="closeTourSection()" class="tour-back-button"><i class="fa-solid fa-arrow-left"></i><span>Nazad na pregled ture</span></button><strong id="tour-overlay-title">Odeljak ture</strong><span class="tour-overlay-spacer"></span></div>
 
 <div id="unassigned-banner" class="unassigned-sheet hidden bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-6 shadow-sm no-print"><div class="flex justify-between items-center gap-3 mb-3"><h2 class="font-bold text-amber-900"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> Недодељене ставке (<span id="unassigned-count">0</span>)</h2><span class="text-xs text-amber-700 bg-amber-200/60 px-2 py-1 rounded">Додели газдинство пре преузимања</span><button type="button" onclick="toggleUnassigned()" class="bg-amber-200 rounded-lg px-3 py-1 font-bold text-amber-900">Затвори ✕</button></div><div id="unassigned-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
 
 <div id="unassigned-toggle-wrap" class="hidden mb-4 no-print"><button id="unassigned-toggle" onclick="toggleUnassigned()" class="unassigned-sheet-toggle w-full text-left bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 font-bold text-amber-900"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Недодељене ставке <span id="unassigned-button-count" class="ml-1 rounded-full bg-amber-200 px-2 py-1 text-xs">0</span><span class="float-right">▼</span></button></div>
 <section id="orders-tab" class="hidden space-y-4"><div class="bg-white p-4 rounded-xl border shadow-sm"><h2 class="font-black text-xl">Поруџбине по купцима</h2><p class="text-sm text-slate-500 mt-1">Преглед шта је сваки купац наручио, по паковањима и цени.</p><div id="orders-summary" class="mt-4"></div></div></section>
 <section id="procurement-tab" class="hidden space-y-4">
-<div id="procurement-workflow" aria-label="Koraci nabavke">
- <button type="button" class="pw-step" data-pw-step="orders" onclick="goProcurementStep('orders')"><span class="pw-number">1</span><span class="pw-copy"><b>Porudžbine</b><small>Ko je šta naručio</small></span></button>
- <button type="button" class="pw-step" data-pw-step="products" aria-current="step" onclick="goProcurementStep('products')"><span class="pw-number">2</span><span class="pw-copy"><b>Proizvodi</b><small>Ukupna potražnja</small></span></button>
- <button type="button" class="pw-step" data-pw-step="allocation" onclick="goProcurementStep('allocation')"><span class="pw-number">3</span><span class="pw-copy"><b>Raspodela</b><small>Izbor gazdinstva za proizvod</small></span></button>
- <button type="button" class="pw-step" data-pw-step="farms" onclick="goProcurementStep('farms')"><span class="pw-number">4</span><span class="pw-copy"><b>Gazdinstva</b><small>Pregled zaduženja</small></span></button>
-</div>
-<div id="procurement-workflow-note"><i class="fa-solid fa-circle-info"></i><span>Izaberi proizvod da pregledaš pakovanja i nastaviš sa raspodelom. Sve količine pripadaju trenutno izabranoj turi.</span></div>
 <div class="bg-white p-3 sm:p-4 rounded-xl border shadow-sm">
 <div class="flex items-center justify-between gap-2 mb-3"><div><h2 class="font-black text-xl">Набавка и преузимање</h2><p class="text-sm text-slate-500">Изабери газдинство, наручи производе и означи преузимање на истој ставци.</p></div></div>
 <div id="procurement-demand-list"></div><div id="supplier-sheet-content"></div>
-</div></section><section id="delivery-tab" class="hidden space-y-4"><div class="bg-white p-4 rounded-xl border no-print"><p class="text-sm text-slate-600"><i class="fa-solid fa-route text-emerald-600 mr-1"></i> Достава је подељена на три јасна прегледа. Изабери шта желиш да видиш.</p></div><div id="delivery-subnav" class="grid grid-cols-3 gap-2 no-print"><button type="button" id="delivery-sub-stock-btn" onclick="setDeliverySubtab('stock')" class="rounded-xl border-2 border-emerald-700 bg-emerald-50 text-emerald-900 px-2 py-3 text-xs sm:text-sm font-black">ШТА ИМА У ВОЗИЛУ</button><button type="button" id="delivery-sub-picked-btn" onclick="setDeliverySubtab('picked')" class="rounded-xl border bg-white text-slate-600 px-2 py-3 text-xs sm:text-sm font-black">ШТА ЈЕ ПРЕУЗЕТО</button><button type="button" id="delivery-sub-orders-btn" onclick="setDeliverySubtab('orders')" class="rounded-xl border bg-white text-slate-600 px-2 py-3 text-xs sm:text-sm font-black">ШТА ТРЕБА ИСПОРУЧИТИ</button></div><div id="delivery-stock-panel"></div><div id="delivery-picked-panel" class="hidden"></div><div id="delivery-orders-panel" class="hidden space-y-4"><div class="bg-white rounded-xl border p-3 no-print"><div class="grid grid-cols-2 gap-2 mb-3"><button id="delivery-point-active-btn" onclick="setDeliveryPointMode('active')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-emerald-700 bg-emerald-50 text-emerald-900">Активни пунктови</button><button id="delivery-point-completed-btn" onclick="setDeliveryPointMode('completed')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-slate-200 bg-white text-slate-600">Завршени пунктови</button></div><div class="grid grid-cols-2 gap-2 mb-3"><button id="delivery-list-pending-btn" onclick="setDeliveryListMode('pending')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-emerald-700 bg-emerald-50 text-emerald-900">За доставу</button><button id="delivery-list-processed-btn" onclick="setDeliveryListMode('processed')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-slate-200 bg-white text-slate-600">Достављено</button></div><input id="delivery-search" oninput="renderDelivery()" placeholder="Претражи купца или телефон…" class="border rounded-lg px-3 py-2 text-sm w-full sm:w-72"></div><div id="points" class="space-y-6"></div></div></section><section id="debts-tab" class="hidden space-y-6"><div class="bg-white p-4 sm:p-5 rounded-xl border shadow-sm"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="font-black text-xl">Дуговања газдинствима</h2><p class="text-sm text-slate-500 mt-1">Све набавке, производи, количине, уплате и преостале обавезе.</p></div><button onclick="loadDebts()" class="no-print bg-slate-100 border px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button></div><div class="mt-5 no-print"><button type="button" id="manual-debt-open-btn" onclick="toggleManualDebtPanel(true)" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-xl px-5 py-3 shadow-sm"><i class="fa-solid fa-plus-circle mr-2"></i> Ручно унеси дуг</button><div id="manual-debt-form" class="hidden mt-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4"><div class="flex items-center justify-between gap-3"><div><h3 class="font-black text-lg text-emerald-900">Ручни унос дуга</h3><p class="text-sm text-slate-600 mt-1">Изабери газдинство, па унеси производ и дуговање.</p></div><button type="button" onclick="toggleManualDebtPanel(false)" class="shrink-0 border bg-white rounded-lg px-3 py-2 text-sm font-bold text-slate-700">Затвори</button></div><label class="block mt-3 text-xs font-bold text-emerald-900">ИЗАБЕРИ ГАЗДИНСТВО<select id="manual-debt-farm" onchange="toggleManualDebtForm(this.value)" class="w-full border-2 border-emerald-400 rounded-xl px-4 py-4 mt-1 bg-white text-base font-black text-slate-900"><option value="">— Изабери газдинство —</option></select></label><div id="manual-debt-fields" class="hidden mt-4 border-t border-emerald-200 pt-4"><div class="rounded-lg bg-white border border-emerald-200 px-3 py-2 mb-3 text-sm">Унос за газдинство: <strong id="manual-debt-selected-name" class="text-emerald-800"></strong></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><label class="text-xs font-bold text-slate-600">ДАТУМ ДУГА<input id="manual-debt-date" type="date" value="2026-11-01" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">ПОВЕЖИ СА ТУРОМ (ОПЦИОНО)<select id="manual-debt-tour" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"><option value="">Без туре / старо дуговање</option></select></label><label class="text-xs font-bold text-slate-600">ПРОИЗВОД<input id="manual-debt-product" type="text" placeholder="Нпр. козје млеко, сир, јаја…" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">КОЛИЧИНА<input id="manual-debt-quantity" type="number" min="0.001" step="0.001" value="1" oninput="previewManualDebt()" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">ЈЕДИНИЦА МЕРЕ<select id="manual-debt-unit" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"><option value="л">Литар (л)</option><option value="кг">Килограм (кг)</option><option value="ком">Комад (ком)</option><option value="гајба">Гајба</option><option value="паковање">Паковање</option><option value="друго">Друго</option></select></label><label class="text-xs font-bold text-slate-600">НАБАВНА ЦЕНА ПО ЈЕДИНИЦИ (ДИН.)<input id="manual-debt-price" type="number" min="0" step="0.01" placeholder="0.00" oninput="previewManualDebt()" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">НАПОМЕНА (ОПЦИОНО)<input id="manual-debt-note" type="text" placeholder="Додатне информације…" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label></div><div class="mt-3 rounded-lg bg-white border p-3 flex justify-between items-center gap-3"><span class="text-sm font-bold text-slate-600">УКУПАН ДУГ</span><strong id="manual-debt-total" class="text-xl font-black text-emerald-800">0 дин.</strong></div><button type="button" onclick="saveManualDebt()" class="mt-3 w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-lg px-4 py-3"><i class="fa-solid fa-floppy-disk mr-2"></i>Сачувај дуг за изабрано газдинство</button></div></div></div><div id="debts-summary" class="mt-4"></div><input id="debts-search" oninput="renderDebts()" placeholder="Претражи газдинство или производ…" class="no-print w-full border rounded-lg px-3 py-2 text-sm mt-4"><div id="debts-list" class="mt-4 space-y-4"></div></div></section><nav id="bottom-tab-nav" aria-label="Мени изабране туре" class="hidden fixed bottom-0 left-0 right-0 z-[80] bg-white/95 backdrop-blur border-t border-slate-200 shadow-[0_-6px_24px_rgba(15,23,42,.12)] no-print" style="padding-bottom:env(safe-area-inset-bottom)"><div class="max-w-7xl mx-auto"><div class="px-3 pt-2 pb-1 flex items-center justify-between gap-2"><span class="text-[9px] font-black tracking-widest text-slate-400">РАД У ОКВИРУ ТУРЕ</span><strong id="bottom-nav-tour-name" class="min-w-0 truncate text-[11px] text-orange-300"></strong></div><div class="grid grid-cols-4 gap-1 px-2 pt-1 pb-2"><button id="btn-orders" onclick="switchTab('orders')" class="flex flex-col items-center justify-center gap-1 min-h-[54px] rounded-xl text-slate-500 font-bold text-[11px]"><i class="fa-solid fa-clipboard-list text-lg"></i><span>Поруџбине</span></button><button id="btn-procurement" onclick="switchTab('procurement')" class="flex flex-col items-center justify-center gap-1 min-h-[54px] rounded-xl text-slate-500 font-bold text-[11px]"><i class="fa-solid fa-boxes-stacked text-lg"></i><span>Набавка</span></button><button id="btn-delivery" onclick="switchTab('delivery')" class="flex flex-col items-center justify-center gap-1 min-h-[54px] rounded-xl text-slate-500 font-bold text-[11px]"><i class="fa-solid fa-route text-lg"></i><span>Достава</span></button><button id="btn-debts" onclick="switchTab('debts')" class="flex flex-col items-center justify-center gap-1 min-h-[54px] rounded-xl text-slate-500 font-bold text-[11px]"><i class="fa-solid fa-wallet text-lg"></i><span>Дуговања</span></button></div></div></nav></main>
+</div></section><section id="delivery-tab" class="hidden space-y-4"><div class="bg-white p-4 rounded-xl border no-print"><p class="text-sm text-slate-600"><i class="fa-solid fa-route text-emerald-600 mr-1"></i> Достава је подељена на три јасна прегледа. Изабери шта желиш да видиш.</p></div><div id="delivery-subnav" class="grid grid-cols-3 gap-2 no-print"><button type="button" id="delivery-sub-stock-btn" onclick="setDeliverySubtab('stock')" class="rounded-xl border-2 border-emerald-700 bg-emerald-50 text-emerald-900 px-2 py-3 text-xs sm:text-sm font-black">ШТА ИМА У ВОЗИЛУ</button><button type="button" id="delivery-sub-picked-btn" onclick="setDeliverySubtab('picked')" class="rounded-xl border bg-white text-slate-600 px-2 py-3 text-xs sm:text-sm font-black">ШТА ЈЕ ПРЕУЗЕТО</button><button type="button" id="delivery-sub-orders-btn" onclick="setDeliverySubtab('orders')" class="rounded-xl border bg-white text-slate-600 px-2 py-3 text-xs sm:text-sm font-black">ШТА ТРЕБА ИСПОРУЧИТИ</button></div><div id="delivery-stock-panel"></div><div id="delivery-picked-panel" class="hidden"></div><div id="delivery-orders-panel" class="hidden space-y-4"><div class="bg-white rounded-xl border p-3 no-print"><div class="grid grid-cols-2 gap-2 mb-3"><button id="delivery-point-active-btn" onclick="setDeliveryPointMode('active')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-emerald-700 bg-emerald-50 text-emerald-900">Активни пунктови</button><button id="delivery-point-completed-btn" onclick="setDeliveryPointMode('completed')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-slate-200 bg-white text-slate-600">Завршени пунктови</button></div><div class="grid grid-cols-2 gap-2 mb-3"><button id="delivery-list-pending-btn" onclick="setDeliveryListMode('pending')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-emerald-700 bg-emerald-50 text-emerald-900">За доставу</button><button id="delivery-list-processed-btn" onclick="setDeliveryListMode('processed')" class="rounded-xl border-2 px-3 py-3 font-black text-sm border-slate-200 bg-white text-slate-600">Достављено</button></div><input id="delivery-search" oninput="renderDelivery()" placeholder="Претражи купца или телефон…" class="border rounded-lg px-3 py-2 text-sm w-full sm:w-72"></div><div id="points" class="space-y-6"></div></div></section><section id="debts-tab" class="hidden space-y-6"><div class="bg-white p-4 sm:p-5 rounded-xl border shadow-sm"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="font-black text-xl">Дуговања газдинствима</h2><p class="text-sm text-slate-500 mt-1">Све набавке, производи, количине, уплате и преостале обавезе.</p></div><button onclick="loadDebts()" class="no-print bg-slate-100 border px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button></div><div class="mt-5 no-print"><button type="button" id="manual-debt-open-btn" onclick="toggleManualDebtPanel(true)" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-xl px-5 py-3 shadow-sm"><i class="fa-solid fa-plus-circle mr-2"></i> Ручно унеси дуг</button><div id="manual-debt-form" class="hidden mt-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4"><div class="flex items-center justify-between gap-3"><div><h3 class="font-black text-lg text-emerald-900">Ручни унос дуга</h3><p class="text-sm text-slate-600 mt-1">Изабери газдинство, па унеси производ и дуговање.</p></div><button type="button" onclick="toggleManualDebtPanel(false)" class="shrink-0 border bg-white rounded-lg px-3 py-2 text-sm font-bold text-slate-700">Затвори</button></div><label class="block mt-3 text-xs font-bold text-emerald-900">ИЗАБЕРИ ГАЗДИНСТВО<select id="manual-debt-farm" onchange="toggleManualDebtForm(this.value)" class="w-full border-2 border-emerald-400 rounded-xl px-4 py-4 mt-1 bg-white text-base font-black text-slate-900"><option value="">— Изабери газдинство —</option></select></label><div id="manual-debt-fields" class="hidden mt-4 border-t border-emerald-200 pt-4"><div class="rounded-lg bg-white border border-emerald-200 px-3 py-2 mb-3 text-sm">Унос за газдинство: <strong id="manual-debt-selected-name" class="text-emerald-800"></strong></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><label class="text-xs font-bold text-slate-600">ДАТУМ ДУГА<input id="manual-debt-date" type="date" value="2026-11-01" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">ПОВЕЖИ СА ТУРОМ (ОПЦИОНО)<select id="manual-debt-tour" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"><option value="">Без туре / старо дуговање</option></select></label><label class="text-xs font-bold text-slate-600">ПРОИЗВОД<input id="manual-debt-product" type="text" placeholder="Нпр. козје млеко, сир, јаја…" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">КОЛИЧИНА<input id="manual-debt-quantity" type="number" min="0.001" step="0.001" value="1" oninput="previewManualDebt()" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">ЈЕДИНИЦА МЕРЕ<select id="manual-debt-unit" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"><option value="л">Литар (л)</option><option value="кг">Килограм (кг)</option><option value="ком">Комад (ком)</option><option value="гајба">Гајба</option><option value="паковање">Паковање</option><option value="друго">Друго</option></select></label><label class="text-xs font-bold text-slate-600">НАБАВНА ЦЕНА ПО ЈЕДИНИЦИ (ДИН.)<input id="manual-debt-price" type="number" min="0" step="0.01" placeholder="0.00" oninput="previewManualDebt()" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="text-xs font-bold text-slate-600">НАПОМЕНА (ОПЦИОНО)<input id="manual-debt-note" type="text" placeholder="Додатне информације…" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label></div><div class="mt-3 rounded-lg bg-white border p-3 flex justify-between items-center gap-3"><span class="text-sm font-bold text-slate-600">УКУПАН ДУГ</span><strong id="manual-debt-total" class="text-xl font-black text-emerald-800">0 дин.</strong></div><button type="button" onclick="saveManualDebt()" class="mt-3 w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-lg px-4 py-3"><i class="fa-solid fa-floppy-disk mr-2"></i>Сачувај дуг за изабрано газдинство</button></div></div></div><div id="debts-summary" class="mt-4"></div><input id="debts-search" oninput="renderDebts()" placeholder="Претражи газдинство или производ…" class="no-print w-full border rounded-lg px-3 py-2 text-sm mt-4"><div id="debts-list" class="mt-4 space-y-4"></div></div></section><nav id="bottom-tab-nav" aria-label="Navigacija ture" class="hidden fixed bottom-0 left-0 right-0 z-[80] bg-slate-950/95 backdrop-blur border-t border-slate-700 shadow-[0_-6px_24px_rgba(0,0,0,.3)] no-print" style="padding-bottom:env(safe-area-inset-bottom)">
+ <div class="max-w-7xl mx-auto">
+  <div class="px-3 pt-2 pb-1 flex items-center justify-between gap-2"><span class="text-[9px] font-black tracking-widest text-slate-400">IZABRANA TURA</span><strong id="bottom-nav-tour-name" class="min-w-0 truncate text-[11px] text-orange-300"></strong></div>
+  <div class="grid grid-cols-3 gap-1 px-2 pt-1 pb-2">
+   <button id="btn-orders" onclick="switchTab('orders')" class="flex flex-col items-center justify-center gap-1 min-h-[56px] rounded-xl text-slate-400 font-bold text-[11px]"><i class="fa-solid fa-clipboard-list text-lg"></i><span>Porudžbine</span></button>
+   <button id="btn-procurement" onclick="switchTab('procurement')" class="flex flex-col items-center justify-center gap-1 min-h-[56px] rounded-xl text-slate-400 font-bold text-[11px]"><i class="fa-solid fa-boxes-stacked text-lg"></i><span>Nabavka</span></button>
+   <button id="btn-delivery" onclick="switchTab('delivery')" class="flex flex-col items-center justify-center gap-1 min-h-[56px] rounded-xl text-slate-400 font-bold text-[11px]"><i class="fa-solid fa-truck-fast text-lg"></i><span>Dostava</span></button>
+  </div>
+ </div>
+</nav></main>
 <script>
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
@@ -685,7 +709,7 @@ async function loadTour(options={}){
   const t=tours.find(x=>Number(x.id)===tourId);
   document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';
   document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;
-  populateFilters();populatePickupSummaryFilters();renderAll();toggleTourPicker(false);
+  populateFilters();populatePickupSummaryFilters();renderAll();renderTourDashboard();toggleTourPicker(false);
   const bottomNav=document.getElementById('bottom-tab-nav'),navTour=document.getElementById('bottom-nav-tour-name');
   if(bottomNav)bottomNav.classList.remove('hidden');
   document.body.classList.add('tour-active');document.getElementById('tour-actions')?.classList.remove('hidden');
@@ -695,7 +719,6 @@ async function loadTour(options={}){
   else if(adminRouterPath()==='/nabavka')switchTab('procurement');
   else if(adminRouterPath()==='/porudzbine')switchTab('orders');
   else if(adminRouterPath()==='/dostava')switchTab('delivery');
-  else if(adminRouterPath()==='/dugovanja')switchTab('debts');
   else showTourDashboard();
   say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки. Изабрана тура се чува и после освежавања странице.');
   return true;
@@ -722,9 +745,102 @@ function printDeliveryInvoice(orderId){
 }
 async function setDeliveryProcessed(orderId,processed,button=null){const oldText=button?.textContent;try{if(button){button.disabled=true;button.textContent='ЧУВАМ…'}const stamp=processed?new Date().toISOString():null;await api('porudzbine?id=eq.'+encodeURIComponent(orderId),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({dostava_obradjena:!!processed,dostava_obradjena_at:stamp})});const check=await api('porudzbine?select=id,dostava_obradjena,dostava_obradjena_at&id=eq.'+encodeURIComponent(orderId));const saved=Array.isArray(check)?check.find(x=>String(x.id)===String(orderId)):null;if(!saved||Boolean(saved.dostava_obradjena)!==!!processed)throw Error('База није потврдила завршетак доставе. Провери дозволе за измену поруџбине.');let row=orders.find(x=>String(x.id)===String(orderId));if(row)Object.assign(row,saved);else orders.push(saved);say(processed?'Купац је пребачен у „Достављено“.':'Купац је враћен у „За доставу“.');renderDelivery();}catch(e){if(button){button.disabled=false;button.textContent=oldText||'✓ ЗАВРШИ ДОСТАВУ'}say('Достава није завршена: '+(e?.message||String(e)),true);document.getElementById('message')?.scrollIntoView({behavior:'smooth',block:'center'});console.error('[DOSTAVA] setDeliveryProcessed failed',orderId,e)}}
 function setDeliverySubtab(mode){deliveryMode=mode;['stock','picked','orders'].forEach(k=>{const panel=document.getElementById('delivery-'+k+'-panel'),btn=document.getElementById('delivery-sub-'+k+'-btn');if(panel)panel.classList.toggle('hidden',k!==mode);if(btn)btn.className='rounded-xl border-2 px-2 py-3 text-xs sm:text-sm font-black '+(k===mode?'border-emerald-700 bg-emerald-50 text-emerald-900':'border-slate-200 bg-white text-slate-600')});}
-function showTourDashboard(){if(!tourId)return;document.body.classList.remove('tour-panel-open');document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');document.getElementById('tour-dashboard')?.classList.remove('hidden');document.getElementById('tour-overlay-header')?.classList.add('hidden');document.getElementById('tour-section-backdrop')?.classList.add('hidden');['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.add('hidden');panel?.classList.remove('tour-section-open')});}
+
+function tourStatusKey(){return String(tours.find(t=>Number(t.id)===Number(tourId))?.status||'open').toLowerCase()}
+function tourStatusLabel(status){return ({open:'Otvorena',full:'Popunjena',scheduled:'Zakazana',processing:'U realizaciji',closed:'Zatvorena',completed:'Završena',cancelled:'Otkazana'})[status]||('Status: '+status)}
+function tourCanManageProcurement(){const status=tourStatusKey();return status==='closed'||status==='processing'}
+function renderTourDashboard(){
+ if(!tourId)return;
+ const tour=tours.find(t=>Number(t.id)===Number(tourId))||{};
+ const status=tourStatusKey(),statusEl=document.getElementById('tour-dashboard-status');
+ const orderIds=[...new Set((items||[]).map(x=>String(x.porudzbina_id||'')).filter(Boolean))];
+ const orderRows=orderIds.map(id=>(orders||[]).find(o=>String(o.id)===id)).filter(Boolean);
+ const customerIds=new Set(orderRows.map(o=>String(o.kupac_id||'')).filter(Boolean));
+ const activePoints=(tourPoints||[]).filter(p=>Number(p.tura_id)===Number(tourId)&&p.aktivan!==false);
+ const demand=procurementDemandData(),packageCount=demand.reduce((sum,p)=>sum+p.packages,0);
+ const money=orderRows.reduce((sum,o)=>sum+n(o.ukupna_cena),0);
+ const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
+ set('tour-dashboard-title',tour.naziv||('Tura '+tourId));
+ set('tour-dashboard-date',tour.datum?new Date(tour.datum+'T12:00:00').toLocaleDateString('sr-RS',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'');
+ set('tour-dashboard-orders',fmt(orderIds.length));
+ set('tour-dashboard-customers',fmt(customerIds.size));
+ set('tour-dashboard-value',new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(money)+' RSD');
+ set('tour-dashboard-points',fmt(activePoints.length));
+ set('tour-dashboard-products',fmt(demand.length));
+ set('tour-dashboard-packages',fmt(packageCount)+' ukupno pakovanja · količina se računa po veličini ambalaže');
+ if(statusEl){
+  statusEl.textContent=tourStatusLabel(status);
+  statusEl.className='inline-flex rounded-full border px-3 py-1.5 text-xs font-bold '+(status==='open'?'border-emerald-500/40 bg-emerald-900/30 text-emerald-300':status==='closed'?'border-amber-500/40 bg-amber-900/30 text-amber-200':status==='completed'?'border-slate-500 bg-slate-800 text-slate-300':'border-slate-600 bg-slate-800 text-slate-300');
+ }
+ const detail=document.getElementById('tour-dashboard-status-detail');
+ if(detail)detail.textContent=status==='open'?'Prijem porudžbina je otvoren. Nabavku pratiš uživo; raspodela i Viber su zaključani.':status==='closed'?'Prijem porudžbina je zatvoren. Nabavka i priprema dostave su otključani.':status==='completed'?'Tura je završena. Podaci su dostupni za pregled.':'Postojeći status ture: '+tourStatusLabel(status)+'.';
+ const next=document.getElementById('tour-dashboard-next-step');
+ if(next)next.textContent=status==='open'?'Kada završiš prijem porudžbina, zatvori turu da otključaš raspodelu i nabavku.':status==='closed'?'Po završetku realizacije označi turu kao završenu.':status==='completed'?'Završena tura je u režimu pregleda.':'Operativne mogućnosti zavise od postojećeg statusa ture.';
+ const action=document.getElementById('tour-status-action');
+ if(action){
+  const allowed=status==='open'||status==='closed';
+  action.classList.toggle('hidden',!allowed);
+  action.textContent=status==='open'?'Zatvori prijem porudžbina':status==='closed'?'Označi turu završenom':'';
+ }
+ const preview=document.getElementById('tour-dashboard-demand-preview');
+ if(preview){
+  preview.innerHTML=demand.slice(0,5).map(p=>'<div class="flex items-center justify-between gap-3 border-t border-slate-800 pt-2 text-xs"><span class="min-w-0 truncate text-slate-200">'+esc(p.name)+'</span><strong class="shrink-0 text-orange-200">'+fmt(p.packages)+' pak. · '+fmt(p.total)+' '+esc(p.rows[0]?.unit||'')+'</strong></div>').join('')||(items.length?'<p class="text-xs text-slate-500">Stavke još nemaju podatke o pakovanju za zbirni pregled.</p>':'<p class="text-xs text-slate-500">Još nema porudžbina u ovoj turi.</p>');
+ }
+}
+async function advanceTourStatus(){
+ const current=tourStatusKey(),next=current==='open'?'closed':current==='closed'?'completed':'';
+ if(!next)return;
+ const promptText=current==='open'?'Zatvoriti prijem porudžbina za ovu turu? Nakon toga se otključavaju raspodela gazdinstvima i Viber poruke.':'Označiti ovu turu kao završenu? Tura će ostati dostupna za pregled.';
+ if(!confirm(promptText))return;
+ const button=document.getElementById('tour-status-action');
+ if(button){button.disabled=true;button.textContent='Čuvanje…'}
+ try{
+  const result=await api('ture?id=eq.'+encodeURIComponent(tourId),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({status:next})});
+  if(!Array.isArray(result)||!result.some(row=>Number(row.id)===Number(tourId)&&String(row.status)===next))throw Error('Baza nije potvrdila promenu statusa ture.');
+  const tour=tours.find(t=>Number(t.id)===Number(tourId));if(tour)tour.status=next;
+  renderTourDashboard();renderProcurement();
+  say(next==='closed'?'Tura je zatvorena. Raspodela nabavke je otključana.':'Tura je označena kao završena.');
+ }catch(e){say('Status nije promenjen: '+e.message,true)}
+ finally{if(button)button.disabled=false}
+}
+function openProcurementDemandDetail(productId){
+ ensureProcurementAllocationModal();
+ const modal=document.getElementById('procurement-allocation-modal'),body=document.getElementById('supplier-sheet-content');
+ if(!modal||!body)return;
+ const product=procurementDemandData().find(p=>String(p.rows[0]?.productId)===String(productId));
+ if(!product){say('Proizvod nije pronađen u ovoj turi.',true);return}
+ procurementDraftProductId=String(productId);procurementDraftLines=[];
+ const tour=tours.find(t=>Number(t.id)===Number(tourId));
+ document.getElementById('procurement-allocation-title').textContent=product.name;
+ modal.hidden=false;document.body.classList.add('allocation-modal-open');
+ let html='<div class="proc-order-toolbar"><button type="button" class="proc-order-back" onclick="closeProcurementAllocation()">← Nazad na nabavku</button><span class="proc-order-count">Pregled potražnje</span></div><div class="proc-order-product-title"><div class="proc-demand-kicker">'+esc(tour?.naziv||('Tura '+tourId))+'</div><h3>'+esc(product.name)+'</h3><p>'+fmt(product.packages)+' pakovanja ukupno</p></div>';
+ product.rows.forEach(row=>{
+  const variant=variantCatalog.find(v=>String(v.id)===String(row.variantId));
+  const lines=items.filter(x=>String(x.product_id)===String(row.productId)&&String(x.variant_id||'')===String(row.variantId||''));
+  html+='<section class="proc-order-variant"><div class="proc-order-variant-head"><div><b>'+esc(variant?.name||variant?.size_label||fmt(row.size)+' '+row.unit)+'</b><small>Potrebno: '+fmt(row.packages)+' pakovanja · '+fmt(row.total)+' '+esc(row.unit)+'</small></div><span class="proc-order-demand">'+fmt(row.packages)+' pak.</span></div><div class="proc-order-customer-list">'+lines.map(x=>{const customer=buyer(ord(x)),pnt=point(x),count=Math.max(0,n(x.package_count)),size=Math.max(0,n(x.package_size)),unit=normUnit(x.package_unit||'kom');return '<div class="proc-order-customer"><div><b>'+esc(customer.ime_prezime||('Porudžbina #'+x.porudzbina_id))+'</b><small>'+esc(pnt.name||'Punkt nije naveden')+'</small></div><div class="proc-order-customer-qty"><b>'+fmt(count)+' pak.</b><small>'+fmt(count*size)+' '+esc(unit)+'</small></div></div>'}).join('')||'<p class="proc-order-empty">Nema detalja porudžbina za ovu ambalažu.</p>'+'</div></section>';
+ });
+ body.innerHTML=html;
+}
+function showTourDashboard(){if(!tourId)return;document.body.classList.remove('tour-panel-open');document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');document.getElementById('tour-dashboard')?.classList.remove('hidden');document.getElementById('tour-overlay-header')?.classList.add('hidden');document.getElementById('tour-section-backdrop')?.classList.add('hidden');['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.add('hidden');panel?.classList.remove('tour-section-open')});renderTourDashboard();}
 function closeTourSection(){adminRouterNavigate('/ture');showTourDashboard();}
-function switchTab(v){if(!tourId){say('Прво изабери туру. Сви одељци менија припадају изабраној тури.',true);toggleTourPicker(true);return}if(!['orders','procurement','delivery','debts'].includes(v))return;adminRouterNavigate('/'+({orders:'porudzbine',procurement:'nabavka',delivery:'dostava',debts:'dugovanja'})[v]);view=v;document.getElementById('unassigned-toggle-wrap')?.classList.toggle('hidden',v!=='procurement');document.getElementById('tour-dashboard')?.classList.add('hidden');document.getElementById('tour-overlay-header')?.classList.remove('hidden');document.getElementById('tour-section-backdrop')?.classList.remove('hidden');document.body.classList.add('tour-panel-open');['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.toggle('hidden',k!==v);panel?.classList.toggle('tour-section-open',k===v)});if(v==='orders')renderOrders();if(v==='procurement'){renderProcurement();renderPickupSummary();}if(v==='delivery')renderDelivery();if(v==='debts')renderDebts();const tour=tours.find(t=>Number(t.id)===Number(tourId));const label=tour?.naziv||('Тура '+tourId);const heading=document.getElementById('tour-overlay-title');if(heading)heading.textContent=({orders:'Поруџбине',procurement:'Набавка',delivery:'Достава',debts:'Дуговања'})[v]+' · '+label;}
+function switchTab(v){
+ if(!tourId){say('Prvo izaberi turu.',true);toggleTourPicker(true);return}
+ if(!['orders','procurement','delivery'].includes(v))return;
+ const route={orders:'/porudzbine',procurement:'/nabavka',delivery:'/dostava'}[v];
+ adminRouterNavigate(route);view=v;
+ document.getElementById('unassigned-toggle-wrap')?.classList.toggle('hidden',v!=='procurement');
+ document.getElementById('tour-dashboard')?.classList.add('hidden');
+ document.getElementById('tour-overlay-header')?.classList.remove('hidden');
+ document.getElementById('tour-section-backdrop')?.classList.remove('hidden');
+ document.body.classList.add('tour-panel-open');
+ ['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.toggle('hidden',k!==v);panel?.classList.toggle('tour-section-open',k===v)});
+ if(v==='orders')renderOrders();
+ if(v==='procurement'){renderProcurement();renderPickupSummary();}
+ if(v==='delivery')renderDelivery();
+ const tour=tours.find(t=>Number(t.id)===Number(tourId));
+ const heading=document.getElementById('tour-overlay-title');
+ if(heading)heading.textContent=({orders:'Porudžbine',procurement:'Nabavka',delivery:'Dostava'})[v]+' · '+(tour?.naziv||('Tura '+tourId));
+}
 function toggleUnassigned(){const panel=document.getElementById('unassigned-banner'),button=document.getElementById('unassigned-toggle');const opening=panel.classList.contains('hidden');panel.classList.toggle('hidden',!opening);button.setAttribute('aria-expanded',String(opening));button.innerHTML='<i class="fa-solid fa-triangle-exclamation mr-2"></i>'+(opening?'Затвори недодељене ставке':'Недодељене ставке')+' <span id="unassigned-button-count" class="ml-1 rounded-full bg-amber-200 px-2 py-1 text-xs">'+(document.getElementById('unassigned-count')?.textContent||'0')+'</span><span class="float-right">'+(opening?'▼':'▲')+'</span>';if(opening)panel.scrollTop=0;}
 function populateFilters(){ /* Филтери се попуњавају из базе. */ }
 function filtered(){let s=document.getElementById('search').value.trim().toLowerCase();return items.filter(x=>!s||[productName(x),x.package_info,buyer(ord(x)).ime_prezime,buyer(ord(x)).telefon,ord(x).telefon,point(x).name,farm(x)?.name].join(' ').toLowerCase().includes(s))}
@@ -1434,7 +1550,16 @@ function printFarmPrep(farmId){
  const grouped={};list.forEach(x=>{const key=deliveryKey(x);if(!grouped[key])grouped[key]={sample:x,rows:[]};grouped[key].rows.push(x)});
  const body=Object.values(grouped).map(g=>'<tr><td>'+esc(productName(g.sample))+' · '+esc(variantFor(g.sample)?.name||g.sample.variant_name||pack(g.sample).label)+'</td><td>'+fmt(g.rows.reduce((s,x)=>s+pack(x).count,0))+'</td><td>'+fmt(g.rows.reduce((s,x)=>s+pack(x).total,0))+' '+esc(pack(g.sample).unit)+'</td><td>'+g.rows.map(x=>esc(buyer(ord(x)).ime_prezime||('Поруџбина #'+x.porudzbina_id))+' ('+fmt(pack(x).count)+' пак.)').join('<br>')+'</td></tr>').join('');
  const win=window.open('','_blank','width=900,height=700');if(!win){say('Прегледач је блокирао прозор за штампу. Дозволи искачуће прозоре.',true);return}
- win.document.write('<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Припрема — '+esc(farmName(f?.name||''))+'</title><style>body{font:14px Arial;padding:28px;color:#17212b}table{width:100%;border-collapse:collapse}th,td{padding:10px;border:1px solid #ddd;text-align:left}th{background:#f1f5f9}h1{font-size:22px}@media print{button{display:none}}</style></head><body><h1>СПИСАК ЗА ПРИПРЕМУ — '+esc(farmName(f?.name||''))+'</h1><p>'+esc(tours.find(t=>Number(t.id)===Number(tourId))?.naziv||('Тура '+tourId))+'</p><table><thead><tr><th>Производ / паковање</th><th>Паковања</th><th>Укупно</th><th>Распоред по купцима</th></tr></thead><tbody>'+body+'</tbody></table><p><button onclick="window.print()">ШТАМПАЈ</button></p></body></html>');win.document.close();
+ win.document.write('<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Припрема — '+esc(farmName(f?.name||''))+'</title><style>body{font:14px Arial;padding:28px;color:#17212b}table{width:100%;border-collapse:collapse}th,td{padding:10px;border:1px solid #ddd;text-align:left}th{background:#f1f5f9}h1{font-size:22px}@media print{button{display:none}}
+/* TOUR WORKSPACE — three persistent destinations, fixed bottom on every screen */
+#bottom-tab-nav{position:fixed!important;top:auto!important;bottom:0!important;left:0!important;right:0!important;transform:none!important;width:100%!important;max-width:none!important;border-radius:18px 18px 0 0!important}
+#bottom-tab-nav>div{max-width:1320px!important}
+#bottom-tab-nav>div>div:last-child{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+#bottom-tab-nav button{min-height:58px!important}
+body.tour-active{padding-bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}
+#tour-dashboard .rounded-xl{box-shadow:none}
+@media(min-width:900px){body.tour-active{padding-bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}#bottom-tab-nav{top:auto!important;bottom:0!important}}
+</style></head><body><h1>СПИСАК ЗА ПРИПРЕМУ — '+esc(farmName(f?.name||''))+'</h1><p>'+esc(tours.find(t=>Number(t.id)===Number(tourId))?.naziv||('Тура '+tourId))+'</p><table><thead><tr><th>Производ / паковање</th><th>Паковања</th><th>Укупно</th><th>Распоред по купцима</th></tr></thead><tbody>'+body+'</tbody></table><p><button onclick="window.print()">ШТАМПАЈ</button></p></body></html>');win.document.close();
 }
 function supplierDemandSummaryHtml(){
  const farmGroups={};
@@ -2024,12 +2149,11 @@ function goProcurementStep(step){
 /* ADMIN SPA ROUTER — URL se menja bez osvežavanja dokumenta.
    Sekcije su postojeći DOM paneli; tura ostaje zajednički kontekst. */
 const ADMIN_ROUTES={
- '/izbor-ture':{title:'Избор туре',render:()=>{showTourDashboard();toggleTourPicker(true)}},
- '/ture':{title:'Радни простор туре',render:()=>{if(tourId)showTourDashboard();else toggleTourPicker(true)}},
- '/porudzbine':{title:'Поруџбине',render:()=>switchTab('orders')},
- '/nabavka':{title:'Набавка',render:()=>switchTab('procurement')},
- '/dostava':{title:'Достава',render:()=>switchTab('delivery')},
- '/dugovanja':{title:'Дуговања',render:()=>switchTab('debts')}
+ '/izbor-ture':{title:'Izbor ture',render:()=>{showTourDashboard();toggleTourPicker(true)}},
+ '/ture':{title:'Radni prostor ture',render:()=>{if(tourId)showTourDashboard();else toggleTourPicker(true)}},
+ '/porudzbine':{title:'Porudžbine',render:()=>switchTab('orders')},
+ '/nabavka':{title:'Nabavka',render:()=>switchTab('procurement')},
+ '/dostava':{title:'Dostava',render:()=>switchTab('delivery')}
 };
 function adminRouterPath(){const raw=location.hash.replace(/^#/, '')||'/izbor-ture';return ADMIN_ROUTES[raw]?raw:'/izbor-ture'}
 function adminRouterNavigate(path,options={}){
@@ -2075,6 +2199,7 @@ function procurementOfferList(productId,variantId){
 }
 function procurementLineKey(productId,variantId,farmId){return [productId,variantId,farmId].map(String).join('|')}
 function procurementAddLine(variantId){
+ if(!tourCanManageProcurement()){say('Raspodela se otključava kada zatvoriš prijem porudžbina.',true);return}
  const variant=variantCatalog.find(v=>String(v.id)===String(variantId));
  if(!variant)return;
  const productId=String(variant.product_id);
@@ -2139,10 +2264,12 @@ function procurementOpenViber(farmId){
  procurementCopyMessage(farmId).then(()=>{window.location.href='viber://chat?number='+encodeURIComponent(phone)});
 }
 function procurementGoToMessages(){
+ if(!tourCanManageProcurement()){say('Viber poruke su dostupne tek nakon zatvaranja ture.',true);return}
  try{procurementValidateDraft();procurementDraftStage='messages';renderProcurementOrderModal()}
  catch(e){say(e.message,true)}
 }
 function procurementGoToConfirmation(){
+ if(!tourCanManageProcurement()){say('Potvrda nabavke je dostupna tek nakon zatvaranja ture.',true);return}
  try{procurementValidateDraft();procurementDraftStage='confirm';renderProcurementOrderModal()}
  catch(e){say(e.message,true)}
 }
@@ -2195,6 +2322,7 @@ function renderProcurementOrderModal(){
  body.innerHTML=html;
 }
 async function confirmProcurementOrder(){
+ if(!tourCanManageProcurement()){say('Tura trenutno ne dozvoljava upis nabavke.',true);return}
  if(procurementSavingConfirmed)return;
  let rows;
  try{rows=procurementValidateDraft()}catch(e){say(e.message,true);return}
@@ -2224,6 +2352,7 @@ async function confirmProcurementOrder(){
  finally{procurementSavingConfirmed=false}
 }
 async function openProcurementAllocation(productId,variantId=''){
+ if(!tourCanManageProcurement()){openProcurementDemandDetail(productId);return}
  ensureProcurementAllocationModal();
  const modal=document.getElementById('procurement-allocation-modal'),body=document.getElementById('supplier-sheet-content');
  if(!modal||!body)return;
@@ -2255,12 +2384,13 @@ function closeProcurementAllocation(){
 }
 function renderProcurement(){
  const box=document.getElementById('procurement-demand-list');if(!box)return;
- const products=procurementDemandData();
+ const products=procurementDemandData(),canAllocate=tourCanManageProcurement(),status=tourStatusKey();
  const cards=products.map(product=>{
-  const rows=product.rows.map(row=>'<button type="button" class="proc-demand-pack-action" data-product="'+esc(row.productId)+'" onclick="openProcurementAllocation(this.dataset.product)"><span><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><strong>'+fmt(row.total)+' '+esc(row.unit)+' · DODELI →</strong></button>').join('');
-  return '<article class="proc-demand-product"><button type="button" class="proc-demand-product-action" data-product="'+esc(product.rows[0]?.productId||'')+'" onclick="openProcurementAllocation(this.dataset.product)"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span><strong>OTVORI →</strong></button><div class="proc-demand-pack-list">'+rows+'</div></article>';
+  const rows=product.rows.map(row=>'<button type="button" class="proc-demand-pack-action" data-product="'+esc(row.productId)+'" onclick="openProcurementAllocation(this.dataset.product)"><span><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><strong>'+fmt(row.total)+' '+esc(row.unit)+' · '+(canAllocate?'RASPODELI →':'DETALJI →')+'</strong></button>').join('');
+  return '<article class="proc-demand-product"><button type="button" class="proc-demand-product-action" data-product="'+esc(product.rows[0]?.productId||'')+'" onclick="openProcurementAllocation(this.dataset.product)"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span><strong>'+ (canAllocate?'OTVORI RASPODELU →':'PREGLEDAJ →')+'</strong></button><div class="proc-demand-pack-list">'+rows+'</div></article>';
  }).join('');
- box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">TURA '+esc(tourId)+' · NABAVKA</div><h3>Potrebni proizvodi</h3><p>Izaberi proizvod, raspodeli ambalažu između jednog ili više gazdinstava i pripremi poruke. Poruke se ne čuvaju u bazi.</p></div>'+(cards||'<div class="proc-demand-empty">Нема ставки за набавку у изабраној тури.</div>')+'</div>';
+ const intro=canAllocate?'Raspodeli količine između jednog ili više gazdinstava, pripremi Viber poruke i ručno potvrdi šta je zaista naručeno.':'Pregled uživo: šta je naručeno i koliko po proizvodu i ambalaži. Raspodela gazdinstvima i slanje poruka biće dostupni nakon zatvaranja prijema.';
+ box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">TURA '+esc(tourId)+' · NABAVKA</div><h3>Potražnja po proizvodima</h3><p>'+intro+'</p></div>'+(cards||'<div class="proc-demand-empty">Nema stavki za nabavku u izabranoj turi.</div>')+'</div>';
 }
 
 document.addEventListener('DOMContentLoaded',async()=>{ensureProcurementAllocationModal();await loadData();initAdminRouter();});
