@@ -444,6 +444,7 @@ main{padding-top:16px!important;padding-bottom:calc(108px + env(safe-area-inset-
 @media(max-width:767px){#bottom-tab-nav>div>div:first-child{padding-top:6px!important}#bottom-tab-nav button{min-height:50px!important}#bottom-tab-nav button i{font-size:16px!important}}
 </style>
 <style id="tour-entry-visibility">#tour-search-label{display:none!important}body.tour-active #tour-search-label{display:block!important}</style>
+<style id="tour-workspace-exclusive">body.tour-active>header{display:none!important}body.tour-active #message{display:none!important}body.tour-active #tour-picker-panel{display:none!important}body.tour-active #tour-dashboard{display:block!important;margin-top:0!important;padding-top:0!important}body.tour-active main{padding-top:12px!important}body:not(.tour-active) #tour-dashboard{display:none!important}body:not(.tour-active)>header{display:block!important}</style>
 <style id="tour-dashboard-no-bottom-tabs">#bottom-tab-nav{display:none!important}#tour-dashboard{padding-bottom:calc(24px + env(safe-area-inset-bottom))}</style>
 <style id="tour-dashboard-panels">
 #tour-dashboard{min-height:calc(100dvh - 170px)}
@@ -607,7 +608,8 @@ body.closed-tours-open{overflow:hidden!important}
 <section id="tour-dashboard" class="hidden mb-6 space-y-4" aria-label="Operativni pregled izabrane ture">
  <div class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 sm:p-6 shadow-xl">
   <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
-   <div><p class="text-[11px] font-black tracking-widest text-orange-300">OPERATIVNI PREGLED TURE</p><h2 class="text-xl sm:text-2xl font-black text-white mt-1" id="tour-dashboard-title">Izabrana tura</h2><p id="tour-dashboard-date" class="text-xs text-slate-400 mt-1"></p></div>
+   <div class="w-full flex items-center justify-between gap-3"><button type="button" onclick="returnToTourPicker()" class="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-sm font-bold text-orange-200"><i class="fa-solid fa-arrow-left mr-2"></i>Избор тура</button><span class="text-[10px] font-bold tracking-widest text-slate-500">РАДНИ ПРОСТОР ТУРЕ</span></div>
+   <div><p class="text-[11px] font-black tracking-widest text-orange-300">КОНТРОЛНИ ПАНЕЛ ТУРЕ</p><h2 class="text-xl sm:text-2xl font-black text-white mt-1" id="tour-dashboard-title">Izabrana tura</h2><p id="tour-dashboard-date" class="text-xs text-slate-400 mt-1"></p></div>
    <div class="text-right"><span id="tour-dashboard-status" class="inline-flex rounded-full border px-3 py-1.5 text-xs font-bold">Učitavanje statusa…</span><p id="tour-dashboard-status-detail" class="text-[11px] text-slate-400 mt-2 max-w-[220px]"></p></div>
   </div>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -901,6 +903,17 @@ function openProcurementDemandDetail(productId){
   html+='<section class="proc-order-variant"><div class="proc-order-variant-head"><div><b>'+esc(variant?.name||variant?.size_label||fmt(row.size)+' '+row.unit)+'</b><small>Potrebno: '+fmt(row.packages)+' pakovanja · '+fmt(row.total)+' '+esc(row.unit)+'</small></div><span class="proc-order-demand">'+fmt(row.packages)+' pak.</span></div><div class="proc-order-customer-list">'+lines.map(x=>{const customer=buyer(ord(x)),pnt=point(x),count=Math.max(0,n(x.package_count)),size=Math.max(0,n(x.package_size)),unit=normUnit(x.package_unit||'kom');return '<div class="proc-order-customer"><div><b>'+esc(customer.ime_prezime||('Porudžbina #'+x.porudzbina_id))+'</b><small>'+esc(pnt.name||'Punkt nije naveden')+'</small></div><div class="proc-order-customer-qty"><b>'+fmt(count)+' pak.</b><small>'+fmt(count*size)+' '+esc(unit)+'</small></div></div>'}).join('')||'<p class="proc-order-empty">Nema detalja porudžbina za ovu ambalažu.</p>'+'</div></section>';
  });
  body.innerHTML=html;
+}
+function returnToTourPicker(){
+ document.body.classList.remove('tour-active','tour-panel-open');
+ document.getElementById('tour-dashboard')?.classList.add('hidden');
+ document.getElementById('tour-picker-panel')?.classList.remove('hidden');
+ document.getElementById('tour-actions')?.classList.add('hidden');
+ document.getElementById('tour-overlay-header')?.classList.add('hidden');
+ document.getElementById('tour-section-backdrop')?.classList.add('hidden');
+ ['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.add('hidden');panel?.classList.remove('tour-section-open')});
+ document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
+ window.scrollTo({top:0,behavior:'instant'});
 }
 function showTourDashboard(){
  if(!tourId)return;
