@@ -1003,6 +1003,7 @@ async function saveSupplierFarmPickedCounts(farmId){
   renderSupplierSheet();
  }catch(e){say('Преузимање није у потпуности сачувано: '+e.message,true);renderSupplierSheet()}
 }
+let supplierHomeView='products';
 function openSupplierSheet(farmId){
  supplierSheetFarmId=farmId?String(farmId):'';
  supplierSheetProductId='';
@@ -1087,15 +1088,43 @@ function renderSupplierSheet(){
  const eligibleFarms=farms.filter(f=>String(f.id)==='2'||farmOffers.some(o=>String(o.gazdinstvo_id)===String(f.id)&&o.is_active!==false&&o.variant_id&&supplierVariantOrderCount(o.variant_id,o.product_id)>0)||tourAllocations.some(a=>String(a.gazdinstvo_id)===String(f.id)));
  const pickupPanel=document.getElementById('pickup-management-panel');
  if(!supplierSheetFarmId){
- 
-  html+='<label class="block text-sm font-black text-slate-700 mb-2">ФИЛТЕР ПО ГАЗДИНСТВУ<select id="procurement-farm-select" onchange="setSupplierFarm(this.value)" class="mt-2 w-full rounded-xl border-2 border-emerald-300 bg-white px-4 py-4 text-base font-bold text-slate-900 shadow-sm"><option value="">СВА ГАЗДИНСТВА — ПРЕГЛЕД СВИХ ПРОИЗВОДА</option>'+eligibleFarms.map(f=>'<option value="'+esc(f.id)+'">'+esc(farmName(f.name))+'</option>').join('')+'</select></label>';
-  if(!eligibleFarms.length)html+='<div class="rounded-xl border border-dashed p-5 text-center text-sm text-slate-500">Нема газдинстава са производима за ову туру.</div>';
+  const demanded={};
+  items.forEach(x=>{
+   if(!x.product_id||!x.variant_id)return;
+   const p=productCatalog.find(z=>String(z.id)===String(x.product_id)),v=variantCatalog.find(z=>String(z.id)===String(x.variant_id));
+   if(!p||!v)return;
+   const key=String(p.id);if(!demanded[key])demanded[key]={product:p,variants:{}};
+   const vk=String(v.id);if(!demanded[key].variants[vk])demanded[key].variants[vk]={variant:v,count:0};
+   demanded[key].variants[vk].count+=Math.max(0,n(pack(x).count));
+  });
+  const productCards=Object.values(demanded).sort((a,b)=>String(a.product.name).localeCompare(String(b.product.name),'sr'));
+  const activeFarmIds=[...new Set((tourAllocations||[]).map(a=>String(a.gazdinstvo_id)))];
+  html+='<div class="grid grid-cols-2 gap-2 rounded-xl border border-slate-700 bg-slate-900 p-1"><button type="button" onclick="supplierHomeView=\'products\';supplierSheetProductId=\'\';renderSupplierSheet()" class="rounded-lg py-3 text-xs font-black '+(supplierHomeView==='products'?'bg-orange-600 text-white':'text-slate-400')+'">📦 ПО ПРОИЗВОДИМА</button><button type="button" onclick="supplierHomeView=\'farms\';supplierSheetProductId=\'\';renderSupplierSheet()" class="rounded-lg py-3 text-xs font-black '+(supplierHomeView==='farms'?'bg-orange-600 text-white':'text-slate-400')+'">🏡 АКТИВНА ГАЗДИНСТВА ('+activeFarmIds.length+')</button></div>';
+  if(supplierHomeView==='farms'){
+   const active=activeFarmIds.map(id=>({farm:farms.find(f=>String(f.id)===id),rows:tourAllocations.filter(a=>String(a.gazdinstvo_id)===id)})).filter(x=>x.farm);
+   html+='<div class="space-y-2"><h3 class="text-sm font-black uppercase text-amber-400">Газдинства са задужењем у овој тури</h3>';
+   if(!active.length)html+='<p class="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">Нема газдинстава са задужењима у овој тури.</p>';
+   active.forEach(({farm,rows})=>{const pending=rows.reduce((a,r)=>a+Math.max(0,n(r.broj_pakovanja)-n(r.preuzeto_pakovanja)),0);html+='<button type="button" onclick="setSupplierFarm(\''+esc(farm.id)+'\')" class="w-full rounded-2xl border border-slate-700 bg-slate-900 p-4 text-left"><div class="flex items-center justify-between gap-2"><b class="text-base">'+esc(farmName(farm.name))+'</b><span class="text-xs font-bold text-amber-400">'+fmt(rows.length)+' ставки</span></div><div class="mt-2 text-xs text-slate-400">Паковања: '+fmt(rows.reduce((a,r)=>a+n(r.broj_pakovanja),0))+' · Преостало за преузимање: '+fmt(pending)+'</div></button>'});
+   html+='</div>';
+  }else if(supplierSheetProductId){
+   const product=demanded[supplierSheetProductId];
+   html+='<div class="flex items-center justify-between gap-2"><div><div class="text-[10px] uppercase font-bold text-orange-400">Степен 2 · Расподела</div><h3 class="text-lg font-black">'+esc(product?.product.name||'Производ')+'</h3></div><button type="button" onclick="setSupplierProduct(\'\')" class="rounded-xl bg-slate-800 px-3 py-3 text-xs font-bold text-white">← Производи</button></div>';
+   const variants=Object.values(product?.variants||{});
+   const farmsForProduct=farms.filter(f=>farmOffers.some(o=>String(o.gazdinstvo_id)===String(f.id)&&o.is_active!==false&&variants.some(v=>String(v.variant.id)===String(o.variant_id)&&String(o.product_id)===supplierSheetProductId)));
+   if(!farmsForProduct.length)html+='<p class="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">Нема активних понуда газдинстава за паковања овог производа.</p>';
+   farmsForProduct.forEach(f=>{const count=variants.reduce((sum,v)=>sum+tourAllocations.filter(a=>String(a.gazdinstvo_id)===String(f.id)&&String(a.product_id)===supplierSheetProductId&&String(a.variant_id)===String(v.variant.id)).reduce((z,a)=>z+n(a.broj_pakovanja),0),0);html+='<button type="button" onclick="setSupplierFarm(\''+esc(f.id)+'\');setSupplierProduct(\''+esc(supplierSheetProductId)+'\')" class="w-full rounded-2xl border border-slate-700 bg-slate-900 p-4 text-left"><div class="flex items-center justify-between"><b>'+esc(farmName(f.name))+'</b><span class="text-xs text-orange-400 font-bold">Отвори →</span></div><div class="mt-1 text-xs text-slate-400">'+fmt(count)+' већ додељених паковања · активна понуда за овај производ</div></button>'});
+  }else{
+   html+='<div class="flex items-center justify-between"><h3 class="text-xs font-black uppercase tracking-wider text-orange-400">Степен 1 · Потребе по производима</h3><span class="text-[11px] text-slate-400">Отвори производ</span></div><div class="grid grid-cols-2 gap-3">';
+   if(!productCards.length)html+='<div class="col-span-2 rounded-2xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">Нема ставки са препознатим производом и варијантом у овој тури.</div>';
+   productCards.forEach(g=>{const variants=Object.values(g.variants).sort((a,b)=>String(a.variant.name||a.variant.size_label).localeCompare(String(b.variant.name||b.variant.size_label),'sr'));const total=variants.reduce((z,v)=>z+v.count,0);const lines=variants.map(v=>'<div class="flex justify-between gap-2 border-t border-slate-700/70 pt-1.5 mt-1.5 text-xs"><span class="text-slate-300">'+esc(v.variant.name||v.variant.size_label||'Паковање')+'</span><b class="shrink-0 text-orange-300">'+fmt(v.count)+' пак.</b></div>').join('');html+='<button type="button" onclick="setSupplierProduct(\''+esc(g.product.id)+'\')" class="min-h-36 rounded-2xl border border-slate-700 bg-slate-900 p-3 text-left shadow"><span class="block text-sm font-black uppercase text-white">'+esc(g.product.name)+'</span><span class="mt-1 block text-xs font-bold text-orange-400">Укупно: '+fmt(total)+' пак.</span><div class="mt-2">'+lines+'</div><span class="mt-3 block text-[10px] font-black uppercase text-orange-400">Расподели →</span></button>'});
+   html+='</div>';
+  }
   box.innerHTML=html+'</div>';return;
  }
  const selectedFarm=farms.find(f=>String(f.id)===supplierSheetFarmId);
  html+='<div class="flex items-center justify-between gap-2 border-b pb-3"><div><div class="text-xs text-slate-500">ИЗАБРАНО ГАЗДИНСТВО</div><h3 class="font-black text-xl">'+esc(farmName(selectedFarm?.name||('Газдинство '+supplierSheetFarmId)))+'</h3></div><button type="button" onclick="setSupplierFarm(\'\')" class="border rounded-lg px-3 py-2 text-sm font-bold">← Сва газдинства</button></div>';
 
- const offers=supplierOfferRows(supplierSheetFarmId),grouped={};
+ const offers=supplierOfferRows(supplierSheetFarmId).filter(o=>!supplierSheetProductId||String(o.product_id)===String(supplierSheetProductId)),grouped={};
  offers.forEach(o=>{const p=productCatalog.find(x=>String(x.id)===String(o.product_id)),v=variantCatalog.find(x=>String(x.id)===String(o.variant_id));if(!p||!v)return;const k=String(p.id);if(!grouped[k])grouped[k]={product:p,variants:[]};grouped[k].variants.push({offer:o,variant:v})});
  const products=Object.values(grouped).sort((a,b)=>String(a.product.name).localeCompare(String(b.product.name),'sr'));
  const staleRows=tourAllocations.filter(a=>String(a.gazdinstvo_id)===supplierSheetFarmId&&!farmOffers.some(o=>String(o.gazdinstvo_id)===supplierSheetFarmId&&String(o.variant_id)===String(a.variant_id)&&String(o.product_id)===String(a.product_id)&&o.is_active!==false));
