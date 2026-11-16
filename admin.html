@@ -72,6 +72,12 @@
 const URL='https://kszkehxrcuagymlfowqj.supabase.co';
 const KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 const sb=window.supabase.createClient(URL,KEY);
+let tour=null, orders=[], points=[], items=[], tours=[], baselineLoaded=false, knownNewIds=new Set(), pollHandle=null;
+const requestedOrderId=new URLSearchParams(location.search).get('porudzbina');
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(Number(n)||0)+' дин.';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const say=t=>$('message').textContent=t;
 let recoveryMode=false;
 sb.auth.onAuthStateChange((event)=>{
  if(event==="PASSWORD_RECOVERY"){
@@ -117,12 +123,6 @@ $('recoveryForm').addEventListener('submit',async event=>{
  }catch(error){message.className='error';message.textContent='Промена лозинке није успела: '+(error.message||error);}
  finally{button.disabled=false;}
 });
-let tour=null, orders=[], points=[], items=[], tours=[], baselineLoaded=false, knownNewIds=new Set(), pollHandle=null;
-const requestedOrderId=new URLSearchParams(location.search).get('porudzbina');
-const $=id=>document.getElementById(id);
-const money=n=>new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(Number(n)||0)+' дин.';
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const say=t=>$('message').textContent=t;
 
 const USER_FN=URL+'/functions/v1/app-user-management';
 async function userAction(payload){
