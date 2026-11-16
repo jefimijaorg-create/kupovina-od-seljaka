@@ -897,7 +897,7 @@ function setDeliverySubtab(mode){deliveryMode=mode;['stock','picked','orders'].f
 function tourStatusKey(){const tour=tours.find(t=>Number(t.id)===Number(tourId));return String(tour?.status||'unknown').toLowerCase()}
 function tourStatusLabel(status){return ({open:'Otvorena',full:'Popunjena',scheduled:'Zakazana',processing:'U realizaciji',closed:'Zatvorena',completed:'Završena',cancelled:'Otkazana'})[status]||('Status: '+status)}
 function tourCanManageProcurement(){const status=tourStatusKey();return status==='closed'||status==='processing'}
-function tourCanEditProcurement(){return tourStatusKey()==='processing'}
+function tourCanEditProcurement(){return ['processing','u realizaciji','u obradi'].includes(tourStatusKey().trim())}
 function renderTourDashboard(){
  if(!tourId)return;
  const tour=tours.find(t=>Number(t.id)===Number(tourId))||{};
