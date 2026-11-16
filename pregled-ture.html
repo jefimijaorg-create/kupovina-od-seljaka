@@ -897,6 +897,7 @@ function setDeliverySubtab(mode){deliveryMode=mode;['stock','picked','orders'].f
 function tourStatusKey(){const tour=tours.find(t=>Number(t.id)===Number(tourId));return String(tour?.status||'unknown').toLowerCase()}
 function tourStatusLabel(status){return ({open:'Otvorena',full:'Popunjena',scheduled:'Zakazana',processing:'U realizaciji',closed:'Zatvorena',completed:'Završena',cancelled:'Otkazana'})[status]||('Status: '+status)}
 function tourCanManageProcurement(){const status=tourStatusKey();return status==='closed'||status==='processing'}
+function tourCanEditProcurement(){return tourStatusKey()==='processing'}
 function renderTourDashboard(){
  if(!tourId)return;
  const tour=tours.find(t=>Number(t.id)===Number(tourId))||{};
@@ -949,7 +950,7 @@ function renderTourDashboard(){
 async function advanceTourStatus(){
  const current=tourStatusKey(),next=current==='open'?'closed':current==='closed'?'completed':'';
  if(!next)return;
- const promptText=current==='open'?'Zatvoriti prijem porudžbina za ovu turu? Nakon toga se otključavaju raspodela gazdinstvima i Viber poruke.':'Označiti ovu turu kao završenu? Tura će ostati dostupna za pregled.';
+ const promptText=current==='open'?'Zatvoriti prijem porudžbina za ovu turu? Tura će preći u režim pregleda.':'Označiti ovu turu kao završenu? Tura će ostati dostupna za pregled.';
  if(!confirm(promptText))return;
  const button=document.getElementById('tour-status-action');
  if(button){button.disabled=true;button.textContent='Čuvanje…'}
@@ -958,7 +959,7 @@ async function advanceTourStatus(){
   if(!Array.isArray(result)||!result.some(row=>Number(row.id)===Number(tourId)&&String(row.status)===next))throw Error('Baza nije potvrdila promenu statusa ture.');
   const tour=tours.find(t=>Number(t.id)===Number(tourId));if(tour)tour.status=next;
   renderTourDashboard();renderProcurement();
-  say(next==='closed'?'Tura je zatvorena. Raspodela nabavke je otključana.':'Tura je označena kao završena.');
+  say(next==='closed'?'Tura je zatvorena. Nabavka je dostupna samo za pregled.':'Tura je označena kao završena.');
  }catch(e){say('Status nije promenjen: '+e.message,true)}
  finally{if(button)button.disabled=false}
 }
@@ -2405,7 +2406,7 @@ function procurementOfferList(productId,variantId){
 }
 function procurementLineKey(productId,variantId,farmId){return [productId,variantId,farmId].map(String).join('|')}
 function procurementAddLine(variantId){
- if(!tourCanManageProcurement()){say('Raspodela se otključava kada zatvoriš prijem porudžbina.',true);return}
+ if(!tourCanEditProcurement()){say('Dodavanje gazdinstva i naručivanje dostupni su samo dok je tura „U realizaciji“.',true);return}
  const variant=variantCatalog.find(v=>String(v.id)===String(variantId));
  if(!variant)return;
  const productId=String(variant.product_id);
@@ -2470,12 +2471,12 @@ function procurementOpenViber(farmId){
  procurementCopyMessage(farmId).then(()=>{window.location.href='viber://chat?number='+encodeURIComponent(phone)});
 }
 function procurementGoToMessages(){
- if(!tourCanManageProcurement()){say('Viber poruke su dostupne tek nakon zatvaranja ture.',true);return}
+ if(!tourCanEditProcurement()){say('Viber poruke su dostupne samo dok je tura „U realizaciji“.',true);return}
  try{procurementValidateDraft();procurementDraftStage='messages';renderProcurementOrderModal()}
  catch(e){say(e.message,true)}
 }
 function procurementGoToConfirmation(){
- if(!tourCanManageProcurement()){say('Potvrda nabavke je dostupna tek nakon zatvaranja ture.',true);return}
+ if(!tourCanEditProcurement()){say('Potvrda nabavke dostupna je samo dok je tura „U realizaciji“.',true);return}
  try{procurementValidateDraft();procurementDraftStage='confirm';renderProcurementOrderModal()}
  catch(e){say(e.message,true)}
 }
@@ -2528,7 +2529,7 @@ function renderProcurementOrderModal(){
  body.innerHTML=html;
 }
 async function confirmProcurementOrder(){
- if(!tourCanManageProcurement()){say('Tura trenutno ne dozvoljava upis nabavke.',true);return}
+ if(!tourCanEditProcurement()){say('Upis nabavke dozvoljen je samo dok je tura „U realizaciji“.',true);return}
  if(procurementSavingConfirmed)return;
  let rows;
  try{rows=procurementValidateDraft()}catch(e){say(e.message,true);return}
@@ -2558,7 +2559,7 @@ async function confirmProcurementOrder(){
  finally{procurementSavingConfirmed=false}
 }
 async function openProcurementAllocation(productId,variantId=''){
- if(!tourCanManageProcurement()){openProcurementDemandDetail(productId);return}
+ if(!tourCanEditProcurement()){openProcurementDemandDetail(productId);return}
  ensureProcurementAllocationModal();
  const modal=document.getElementById('procurement-allocation-modal'),body=document.getElementById('supplier-sheet-content');
  if(!modal||!body)return;
@@ -2590,12 +2591,12 @@ function closeProcurementAllocation(){
 }
 function renderProcurement(){
  const box=document.getElementById('procurement-demand-list');if(!box)return;
- const products=procurementDemandData(),canAllocate=tourCanManageProcurement(),status=tourStatusKey();
+ const products=procurementDemandData(),canAllocate=tourCanEditProcurement(),status=tourStatusKey();
  const cards=products.map(product=>{
   const rows=product.rows.map(row=>'<button type="button" class="proc-demand-pack-action" data-product="'+esc(row.productId)+'" onclick="openProcurementAllocation(this.dataset.product)"><span><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><strong>'+fmt(row.total)+' '+esc(row.unit)+' · '+(canAllocate?'RASPODELI →':'DETALJI →')+'</strong></button>').join('');
-  return '<article class="proc-demand-product"><button type="button" class="proc-demand-product-action" data-product="'+esc(product.rows[0]?.productId||'')+'" onclick="openProcurementAllocation(this.dataset.product)"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span><strong>'+ (canAllocate?'OTVORI RASPODELU →':'PREGLEDAJ →')+'</strong></button><div class="proc-demand-pack-list">'+rows+'</div></article>';
+  return '<article class="proc-demand-product"><button type="button" class="proc-demand-product-action" data-product="'+esc(product.rows[0]?.productId||'')+'" onclick="openProcurementAllocation(this.dataset.product)"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span><strong>'+ (canAllocate?'+ DODAJ GAZDINSTVO / NARUČI →':'PREGLEDAJ →')+'</strong></button><div class="proc-demand-pack-list">'+rows+'</div></article>';
  }).join('');
- const intro=canAllocate?'Raspodeli količine između jednog ili više gazdinstava, pripremi Viber poruke i ručno potvrdi šta je zaista naručeno.':'Pregled uživo: šta je naručeno i koliko po proizvodu i ambalaži. Raspodela gazdinstvima i slanje poruka biće dostupni nakon zatvaranja prijema.';
+ const intro=canAllocate?'Dodaj gazdinstvo za proizvod, rasporedi pakovanja, pripremi Viber poruke i potvrdi šta je zaista naručeno.':'Pregled uživo: šta je naručeno i koliko po proizvodu i ambalaži. Dodavanje gazdinstava i naručivanje dostupni su samo dok je tura „U realizaciji“.';
  box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">TURA '+esc(tourId)+' · NABAVKA</div><h3>Potražnja po proizvodima</h3><p>'+intro+'</p></div>'+(cards||'<div class="proc-demand-empty">Nema stavki za nabavku u izabranoj turi.</div>')+'</div>';
 }
 
