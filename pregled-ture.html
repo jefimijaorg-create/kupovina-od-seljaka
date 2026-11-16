@@ -497,6 +497,46 @@ main section.tour-section-open>div{max-width:1100px;margin-left:auto;margin-righ
 .proc-demand-footnote{padding:13px 2px 4px;font-size:10px;line-height:1.5;color:#94a3b8}
 @media(min-width:700px){.proc-demand-stats>div{padding:16px}.proc-demand-stats b{font-size:26px}.proc-demand-product-head{padding:17px}.proc-demand-pack-list{padding:0 17px}}
 </style>
+
+<style id="procurement-viber-split-styles">
+#bottom-tab-nav{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important;width:100%!important;z-index:120!important}
+body.tour-active{padding-bottom:calc(88px + env(safe-area-inset-bottom))!important}
+main section.tour-section-open{padding-bottom:calc(105px + env(safe-area-inset-bottom))!important}
+.proc-order-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.proc-order-back,.proc-order-basket,.proc-order-secondary{border:1px solid #475569;border-radius:11px;background:#1e293b;color:#e2e8f0;padding:11px 13px;font-size:12px;font-weight:850}
+.proc-order-basket{background:#3b2b1c;color:#fed7aa;border-color:#9a5b2d}
+.proc-order-product-title{padding:10px 0 15px}.proc-order-product-title h3{font-size:21px;font-weight:900;color:#f8fafc;margin:4px 0}.proc-order-product-title p{font-size:12px;color:#a8b5c8}
+.proc-order-variant{background:#17243b;border:1px solid #3b4d66;border-radius:15px;padding:13px;margin-bottom:12px}
+.proc-order-variant-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.proc-order-variant-head b{font-size:14px;color:#f8fafc}.proc-order-variant-head small{display:block;color:#a8b5c8;font-size:11px;margin-top:4px}
+.proc-order-demand{background:#263c2b;color:#a7dfad;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:900;white-space:nowrap}
+.proc-order-customer-list{border-top:1px solid #34445c;margin-top:10px}
+.proc-order-customer{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #2b3b52}
+.proc-order-customer b{font-size:12px;color:#f1f5f9}.proc-order-customer small{display:block;color:#94a3b8;font-size:10px;margin-top:3px}
+.proc-order-customer-qty{text-align:right;white-space:nowrap}.proc-order-customer-qty b{font-size:12px;color:#c7d9ca}
+.proc-order-assigned{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #34445c;padding:9px 0;color:#f8fafc}
+.proc-order-assigned b{font-size:12px}.proc-order-assigned small{display:block;color:#a8b5c8;font-size:10px;margin-top:3px}
+.proc-order-remove{padding:8px 10px;border:1px solid #854d4d;border-radius:9px;color:#fecaca;background:#3b2028;font-size:11px;font-weight:800}
+.proc-order-muted,.proc-order-empty{font-size:11px;color:#a8b5c8;padding:10px 0}
+.proc-order-add{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(90px,.7fr);gap:9px;margin-top:12px;align-items:end}
+.proc-order-add label,.proc-order-confirm-row label{display:grid;gap:6px;font-size:11px;font-weight:850;color:#cbd5e1}
+.proc-order-add select,.proc-order-add input,.proc-order-confirm-row input{width:100%;min-height:46px;border:1px solid #52647d;border-radius:10px;background:#0d1728;color:#f8fafc;padding:10px;font-size:14px}
+.proc-order-add button{grid-column:1/-1;min-height:44px}
+.proc-order-warning{padding:11px;border:1px solid #78562c;border-radius:11px;background:#382b1b;color:#f7c98f;font-size:11px;margin-top:10px}
+.proc-order-actions{position:sticky;bottom:-14px;padding:17px 0 3px;background:linear-gradient(transparent,#111c32 20%)}
+.proc-order-primary{min-height:46px;border:1px solid #e98b45;border-radius:12px;background:#e98b45;color:#21170f;font-weight:900;font-size:13px;padding:11px 14px}
+.proc-order-primary:disabled{opacity:.4}
+.proc-order-count,.proc-order-lines{font-size:10px;color:#a8b5c8}
+.proc-order-message-card{background:#17243b;border:1px solid #3b4d66;border-radius:15px;padding:13px;margin-bottom:12px}
+.proc-order-message-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.proc-order-message-head h3{font-size:16px;font-weight:900;color:#f8fafc;margin:4px 0}.proc-order-message-head small{font-size:11px;color:#a8b5c8}
+.proc-order-message-card pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0d1728;border:1px solid #34445c;border-radius:11px;padding:12px;margin:12px 0;color:#e2e8f0;font:12px/1.55 inherit}
+.proc-order-message-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.proc-order-confirm-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,.7fr);gap:10px;align-items:center;padding:10px 0;border-top:1px solid #34445c}
+.proc-order-confirm-row b{font-size:12px;color:#f8fafc}.proc-order-confirm-row small{display:block;font-size:10px;color:#a8b5c8;margin-top:3px}
+@media(min-width:700px){.proc-order-add{grid-template-columns:minmax(0,1fr) 130px auto}.proc-order-add button{grid-column:auto}.proc-order-message-actions{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.proc-order-add{grid-template-columns:1fr 100px}.proc-order-message-actions{grid-template-columns:1fr}}
+</style>
 </head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div id="tour-actions" class="hidden flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
@@ -576,7 +616,7 @@ async function loadData(){
   tours=await api('ture?select=id,naziv,datum,status&order=datum.desc,id.desc&limit=300');
   if(!Array.isArray(tours))throw Error('База није вратила списак тура.');
   const core=await Promise.all([
-   api('gazdinstva?select=id,name&order=name.asc').catch(e=>{console.warn('Газдинства нису учитана:',e);return []}),
+   api('gazdinstva?select=id,name,phone&order=name.asc').catch(e=>{console.warn('Газдинства нису учитана:',e);return []}),
    api('punktovi?select=id,name,city,address,is_active,aktivan'),
    api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at&limit=3000').catch(e=>{console.warn('Поруџбине нису учитане:',e);return []}),
    api('kupci?select=id,ime_prezime,telefon').catch(e=>{console.warn('Купци нису учитани:',e);return []}),
@@ -2018,6 +2058,196 @@ function initAdminRouter(){
  window.addEventListener('popstate',adminRouterRender);
  window.addEventListener('hashchange',adminRouterRender);
  adminRouterRender();
+}
+
+
+/* NOVI TOK NABAVKE: raspodela po proizvodu/ambalaži, Viber bez upisa, ručna potvrda. */
+var procurementDraftLines=[];
+var procurementDraftSequence=0;
+var procurementDraftProductId='';
+var procurementDraftStage='allocation';
+var procurementSavingConfirmed=false;
+
+function procurementDemandForVariant(productId,variantId){
+ return procurementDemandData().flatMap(p=>p.rows).find(r=>String(r.productId)===String(productId)&&String(r.variantId)===String(variantId))||null;
+}
+function procurementOfferList(productId,variantId){
+ return (farmOffers||[]).filter(o=>o.is_active!==false&&String(o.product_id)===String(productId)&&String(o.variant_id)===String(variantId)&&farms.some(f=>String(f.id)===String(o.gazdinstvo_id)));
+}
+function procurementLineKey(productId,variantId,farmId){return [productId,variantId,farmId].map(String).join('|')}
+function procurementAddLine(variantId){
+ const variant=variantCatalog.find(v=>String(v.id)===String(variantId));
+ if(!variant)return;
+ const productId=String(variant.product_id);
+ const farmSelect=document.getElementById('proc-add-farm-'+variantId);
+ const qtyInput=document.getElementById('proc-add-qty-'+variantId);
+ const farmId=String(farmSelect?.value||''),count=Number(qtyInput?.value);
+ if(!farmId){say('Izaberi gazdinstvo.',true);return}
+ if(!Number.isInteger(count)||count<1){say('Unesi broj pakovanja kao ceo broj veći od nule.',true);return}
+ const offer=procurementOfferList(productId,variantId).find(o=>String(o.gazdinstvo_id)===farmId);
+ if(!offer){say('Izabrano gazdinstvo nema aktivnu ponudu za ovu ambalažu.',true);return}
+ const existing=procurementDraftLines.find(x=>procurementLineKey(x.productId,x.variantId,x.farmId)===procurementLineKey(productId,variantId,farmId));
+ if(existing)existing.count=count;
+ else procurementDraftLines.push({key:String(++procurementDraftSequence),productId,variantId:String(variantId),farmId,count});
+ renderProcurementOrderModal();
+}
+function procurementRemoveLine(key){
+ procurementDraftLines=procurementDraftLines.filter(x=>String(x.key)!==String(key));
+ renderProcurementOrderModal();
+}
+function procurementDraftData(){
+ return procurementDraftLines.map(x=>{
+  const product=productCatalog.find(p=>String(p.id)===String(x.productId));
+  const variant=variantCatalog.find(v=>String(v.id)===String(x.variantId));
+  const farm=farms.find(f=>String(f.id)===String(x.farmId));
+  const offer=procurementOfferList(x.productId,x.variantId).find(o=>String(o.gazdinstvo_id)===String(x.farmId));
+  const demand=procurementDemandForVariant(x.productId,x.variantId);
+  return {...x,productName:product?.name||'Nepoznat proizvod',variantName:variant?.name||variant?.size_label||'Ambalaža',farm,offer,size:demand?.size||n(variant?.package_value),unit:demand?.unit||normUnit(variant?.package_unit||variant?.unit||'kom'),needed:demand?.packages||0};
+ }).filter(x=>x.farm&&x.offer);
+}
+function procurementValidateDraft(){
+ const rows=procurementDraftData();
+ if(!rows.length)throw Error('Dodaj bar jedno gazdinstvo i količinu.');
+ const groups=new Map();
+ rows.forEach(x=>{const key=x.productId+'|'+x.variantId;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(x)});
+ for(const [key,list] of groups){
+  const first=list[0],edited=new Set(list.map(x=>String(x.farmId)));
+  const already=(tourAllocations||[]).filter(a=>String(a.product_id)===String(first.productId)&&String(a.variant_id)===String(first.variantId)&&!edited.has(String(a.gazdinstvo_id))).reduce((sum,a)=>sum+n(a.broj_pakovanja),0);
+  const proposed=list.reduce((sum,x)=>sum+x.count,0);
+  if(already+proposed>first.needed)throw Error(first.productName+': ukupno raspoređeno bi bilo '+(already+proposed)+' od potrebnih '+first.needed+' pakovanja. Smanji količine.');
+ }
+ return rows;
+}
+function procurementMessageForFarm(farmId){
+ const farm=farms.find(f=>String(f.id)===String(farmId));
+ const rows=procurementDraftData().filter(x=>String(x.farmId)===String(farmId));
+ const tour=tours.find(t=>String(t.id)===String(tourId));
+ const lines=rows.map(x=>'• '+x.productName+' — '+x.variantName+': '+fmt(x.count)+' pakovanja × '+fmt(x.size)+' '+x.unit+' = '+fmt(x.count*x.size)+' '+x.unit);
+ return ['Zdravo'+(farm?.name?' '+farm.name:'')+'!','','Za '+(tour?.naziv||'predstojeću turu')+(tour?.datum?' ('+tour.datum+')':'')+' potrebno nam je:','',...lines,'','Da li možete da pripremite navedene količine? Molimo vas da potvrdite šta možete da obezbedite.','','Hvala!'].join(String.fromCharCode(10));
+}
+async function procurementCopyMessage(farmId){
+ const text=procurementMessageForFarm(farmId);
+ try{
+  if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
+  else{const el=document.createElement('textarea');el.value=text;el.style.position='fixed';el.style.opacity='0';document.body.appendChild(el);el.select();document.execCommand('copy');el.remove()}
+  say('Viber poruka je kopirana. Slanje još nije evidentirano u bazi.');
+ }catch(e){say('Kopiranje poruke nije uspelo. Obeleži tekst poruke i kopiraj ga ručno.',true)}
+}
+function procurementOpenViber(farmId){
+ const farm=farms.find(f=>String(f.id)===String(farmId));
+ const phone=String(farm?.phone||'').replace(/[^\d+]/g,'');
+ if(!phone){say('Za ovo gazdinstvo nije unet broj telefona. Poruku možeš kopirati.',true);return}
+ procurementCopyMessage(farmId).then(()=>{window.location.href='viber://chat?number='+encodeURIComponent(phone)});
+}
+function procurementGoToMessages(){
+ try{procurementValidateDraft();procurementDraftStage='messages';renderProcurementOrderModal()}
+ catch(e){say(e.message,true)}
+}
+function procurementGoToConfirmation(){
+ try{procurementValidateDraft();procurementDraftStage='confirm';renderProcurementOrderModal()}
+ catch(e){say(e.message,true)}
+}
+function renderProcurementOrderModal(){
+ const body=document.getElementById('supplier-sheet-content');if(!body)return;
+ const rows=procurementDraftData();
+ if(procurementDraftStage==='allocation'){
+  const product=procurementDemandData().find(p=>String(p.rows[0]?.productId)===String(procurementDraftProductId));
+  if(!product){body.innerHTML='<p class="proc-order-empty">Nema stavki za ovaj proizvod u izabranoj turi.</p>';return}
+  let html='<div class="proc-order-toolbar"><button type="button" class="proc-order-back" onclick="closeProcurementAllocation()">← Nazad na nabavku</button><button type="button" class="proc-order-basket" onclick="procurementGoToMessages()">Viber poruke ('+rows.length+')</button></div>';
+  html+='<div class="proc-order-product-title"><div class="proc-demand-kicker">DETALJAN PREGLED PORUDŽBINA</div><h3>'+esc(product.name)+'</h3><p>'+fmt(product.packages)+' pakovanja potrebno ukupno</p></div>';
+  product.rows.forEach(row=>{
+   const variantId=String(row.variantId||''),variant=variantCatalog.find(v=>String(v.id)===variantId);
+   const demandLines=items.filter(x=>String(x.product_id)===String(row.productId)&&String(x.variant_id)===variantId);
+   const assigned=rows.filter(x=>String(x.variantId)===variantId);
+   const offers=procurementOfferList(row.productId,variantId);
+   const offerOptions=offers.map(o=>{const f=farms.find(z=>String(z.id)===String(o.gazdinstvo_id));return f?'<option value="'+esc(f.id)+'">'+esc(farmName(f.name))+'</option>':''}).join('');
+   const details=demandLines.map(x=>{
+    const customer=buyer(ord(x)),pnt=point(x),count=Math.max(0,n(x.package_count)),size=Math.max(0,n(x.package_size)),unitName=normUnit(x.package_unit||'ком');
+    return '<div class="proc-order-customer"><div><b>'+esc(customer.ime_prezime||('Porudžbina #'+x.porudzbina_id))+'</b><small>Porudžbina #'+esc(x.porudzbina_id||'—')+' · '+esc(pnt.name||'Punkt nije naveden')+'</small></div><div class="proc-order-customer-qty"><b>'+fmt(count)+' pak.</b><small>'+fmt(count*size)+' '+esc(unitName)+'</small></div></div>';
+   }).join('');
+   html+='<section class="proc-order-variant"><div class="proc-order-variant-head"><div><b>'+esc(variant?.name||variant?.size_label||fmt(row.size)+' '+row.unit)+'</b><small>Potrebno: '+fmt(row.packages)+' pakovanja · '+fmt(row.total)+' '+esc(row.unit)+'</small></div><span class="proc-order-demand">'+fmt(row.packages)+' pak.</span></div><div class="proc-order-customer-list">'+(details||'<p class="proc-order-empty">Nema detalja porudžbina za ovu ambalažu.</p>')+'</div>';
+   html+='<div class="proc-order-assigned-list">'+(assigned.map(x=>'<div class="proc-order-assigned"><div><b>'+esc(farmName(x.farm.name))+'</b><small>'+fmt(x.count)+' pakovanja · '+fmt(x.count*x.size)+' '+esc(x.unit)+'</small></div><button type="button" class="proc-order-remove" data-key="'+esc(x.key)+'" onclick="procurementRemoveLine(this.dataset.key)">Ukloni</button></div>').join('')||'<p class="proc-order-muted">Još nema raspodele za ovu ambalažu.</p>')+'</div>';
+   if(offers.length){
+    html+='<div class="proc-order-add"><label>Dodaj gazdinstvo<select id="proc-add-farm-'+esc(variantId)+'"><option value="">Izaberi gazdinstvo</option>'+offerOptions+'</select></label><label>Broj pakovanja<input id="proc-add-qty-'+esc(variantId)+'" type="number" min="1" max="'+fmt(row.packages)+'" step="1" inputmode="numeric" value="'+fmt(Math.max(1,row.packages-assigned.reduce((sum,x)=>sum+x.count,0)))+'"></label><button type="button" class="proc-order-secondary" data-variant="'+esc(variantId)+'" onclick="procurementAddLine(this.dataset.variant)">+ Dodaj raspodelu</button></div>';
+   }else html+='<p class="proc-order-warning">Nema aktivnih ponuda gazdinstava za ovu ambalažu.</p>';
+   html+='</section>';
+  });
+  html+='<div class="proc-order-actions"><button type="button" class="proc-order-primary" onclick="procurementGoToMessages()">Pripremi Viber poruke →</button></div>';
+  body.innerHTML=html;return;
+ }
+ const byFarm=new Map();rows.forEach(x=>{const k=String(x.farmId);if(!byFarm.has(k))byFarm.set(k,[]);byFarm.get(k).push(x)});
+ if(procurementDraftStage==='messages'){
+  let html='<div class="proc-order-toolbar"><button type="button" class="proc-order-back" onclick="procurementDraftStage=\'allocation\';renderProcurementOrderModal()">← Nazad na raspodelu</button><span class="proc-order-count">'+rows.length+' stavki · '+byFarm.size+' gazdinstava</span></div>';
+  if(!rows.length)html+='<p class="proc-order-empty">Nema pripremljenih stavki. Vrati se na raspodelu.</p>';
+  byFarm.forEach((farmRows,farmId)=>{
+   const farm=farmRows[0].farm,phone=farm?.phone||'Telefon nije unet';
+   html+='<section class="proc-order-message-card"><div class="proc-order-message-head"><div><div class="proc-demand-kicker">VIBER PORUKA</div><h3>'+esc(farmName(farm?.name))+'</h3><small>'+esc(phone)+'</small></div><span class="proc-order-lines">'+farmRows.length+' stavki</span></div><pre>'+esc(procurementMessageForFarm(farmId))+'</pre><div class="proc-order-message-actions"><button type="button" class="proc-order-secondary" data-farm="'+esc(farmId)+'" onclick="procurementCopyMessage(this.dataset.farm)">Kopiraj poruku</button><button type="button" class="proc-order-primary" data-farm="'+esc(farmId)+'" onclick="procurementOpenViber(this.dataset.farm)" '+(!farm?.phone?'disabled':'')+'>Otvori Viber</button></div></section>';
+  });
+  if(rows.length)html+='<div class="proc-order-actions"><button type="button" class="proc-order-primary" onclick="procurementGoToConfirmation()">Dogovoreno — potvrdi šta je naručeno →</button></div>';
+  body.innerHTML=html;return;
+ }
+ let html='<div class="proc-order-toolbar"><button type="button" class="proc-order-back" onclick="procurementDraftStage=\'messages\';renderProcurementOrderModal()">← Nazad na Viber poruke</button><span class="proc-order-count">Ručna potvrda dogovora</span></div><div class="proc-order-product-title"><div class="proc-demand-kicker">TEK SADA SE ČUVA U BAZI</div><h3>Potvrdi stvarno naručene količine</h3><p>Unesi količinu koju je gazdinstvo zaista potvrdilo. Slanje Viber poruke nije upisalo ništa u bazu.</p></div>';
+ byFarm.forEach((farmRows,farmId)=>{
+  html+='<section class="proc-order-variant"><h3>'+esc(farmName(farmRows[0].farm.name))+'</h3>';
+  farmRows.forEach(x=>{html+='<div class="proc-order-confirm-row"><div><b>'+esc(x.productName)+'</b><small>'+esc(x.variantName)+' · poslato u upitu '+fmt(x.count)+' pak.</small></div><label>Potvrđeno pakovanja<input id="proc-confirm-'+esc(x.key)+'" type="number" min="0" step="1" value="'+fmt(x.count)+'"></label></div>'});
+  html+='</section>';
+ });
+ html+='<div class="proc-order-actions"><button type="button" class="proc-order-primary" onclick="confirmProcurementOrder()">Potvrdi i sačuvaj nabavku</button></div>';
+ body.innerHTML=html;
+}
+async function confirmProcurementOrder(){
+ if(procurementSavingConfirmed)return;
+ let rows;
+ try{rows=procurementValidateDraft()}catch(e){say(e.message,true);return}
+ const confirmed=rows.map(x=>({...x,count:Number(document.getElementById('proc-confirm-'+x.key)?.value)}));
+ for(const x of confirmed){if(!Number.isInteger(x.count)||x.count<0){say('Potvrđena količina mora biti ceo broj nula ili veći.',true);return}}
+ if(!confirm('Sačuvati stvarno potvrđene količine za '+confirmed.length+' raspodela?'))return;
+ procurementSavingConfirmed=true;
+ try{
+  for(const x of confirmed){
+   if(x.count===0)continue;
+   const existing=(tourAllocations||[]).find(a=>String(a.tura_id)===String(tourId)&&String(a.product_id)===String(x.productId)&&String(a.variant_id)===String(x.variantId)&&String(a.gazdinstvo_id)===String(x.farmId));
+   const payload={broj_pakovanja:x.count,nabavna_cena:Number(x.offer.purchase_price),naruceno:true,potvrdjeno_pakovanja:x.count,updated_at:new Date().toISOString()};
+   let result;
+   if(existing){
+    result=await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(existing.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
+    if(!Array.isArray(result)||!result.some(r=>String(r.id)===String(existing.id)&&r.naruceno===true&&n(r.potvrdjeno_pakovanja)===x.count))throw Error('Baza nije potvrdila '+x.productName+' za '+farmName(x.farm.name)+'.');
+   }else{
+    const insert={...payload,tura_id:Number(tourId),product_id:x.productId,variant_id:x.variantId,gazdinstvo_id:Number(x.farmId),preuzeto_pakovanja:0};
+    result=await api('tura_nabavka_dodele',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(insert)});
+    if(!Array.isArray(result)||result.length!==1||result[0].naruceno!==true||n(result[0].potvrdjeno_pakovanja)!==x.count)throw Error('Baza nije potvrdila dodavanje '+x.productName+' za '+farmName(x.farm.name)+'.');
+   }
+  }
+  tourAllocations=await api('tura_nabavka_dodele?select=*&tura_id=eq.'+encodeURIComponent(tourId)+'&order=id.asc');
+  for(const x of confirmed){if(x.count===0)continue;const saved=tourAllocations.find(a=>String(a.product_id)===String(x.productId)&&String(a.variant_id)===String(x.variantId)&&String(a.gazdinstvo_id)===String(x.farmId)&&a.naruceno===true&&n(a.potvrdjeno_pakovanja)===x.count);if(!saved)throw Error('Naknadna provera baze nije prošla za '+x.productName+'.')}
+  procurementDraftLines=[];renderSupplierAllocationSummary();renderProcurement();say('Potvrđena nabavka je sačuvana i proverena u bazi.');closeProcurementAllocation();
+ }catch(e){say('Nabavka nije u potpunosti potvrđena: '+e.message,true)}
+ finally{procurementSavingConfirmed=false}
+}
+function openProcurementAllocation(productId,variantId=''){
+ ensureProcurementAllocationModal();
+ const modal=document.getElementById('procurement-allocation-modal'),body=document.getElementById('supplier-sheet-content');
+ if(!modal||!body)return;
+ procurementDraftProductId=String(productId||'');procurementDraftStage='allocation';procurementDraftLines=[];procurementDraftSequence=0;
+ modal.querySelector('#procurement-allocation-title').textContent=productCatalog.find(p=>String(p.id)===procurementDraftProductId)?.name||'Raspodela nabavke';
+ modal.hidden=false;document.body.classList.add('allocation-modal-open');
+ if(variantId){procurementDraftStage='allocation'}
+ renderProcurementOrderModal();
+}
+function closeProcurementAllocation(){
+ const modal=document.getElementById('procurement-allocation-modal'),source=document.getElementById('supplier-sheet-content');
+ if(modal)modal.hidden=true;
+ if(source&&procurementModalAnchor?.parentNode)procurementModalAnchor.parentNode.insertBefore(source,procurementModalAnchor.nextSibling);
+ document.body.classList.remove('allocation-modal-open');renderProcurement();
+}
+function renderProcurement(){
+ const box=document.getElementById('supplier-sheet-content');if(!box)return;
+ const products=procurementDemandData();
+ const cards=products.map(product=>{
+  const rows=product.rows.map(row=>'<button type="button" class="proc-demand-pack-action" data-product="'+esc(row.productId)+'" onclick="openProcurementAllocation(this.dataset.product)"><span><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><strong>'+fmt(row.total)+' '+esc(row.unit)+' · DODELI →</strong></button>').join('');
+  return '<article class="proc-demand-product"><button type="button" class="proc-demand-product-action" data-product="'+esc(product.rows[0]?.productId||'')+'" onclick="openProcurementAllocation(this.dataset.product)"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span><strong>OTVORI →</strong></button><div class="proc-demand-pack-list">'+rows+'</div></article>';
+ }).join('');
+ box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">TURA '+esc(tourId)+' · NABAVKA</div><h3>Potrebni proizvodi</h3><p>Izaberi proizvod, raspodeli ambalažu između jednog ili više gazdinstava i pripremi poruke. Poruke se ne čuvaju u bazi.</p></div>'+(cards||'<div class="proc-demand-empty">Nema stavki za nabavku u izabranoj turi.</div>')+'</div>';
 }
 
 document.addEventListener('DOMContentLoaded',()=>{ensureProcurementAllocationModal();loadData();initAdminRouter();});
