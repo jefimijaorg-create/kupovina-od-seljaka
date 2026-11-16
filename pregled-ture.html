@@ -461,7 +461,6 @@ main{padding-top:16px!important;padding-bottom:calc(108px + env(safe-area-inset-
 body.tour-panel-open{overflow:hidden!important}
 main section.tour-section-open{display:block!important;position:fixed!important;z-index:101;inset:0;overflow-y:auto!important;overscroll-behavior:contain;padding:82px 14px calc(24px + env(safe-area-inset-bottom))!important;margin:0!important;border:0!important;border-radius:0!important;background:#0f172a!important}
 main section.tour-section-open>div{max-width:1100px;margin-left:auto;margin-right:auto}
-#bottom-tab-nav{display:none!important}
 @media(min-width:768px){.tour-dashboard-card{min-height:170px;padding:22px}.tour-dashboard-card strong{font-size:18px}.tour-dashboard-card small{font-size:13px}main section.tour-section-open{padding:92px 32px 32px!important}#tour-overlay-header{padding-left:28px;padding-right:28px}}
 @media(max-width:380px){.tour-dashboard-card{min-height:138px;padding:13px 11px}.tour-dashboard-card strong{font-size:14px}.tour-dashboard-card small{font-size:10px}}
 @media(prefers-reduced-motion:no-preference){.tour-dashboard-card{transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.tour-dashboard-card:hover{border-color:#f97316;box-shadow:0 10px 25px rgba(0,0,0,.28)}}
@@ -502,6 +501,8 @@ main section.tour-section-open>div{max-width:1100px;margin-left:auto;margin-righ
 #bottom-tab-nav{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important;width:100%!important;z-index:120!important}
 body.tour-active{padding-bottom:calc(88px + env(safe-area-inset-bottom))!important}
 main section.tour-section-open{padding-bottom:calc(105px + env(safe-area-inset-bottom))!important}
+#delivery-tab.delivery-locked> :not(#delivery-locked-notice){display:none!important;pointer-events:none!important}
+#delivery-locked-notice{width:100%;max-width:680px;margin:28px auto;padding:12px}
 .proc-order-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
 .proc-order-back,.proc-order-basket,.proc-order-secondary{border:1px solid #475569;border-radius:11px;background:#1e293b;color:#e2e8f0;padding:11px 13px;font-size:12px;font-weight:850}
 .proc-order-basket{background:#3b2b1c;color:#fed7aa;border-color:#9a5b2d}
@@ -558,7 +559,7 @@ main section.tour-section-open{padding-bottom:calc(105px + env(safe-area-inset-b
   <div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4">
    <div class="flex items-center justify-between gap-3"><div><p class="text-[10px] tracking-widest font-black text-orange-300">PREGLED NABAVKE</p><h3 class="font-bold text-white mt-1">Šta je naručeno i koliko</h3></div><div class="text-right"><strong id="tour-dashboard-products" class="block text-xl font-black">—</strong><small class="text-[10px] text-slate-500">proizvoda</small></div></div>
    <p id="tour-dashboard-packages" class="text-xs text-slate-400 mt-1"></p><div id="tour-dashboard-demand-preview" class="mt-3 space-y-2"></div>
-   <button type="button" onclick="switchTab('procurement')" class="mt-4 w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-3 text-sm font-bold text-white">Otvori nabavku <i class="fa-solid fa-arrow-right ml-1"></i></button>
+   <p class="mt-4 text-center text-xs text-slate-500">Za detaljan pregled otvori <strong class="text-slate-300">Nabavka</strong> u donjoj navigaciji.</p>
   </div>
   <div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
    <p id="tour-dashboard-next-step" class="text-xs text-slate-400">Izaberi jednu od tri celine u donjoj navigaciji.</p>
@@ -746,7 +747,7 @@ function printDeliveryInvoice(orderId){
 async function setDeliveryProcessed(orderId,processed,button=null){const oldText=button?.textContent;try{if(button){button.disabled=true;button.textContent='ЧУВАМ…'}const stamp=processed?new Date().toISOString():null;await api('porudzbine?id=eq.'+encodeURIComponent(orderId),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({dostava_obradjena:!!processed,dostava_obradjena_at:stamp})});const check=await api('porudzbine?select=id,dostava_obradjena,dostava_obradjena_at&id=eq.'+encodeURIComponent(orderId));const saved=Array.isArray(check)?check.find(x=>String(x.id)===String(orderId)):null;if(!saved||Boolean(saved.dostava_obradjena)!==!!processed)throw Error('База није потврдила завршетак доставе. Провери дозволе за измену поруџбине.');let row=orders.find(x=>String(x.id)===String(orderId));if(row)Object.assign(row,saved);else orders.push(saved);say(processed?'Купац је пребачен у „Достављено“.':'Купац је враћен у „За доставу“.');renderDelivery();}catch(e){if(button){button.disabled=false;button.textContent=oldText||'✓ ЗАВРШИ ДОСТАВУ'}say('Достава није завршена: '+(e?.message||String(e)),true);document.getElementById('message')?.scrollIntoView({behavior:'smooth',block:'center'});console.error('[DOSTAVA] setDeliveryProcessed failed',orderId,e)}}
 function setDeliverySubtab(mode){deliveryMode=mode;['stock','picked','orders'].forEach(k=>{const panel=document.getElementById('delivery-'+k+'-panel'),btn=document.getElementById('delivery-sub-'+k+'-btn');if(panel)panel.classList.toggle('hidden',k!==mode);if(btn)btn.className='rounded-xl border-2 px-2 py-3 text-xs sm:text-sm font-black '+(k===mode?'border-emerald-700 bg-emerald-50 text-emerald-900':'border-slate-200 bg-white text-slate-600')});}
 
-function tourStatusKey(){return String(tours.find(t=>Number(t.id)===Number(tourId))?.status||'open').toLowerCase()}
+function tourStatusKey(){const tour=tours.find(t=>Number(t.id)===Number(tourId));return String(tour?.status||'unknown').toLowerCase()}
 function tourStatusLabel(status){return ({open:'Otvorena',full:'Popunjena',scheduled:'Zakazana',processing:'U realizaciji',closed:'Zatvorena',completed:'Završena',cancelled:'Otkazana'})[status]||('Status: '+status)}
 function tourCanManageProcurement(){const status=tourStatusKey();return status==='closed'||status==='processing'}
 function renderTourDashboard(){
@@ -821,22 +822,47 @@ function openProcurementDemandDetail(productId){
  });
  body.innerHTML=html;
 }
-function showTourDashboard(){if(!tourId)return;document.body.classList.remove('tour-panel-open');document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');document.getElementById('tour-dashboard')?.classList.remove('hidden');document.getElementById('tour-overlay-header')?.classList.add('hidden');document.getElementById('tour-section-backdrop')?.classList.add('hidden');['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.add('hidden');panel?.classList.remove('tour-section-open')});renderTourDashboard();}
+function showTourDashboard(){
+ if(!tourId)return;
+ document.body.classList.remove('tour-panel-open');
+ document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
+ document.getElementById('tour-dashboard')?.classList.remove('hidden');
+ document.getElementById('tour-overlay-header')?.classList.add('hidden');
+ document.getElementById('tour-section-backdrop')?.classList.add('hidden');
+ ['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.add('hidden');panel?.classList.remove('tour-section-open')});
+ ['orders','procurement','delivery'].forEach(k=>{const b=document.getElementById('btn-'+k);if(!b)return;b.classList.remove('text-emerald-800','text-slate-500');b.classList.add('text-slate-400');b.removeAttribute('aria-current')});
+ const delivery=document.getElementById('delivery-tab');delivery?.classList.remove('delivery-locked');
+ document.getElementById('delivery-locked-notice')?.classList.add('hidden');
+ renderTourDashboard();
+}
 function closeTourSection(){adminRouterNavigate('/ture');showTourDashboard();}
 function switchTab(v){
  if(!tourId){say('Prvo izaberi turu.',true);toggleTourPicker(true);return}
  if(!['orders','procurement','delivery'].includes(v))return;
  const route={orders:'/porudzbine',procurement:'/nabavka',delivery:'/dostava'}[v];
  adminRouterNavigate(route);view=v;
- document.getElementById('unassigned-toggle-wrap')?.classList.toggle('hidden',v!=='procurement');
+ ['orders','procurement','delivery'].forEach(k=>{const b=document.getElementById('btn-'+k);if(!b)return;b.classList.remove('text-slate-400','text-emerald-800','text-slate-500');b.classList.add(k===v?'text-emerald-800':'text-slate-500');if(k===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+ document.getElementById('unassigned-toggle-wrap')?.classList.toggle('hidden',v!=='procurement'||!tourCanManageProcurement());
  document.getElementById('tour-dashboard')?.classList.add('hidden');
  document.getElementById('tour-overlay-header')?.classList.remove('hidden');
  document.getElementById('tour-section-backdrop')?.classList.remove('hidden');
  document.body.classList.add('tour-panel-open');
  ['orders','procurement','delivery','debts'].forEach(k=>{const panel=document.getElementById(k+'-tab');panel?.classList.toggle('hidden',k!==v);panel?.classList.toggle('tour-section-open',k===v)});
  if(v==='orders')renderOrders();
- if(v==='procurement'){renderProcurement();renderPickupSummary();}
- if(v==='delivery')renderDelivery();
+ if(v==='procurement'){renderProcurement();if(tourCanManageProcurement())renderPickupSummary();}
+ if(v==='delivery'){
+  const panel=document.getElementById('delivery-tab');
+  let notice=document.getElementById('delivery-locked-notice');
+  if(!notice&&panel){notice=document.createElement('div');notice.id='delivery-locked-notice';notice.className='delivery-locked-notice';panel.insertBefore(notice,panel.firstChild)}
+  if(!tourCanManageProcurement()){
+   panel?.classList.add('delivery-locked');
+   if(notice){notice.classList.remove('hidden');notice.innerHTML='<div class="rounded-2xl border border-amber-500/30 bg-amber-950/30 p-5 text-center"><div class="text-2xl mb-2">🔒</div><h3 class="font-black text-lg text-white">Dostava još nije otključana</h3><p class="text-sm text-slate-300 mt-2">Dok je prijem porudžbina otvoren, ovde nema evidentiranja preuzimanja ni dostave. Zatvori prijem na kontrolnoj tabli da bi nastavio.</p><button type="button" onclick="showTourDashboard()" class="mt-4 rounded-xl bg-slate-700 px-4 py-3 text-sm font-bold text-white">Nazad na kontrolnu tablu</button></div>'}
+  }else{
+   panel?.classList.remove('delivery-locked');
+   notice?.classList.add('hidden');
+   renderDelivery();
+  }
+ }
  const tour=tours.find(t=>Number(t.id)===Number(tourId));
  const heading=document.getElementById('tour-overlay-title');
  if(heading)heading.textContent=({orders:'Porudžbine',procurement:'Nabavka',delivery:'Dostava'})[v]+' · '+(tour?.naziv||('Tura '+tourId));
