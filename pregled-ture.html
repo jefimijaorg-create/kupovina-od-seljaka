@@ -1309,7 +1309,7 @@ function procurementLine(x){
 }
 function supplierCategory(name){const s=String(name||'').toLowerCase();if(s.includes('јај'))return 'eggs';if(s.includes('сир'))return 'cheese';if(s.includes('млек')||s.includes('сурут'))return 'milk';return 'other'}
 function supplierOfferRows(farmId){return farmOffers.filter(o=>{if(String(o.gazdinstvo_id)!==String(farmId)||o.is_active===false||!o.variant_id||!productCatalog.some(p=>String(p.id)===String(o.product_id))||!variantCatalog.some(v=>String(v.id)===String(o.variant_id)&&String(v.product_id)===String(o.product_id)))return false;const hasDemand=supplierVariantOrderCount(o.variant_id,o.product_id)>0,own=(tourAllocations||[]).some(a=>String(a.variant_id)===String(o.variant_id)&&String(a.product_id)===String(o.product_id)&&String(a.gazdinstvo_id)===String(farmId));return hasDemand&&(supplierVariantRemaining(o.variant_id,farmId,o.product_id)>0||own)})}
-function supplierVariantOrderCount(variantId,productId){return items.filter(x=>String(x.variant_id)===String(variantId)&&(productId===undefined||String(x.product_id)===String(productId))).reduce((sum,x)=>sum+Math.max(0,n(pack(x).count)),0)}
+function supplierVariantOrderCount(variantId,productId){return items.filter(x=>String(x.variant_id)===String(variantId)&&(productId===undefined||String(x.product_id)===String(productId))).reduce((sum,x)=>sum+Math.max(0,n(x.package_count)),0)}
 function supplierVariantAllocated(variantId,excludeFarmId,productId){return (tourAllocations||[]).filter(a=>String(a.variant_id)===String(variantId)&&(productId===undefined||String(a.product_id)===String(productId))&&(excludeFarmId===undefined||String(a.gazdinstvo_id)!==String(excludeFarmId))).reduce((sum,a)=>sum+Math.max(0,n(a.broj_pakovanja)),0)}
 function supplierVariantRemaining(variantId,excludeFarmId,productId){return Math.max(0,supplierVariantOrderCount(variantId,productId)-supplierVariantAllocated(variantId,excludeFarmId,productId))}
 function setSupplierDemandFarmFilter(value){supplierDemandFarmFilter=String(value||'all');renderSupplierSheet()}
@@ -1903,8 +1903,9 @@ function procurementDemandData(){
   const count=Math.max(0,n(row.package_count));
   const size=Math.max(0,n(row.package_size));
   const unitName=normUnit(row.package_unit||'ком');
-  const key=productId+'|'+String(size)+'|'+unitName;
-  if(!groups.has(key))groups.set(key,{productId,productName:product?.name||(productId?'Назив производа није учитан':'Неповезан производ'),size,unit:unitName,packages:0,total:0,orders:0,missing:!product});
+  const variantId=String(row.variant_id||'');
+  const key=productId+'|'+variantId+'|'+String(size)+'|'+unitName;
+  if(!groups.has(key))groups.set(key,{productId,variantId,productName:product?.name||(productId?'Назив производа није учитан':'Неповезан производ'),size,unit:unitName,packages:0,total:0,orders:0,missing:!product});
   const group=groups.get(key);group.packages+=count;group.total+=count*size;group.orders++;
  });
  const all=[...groups.values()].sort((a,b)=>a.productName.localeCompare(b.productName,'sr')||a.size-b.size||a.unit.localeCompare(b.unit,'sr'));
@@ -1948,7 +1949,10 @@ function closeProcurementAllocation(){
  document.body.classList.remove('allocation-modal-open');supplierSheetFarmId='';supplierSheetProductId='';supplierSheetTargetVariantId='';renderProcurement();
 }
 function renderProcurement(){
- const box=document.getElementById('supplier-sheet-content');if(!box)return;const products=procurementDemandData();
+ const box=document.getElementById('supplier-sheet-content');if(!box)return;
+ const allocationModal=document.getElementById('procurement-allocation-modal');
+ if(allocationModal&&!allocationModal.hidden&&supplierSheetFarmId){renderSupplierSheet();return;}
+ const products=procurementDemandData();
  const cards=products.map(product=>{
   const rows=product.rows.map(row=>'<div class="proc-demand-pack"><button type="button" class="proc-demand-pack-action" onclick="openProcurementAllocation(\''+esc(product.productId)+'\',\''+esc(row.variantId||'')+'\')"><span class="min-w-0"><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><span class="text-right shrink-0"><strong>'+fmt(row.total)+' '+esc(row.unit)+'</strong><span class="proc-demand-open block mt-1">DODELI →</span></span></button></div>').join('');
   return '<article class="proc-demand-product"><div class="proc-demand-product-head"><button type="button" class="proc-demand-product-action" onclick="openProcurementAllocation(\''+esc(product.productId)+'\')"><span class="min-w-0"><h4>'+esc(product.name)+'</h4><p>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</p></span><span class="proc-demand-open">OTVORI →</span></button></div><div class="proc-demand-pack-list">'+rows+'</div></article>';
