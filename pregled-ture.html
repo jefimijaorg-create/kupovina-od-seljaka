@@ -829,6 +829,7 @@ async function loadTour(options={}){
   else if(adminRouterPath()==='/porudzbine')switchTab('orders');
   else if(adminRouterPath()==='/dostava')switchTab('delivery');
   else showTourDashboard();
+  scrollTourWorkspaceToTop();
   say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки. Изабрана тура се чува и после освежавања странице.');
   return true;
  }catch(e){
@@ -950,8 +951,13 @@ function returnToTourPicker(){
  document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
  window.scrollTo({top:0,behavior:'instant'});
 }
+function scrollTourWorkspaceToTop(){
+ const reset=()=>{window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;};
+ requestAnimationFrame(()=>{reset();requestAnimationFrame(reset);});
+}
 function showTourDashboard(){
  if(!tourId)return;
+ scrollTourWorkspaceToTop();
  document.body.classList.remove('tour-panel-open');
  document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
  document.getElementById('tour-dashboard')?.classList.remove('hidden');
