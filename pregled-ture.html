@@ -444,6 +444,7 @@ main{padding-top:16px!important;padding-bottom:calc(108px + env(safe-area-inset-
 @media(max-width:767px){#bottom-tab-nav>div>div:first-child{padding-top:6px!important}#bottom-tab-nav button{min-height:50px!important}#bottom-tab-nav button i{font-size:16px!important}}
 </style>
 <style id="tour-entry-visibility">#tour-search-label{display:none!important}body.tour-active #tour-search-label{display:block!important}</style>
+<style id="tour-dashboard-no-bottom-tabs">#bottom-tab-nav{display:none!important}#tour-dashboard{padding-bottom:calc(24px + env(safe-area-inset-bottom))}</style>
 <style id="tour-dashboard-panels">
 #tour-dashboard{min-height:calc(100dvh - 170px)}
 .tour-dashboard-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:148px;padding:17px 14px;border:1px solid #334155;border-radius:18px;background:linear-gradient(145deg,#1b2940,#121d31);color:#f8fafc;box-shadow:0 8px 20px rgba(0,0,0,.18);-webkit-tap-highlight-color:transparent}
@@ -618,10 +619,15 @@ body.closed-tours-open{overflow:hidden!important}
   <div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4">
    <div class="flex items-center justify-between gap-3"><div><p class="text-[10px] tracking-widest font-black text-orange-300">PREGLED NABAVKE</p><h3 class="font-bold text-white mt-1">Šta je naručeno i koliko</h3></div><div class="text-right"><strong id="tour-dashboard-products" class="block text-xl font-black">—</strong><small class="text-[10px] text-slate-500">proizvoda</small></div></div>
    <p id="tour-dashboard-packages" class="text-xs text-slate-400 mt-1"></p><div id="tour-dashboard-demand-preview" class="mt-3 space-y-2"></div>
-   <p class="mt-4 text-center text-xs text-slate-500">Za detaljan pregled otvori <strong class="text-slate-300">Nabavka</strong> u donjoj navigaciji.</p>
+   <div class="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-4"><div class="mb-2"><p class="text-[10px] tracking-widest font-black text-orange-300">ПУНКТОВИ И РАСПОРЕД</p><h3 class="font-bold text-white mt-1">Где се шта преузима</h3></div><div id="tour-dashboard-points-preview" class="space-y-1"></div></div>
   </div>
+  <div class="mt-4"><p class="mb-3 text-[10px] tracking-widest font-black text-orange-300">ДАЉА ОБРАДА ТУРЕ</p><div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+   <button type="button" class="tour-dashboard-card" onclick="switchTab('orders')"><span class="tour-dashboard-icon"><i class="fa-solid fa-clipboard-list"></i></span><i class="fa-solid fa-chevron-right tour-card-arrow"></i><strong>Поруџбине</strong><small>Купци, пунктови и наручене ставке</small></button>
+   <button type="button" class="tour-dashboard-card" onclick="switchTab('procurement')"><span class="tour-dashboard-icon"><i class="fa-solid fa-boxes-stacked"></i></span><i class="fa-solid fa-chevron-right tour-card-arrow"></i><strong>Набавка</strong><small>Потребне количине и расподела по газдинствима</small></button>
+   <button type="button" class="tour-dashboard-card" onclick="switchTab('delivery')"><span class="tour-dashboard-icon"><i class="fa-solid fa-truck-fast"></i></span><i class="fa-solid fa-chevron-right tour-card-arrow"></i><strong>Достава</strong><small>Преузимање, пунктови и испорука</small></button>
+  </div></div>
   <div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-   <p id="tour-dashboard-next-step" class="text-xs text-slate-400">Izaberi jednu od tri celine u donjoj navigaciji.</p>
+   <p id="tour-dashboard-next-step" class="text-xs text-slate-400">Изабери део обраде туре изнад.</p>
    <button id="tour-status-action" type="button" onclick="advanceTourStatus()" class="hidden rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-black px-5 py-3 text-sm">Promeni status ture</button>
   </div>
  </div>
@@ -778,11 +784,10 @@ async function loadTour(options={}){
   document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';
   document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;
   populateFilters();populatePickupSummaryFilters();renderAll();renderTourDashboard();toggleTourPicker(false);
-  const bottomNav=document.getElementById('bottom-tab-nav'),navTour=document.getElementById('bottom-nav-tour-name');
-  if(bottomNav)bottomNav.classList.remove('hidden');
+  const bottomNav=document.getElementById('bottom-tab-nav');
+  if(bottomNav)bottomNav.classList.add('hidden');
   document.body.classList.add('tour-active');document.getElementById('tour-actions')?.classList.remove('hidden');
   document.getElementById('unassigned-toggle-wrap')?.classList.remove('hidden');
-  if(navTour)navTour.textContent=t?.naziv||('Тура '+tourId);
   if(!options.preserveRoute){adminRouterNavigate('/ture',{replace:true});showTourDashboard()}
   else if(adminRouterPath()==='/nabavka')switchTab('procurement');
   else if(adminRouterPath()==='/porudzbine')switchTab('orders');
@@ -834,6 +839,14 @@ function renderTourDashboard(){
  set('tour-dashboard-customers',fmt(customerIds.size));
  set('tour-dashboard-value',new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(money)+' RSD');
  set('tour-dashboard-points',fmt(activePoints.length));
+ const pointPreview=document.getElementById('tour-dashboard-points-preview');
+ if(pointPreview){
+  pointPreview.innerHTML=activePoints.map(tp=>{
+   const p=points.find(x=>String(x.id)===String(tp.punkt_id))||{};
+   const pointOrders=orderRows.filter(o=>String(o.punkt_id||'')===String(tp.punkt_id));
+   return '<div class="flex items-center justify-between gap-3 border-t border-slate-800 py-2 text-xs"><span class="min-w-0"><strong class="block text-slate-200">'+esc(p.name||('Пункт #'+tp.punkt_id))+'</strong><small class="text-slate-500">'+esc([p.city,p.address].filter(Boolean).join(' · '))+'</small></span><strong class="shrink-0 text-orange-200">'+fmt(pointOrders.length)+' поруџб.</strong></div>';
+  }).join('')||'<p class="text-xs text-slate-500">За ову туру нису евидентирани активни пунктови.</p>';
+ }
  set('tour-dashboard-products',fmt(demand.length));
  set('tour-dashboard-packages',fmt(packageCount)+' ukupno pakovanja · količina se računa po veličini ambalaže');
  if(statusEl){
@@ -843,7 +856,7 @@ function renderTourDashboard(){
  const detail=document.getElementById('tour-dashboard-status-detail');
  if(detail)detail.textContent=status==='open'?'Prijem porudžbina je otvoren. Nabavku pratiš uživo; raspodela i Viber su zaključani.':status==='closed'?'Prijem porudžbina je zatvoren. Nabavka i priprema dostave su otključani.':status==='completed'?'Tura je završena. Podaci su dostupni za pregled.':'Postojeći status ture: '+tourStatusLabel(status)+'.';
  const next=document.getElementById('tour-dashboard-next-step');
- if(next)next.textContent=status==='open'?'Kada završiš prijem porudžbina, zatvori turu da otključaš raspodelu i nabavku.':status==='closed'?'Po završetku realizacije označi turu kao završenu.':status==='completed'?'Završena tura je u režimu pregleda.':'Operativne mogućnosti zavise od postojećeg statusa ture.';
+ if(next)next.textContent=status==='open'?'Прегледај наручене производе и количине, па настави у Поруџбине, Набавку или Доставу.':status==='closed'?'Настави припрему набавке и доставе, па по завршетку означи туру као завршену.':status==='completed'?'Завршена тура је у режиму прегледа.':'Оперативне могућности зависе од постојећег статуса туре.';
  const action=document.getElementById('tour-status-action');
  if(action){
   const allowed=status==='open'||status==='closed';
@@ -852,7 +865,7 @@ function renderTourDashboard(){
  }
  const preview=document.getElementById('tour-dashboard-demand-preview');
  if(preview){
-  preview.innerHTML=demand.slice(0,5).map(p=>'<div class="flex items-center justify-between gap-3 border-t border-slate-800 pt-2 text-xs"><span class="min-w-0 truncate text-slate-200">'+esc(p.name)+'</span><strong class="shrink-0 text-orange-200">'+fmt(p.packages)+' pak. · '+fmt(p.total)+' '+esc(p.rows[0]?.unit||'')+'</strong></div>').join('')||(items.length?'<p class="text-xs text-slate-500">Stavke još nemaju podatke o pakovanju za zbirni pregled.</p>':'<p class="text-xs text-slate-500">Još nema porudžbina u ovoj turi.</p>');
+  preview.innerHTML=demand.map(p=>'<article class="rounded-xl border border-slate-700 bg-slate-900/70 p-3"><div class="flex items-start justify-between gap-3"><strong class="min-w-0 text-sm font-black text-white">'+esc(p.name)+'</strong><span class="shrink-0 text-[11px] font-bold text-orange-200">'+fmt(p.packages)+' пак.</span></div><div class="mt-2 space-y-2">'+p.rows.map(r=>'<div class="flex items-center justify-between gap-3 border-t border-slate-800 pt-2 text-xs"><span class="min-w-0 text-slate-300">'+fmt(r.size)+' '+esc(r.unit)+' · '+fmt(r.packages)+' паковања</span><strong class="shrink-0 text-orange-200">'+fmt(r.total)+' '+esc(r.unit)+'</strong></div>').join('')+'</div><div class="mt-3 flex items-center justify-between border-t border-slate-700 pt-2 text-xs"><span class="text-slate-400">Укупно за производ</span><strong class="text-white">'+fmt(p.packages)+' пак. · '+fmt(p.total)+' '+esc(p.rows[0]?.unit||'')+'</strong></div></article>').join('')||(items.length?'<p class="text-xs text-slate-500">Ставке још немају податке о паковању за збирни преглед.</p>':'<p class="text-xs text-slate-500">Још нема поруџбина у овој тури.</p>');
  }
 }
 async function advanceTourStatus(){
