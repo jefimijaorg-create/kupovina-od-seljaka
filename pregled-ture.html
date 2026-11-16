@@ -318,6 +318,64 @@ main{padding-top:16px!important;padding-bottom:calc(108px + env(safe-area-inset-
  #procurement-workflow .pw-copy small{font-size:11px}
 }
 </style>
+
+<style id="orders-compact-ux">
+#orders-tab>div{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+#orders-summary{margin-top:10px!important}
+.orders-tour-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;margin-bottom:10px;background:#111a2b;border:1px solid #26354b;border-radius:12px}
+.orders-tour-strip>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.orders-tour-strip strong{font-size:15px;color:#f3f6fc;line-height:1.3}
+.orders-tour-strip small,.orders-eyebrow{font-size:10px;color:#94a3b8}
+.orders-eyebrow{font-weight:800;letter-spacing:.1em}
+.orders-tour-count{flex-shrink:0;font-size:11px;color:#f6b477;background:rgba(242,138,53,.1);border:1px solid rgba(242,138,53,.2);border-radius:8px;padding:5px 8px}
+.orders-list{display:flex;flex-direction:column;gap:7px}
+.orders-point{background:#111a2b;border:1px solid #2a3a50;border-radius:12px;overflow:hidden}
+.orders-point>summary,.orders-customer>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:51px;padding:9px 12px;cursor:pointer}
+.orders-point>summary::-webkit-details-marker,.orders-customer>summary::-webkit-details-marker,.orders-edit>summary::-webkit-details-marker{display:none}
+.orders-point-info,.orders-customer-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.orders-point-info strong{font-size:14px;color:#f3f6fc;font-weight:750}
+.orders-point-info small,.orders-customer-info small{font-size:11px;color:#94a3b8}
+.orders-point-meta,.orders-customer-meta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.orders-point-meta strong{font-size:12px;color:#f4b477}
+.orders-point-meta i,.orders-customer-meta i{font-size:11px;color:#8292a9;transition:transform .16s}
+.orders-point[open]>summary,.orders-customer[open]>summary{background:#172338}
+.orders-point[open]>summary .orders-point-meta i,.orders-customer[open]>summary .orders-customer-meta i{transform:rotate(180deg)}
+.orders-point-body{padding:4px 8px 8px}
+.orders-customer{background:#0d1728;border:1px solid #26354b;border-radius:9px;margin-top:5px;overflow:hidden}
+.orders-customer>summary{min-height:48px;padding:8px 10px}
+.orders-customer-info strong{font-size:12px;color:#e7edf6;font-weight:700}
+.orders-customer-meta strong{font-size:11px;color:#f2b477}
+.orders-customer-body{padding:0 10px 10px}
+.orders-products{border-top:1px solid #26354b}
+.orders-product-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 1px;border-bottom:1px solid rgba(38,53,75,.72)}
+.orders-product-main,.orders-product-price{display:flex;flex-direction:column;gap:2px;min-width:0}
+.orders-product-main strong{font-size:12px;color:#e8eef7;font-weight:650}
+.orders-product-main small,.orders-product-price small{font-size:10px;color:#91a1b7}
+.orders-product-price{text-align:right;flex-shrink:0}
+.orders-product-price strong{font-size:12px;color:#f4b477;font-weight:750}
+.orders-order-total{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 1px 3px;font-size:11px;color:#9eacc0}
+.orders-order-total strong{font-size:13px;color:#f3f6fc}
+.orders-edit{margin-top:8px;border-top:1px solid #26354b;padding-top:7px}
+.orders-edit>summary{list-style:none;display:flex;align-items:center;gap:7px;color:#aebbd0;font-size:11px;font-weight:650;cursor:pointer;padding:5px 0}
+.orders-edit>summary::-webkit-details-marker{display:none}
+.orders-edit>summary i{color:#f2a15e}
+.orders-edit-body{display:flex;flex-direction:column;gap:8px;padding-top:8px}
+.orders-edit-heading{font-size:11px;font-weight:750;color:#e6edf7}
+.orders-edit-line{padding:9px;background:#142139;border:1px solid #2a3a50;border-radius:9px;display:flex;flex-direction:column;gap:7px}
+.orders-edit-line>strong{font-size:12px;color:#f3f6fc}
+.orders-edit-line>small{font-size:10px;color:#94a3b8}
+.orders-edit-line label,.orders-edit-field{display:flex;flex-direction:column;gap:4px;font-size:10px;color:#aab8ca}
+.orders-edit-line input,.orders-edit-field select{width:100%;min-height:38px!important;padding:7px 9px!important;font-size:12px!important;border-radius:8px!important}
+.orders-save-button{min-height:42px;border-radius:9px;background:#e98536;color:#1c1712;font-size:12px;font-weight:800;padding:10px 14px}
+.orders-point-time{margin-top:8px;border-top:1px solid #26354b;padding-top:7px}
+.orders-point-time>summary{font-size:10px;color:#8fa0b7;cursor:pointer}
+.orders-point-time>div{display:flex;gap:7px;margin-top:7px}
+.orders-point-time input{min-height:36px!important;padding:6px 9px!important;flex:1}
+.orders-point-time button{background:#26364d;color:#eaf0f8;border:1px solid #394b64;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:700}
+.orders-empty{padding:20px 12px;text-align:center;background:#111a2b;border:1px solid #26354b;border-radius:12px;color:#94a3b8;font-size:12px}
+@media(min-width:768px){.orders-list{max-width:980px}.orders-point>summary{padding:11px 14px}.orders-point-body{padding:5px 11px 11px}.orders-customer-body{padding:0 12px 11px}}
+@media(max-width:380px){.orders-product-row{gap:7px}.orders-product-main strong{font-size:11px}.orders-product-price strong{font-size:11px}}
+</style>
 </head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div class="flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
@@ -904,7 +962,8 @@ function renderOrders(){
  list.forEach(x=>{
   const o=ord(x),b=buyer(o),p=point(x),key=String(o.punkt_id||'none');
   if(!groups[key])groups[key]={p,orders:{},time:'',order:9999};
-  const g=groups[key];(g.orders[String(o.id)]||(g.orders[String(o.id)]={order:o,buyer:b,items:[]})).items.push(x);
+  const g=groups[key];
+  (g.orders[String(o.id)]||(g.orders[String(o.id)]={order:o,buyer:b,items:[]})).items.push(x);
   const tp=tourPoints.find(t=>Number(t.tura_id)===tourId&&String(t.punkt_id)===key&&t.aktivan);
   if(tp){g.time=tp.vreme||g.time;g.order=n(tp.redosled)||g.order}
  });
@@ -915,39 +974,44 @@ function renderOrders(){
   return groups[a].order-groups[b].order||String(groups[a].p.name||'').localeCompare(String(groups[b].p.name||''),'sr');
  });
  const tour=tours.find(t=>Number(t.id)===tourId);
- let html='<div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4"><div class="font-black text-lg">'+esc(tour?.naziv||'Изабрана тура')+'</div><div class="text-sm text-slate-600">'+esc(tour?.datum||'')+'</div><div class="text-sm text-slate-600 mt-1">Отвори поруџбину да измениш цене и пункт. Сатница се подешава за цео пункт.</div></div>';
+ let html='<div class="orders-tour-strip"><div><span class="orders-eyebrow">IZABRANA TURA</span><strong>'+esc(tour?.naziv||'Izabrana tura')+'</strong><small>'+esc(tour?.datum||'')+'</small></div><span class="orders-tour-count">'+list.length+' stavki</span></div>';
+ if(!keys.length){
+  document.getElementById('orders-summary').innerHTML=html+'<div class="orders-empty">Za ovu turu nema naručenih proizvoda.</div>';
+  return;
+ }
+ html+='<div class="orders-list">';
  html+=keys.map(k=>{
   const g=groups[k],ids=Object.keys(g.orders);
-  let pointTotal=0;
+  let pointTotal=0,pointLineCount=0;
   const ordersHtml=ids.sort((a,b)=>(g.orders[a].buyer.ime_prezime||'').localeCompare(g.orders[b].buyer.ime_prezime||'','sr')).map(oid=>{
-   const row=g.orders[oid],o=row.order,b=row.buyer,its=orderItemsByOrder[String(o.id)]||row.items,sum=its.reduce((a,x)=>a+price(x),0);pointTotal+=sum;
-   const orderPrice=its.reduce((sum,x)=>sum+price(x),0);
-   const lineInputs=its.map(x=>{const v=variantFor(x),variantLabel=v?.name||v?.size_label||x.variant_name||x.package_info||x.velicina_pakovanja||'Паковање није наведено';return '<div class="border rounded-lg p-3 bg-white space-y-2"><div class="text-xs font-bold text-slate-500">ПРОИЗВОД ИЗ КАТАЛОГА</div><div class="font-bold text-slate-800">'+esc(productName(x))+'</div><div class="text-xs text-slate-500">ID: '+esc(x.product_id||'није повезан')+'</div><div class="text-sm text-slate-700">Варијанта / паковање: <b>'+esc(variantLabel)+'</b><div class="text-xs text-slate-500">'+esc(textPack(x))+'</div></div><div class="grid grid-cols-2 gap-2"><label><span class="block text-xs font-bold text-slate-500">Количина</span><input id="line-qty-'+x.id+'" type="number" min="0" step="0.001" value="'+esc(x.kolicina)+'" oninput="previewOrderTotal('+o.id+')" class="w-full border rounded-lg px-3 py-2 mt-1"></label><label><span class="block text-xs font-bold text-slate-500">Јединица</span><input id="line-unit-'+x.id+'" value="'+esc(x.jedinica||'')+'" class="w-full border rounded-lg px-3 py-2 mt-1"></label></div><label class="block"><span class="block text-xs font-bold text-slate-500">Укупна цена ставке (дин.)</span><input id="line-price-'+x.id+'" type="number" min="0" step="0.01" value="'+(price(x)>0?esc(price(x)):'')+'" oninput="previewOrderTotal('+o.id+')" placeholder="Унеси цену" class="w-full border rounded-lg px-3 py-2 mt-1"></label></div>'}).join('');
-   const pointOptions='<option value="">— Без пункта —</option>'+points.map(p=>'<option value="'+p.id+'" '+(String(o.punkt_id||'')===String(p.id)?'selected':'')+'>'+esc(p.name)+(p.address?' — '+esc(p.address):'')+'</option>').join('');
-   const orderTourIds=[...new Set(its.map(x=>String(x.tura_id??'')))],orderTourValue=orderTourIds.length===1?orderTourIds[0]:'__mixed__';
-   const tourOptions=(orderTourValue==='__mixed__'?'<option value="__mixed__" selected>Више тура — изабери једну</option>':'')+'<option value="">Без туре</option>'+tours.map(t=>'<option value="'+t.id+'" '+(orderTourValue===String(t.id)?'selected':'')+'>'+esc(t.naziv||('Тура '+t.id))+' · '+esc(t.datum||'')+'</option>').join('');
-   return '<details class="border rounded-xl mb-2 overflow-hidden bg-white"><summary class="list-none cursor-pointer p-3 flex flex-wrap items-center justify-between gap-2"><div><div class="font-black text-base">'+esc(b.ime_prezime||'Поруџбина '+o.id)+'</div><div class="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-1"><span>'+esc(o.telefon||b.telefon||'Број није унет')+'</span>'+(o.telefon||b.telefon?'<button type="button" onclick="copyBuyerPhone('+JSON.stringify(o.telefon||b.telefon)+')" class="rounded-lg border border-violet-200 bg-violet-50 text-violet-800 px-2 py-1 font-bold"><i class="fa-solid fa-copy mr-1"></i>Копирај број за Viber</button>':'')+'<span>· Поруџбина #'+o.id+'</span></div></div><div class="flex items-center gap-3"><b class="text-emerald-800">'+(orderPrice!==''?cash(orderPrice):'<span class="text-amber-700">Цена није унета</span>')+'</b><span class="text-slate-500">▼</span></div></summary><div class="p-3 space-y-3 border-t"><div class="font-black text-sm">Ставке и цене</div>'+lineInputs+'<div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3"><span class="block text-xs font-bold text-emerald-800">УКУПНО — АУТОМАТСКИ ЗБИР СТАВКИ</span><strong id="order-total-'+o.id+'" class="text-xl text-emerald-900">'+cash(orderPrice)+'</strong><p class="text-xs text-emerald-700 mt-1">Износ се рачуна из сачуваних цена ставки. Не уноси се ручно.</p></div><label class="block"><span class="block text-sm font-bold">Тура за целу поруџбину</span><select id="order-tour-'+o.id+'" class="w-full border rounded-lg px-3 py-2 mt-1">'+tourOptions+'</select><span class="block text-xs text-slate-500 mt-1">Избор се примењује на све ставке ове поруџбине, укључујући ставке које су тренутно у другој тури.</span></label><label class="block"><span class="block text-sm font-bold">Пункт преузимања</span><select id="order-point-'+o.id+'" class="w-full border rounded-lg px-3 py-2 mt-1">'+pointOptions+'</select></label><div class="rounded-lg border border-dashed border-emerald-300 bg-emerald-50/50 p-3"><button type="button" onclick="toggleNewPointForm('+o.id+')" class="text-sm font-bold text-emerald-800"><i class="fa-solid fa-plus mr-1"></i> Додај нови пункт ако га нема</button><div id="new-point-form-'+o.id+'" class="hidden mt-3 space-y-2"><label class="block text-xs font-bold text-slate-600">НАЗИВ ПУНКТА<input id="new-point-name-'+o.id+'" type="text" placeholder="Нпр. Богословија" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="block text-xs font-bold text-slate-600">ГРАД / НАСЕЉЕ<input id="new-point-city-'+o.id+'" type="text" placeholder="Нпр. Београд" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><label class="block text-xs font-bold text-slate-600">АДРЕСА / ОПИС ЛОКАЦИЈЕ<input id="new-point-address-'+o.id+'" type="text" placeholder="Адреса или ближи опис (опционо)" class="w-full border rounded-lg px-3 py-2 mt-1 bg-white"></label><button type="button" onclick="createPointForOrder('+o.id+')" class="w-full bg-emerald-700 text-white font-bold rounded-lg px-4 py-2">Сачувај пункт и додели овој поруџбини</button></div></div><button type="button" onclick="saveOrderEdit('+o.id+','+JSON.stringify(its.map(x=>x.id))+')" class="w-full bg-emerald-700 text-white font-bold rounded-lg px-4 py-3">Сачувај измене поруџбине</button><div class="text-xs text-slate-500">Назив производа се аутоматски чита из каталога преко product_id. Можеш да измениш количину, јединицу, цену и пункт.</div></div></details>';
+   const row=g.orders[oid],o=row.order,b=row.buyer;
+   const tourLines=row.items.slice().sort((a,b)=>Number(a.id)-Number(b.id));
+   const orderPrice=tourLines.reduce((sum,x)=>sum+price(x),0);
+   const hasAnyPrice=tourLines.some(x=>hasItemPrice(x));
+   pointTotal+=orderPrice;pointLineCount+=tourLines.length;
+   const productRows=tourLines.map(x=>{
+    const p=pack(x),linePrice=price(x),perPack=p.count>0?linePrice/p.count:0;
+    const priceText=hasItemPrice(x)?cash(perPack)+' / pak.':'Cena nije uneta';
+    const totalText=hasItemPrice(x)?cash(linePrice):'—';
+    return '<div class="orders-product-row"><div class="orders-product-main"><strong>'+esc(productName(x))+'</strong><small>'+esc(fmt(p.count))+' pak. × '+esc(fmt(p.size))+' '+esc(p.unit)+'</small></div><div class="orders-product-price"><strong>'+totalText+'</strong><small>'+priceText+'</small></div></div>';
+   }).join('');
+   const allLines=orderItemsByOrder[String(o.id)]||tourLines;
+   const lineInputs=allLines.map(x=>{
+    const v=variantFor(x),variantLabel=v?.name||v?.size_label||x.variant_name||x.package_info||x.velicina_pakovanja||'Pakovanje nije navedeno';
+    return '<div class="orders-edit-line"><strong>'+esc(productName(x))+'</strong><small>'+esc(variantLabel)+' · '+esc(textPack(x))+'</small><div class="grid grid-cols-2 gap-2"><label><span>Količina</span><input id="line-qty-'+x.id+'" type="number" min="0" step="0.001" value="'+esc(x.kolicina)+'" oninput="previewOrderTotal('+o.id+')"></label><label><span>Jedinica</span><input id="line-unit-'+x.id+'" value="'+esc(x.jedinica||'')+'"></label></div><label><span>Ukupna cena stavke (din.)</span><input id="line-price-'+x.id+'" type="number" min="0" step="0.01" value="'+(hasItemPrice(x)?esc(price(x)):'')+'" oninput="previewOrderTotal('+o.id+')" placeholder="Unesi cenu"></label></div>';
+   }).join('');
+   const pointOptions='<option value="">— Bez punkta —</option>'+points.map(p=>'<option value="'+p.id+'" '+(String(o.punkt_id||'')===String(p.id)?'selected':'')+'>'+esc(p.name)+(p.address?' — '+esc(p.address):'')+'</option>').join('');
+   const orderTourIds=[...new Set(allLines.map(x=>String(x.tura_id??'')))],orderTourValue=orderTourIds.length===1?orderTourIds[0]:'__mixed__';
+   const tourOptions=(orderTourValue==='__mixed__'?'<option value="__mixed__" selected>Više tura — izaberi jednu</option>':'')+'<option value="">Bez ture</option>'+tours.map(t=>'<option value="'+t.id+'" '+(orderTourValue===String(t.id)?'selected':'')+'>'+esc(t.naziv||('Tura '+t.id))+' · '+esc(t.datum||'')+'</option>').join('');
+   const phone=o.telefon||b.telefon||'Broj nije unet';
+   return '<details class="orders-customer"><summary><span class="orders-customer-info"><strong>'+esc(b.ime_prezime||'Kupac · porudžbina #'+o.id)+'</strong><small>'+esc(phone)+'</small></span><span class="orders-customer-meta"><strong>'+(hasAnyPrice?cash(orderPrice):'—')+'</strong><i class="fa-solid fa-chevron-down"></i></span></summary><div class="orders-customer-body"><div class="orders-products">'+productRows+'</div><div class="orders-order-total"><span>Ukupno za kupca</span><strong>'+(hasAnyPrice?cash(orderPrice):'Cena nije uneta')+'</strong></div><details class="orders-edit"><summary><i class="fa-solid fa-pen-to-square"></i> Izmeni porudžbinu</summary><div class="orders-edit-body"><div class="orders-edit-heading">Stavke porudžbine</div>'+lineInputs+'<div class="orders-order-total"><span>Ukupno</span><strong id="order-total-'+o.id+'">'+cash(orderPrice)+'</strong></div><label class="orders-edit-field"><span>Tura za celu porudžbinu</span><select id="order-tour-'+o.id+'">'+tourOptions+'</select></label><label class="orders-edit-field"><span>Punkt preuzimanja</span><select id="order-point-'+o.id+'">'+pointOptions+'</select></label><button type="button" onclick="saveOrderEdit('+o.id+','+JSON.stringify(allLines.map(x=>x.id))+')" class="orders-save-button">Sačuvaj izmene</button></div></details></div></details>';
   }).join('');
   const timeId='point-time-'+String(k).replace(/[^a-zA-Z0-9_-]/g,'_');
-  const pointOptions=points.map(p=>'<option value="'+p.id+'" '+(String(k)===String(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join('');
-  return '<section class="border-2 border-slate-200 rounded-2xl mb-5 overflow-hidden bg-slate-50"><header class="p-4 bg-slate-100"><div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-lg sm:text-xl font-black uppercase">📍 '+esc(g.p.name||'Пункт није одређен')+'</h3><span class="rounded-lg bg-emerald-100 text-emerald-900 px-3 py-1 font-black">'+esc(g.time?String(g.time).slice(0,5):'Сатница није унета')+'</span></div><div class="text-sm text-slate-600 mt-1">'+esc(g.p.address||g.p.city||'')+'</div><div class="mt-3 flex flex-wrap gap-2 items-end no-print"><label class="text-xs font-bold text-slate-600">Сатница пункта<input id="'+timeId+'" type="time" value="'+esc(String(g.time||'').slice(0,5))+'" class="block border rounded-lg px-3 py-2 mt-1 bg-white"></label><button type="button" onclick="savePointTime('+JSON.stringify(k)+','+JSON.stringify(timeId)+')" class="bg-slate-800 text-white rounded-lg px-3 py-2 text-sm font-bold">Сачувај сатницу</button></div></header><div class="p-3"><div class="text-xs uppercase font-bold text-slate-500 mb-2">'+ids.length+' поруџбина</div>'+ordersHtml+'<div class="text-right font-black text-base border-t pt-3">Укупно за пункт: '+cash(pointTotal)+'</div></div></section>';
+  const pointName=g.p.name||'Punkt nije određen';
+  return '<details class="orders-point" open><summary><span class="orders-point-info"><strong>'+esc(pointName)+'</strong><small>'+ids.length+' kupaca'+(g.time?' · '+esc(String(g.time).slice(0,5)):'')+'</small></span><span class="orders-point-meta"><strong>'+cash(pointTotal)+'</strong><i class="fa-solid fa-chevron-down"></i></span></summary><div class="orders-point-body">'+ordersHtml+'<details class="orders-point-time no-print"><summary>Podešavanje satnice punkta</summary><div><input id="'+timeId+'" type="time" value="'+esc(String(g.time||'').slice(0,5))+'"><button type="button" onclick="savePointTime('+JSON.stringify(k)+','+JSON.stringify(timeId)+')">Sačuvaj satnicu</button></div></details></div></details>';
  }).join('');
- const tourPointIds=new Set(tourPoints.filter(t=>Number(t.tura_id)===tourId&&t.aktivan).map(t=>String(t.punkt_id)));
- const catalogPoints=points.slice().sort((a,b)=>{
-  const ta=tourPoints.find(t=>Number(t.tura_id)===tourId&&String(t.punkt_id)===String(a.id)&&t.aktivan)?.vreme||'';
-  const tb=tourPoints.find(t=>Number(t.tura_id)===tourId&&String(t.punkt_id)===String(b.id)&&t.aktivan)?.vreme||'';
-  if(ta&&tb&&String(ta).slice(0,5)!==String(tb).slice(0,5))return String(ta).localeCompare(String(tb));
-  if(ta)return -1;if(tb)return 1;
-  return String(a.name||'').localeCompare(String(b.name||''),'sr');
- });
- html+='<section class="bg-white border-2 border-emerald-200 rounded-2xl p-4 mt-6"><div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div><h3 class="font-black text-lg">Сви пунктови у бази ('+catalogPoints.length+')</h3><p class="text-sm text-slate-500">Изабери пункт, додај га у ову туру и подеси сатницу. Пунктови са поруџбинама приказани су и изнад.</p></div></div><div class="space-y-2">'+catalogPoints.map(p=>{
-  const tp=tourPoints.find(t=>Number(t.tura_id)===tourId&&String(t.punkt_id)===String(p.id)&&t.aktivan);
-  const active=p.is_active===true||p.aktivan===true||String(p.is_active)==='true'||String(p.aktivan)==='true';
-  const timeId='catalog-point-time-'+p.id;
-  const inTour=!!tp;
-  return '<div class="border rounded-xl p-3 flex flex-col sm:flex-row sm:items-end gap-3"><div class="flex-1 min-w-0"><div class="font-bold">'+esc(p.name||('Пункт '+p.id))+'</div><div class="text-xs text-slate-500">'+esc([p.address,p.city].filter(Boolean).join(' · ')||'Адреса није унета')+'</div><div class="mt-1 text-xs font-bold '+(active?'text-emerald-700':'text-amber-700')+'">'+(active?'Активан у бази':'Неактиван у бази')+' · '+(inTour?'Додат у ову туру':'Није додат у туру')+'</div></div><label class="text-xs font-bold text-slate-600">Сатница<input id="'+timeId+'" type="time" value="'+esc(String(tp?.vreme||'').slice(0,5))+'" class="block border rounded-lg px-3 py-2 mt-1 bg-white"></label><button type="button" onclick="addCatalogPointToTour('+p.id+',\''+timeId+'\')" class="bg-emerald-700 text-white rounded-lg px-3 py-2 text-sm font-bold">'+(inTour?'Сачувај сатницу':'Активирај и додај у туру')+'</button></div>';
- }).join('')+'</div></section>';
- document.getElementById('orders-summary').innerHTML=html||'<p class="text-sm text-slate-500">Нема поруџбина за приказ.</p>';
+ html+='</div>';
+ document.getElementById('orders-summary').innerHTML=html;
 }
 function previewOrderTotal(orderId){
  const rows=orderItemsByOrder[String(orderId)]||[],total=rows.reduce((sum,x)=>{
