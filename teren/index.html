@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Јуначко Срце — Teren. Мобилна апликација за евиденцију набавке од пољопривредних газдинстава.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Јуначко Срце — Teren</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">♥</span><div><strong>Јуначко Срце</strong><small>TEREN · НАБАВКА</small></div></div>
+    <div class="top-actions"><span class="connection" id="connection"><i></i> ONLINE</span><button class="icon-button" id="installBtn" hidden aria-label="Инсталирај апликацију">⇩</button></div>
+  </header>
+  <main class="app-shell">
+    <section class="tour-panel">
+      <div><span class="eyebrow">РАДНА ТУРА</span><h1 id="tourTitle">Набавка за туру</h1><p id="tourDate">Демо подаци · локално чување</p></div>
+      <div class="tour-actions"><label class="select-label">Тура<select id="tourSelect"><option value="demo-1">Тура 21.11.2026.</option></select></label><span class="demo-chip">DEMO РЕЖИМ</span></div>
+    </section>
+    <section class="summary-grid" aria-label="Преглед набавке">
+      <article class="metric"><span>Укупно ставки</span><strong id="metricItems">0</strong><small>у овој тури</small></article>
+      <article class="metric"><span>За преузимање</span><strong id="metricPending">0</strong><small>требовање + потврђено</small></article>
+      <article class="metric"><span>Преузето</span><strong id="metricTaken">0</strong><small>чека исплату</small></article>
+      <article class="metric"><span>За исплату</span><strong id="metricDue">0 дин.</strong><small>преузета роба</small></article>
+    </section>
+    <nav class="tabs" aria-label="Главна навигација">
+      <button class="tab active" data-tab="summary"><span>▦</span>ЗБИР</button>
+      <button class="tab" data-tab="farms"><span>♧</span>ГАЗДИНСТВА</button>
+      <button class="tab" data-tab="entry"><span>＋</span>УНОС</button>
+      <button class="tab" data-tab="offers"><span>◇</span>ПОНУДА</button>
+    </nav>
+    <div class="toolbar"><div><strong id="sectionTitle">Збир набавке</strong><small id="sectionHint">Све ставке за изабрану туру</small></div><button class="secondary-button" id="resetBtn">↺ Ресетуј DEMO</button></div>
+    <section id="view-summary" class="view active">
+      <div class="filters" id="statusFilters">
+        <button class="filter active" data-filter="all">Све</button><button class="filter" data-filter="requested">Требовање</button><button class="filter" data-filter="confirmed">Потврђено</button><button class="filter" data-filter="collected">Преузето</button><button class="filter" data-filter="paid">Плаћено</button>
+      </div>
+      <div class="search-row"><input id="summarySearch" type="search" placeholder="Претражи производ или газдинство…" aria-label="Претрага"><span id="visibleCount" class="muted"></span></div>
+      <div id="summaryList" class="stack"></div>
+    </section>
+    <section id="view-farms" class="view"><div id="farmList" class="stack"></div><div class="history-panel"><h3>Историја исплата</h3><div id="paymentHistory"></div></div></section>
+    <section id="view-entry" class="view">
+      <form id="entryForm" class="form-card">
+        <div class="form-heading"><div><span class="eyebrow">РУЧНИ УНОС</span><h2>Нова набавка</h2></div><span class="form-icon">＋</span></div>
+        <label>Газдинство<select id="entryFarm" required></select></label>
+        <label>Производ<select id="entryProduct" required></select></label>
+        <label>Варијанта паковања<select id="entryVariant" required></select></label>
+        <div class="form-grid"><label>Количина паковања<input id="entryQty" type="number" min="0.01" step="0.01" value="1" required></label><label>Набавна цена (дин.)<input id="entryPrice" type="number" min="0" step="0.01" required></label></div>
+        <label>Почетни статус<select id="entryStatus"><option value="requested">Требовање</option><option value="confirmed">Потврђено</option><option value="collected">Преузето</option></select></label>
+        <label>Напомена<textarea id="entryNote" rows="2" placeholder="Опциона напомена…"></textarea></label>
+        <div class="total-line"><span>Укупна вредност</span><strong id="entryTotal">0 дин.</strong></div>
+        <button class="primary-button full" type="submit">Сачувај ставку</button>
+        <p class="form-note">Подаци се чувају само на овом уређају док је DEMO режим активан.</p>
+      </form>
+    </section>
+    <section id="view-offers" class="view">
+      <form id="offerForm" class="form-card compact">
+        <div class="form-heading"><div><span class="eyebrow">ЦЕНОВНИК</span><h2 id="offerFormTitle">Додај понуду</h2></div></div>
+        <label>Газдинство<select id="offerFarm" required></select></label>
+        <label>Производ<select id="offerProduct" required></select></label>
+        <label>Варијанта<select id="offerVariant" required></select></label>
+        <div class="form-grid"><label>Набавна цена (дин.)<input id="offerPrice" type="number" min="0" step="0.01" required></label><label>Јединица мере<input id="offerUnit" type="text" placeholder="ком" required></label></div>
+        <input id="offerId" type="hidden">
+        <button class="primary-button full" type="submit" id="offerSave">Сачувај понуду</button>
+        <button class="secondary-button full" type="button" id="offerCancel" hidden>Откажи измену</button>
+      </form>
+      <div class="toolbar sub-toolbar"><div><strong>Активна понуда</strong><small>Цене по газдинству и паковању</small></div></div>
+      <div id="offerList" class="stack"></div>
+    </section>
+    <footer class="app-footer"><span>Јуначко Срце · Teren</span><span id="syncState">Локално сачувано · није повезано са базом</span></footer>
+  </main>
+  <div class="modal-backdrop" id="modal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle">Потврда</h2><button class="icon-button" id="modalClose" aria-label="Затвори">×</button></div><div id="modalBody"></div><div class="modal-actions" id="modalActions"></div></section></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
