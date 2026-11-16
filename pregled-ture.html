@@ -2064,7 +2064,14 @@ function procurementDemandForVariant(productId,variantId){
  return procurementDemandData().flatMap(p=>p.rows).find(r=>String(r.productId)===String(productId)&&String(r.variantId)===String(variantId))||null;
 }
 function procurementOfferList(productId,variantId){
- return (farmOffers||[]).filter(o=>o.is_active!==false&&String(o.product_id)===String(productId)&&String(o.variant_id)===String(variantId)&&farms.some(f=>String(f.id)===String(o.gazdinstvo_id)));
+ const pid=String(productId||'').trim().toLowerCase(),vid=String(variantId||'').trim().toLowerCase();
+ return (farmOffers||[]).filter(o=>
+  (o.is_active===true||String(o.is_active).toLowerCase()==='true')&&
+  String(o.product_id||'').trim().toLowerCase()===pid&&
+  String(o.variant_id||'').trim().toLowerCase()===vid&&
+  String(variantCatalog.find(v=>String(v.id).trim().toLowerCase()===vid)?.product_id||'').trim().toLowerCase()===pid&&
+  farms.some(f=>String(f.id)===String(o.gazdinstvo_id))
+ );
 }
 function procurementLineKey(productId,variantId,farmId){return [productId,variantId,farmId].map(String).join('|')}
 function procurementAddLine(variantId){
@@ -2216,15 +2223,29 @@ async function confirmProcurementOrder(){
  }catch(e){say('Nabavka nije u potpunosti potvrđena: '+e.message,true)}
  finally{procurementSavingConfirmed=false}
 }
-function openProcurementAllocation(productId,variantId=''){
+async function openProcurementAllocation(productId,variantId=''){
  ensureProcurementAllocationModal();
  const modal=document.getElementById('procurement-allocation-modal'),body=document.getElementById('supplier-sheet-content');
  if(!modal||!body)return;
  procurementDraftProductId=String(productId||'');procurementDraftStage='allocation';procurementDraftLines=[];procurementDraftSequence=0;
  modal.querySelector('#procurement-allocation-title').textContent=productCatalog.find(p=>String(p.id)===procurementDraftProductId)?.name||'Raspodela nabavke';
  modal.hidden=false;document.body.classList.add('allocation-modal-open');
- if(variantId){procurementDraftStage='allocation'}
- renderProcurementOrderModal();
+ body.innerHTML='<div class="proc-order-empty">Учитавање активних понуда газдинстава…</div>';
+ try{
+  const pid=encodeURIComponent(procurementDraftProductId);
+  const [offers,farmRows]=await Promise.all([
+   api('product_offers?select=id,gazdinstvo_id,product_id,variant_id,purchase_price,is_active&product_id=eq.'+pid+'&is_active=eq.true&order=id.asc'),
+   api('gazdinstva?select=id,name,phone&order=name.asc')
+  ]);
+  if(!Array.isArray(offers)||!Array.isArray(farmRows))throw Error('База није вратила исправан списак активних понуда и газдинстава.');
+  farmOffers=[...(farmOffers||[]).filter(o=>String(o.product_id)!==procurementDraftProductId),...offers];
+  farms=farmRows;
+  if(variantId)procurementDraftStage='allocation';
+  renderProcurementOrderModal();
+ }catch(e){
+  body.innerHTML='<div class="proc-order-warning">Активне понуде тренутно нису могле да се учитају. '+esc(e.message||String(e))+'</div>';
+  console.error('[NABAVKA] Neuspešno osvežavanje ponuda:',e);
+ }
 }
 function closeProcurementAllocation(){
  const modal=document.getElementById('procurement-allocation-modal'),source=document.getElementById('supplier-sheet-content');
