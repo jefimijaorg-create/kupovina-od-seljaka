@@ -1307,6 +1307,7 @@ async function saveSupplierFarmPickedCounts(farmId){
  }catch(e){say('Преузимање није у потпуности сачувано: '+e.message,true);renderSupplierSheet()}
 }
 let supplierHomeView='products';
+let supplierHomeSearch='';
 function openSupplierSheet(farmId){
  supplierSheetFarmId=farmId?String(farmId):'';
  supplierSheetProductId='';
@@ -1401,13 +1402,26 @@ function renderSupplierSheet(){
    demanded[key].variants[vk].count+=Math.max(0,n(pack(x).count));
   });
   const productCards=Object.values(demanded).sort((a,b)=>String(a.product.name).localeCompare(String(b.product.name),'sr'));
-  const activeFarmIds=[...new Set((tourAllocations||[]).map(a=>String(a.gazdinstvo_id)))];
-  html+='<div class="grid grid-cols-2 gap-2 rounded-xl border border-slate-700 bg-slate-900 p-1"><button type="button" onclick="supplierHomeView=\'products\';supplierSheetProductId=\'\';renderSupplierSheet()" class="rounded-lg py-3 text-xs font-black '+(supplierHomeView==='products'?'bg-orange-600 text-white':'text-slate-400')+'">📦 ПО ПРОИЗВОДИМА</button><button type="button" onclick="supplierHomeView=\'farms\';supplierSheetProductId=\'\';renderSupplierSheet()" class="rounded-lg py-3 text-xs font-black '+(supplierHomeView==='farms'?'bg-orange-600 text-white':'text-slate-400')+'">🏡 АКТИВНА ГАЗДИНСТВА ('+activeFarmIds.length+')</button></div>';
+  const demandedOfferRows=(farmOffers||[]).filter(o=>o.is_active!==false&&o.product_id&&o.variant_id&&demanded[String(o.product_id)]&&demanded[String(o.product_id)].variants[String(o.variant_id)]);
+  const activeFarmIds=[...new Set([...demandedOfferRows.map(o=>String(o.gazdinstvo_id)),...(tourAllocations||[]).map(a=>String(a.gazdinstvo_id))])];
+  html+='<div class="grid grid-cols-2 gap-2 rounded-xl border border-slate-700 bg-slate-900 p-1"><button type="button" onclick="supplierHomeView=\'products\';supplierSheetProductId=\'\';renderSupplierSheet()" class="rounded-lg py-3 text-xs font-black '+(supplierHomeView==='products'?'bg-orange-600 text-white':'text-slate-400')+'">📦 ПО ПРОИЗВОДИМА</button><button type="button" onclick="supplierHomeView=\'farms\';supplierSheetProductId=\'\';renderSupplierSheet()" class="rounded-lg py-3 text-xs font-black '+(supplierHomeView==='farms'?'bg-orange-600 text-white':'text-slate-400')+'">🏡 ГАЗДИНСТВА ('+activeFarmIds.length+')</button></div>';
   if(supplierHomeView==='farms'){
-   const active=activeFarmIds.map(id=>({farm:farms.find(f=>String(f.id)===id),rows:tourAllocations.filter(a=>String(a.gazdinstvo_id)===id)})).filter(x=>x.farm);
-   html+='<div class="space-y-2"><h3 class="text-sm font-black uppercase text-amber-400">Газдинства са задужењем у овој тури</h3>';
-   if(!active.length)html+='<p class="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">Нема газдинстава са задужењима у овој тури.</p>';
-   active.forEach(({farm,rows})=>{const pending=rows.reduce((a,r)=>a+Math.max(0,n(r.broj_pakovanja)-n(r.preuzeto_pakovanja)),0);html+='<button type="button" onclick="setSupplierFarm(\''+esc(farm.id)+'\')" class="w-full rounded-2xl border border-slate-700 bg-slate-900 p-4 text-left"><div class="flex items-center justify-between gap-2"><b class="text-base">'+esc(farmName(farm.name))+'</b><span class="text-xs font-bold text-amber-400">'+fmt(rows.length)+' ставки</span></div><div class="mt-2 text-xs text-slate-400">Паковања: '+fmt(rows.reduce((a,r)=>a+n(r.broj_pakovanja),0))+' · Преостало за преузимање: '+fmt(pending)+'</div></button>'});
+   const active=activeFarmIds.map(id=>{
+    const farm=farms.find(f=>String(f.id)===id),rows=tourAllocations.filter(a=>String(a.gazdinstvo_id)===id);
+    const offers=demandedOfferRows.filter(o=>String(o.gazdinstvo_id)===id);
+    const productIds=[...new Set([...offers.map(o=>String(o.product_id)),...rows.map(r=>String(r.product_id))])];
+    const products=productIds.map(pid=>productCatalog.find(p=>String(p.id)===pid)).filter(Boolean);
+    return {farm,rows,offers,products};
+   }).filter(x=>x.farm).sort((a,b)=>String(a.farm.name).localeCompare(String(b.farm.name),'sr'));
+   const farmQuery=String(supplierHomeSearch||'').trim().toLocaleLowerCase('sr');
+   const visibleFarms=active.filter(x=>(String(x.farm.name)+' '+x.products.map(p=>p.name).join(' ')).toLocaleLowerCase('sr').includes(farmQuery));
+   html+='<div class="space-y-3"><div class="flex items-center justify-between gap-2"><h3 class="text-sm font-black uppercase text-amber-400">Газдинства и њихови производи</h3><span class="text-xs text-slate-400">'+visibleFarms.length+' / '+active.length+'</span></div><label class="flex min-h-12 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 text-orange-400"><i class="fa-solid fa-magnifying-glass"></i><input type="search" value="'+esc(supplierHomeSearch)+'" oninput="supplierHomeSearch=this.value;renderSupplierSheet()" placeholder="Претражи газдинство или производ…" aria-label="Претражи газдинство или производ" class="w-full border-0 bg-transparent"></label>';
+   if(!visibleFarms.length)html+='<p class="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">'+(active.length?'Нема резултата претраге.':'Нема газдинстава са активном понудом за производе из ове туре.')+'</p>';
+   visibleFarms.forEach(({farm,rows,offers,products})=>{
+    const pending=rows.reduce((a,r)=>a+Math.max(0,n(r.broj_pakovanja)-n(r.preuzeto_pakovanja)),0);
+    const chips=products.map(p=>'<span class="rounded-full border border-slate-600 bg-slate-800 px-2 py-1 text-[10px] font-bold text-slate-300">'+esc(p.name)+'</span>').join('');
+    html+='<button type="button" onclick="setSupplierFarm(\''+esc(farm.id)+'\')" class="w-full rounded-2xl border border-slate-700 bg-slate-900 p-4 text-left"><div class="flex items-center justify-between gap-2"><b class="text-base">'+esc(farmName(farm.name))+'</b><span class="text-xs font-bold text-orange-400">Отвори →</span></div><div class="mt-2 flex flex-wrap gap-1.5">'+(chips||'<span class="text-xs text-slate-500">Само раније распоређене ставке</span>')+'</div><div class="mt-2 text-xs text-slate-400">'+offers.length+' активних понуда за ову туру'+(rows.length?' · '+fmt(rows.reduce((a,r)=>a+n(r.broj_pakovanja),0))+' распоређених пак. · '+fmt(pending)+' за преузимање':' · још нема распоређене набавке')+'</div></button>';
+   });
    html+='</div>';
   }else if(supplierSheetProductId){
    const product=demanded[supplierSheetProductId];
