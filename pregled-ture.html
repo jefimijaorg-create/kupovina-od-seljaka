@@ -1308,6 +1308,12 @@ async function saveSupplierFarmPickedCounts(farmId){
 }
 let supplierHomeView='products';
 let supplierHomeSearch='';
+function setSupplierHomeSearch(value){
+ supplierHomeSearch=String(value||'');
+ renderSupplierSheet();
+ const input=document.querySelector('#supplier-sheet-content input[aria-label="Претражи газдинство или производ"]');
+ if(input){input.focus();const pos=input.value.length;try{input.setSelectionRange(pos,pos)}catch(e){}}
+}
 function openSupplierSheet(farmId){
  supplierSheetFarmId=farmId?String(farmId):'';
  supplierSheetProductId='';
@@ -1415,7 +1421,7 @@ function renderSupplierSheet(){
    }).filter(x=>x.farm).sort((a,b)=>String(a.farm.name).localeCompare(String(b.farm.name),'sr'));
    const farmQuery=String(supplierHomeSearch||'').trim().toLocaleLowerCase('sr');
    const visibleFarms=active.filter(x=>(String(x.farm.name)+' '+x.products.map(p=>p.name).join(' ')).toLocaleLowerCase('sr').includes(farmQuery));
-   html+='<div class="space-y-3"><div class="flex items-center justify-between gap-2"><h3 class="text-sm font-black uppercase text-amber-400">Газдинства и њихови производи</h3><span class="text-xs text-slate-400">'+visibleFarms.length+' / '+active.length+'</span></div><label class="flex min-h-12 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 text-orange-400"><i class="fa-solid fa-magnifying-glass"></i><input type="search" value="'+esc(supplierHomeSearch)+'" oninput="supplierHomeSearch=this.value;renderSupplierSheet()" placeholder="Претражи газдинство или производ…" aria-label="Претражи газдинство или производ" class="w-full border-0 bg-transparent"></label>';
+   html+='<div class="space-y-3"><div class="flex items-center justify-between gap-2"><h3 class="text-sm font-black uppercase text-amber-400">Газдинства и њихови производи</h3><span class="text-xs text-slate-400">'+visibleFarms.length+' / '+active.length+'</span></div><label class="flex min-h-12 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 text-orange-400"><i class="fa-solid fa-magnifying-glass"></i><input type="search" value="'+esc(supplierHomeSearch)+'" oninput="setSupplierHomeSearch(this.value)" placeholder="Претражи газдинство или производ…" aria-label="Претражи газдинство или производ" class="w-full border-0 bg-transparent"></label>';
    if(!visibleFarms.length)html+='<p class="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">'+(active.length?'Нема резултата претраге.':'Нема газдинстава са активном понудом за производе из ове туре.')+'</p>';
    visibleFarms.forEach(({farm,rows,offers,products})=>{
     const pending=rows.reduce((a,r)=>a+Math.max(0,n(r.broj_pakovanja)-n(r.preuzeto_pakovanja)),0);
