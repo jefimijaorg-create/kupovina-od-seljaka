@@ -636,7 +636,15 @@ async function loadData(){
   if(savedTour){
    sel.value=savedKey;
    const restored=await loadTour({preserveRoute:true});
-   if(!restored)throw Error('Poslednja izabrana tura nije mogla da se učita.');
+   if(!restored){
+    tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};sel.value='';
+    document.body.classList.remove('tour-active');
+    document.getElementById('bottom-tab-nav')?.classList.add('hidden');
+    document.getElementById('tour-actions')?.classList.add('hidden');
+    document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
+    toggleTourPicker(true);
+    throw Error('Poslednja izabrana tura nije mogla da se učita. Pokušaj ponovo kada veza sa bazom bude dostupna.');
+   }
   }else{
    if(saved)saveTourId('');
    tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};sel.value='';
