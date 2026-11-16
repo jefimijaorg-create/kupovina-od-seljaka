@@ -1454,7 +1454,7 @@ function nabavkaSadrzaj(){
 }
 function nabavkaIzaberiProizvod(id){nabavkaProizvodId=String(id);nabavkaKorak=4;renderProcurement()}
 function nabavkaIzaberiGazdinstvo(id){nabavkaGazdinstvoId=String(id);supplierSheetFarmId=String(id);supplierSheetProductId=String(nabavkaProizvodId);nabavkaKorak=6;renderProcurement()}
-function nabavkaIzaberiZaPreuzimanje(id){nabavkaGazdinstvoId=String(id);supplierSheetFarmId=String(id);supplierSheetProductId='';renderSupplierSheetOriginal();const html=document.getElementById('supplier-sheet-content')?.innerHTML||'';const target=document.getElementById('nw-pickup-content');if(target)target.innerHTML=html}
+function nabavkaIzaberiZaPreuzimanje(id){nabavkaGazdinstvoId=String(id);supplierSheetFarmId=String(id);supplierSheetProductId='';renderSupplierSheetOriginal();const html=document.getElementById('supplier-sheet-content')?.innerHTML||'';renderProcurement();const target=document.getElementById('nw-pickup-content');if(target)target.innerHTML=html}
 function renderProcurement(){
  const box=document.getElementById('supplier-sheet-content');if(!box)return;
  if(!tourId){box.innerHTML='<div class="nw-panel">Прво изабери туру.</div>';return}
