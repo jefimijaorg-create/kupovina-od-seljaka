@@ -660,23 +660,51 @@ async function loadData(){
 }
 function chooseTour(id){const sel=document.getElementById('tour-select');if(sel)sel.value=String(id);loadTour();}
 async function loadTour(options={}){
- const selected=document.getElementById('tour-select').value;if(!selected){say('Изабери туру пре наставка.',true);return}
- const next=Number(selected);if(!Number.isFinite(next)||next<=0){say('Изабрана тура није исправна.',true);return}
- try{if(String(tourId)!==String(next))deliveryDraftSelection.clear();tourId=next;saveTourId(tourId);nabavkaKorak=2;nabavkaProizvodId='';nabavkaGazdinstvoId='';supplierSheetFarmId='';supplierSheetProductId='';const t=tours.find(x=>Number(x.id)===tourId);
- document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';
- document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;
- say('Учитавање туре '+tourId+'…');[items,tourAllocations]=await Promise.all([api('stavke_porudzbine?select=*&tura_id=eq.'+tourId+'&order=id.asc'),api('tura_nabavka_dodele?select=*&tura_id=eq.'+tourId+'&order=id.asc').catch(e=>{console.warn('Расподела набавке није учитана:',e);return []})]);
- orderItemsByOrder={};
- const visibleOrderIds=[...new Set(items.map(x=>String(x.porudzbina_id||'')).filter(Boolean))];
- if(visibleOrderIds.length){
-  const allOrderLines=await api('stavke_porudzbine?select=*&porudzbina_id=in.('+visibleOrderIds.join(',')+')&order=id.asc');
-  if(!Array.isArray(allOrderLines))throw Error('Нису учитане све ставке приказаних поруџбина.');
-  allOrderLines.forEach(line=>{const key=String(line.porudzbina_id);(orderItemsByOrder[key]||(orderItemsByOrder[key]=[])).push(line)});
- }
- populateFilters();populatePickupSummaryFilters();renderAll();toggleTourPicker(false);const bottomNav=document.getElementById('bottom-tab-nav'),navTour=document.getElementById('bottom-nav-tour-name');if(bottomNav)bottomNav.classList.remove('hidden');document.body.classList.add('tour-active');document.getElementById('tour-actions')?.classList.remove('hidden');document.getElementById('unassigned-toggle-wrap')?.classList.remove('hidden');if(navTour)navTour.textContent=t?.naziv||('Тура '+tourId);if(!options.preserveRoute){adminRouterNavigate('/ture',{replace:true});showTourDashboard();}
- say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки. Изабрана тура се чува и после освежавања странице.');
+ const select=document.getElementById('tour-select'),selected=select?.value;
+ if(!selected){say('Изабери туру пре наставка.',true);return false}
+ const next=Number(selected);
+ if(!Number.isFinite(next)||next<=0){say('Изабрана тура није исправна.',true);return false}
+ const previousTourId=tourId;
+ try{
+  say('Учитавање туре '+next+'…');
+  const [nextItems,nextAllocations]=await Promise.all([
+   api('stavke_porudzbine?select=*&tura_id=eq.'+next+'&order=id.asc'),
+   api('tura_nabavka_dodele?select=*&tura_id=eq.'+next+'&order=id.asc').catch(e=>{console.warn('Расподела набавке није учитана:',e);return []})
+  ]);
+  if(!Array.isArray(nextItems))throw Error('Табела stavke_porudzbine није вратила исправан списак.');
+  if(!Array.isArray(nextAllocations))throw Error('Табела tura_nabavka_dodele није вратила исправан списак.');
+  const nextOrderItems={},visibleOrderIds=[...new Set(nextItems.map(x=>String(x.porudzbina_id||'')).filter(Boolean))];
+  if(visibleOrderIds.length){
+   const allOrderLines=await api('stavke_porudzbine?select=*&porudzbina_id=in.('+visibleOrderIds.join(',')+')&order=id.asc');
+   if(!Array.isArray(allOrderLines))throw Error('Нису учитане све ставке приказаних поруџбина.');
+   allOrderLines.forEach(line=>{const key=String(line.porudzbina_id);(nextOrderItems[key]||(nextOrderItems[key]=[])).push(line)});
+  }
+  if(String(previousTourId)!==String(next))deliveryDraftSelection.clear();
+  tourId=next;items=nextItems;tourAllocations=nextAllocations;orderItemsByOrder=nextOrderItems;saveTourId(tourId);
+  nabavkaKorak=2;nabavkaProizvodId='';nabavkaGazdinstvoId='';supplierSheetFarmId='';supplierSheetProductId='';
+  const t=tours.find(x=>Number(x.id)===tourId);
+  document.getElementById('tour-title').textContent=(t?.naziv||'Тура бр. '+tourId)+' — Преузимање & Достава';
+  document.getElementById('tour-date').textContent=t?.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+tourId;
+  populateFilters();populatePickupSummaryFilters();renderAll();toggleTourPicker(false);
+  const bottomNav=document.getElementById('bottom-tab-nav'),navTour=document.getElementById('bottom-nav-tour-name');
+  if(bottomNav)bottomNav.classList.remove('hidden');
+  document.body.classList.add('tour-active');document.getElementById('tour-actions')?.classList.remove('hidden');
+  document.getElementById('unassigned-toggle-wrap')?.classList.remove('hidden');
+  if(navTour)navTour.textContent=t?.naziv||('Тура '+tourId);
+  if(!options.preserveRoute){adminRouterNavigate('/ture',{replace:true});showTourDashboard()}
+  else if(adminRouterPath()==='/nabavka')switchTab('procurement');
+  else if(adminRouterPath()==='/porudzbine')switchTab('orders');
+  else if(adminRouterPath()==='/dostava')switchTab('delivery');
+  else if(adminRouterPath()==='/dugovanja')switchTab('debts');
+  else showTourDashboard();
+  say('Повезано са базом · тура '+tourId+' · '+items.length+' ставки. Изабрана тура се чува и после освежавања странице.');
   return true;
- }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ИЗАБРАНЕ ТУРЕ '+tourId+'\\n'+(e?.message||String(e))+'\\n\\nПровери да ли постоје ставке за туру и да ли база дозвољава читање табеле stavke_porudzbine.';say(detail,true);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';console.error('[PREGLED-TURE] loadTour failed',e);return false}
+ }catch(e){
+  tourId=previousTourId;if(select)select.value=previousTourId?String(previousTourId):'';
+  const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ИЗАБРАНЕ ТУРЕ '+next+'\\n'+(e?.message||String(e))+'\\n\\nПровери Supabase дозволе (RLS), табелу stavke_porudzbine и мрежну везу.';
+  say(detail,true);const box=document.getElementById('message');if(box){box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere'}
+  console.error('[PREGLED-TURE] loadTour failed',e);return false;
+ }
 }
 function setDeliveryListMode(mode){deliveryListMode=mode==='processed'?'processed':'pending';const a=document.getElementById('delivery-list-pending-btn'),b=document.getElementById('delivery-list-processed-btn');[a,b].forEach((el,i)=>{if(el)el.className='rounded-xl border-2 px-3 py-3 font-black text-sm '+((i===0&&deliveryListMode==='pending'||i===1&&deliveryListMode==='processed')?'border-emerald-700 bg-emerald-50 text-emerald-900':'border-slate-200 bg-white text-slate-600')});renderDelivery();}
 function setDeliveryPointMode(mode){deliveryPointMode=mode==='completed'?'completed':'active';const a=document.getElementById('delivery-point-active-btn'),b=document.getElementById('delivery-point-completed-btn');[a,b].forEach((el,i)=>{if(el)el.className='rounded-xl border-2 px-3 py-3 font-black text-sm '+((i===0&&deliveryPointMode==='active'||i===1&&deliveryPointMode==='completed')?'border-emerald-700 bg-emerald-50 text-emerald-900':'border-slate-200 bg-white text-slate-600')});renderDelivery();}
@@ -1479,15 +1507,8 @@ function openSupplierSheet(farmId){
  renderSupplierSheet();
 }
 function closeSupplierSheet(){}
-function setSupplierFarm(id){
- supplierSheetFarmId=String(id||'');
- supplierSheetProductId='';
- supplierSheetFilter='all';
- supplierSheetDraft={};
- if(supplierSheetFarmId)tourAllocations.filter(a=>String(a.gazdinstvo_id)===supplierSheetFarmId).forEach(a=>{supplierSheetDraft[String(a.variant_id)]={selected:true,count:String(a.broj_pakovanja||'')}});
- renderSupplierSheet();
-}
-function setSupplierProduct(id){supplierSheetProductId=String(id||'');renderSupplierSheet()}
+
+
 function setSupplierFilter(filter){supplierSheetFilter=filter;renderSupplierSheet()}
 function toggleSupplierVariant(variantId,checked){
  const key=String(variantId),old=supplierSheetDraft[key]||{},offer=farmOffers.find(o=>String(o.gazdinstvo_id)===String(supplierSheetFarmId)&&String(o.variant_id)===key&&o.is_active!==false),available=supplierVariantRemaining(key,supplierSheetFarmId,offer?.product_id),saved=tourAllocations.find(a=>String(a.variant_id)===key&&String(a.gazdinstvo_id)===supplierSheetFarmId);
@@ -1978,17 +1999,27 @@ function ensureProcurementAllocationModal(){
  modal.addEventListener('click',e=>{if(e.target===modal)closeProcurementAllocation()});
  document.body.appendChild(modal);document.getElementById('procurement-allocation-body').appendChild(source);
 }
-function openProcurementAllocation(productId,variantId=''){
- ensureProcurementAllocationModal();const modal=document.getElementById('procurement-allocation-modal');const source=document.getElementById('supplier-sheet-content');if(!modal||!source)return;
- modal.querySelector('#procurement-allocation-title').textContent=productCatalog.find(p=>String(p.id)===String(productId))?.name||'Додела газдинству';
- modal.hidden=false;supplierSheetFarmId='';supplierSheetProductId=String(productId||'');supplierSheetTargetVariantId=String(variantId||'');supplierSheetFilter='all';supplierSheetDraft={};supplierHomeView='products';renderSupplierSheet();document.body.classList.add('allocation-modal-open');
-}
-function closeProcurementAllocation(){
- const modal=document.getElementById('procurement-allocation-modal');const source=document.getElementById('supplier-sheet-content');if(modal)modal.hidden=true;
- if(source&&procurementModalAnchor?.parentNode)procurementModalAnchor.parentNode.insertBefore(source,procurementModalAnchor.nextSibling);
- document.body.classList.remove('allocation-modal-open');supplierSheetFarmId='';supplierSheetProductId='';supplierSheetTargetVariantId='';renderProcurement();
-}
 
+
+
+
+function goProcurementStep(step){
+ const allowed=['orders','products','allocation','farms'];if(!allowed.includes(step))return;
+ document.querySelectorAll('#procurement-workflow [data-pw-step]').forEach(btn=>{
+  const current=btn.dataset.pwStep,active=current===step;
+  btn.classList.toggle('is-done',allowed.indexOf(current)<allowed.indexOf(step));
+  if(active)btn.setAttribute('aria-current','step');else btn.removeAttribute('aria-current');
+ });
+ const note=document.getElementById('procurement-workflow-note');
+ if(step==='orders'){switchTab('orders');return}
+ switchTab('procurement');
+ if(note)note.textContent=({
+  products:'Pregled proizvoda i ukupne potražnje za izabranu turu.',
+  allocation:'Izaberi proizvod da raspodeliš potrebna pakovanja između gazdinstava.',
+  farms:'Izbor i raspodela gazdinstava obavljaju se unutar detalja svakog proizvoda.'
+ })[step];
+ renderProcurement();
+}
 
 /* ADMIN SPA ROUTER — URL se menja bez osvežavanja dokumenta.
    Sekcije su postojeći DOM paneli; tura ostaje zajednički kontekst. */
