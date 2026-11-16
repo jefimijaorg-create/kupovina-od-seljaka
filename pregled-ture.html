@@ -466,7 +466,8 @@ main section.tour-section-open>div{max-width:1100px;margin-left:auto;margin-righ
 @media(max-width:380px){.tour-dashboard-card{min-height:138px;padding:13px 11px}.tour-dashboard-card strong{font-size:14px}.tour-dashboard-card small{font-size:10px}}
 @media(prefers-reduced-motion:no-preference){.tour-dashboard-card{transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.tour-dashboard-card:hover{border-color:#f97316;box-shadow:0 10px 25px rgba(0,0,0,.28)}}
 </style>
-<style id="procurement-demand-overview">
+<style id="procurement-demand-overview">/* Compact procurement and persistent bottom navigation */
+.proc-demand-stats{display:none!important}.proc-demand-intro{padding:0 0 10px!important}.proc-demand-intro h3{font-size:20px!important;margin:3px 0!important}.proc-demand-intro p{display:none!important}.proc-demand-product{border-radius:14px}.proc-demand-product-head{padding:11px 12px}.proc-demand-product-head h4{font-size:15px}.proc-demand-product-head p{font-size:10px}.proc-demand-product-total{display:none}.proc-demand-pack-list{padding:0 12px}.proc-demand-pack{padding:0;border:0}.proc-demand-product-action,.proc-demand-pack-action{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;color:#f8fafc}.proc-demand-product-action{padding:0;background:transparent}.proc-demand-pack-action{padding:11px 0;border-top:1px solid rgba(71,85,105,.55)}.proc-demand-open{font-size:10px;font-weight:900;color:#fb923c;white-space:nowrap}#bottom-tab-nav{z-index:120!important}main section.tour-section-open{padding-bottom:calc(100px + env(safe-area-inset-bottom))!important}#procurement-allocation-modal[hidden]{display:none!important}#procurement-allocation-modal{position:fixed;inset:0;z-index:140;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,6,23,.82);backdrop-filter:blur(7px)}#procurement-allocation-dialog{width:100%;max-width:760px;max-height:90dvh;overflow:auto;background:#111c32;border:1px solid #475569;border-radius:22px 22px 0 0;padding:15px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -15px 50px rgba(0,0,0,.4)}#procurement-allocation-dialog header{position:sticky;top:-15px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-15px -14px 13px;padding:14px;background:#111c32;border-bottom:1px solid #334155}#procurement-allocation-dialog h3{font-size:18px;font-weight:900;color:#f8fafc}#procurement-allocation-close{min-width:44px;min-height:44px;border:1px solid #475569;border-radius:12px;background:#1e293b;color:#fdba74;font-size:20px}#procurement-allocation-dialog #supplier-sheet-content{padding-bottom:8px}@media(min-width:768px){#procurement-allocation-modal{align-items:center;padding:20px}#procurement-allocation-dialog{border-radius:22px;max-height:85dvh}}
 .proc-demand-screen{max-width:1000px;margin:0 auto;color:#f8fafc}
 .proc-demand-intro{padding:4px 1px 16px}
 .proc-demand-kicker{font-size:10px;font-weight:900;letter-spacing:.16em;color:#fb923c}
@@ -1530,7 +1531,7 @@ function renderSupplierSheet(){
   }else if(supplierSheetProductId){
    const product=demanded[supplierSheetProductId];
    html+='<div class="flex items-center justify-between gap-2"><div><div class="text-[10px] uppercase font-bold text-orange-400">Степен 2 · Расподела</div><h3 class="text-lg font-black">'+esc(product?.product.name||'Производ')+'</h3></div><button type="button" onclick="setSupplierProduct(\'\')" class="rounded-xl bg-slate-800 px-3 py-3 text-xs font-bold text-white">← Производи</button></div>';
-   const variants=Object.values(product?.variants||{});
+   const variants=Object.values(product?.variants||{}).filter(v=>!supplierSheetTargetVariantId||String(v.variant.id)===String(supplierSheetTargetVariantId));
    const farmsForProduct=farms.filter(f=>farmOffers.some(o=>String(o.gazdinstvo_id)===String(f.id)&&o.is_active!==false&&variants.some(v=>String(v.variant.id)===String(o.variant_id)&&String(o.product_id)===supplierSheetProductId)));
    if(!farmsForProduct.length)html+='<p class="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400">Нема активних понуда газдинстава за паковања овог производа.</p>';
    farmsForProduct.forEach(f=>{const count=variants.reduce((sum,v)=>sum+tourAllocations.filter(a=>String(a.gazdinstvo_id)===String(f.id)&&String(a.product_id)===supplierSheetProductId&&String(a.variant_id)===String(v.variant.id)).reduce((z,a)=>z+n(a.broj_pakovanja),0),0);html+='<button type="button" onclick="setSupplierFarm(\''+esc(f.id)+'\');setSupplierProduct(\''+esc(supplierSheetProductId)+'\')" class="w-full rounded-2xl border border-slate-700 bg-slate-900 p-4 text-left"><div class="flex items-center justify-between"><b>'+esc(farmName(f.name))+'</b><span class="text-xs text-orange-400 font-bold">Отвори →</span></div><div class="mt-1 text-xs text-slate-400">'+fmt(count)+' већ додељених паковања · активна понуда за овај производ</div></button>'});
@@ -1545,7 +1546,7 @@ function renderSupplierSheet(){
  const selectedFarm=farms.find(f=>String(f.id)===supplierSheetFarmId);
  html+='<div class="flex items-center justify-between gap-2 border-b pb-3"><div><div class="text-xs text-slate-500">ИЗАБРАНО ГАЗДИНСТВО</div><h3 class="font-black text-xl">'+esc(farmName(selectedFarm?.name||('Газдинство '+supplierSheetFarmId)))+'</h3></div><button type="button" onclick="setSupplierFarm(\'\')" class="border rounded-lg px-3 py-2 text-sm font-bold">← Сва газдинства</button></div>';
 
- const offers=supplierOfferRows(supplierSheetFarmId).filter(o=>!supplierSheetProductId||String(o.product_id)===String(supplierSheetProductId)),grouped={};
+ const offers=supplierOfferRows(supplierSheetFarmId).filter(o=>(!supplierSheetProductId||String(o.product_id)===String(supplierSheetProductId))&&(!supplierSheetTargetVariantId||String(o.variant_id)===String(supplierSheetTargetVariantId))),grouped={};
  offers.forEach(o=>{const p=productCatalog.find(x=>String(x.id)===String(o.product_id)),v=variantCatalog.find(x=>String(x.id)===String(o.variant_id));if(!p||!v)return;const k=String(p.id);if(!grouped[k])grouped[k]={product:p,variants:[]};grouped[k].variants.push({offer:o,variant:v})});
  const products=Object.values(grouped).sort((a,b)=>String(a.product.name).localeCompare(String(b.product.name),'sr'));
  const staleRows=tourAllocations.filter(a=>String(a.gazdinstvo_id)===supplierSheetFarmId&&!farmOffers.some(o=>String(o.gazdinstvo_id)===supplierSheetFarmId&&String(o.variant_id)===String(a.variant_id)&&String(o.product_id)===String(a.product_id)&&o.is_active!==false));
@@ -1923,6 +1924,38 @@ function renderProcurement(){
  }).join('');
  box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">NABAVKA · POTREBE TURE</div><h3>Pregled potrebnih proizvoda</h3><p>Količine su sabrane iz stavki porudžbina izabrane ture. Prvo su grupisani proizvodi, a unutar svakog proizvoda vrste pakovanja.</p></div><div class="proc-demand-stats"><div><b>'+productCount+'</b><span>proizvoda</span></div><div><b>'+packagingCount+'</b><span>vrsta pakovanja</span></div><div><b>'+fmt(totalPackages)+'</b><span>pakovanja ukupno</span></div></div>'+(products.length?'<div class="proc-demand-list">'+cards+'</div>':'<div class="proc-demand-empty"><i class="fa-solid fa-box-open"></i><b>Nema stavki za nabavku</b><span>Za izabranu turu nisu pronađene povezane stavke porudžbina.</span></div>')+'<p class="proc-demand-footnote">Ukupna količina = broj pakovanja × veličina pakovanja. Nazivi proizvoda dolaze iz kataloga proizvoda.</p></div>';
 }
+
+let supplierSheetTargetVariantId='';
+let procurementModalAnchor=null;
+function ensureProcurementAllocationModal(){
+ if(document.getElementById('procurement-allocation-modal'))return;
+ const source=document.getElementById('supplier-sheet-content');if(!source)return;
+ procurementModalAnchor=document.createComment('supplier-sheet-content-position');
+ source.parentNode.insertBefore(procurementModalAnchor,source);
+ const modal=document.createElement('div');modal.id='procurement-allocation-modal';modal.hidden=true;
+ modal.innerHTML='<div id="procurement-allocation-dialog" role="dialog" aria-modal="true" aria-labelledby="procurement-allocation-title"><header><div><div class="text-[10px] font-black tracking-widest text-orange-400">НАБАВКА · РАСПОДЕЛА</div><h3 id="procurement-allocation-title">Додела газдинству</h3></div><button id="procurement-allocation-close" type="button" aria-label="Затвори" onclick="closeProcurementAllocation()">×</button></header><div id="procurement-allocation-body"></div></div>';
+ modal.addEventListener('click',e=>{if(e.target===modal)closeProcurementAllocation()});
+ document.body.appendChild(modal);document.getElementById('procurement-allocation-body').appendChild(source);
+}
+function openProcurementAllocation(productId,variantId=''){
+ ensureProcurementAllocationModal();const modal=document.getElementById('procurement-allocation-modal');const source=document.getElementById('supplier-sheet-content');if(!modal||!source)return;
+ modal.querySelector('#procurement-allocation-title').textContent=productCatalog.find(p=>String(p.id)===String(productId))?.name||'Додела газдинству';
+ modal.hidden=false;supplierSheetFarmId='';supplierSheetProductId=String(productId||'');supplierSheetTargetVariantId=String(variantId||'');supplierSheetFilter='all';supplierSheetDraft={};supplierHomeView='products';renderSupplierSheet();document.body.classList.add('allocation-modal-open');
+}
+function closeProcurementAllocation(){
+ const modal=document.getElementById('procurement-allocation-modal');const source=document.getElementById('supplier-sheet-content');if(modal)modal.hidden=true;
+ if(source&&procurementModalAnchor?.parentNode)procurementModalAnchor.parentNode.insertBefore(source,procurementModalAnchor.nextSibling);
+ document.body.classList.remove('allocation-modal-open');supplierSheetFarmId='';supplierSheetProductId='';supplierSheetTargetVariantId='';renderProcurement();
+}
+function renderProcurement(){
+ const box=document.getElementById('supplier-sheet-content');if(!box)return;const products=procurementDemandData();
+ const cards=products.map(product=>{
+  const rows=product.rows.map(row=>'<div class="proc-demand-pack"><button type="button" class="proc-demand-pack-action" onclick="openProcurementAllocation(\''+esc(product.productId)+'\',\''+esc(row.variantId||'')+'\')"><span class="min-w-0"><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><span class="text-right shrink-0"><strong>'+fmt(row.total)+' '+esc(row.unit)+'</strong><span class="proc-demand-open block mt-1">DODELI →</span></span></button></div>').join('');
+  return '<article class="proc-demand-product"><div class="proc-demand-product-head"><button type="button" class="proc-demand-product-action" onclick="openProcurementAllocation(\''+esc(product.productId)+'\')"><span class="min-w-0"><h4>'+esc(product.name)+'</h4><p>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</p></span><span class="proc-demand-open">OTVORI →</span></button></div><div class="proc-demand-pack-list">'+rows+'</div></article>';
+ }).join('');
+ box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">TURA '+esc(tourId)+' · NABAVKA</div><h3>Potrebni proizvodi</h3></div>'+(products.length?'<div class="proc-demand-list">'+cards+'</div>':'<div class="proc-demand-empty"><i class="fa-solid fa-box-open"></i><b>Nema stavki za nabavku</b><span>Za izabranu turu nisu pronađene povezane stavke porudžbina.</span></div>')+'</div>';
+}
+
 function goProcurementStep(step){
  const note=document.getElementById('procurement-workflow-note');
  document.querySelectorAll('#procurement-workflow [data-pw-step]').forEach(btn=>{
@@ -1983,5 +2016,5 @@ function initAdminRouter(){
  adminRouterRender();
 }
 
-document.addEventListener('DOMContentLoaded',()=>{loadData();initAdminRouter();});
+document.addEventListener('DOMContentLoaded',()=>{ensureProcurementAllocationModal();loadData();initAdminRouter();});
 </script></body></html>
