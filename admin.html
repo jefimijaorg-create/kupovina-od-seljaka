@@ -258,4 +258,39 @@ async function changeStatus(id,status,control){control.disabled=true;say('Чув
 authState();
 if(!pollHandle)pollHandle=setInterval(async()=>{if(!document.hidden){const {data:{session}}=await sb.auth.getSession();if(session)load(true);}},30000);
 document.addEventListener('visibilitychange',async()=>{if(!document.hidden){const {data:{session}}=await sb.auth.getSession();if(session)load(true);}});
-</script></body></html>
+</script>
+<script>
+// RECOVERY_STANDALONE_HANDLER: independent from the main ADMIN application script.
+(function () {
+  const button = document.getElementById('requestPasswordReset');
+  const message = document.getElementById('resetRequestMessage');
+  if (!button || !message) return;
+  button.onclick = async function () {
+    if (button.disabled) return;
+    button.disabled = true;
+    message.className = 'muted';
+    message.textContent = 'Повезујем се са сервером за опоравак…';
+    try {
+      const response = await fetch('https://kszkehxrcuagymlfowqj.supabase.co/functions/v1/app-user-management', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532'
+        },
+        body: JSON.stringify({ action: 'request_super_admin_recovery' })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || ('HTTP ' + response.status));
+      message.textContent = result.message || 'Захтев је прихваћен. Провери Gmail и Spam.';
+    } catch (error) {
+      message.className = 'error';
+      message.textContent = 'Опоравак није покренут: ' + (error && error.message ? error.message : String(error));
+    } finally {
+      button.disabled = false;
+    }
+  };
+})();
+</script>
+
+</body>
+</html>
