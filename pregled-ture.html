@@ -2593,10 +2593,15 @@ function renderProcurement(){
  const box=document.getElementById('procurement-demand-list');if(!box)return;
  const products=procurementDemandData(),canAllocate=tourCanEditProcurement(),status=tourStatusKey();
  const cards=products.map(product=>{
-  const rows=product.rows.map(row=>'<button type="button" class="proc-demand-pack-action" data-product="'+esc(row.productId)+'" onclick="openProcurementProductPanel(this.dataset.product)"><span><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><strong>'+fmt(row.total)+' '+esc(row.unit)+' · '+(canAllocate?'RASPODELI →':'DETALJI →')+'</strong></button>').join('');
-  return '<article class="proc-demand-product"><button type="button" class="proc-demand-product-action" data-product="'+esc(product.rows[0]?.productId||'')+'" onclick="openProcurementProductPanel(this.dataset.product)"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span><strong>'+ (canAllocate?'+ DODAJ GAZDINSTVO / NARUČI →':'PREGLEDAJ →')+'</strong></button><div class="proc-demand-pack-list">'+rows+'</div></article>';
+  const rows=product.rows.map(row=>canAllocate
+   ?'<button type="button" class="proc-demand-pack-action" data-product="'+esc(row.productId)+'" onclick="openProcurementProductPanel(this.dataset.product)"><span><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><strong>'+fmt(row.total)+' '+esc(row.unit)+' · RASPODELI →</strong></button>'
+   :'<div class="proc-demand-pack-action" aria-disabled="true"><span><b>'+fmt(row.size)+' '+esc(row.unit)+'</b><small>'+fmt(row.packages)+' pakovanja × '+fmt(row.size)+' '+esc(row.unit)+'</small></span><strong>'+fmt(row.total)+' '+esc(row.unit)+'</strong></div>').join('');
+  const heading=canAllocate
+   ?'<button type="button" class="proc-demand-product-action" data-product="'+esc(product.rows[0]?.productId||'')+'" onclick="openProcurementProductPanel(this.dataset.product)"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span><strong>+ DODAJ GAZDINSTVO / NARUČI →</strong></button>'
+   :'<div class="proc-demand-product-action" aria-disabled="true"><span><h4>'+esc(product.name)+'</h4><small>'+product.variants+' vrste ambalaže · '+fmt(product.packages)+' pakovanja</small></span></div>';
+  return '<article class="proc-demand-product">'+heading+'<div class="proc-demand-pack-list">'+rows+'</div></article>';
  }).join('');
- const intro=canAllocate?'Dodaj gazdinstvo za proizvod, rasporedi pakovanja, pripremi Viber poruke i potvrdi šta je zaista naručeno.':'Pregled uživo: šta je naručeno i koliko po proizvodu i ambalaži. Dodavanje gazdinstava i naručivanje dostupni su samo dok je tura „U realizaciji“.';
+ const intro=canAllocate?'Izaberi proizvod da otvoriš panel, dodaš gazdinstva, rasporediš pakovanja i potvrdiš nabavku.':'Pregled potražnje po proizvodima i ambalaži. Panel za raspodelu prikazuje se samo dok je tura „U obradi“.';
  box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">TURA '+esc(tourId)+' · NABAVKA</div><h3>Potražnja po proizvodima</h3><p>'+intro+'</p></div>'+(cards||'<div class="proc-demand-empty">Nema stavki za nabavku u izabranoj turi.</div>')+'</div>';
 }
 
