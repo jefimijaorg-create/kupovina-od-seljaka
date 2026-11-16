@@ -7,11 +7,20 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{color-scheme:light;--green:#166534;--line:#e5e7eb;--muted:#64748b}*{box-sizing:border-box}body{margin:0;background:#f3f5f4;color:#17211b;font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#14532d;color:white;padding:18px max(16px,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:21px;margin:0}main{max-width:1100px;margin:auto;padding:18px 14px 60px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 3px 12px #0f172a08}.login{max-width:430px;margin:7vh auto}.fields{display:flex;gap:9px;flex-wrap:wrap}input,select,button{font:inherit;border-radius:10px;padding:10px 12px;border:1px solid #cbd5e1;background:white}input{min-width:0;flex:1}button{cursor:pointer;font-weight:700}button.primary{background:var(--green);color:white;border-color:var(--green)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:13px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:22px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.stop{margin:14px 0 8px;font-size:17px;font-weight:800}.order{border:1px solid var(--line);border-radius:13px;padding:13px;margin:8px 0;background:white}.order-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.name{font-weight:800;font-size:16px}.muted{color:var(--muted);font-size:13px}.items{margin:8px 0;padding-left:19px}.items li{margin:3px 0}.amount{font-weight:900;white-space:nowrap}.pill{display:inline-block;border-radius:999px;padding:3px 9px;background:#ecfdf5;color:#166534;font-size:12px;font-weight:800}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.error{color:#b91c1c}.hidden{display:none!important}.empty{padding:20px;text-align:center;color:var(--muted)}footer{font-size:12px;color:var(--muted);text-align:center;margin:22px 0}@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.order-head{display:block}.amount{display:block;margin-top:5px}}@media print{header,.toolbar,.actions,.login,footer,.no-print{display:none!important}body{background:white}main{max-width:none;padding:0}.panel,.order{box-shadow:none;border-color:#bbb;break-inside:avoid}.stop{break-after:avoid}}
+
+#recoveryOverlay{position:fixed;inset:0;z-index:9999;background:#0f172acc;display:flex;align-items:center;justify-content:center;padding:16px}
+#recoveryOverlay.hidden{display:none!important}
+.recovery-card{width:min(100%,440px);max-height:calc(100dvh - 32px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 24px 70px #0005}
+.recovery-card h2{margin:0 0 8px}
+.recovery-card .fields{margin:12px 0}
+.recovery-card input{width:100%;min-height:48px}
+.recovery-card button{min-height:46px}
+@media(max-width:650px){#recoveryOverlay{align-items:flex-end;padding:0}.recovery-card{width:100%;border-radius:20px 20px 0 0;max-height:88dvh;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}}
 </style></head>
 <body>
 <header><div><h1>Наручи домаће — Оператива</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке · безбедна пријава</div><div id="appVersion" style="display:inline-block;margin-top:7px;padding:3px 9px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff18;font-size:12px;font-weight:700">ADMIN · верзија 4</div></div><button id="logout" class="hidden">Одјава</button></header>
 <main>
-<section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Унеси корисничко име и лозинку.</p><form id="loginForm"><div class="fields" style="margin:10px 0"><input id="username" type="text" autocomplete="username" placeholder="Корисничко име" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button><p id="loginError" class="error"></p></form></section>
+<section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Унеси корисничко име и лозинку.</p><form id="loginForm"><div class="fields" style="margin:10px 0"><input id="username" type="text" autocomplete="username" placeholder="Корисничко име" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button> <button id="requestPasswordReset" type="button">Заборављена лозинка?</button><p id="resetRequestMessage" class="muted" role="status"></p><p id="loginError" class="error"></p></form></section>
 <section id="bootstrapPanel" class="panel login">
 <h2>Прво покретање — главни администратор</h2>
 <p class="muted">Ово користиш само једном, након што је код за почетно подешавање постављен на серверу.</p>
@@ -46,11 +55,68 @@
 <div id="orders"></div><p id="message" class="muted"></p>
 </section>
 <footer>Пријава корисничким именом користи заштићени Supabase Auth налог. Не дели лозинку.</footer>
+<div id="recoveryOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle">
+ <section class="recovery-card">
+  <h2 id="recoveryTitle">Постави нову лозинку</h2>
+  <p class="muted">Линк за опоравак је потврђен. Изабери нову лозинку за главни ADMIN налог.</p>
+  <form id="recoveryForm">
+   <div class="fields"><input id="recoveryPassword" type="password" minlength="12" autocomplete="new-password" placeholder="Нова лозинка (најмање 12 знакова)" required></div>
+   <div class="fields"><input id="recoveryPassword2" type="password" minlength="12" autocomplete="new-password" placeholder="Понови нову лозинку" required></div>
+   <button class="primary" type="submit">Сачувај нову лозинку</button>
+   <p id="recoveryMessage" class="muted" role="status"></p>
+  </form>
+ </section>
+</div>
 </main>
 <script>
 const URL='https://kszkehxrcuagymlfowqj.supabase.co';
 const KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 const sb=window.supabase.createClient(URL,KEY);
+let recoveryMode=false;
+sb.auth.onAuthStateChange((event)=>{
+ if(event==="PASSWORD_RECOVERY"){
+  recoveryMode=true;
+  $('loginPanel').classList.add('hidden');
+  $('bootstrapPanel').classList.add('hidden');
+  $('app').classList.add('hidden');
+  $('logout').classList.add('hidden');
+  $('recoveryOverlay').classList.remove('hidden');
+  setTimeout(()=>$('recoveryPassword').focus(),0);
+ }
+});
+$('requestPasswordReset').onclick=async()=>{
+ const button=$('requestPasswordReset'),message=$('resetRequestMessage');
+ button.disabled=true;message.className='muted';message.textContent='Шаљем захтев за опоравак…';
+ try{
+  const response=await fetch(USER_FN,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({action:'request_super_admin_recovery'})});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||'Захтев није успео. Покушај поново касније.');
+  message.textContent=result.message||'Ако је налог доступан, послат је линк за опоравак.';
+ }catch(error){
+  message.className='error';message.textContent='Није могуће послати захтев: '+(error.message||error);
+ }finally{button.disabled=false;}
+};
+$('recoveryForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ const password=$('recoveryPassword').value,password2=$('recoveryPassword2').value;
+ const message=$('recoveryMessage'),button=$('recoveryForm').querySelector('button[type="submit"]');
+ message.className='error';
+ if(password.length<12){message.textContent='Лозинка мора имати најмање 12 знакова.';return;}
+ if(password!==password2){message.textContent='Лозинке се не поклапају.';return;}
+ button.disabled=true;message.className='muted';message.textContent='Чувам нову лозинку…';
+ try{
+  const {error}=await sb.auth.updateUser({password});
+  if(error)throw error;
+  message.textContent='Лозинка је успешно промењена. Враћам те на пријаву…';
+  $('recoveryPassword').value='';$('recoveryPassword2').value='';
+  await sb.auth.signOut();
+  recoveryMode=false;
+  $('recoveryOverlay').classList.add('hidden');
+  $('loginError').textContent='Лозинка је промењена. Пријави се новом лозинком.';
+  await authState();
+ }catch(error){message.className='error';message.textContent='Промена лозинке није успела: '+(error.message||error);}
+ finally{button.disabled=false;}
+});
 let tour=null, orders=[], points=[], items=[], tours=[], baselineLoaded=false, knownNewIds=new Set(), pollHandle=null;
 const requestedOrderId=new URLSearchParams(location.search).get('porudzbina');
 const $=id=>document.getElementById(id);
@@ -111,7 +177,7 @@ async function loadUsers(){
  }catch(e){$('usersList').textContent='Управљање корисницима није доступно: '+e.message;}
 }
 
-async function authState(){const {data:{session}}=await sb.auth.getSession();$('loginPanel').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);$('logout').classList.toggle('hidden',!session);if(session){$('bootstrapPanel').classList.add('hidden');await load();await loadUsers();}else{$('bootstrapPanel').classList.remove('hidden');}}
+async function authState(){if(recoveryMode){$("loginPanel").classList.add("hidden");$("bootstrapPanel").classList.add("hidden");$("app").classList.add("hidden");$("logout").classList.add("hidden");return;}const {data:{session}}=await sb.auth.getSession();$('loginPanel').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);$('logout').classList.toggle('hidden',!session);if(session){$('bootstrapPanel').classList.add('hidden');await load();await loadUsers();}else{$('bootstrapPanel').classList.remove('hidden');}}
 $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const out=$('loginError'),button=$('loginForm').querySelector('button[type="submit"]');
