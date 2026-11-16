@@ -47,7 +47,7 @@
   if(!root||!p||!content)return;
   root.querySelector('#ndp-title').textContent=p.name||'Производ';
   const tour=(Array.isArray(tours)?tours:[]).find(t=>String(t.id)===String(tourId));
-  root.querySelector('#ndp-tour').textContent=(tour?.naziv||('Тура '+tourId))+' · У реализацији';
+  root.querySelector('#ndp-tour').textContent=(tour?.naziv||('Тура '+tourId))+' · У обради';
   root.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===activeTab)));
   const saved=allocations();
   if(activeTab==='demand'){
@@ -55,16 +55,16 @@
   }else if(activeTab==='allocation'){
    const sum=saved.reduce((s,a)=>s+num(a.broj_pakovanja),0);
    content.innerHTML='<div class="ndp-card"><div class="ndp-kicker">РАСПОДЕЛА ПО ГАЗДИНСТВИМА</div><div class="ndp-row" style="margin-top:7px"><strong>'+saved.length+' ставки</strong><strong class="ndp-value">'+fmt(sum)+' паковања</strong></div><div class="ndp-muted">Требовања се воде по производу, амбалажи и газдинству. Viber поруке се припремају у постојећем радном току.</div></div>'+(saved.map(a=>{const f=(farms||[]).find(x=>String(x.id)===String(a.gazdinstvo_id))||{};const v=(variantCatalog||[]).find(x=>String(x.id)===String(a.variant_id))||{};return '<article class="ndp-card"><div class="ndp-row"><strong>'+esc(f.name||('Газдинство #'+a.gazdinstvo_id))+'</strong><span class="ndp-value">'+fmt(a.broj_pakovanja)+' пак.</span></div><div class="ndp-muted">'+esc(v.name||v.size_label||'Амбалажа')+' · '+(a.naruceno?'Наручено':'У припреми')+'</div></article>'}).join('')||'<div class="ndp-empty">За овај производ још нема сачуване расподеле.</div>')+'<button class="ndp-action" id="ndp-edit-allocation" '+(busy?'disabled':'')+'>+ Додај газдинство / измени расподелу</button>';
-   content.querySelector('#ndp-edit-allocation')?.addEventListener('click',()=>{if(typeof tourCanEditProcurement!=='function'||!tourCanEditProcurement()){say('Расподела је доступна само док је тура у реализацији.',true);return}openProcurementAllocation(activeProductId)});
+   content.querySelector('#ndp-edit-allocation')?.addEventListener('click',()=>{if(typeof tourCanEditProcurement!=='function'||!tourCanEditProcurement()){say('Расподела је доступна само док је тура у обради.',true);return}openProcurementAllocation(activeProductId)});
   }else{
    const confirmed=saved.filter(a=>a.naruceno===true&&a.potvrdjeno_pakovanja!==null&&a.potvrdjeno_pakovanja!==undefined);
    const count=confirmed.reduce((s,a)=>s+num(a.potvrdjeno_pakovanja),0);
    content.innerHTML='<div class="ndp-card"><div class="ndp-kicker">СТВАРНО ПОТВРЂЕНА НАБАВКА</div><div class="ndp-row" style="margin-top:7px"><strong style="font-size:25px">'+fmt(count)+' паковања</strong><strong class="ndp-value">'+confirmed.length+' потврда</strong></div><div class="ndp-muted">Приказују се количине које су добављачи стварно потврдили и које су сачуване у бази.</div></div>'+(confirmed.map(a=>{const f=(farms||[]).find(x=>String(x.id)===String(a.gazdinstvo_id))||{};const v=(variantCatalog||[]).find(x=>String(x.id)===String(a.variant_id))||{};return '<article class="ndp-card"><div class="ndp-row"><strong>'+esc(f.name||('Газдинство #'+a.gazdinstvo_id))+'</strong><strong class="ndp-value">'+fmt(a.potvrdjeno_pakovanja)+' пак.</strong></div><div class="ndp-muted">'+esc(v.name||v.size_label||'Амбалажа')+' · Потврђено</div></article>'}).join('')||'<div class="ndp-empty">Још нема евидентираних потврда добављача за овај производ.</div>')+'<button class="ndp-action" id="ndp-confirm-procurement">Отвори радни ток за потврду набавке</button>';
-   content.querySelector('#ndp-confirm-procurement')?.addEventListener('click',()=>{if(typeof tourCanEditProcurement!=='function'||!tourCanEditProcurement()){say('Потврда набавке је доступна само док је тура у реализацији.',true);return}close();openProcurementAllocation(activeProductId)});
+   content.querySelector('#ndp-confirm-procurement')?.addEventListener('click',()=>{if(typeof tourCanEditProcurement!=='function'||!tourCanEditProcurement()){say('Потврда набавке је доступна само док је тура у обради.',true);return}close();openProcurementAllocation(activeProductId)});
   }
  }
  async function open(productId){
-  if(typeof tourCanEditProcurement!=='function'||!tourCanEditProcurement()){openProcurementDemandDetail(productId);return}
+  if(typeof tourCanEditProcurement!=='function'||!tourCanEditProcurement())return;
   activeProductId=String(productId||'');activeTab='demand';ensure();
   const root=document.getElementById(ID),content=root.querySelector('#ndp-content');
   root.hidden=false;document.body.classList.add('nd-product-panel-open');
