@@ -118,7 +118,31 @@ main{max-width:1440px!important;padding-top:22px!important}
  header.sticky{position:static!important;background:#fff!important;color:#111!important;box-shadow:none!important}
  main{padding-top:12px!important}
  #bottom-tab-nav{display:none!important}
-}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet"></head>
+}</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet"><style id="field-compact-overrides">
+/* Компактан теренски приказ */
+html,body{background:#0F172A!important;color:#F1F5F9!important}
+header{background:#111C32!important;border-bottom:1px solid #263449!important;box-shadow:none!important}
+header>div{padding-top:10px!important;padding-bottom:10px!important;gap:8px!important}
+header h1{font-size:19px!important;line-height:1.2!important;margin-top:5px!important;color:#FB923C!important}
+header p{font-size:11px!important;line-height:1.25!important;color:#94A3B8!important}
+header button{padding:8px 10px!important;border-radius:10px!important;font-size:11px!important}
+header button:nth-of-type(n+3){display:none!important}
+main{padding-top:12px!important;padding-bottom:90px!important}
+#message{padding:8px 11px!important;margin-bottom:10px!important;border-radius:10px!important;font-size:11px!important;line-height:1.35!important;background:#142139!important;color:#CBD5E1!important;border:1px solid #29384E!important}
+#tour-picker-panel{padding:10px!important;margin-bottom:12px!important;gap:8px!important;border-radius:13px!important;background:#142139!important;border-color:#29384E!important}
+#tour-picker-panel label{font-size:10px!important}
+#tour-picker-panel select,#tour-picker-panel input{padding:10px 12px!important;border-radius:10px!important;font-size:13px!important;background:#0B1425!important;color:#F8FAFC!important;border-color:#334155!important}
+#tour-picker-panel label:nth-of-type(2){display:none!important}
+#supplier-sheet-content>div:first-child{gap:10px!important}
+#procurement-tab>div{padding:10px!important;border-radius:14px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+#procurement-tab h2{font-size:17px!important}
+#procurement-tab p{font-size:11px!important}
+#bottom-tab-nav{background:#0B1425F2!important;border-color:#29384E!important;box-shadow:0 -4px 16px #0005!important}
+#bottom-tab-nav>div{padding:5px 6px calc(5px + env(safe-area-inset-bottom))!important}
+#bottom-tab-nav button{min-height:48px!important;border-radius:10px!important;font-size:10px!important;gap:3px!important}
+#bottom-tab-nav button i{font-size:15px!important}
+@media(min-width:768px){header button:nth-of-type(n+3){display:inline-flex!important}#tour-picker-panel label:nth-of-type(2){display:block!important}}
+</style></head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div class="flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6"><div id="message" class="bg-white border border-slate-200 rounded-xl p-3 mb-5 text-sm">Повезивање са базом…</div>
@@ -136,7 +160,7 @@ main{max-width:1440px!important;padding-top:22px!important}
 <script>
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
-let tours=[],items=[],orderItemsByOrder={},farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},supplierDemandFarmFilter='all',supplierDemandExpanded={},tourId=68,view='orders',deliveryMode='stock',deliveryListMode='pending',deliveryPointMode='active',deliveryInvoicePrepared=new Set(),deliveryDraftSelection=new Set(),deliveryDraftPackages=new Map(),procurementMode='farm',procurementFarmFilter='all';
+let tours=[],items=[],orderItemsByOrder={},farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},supplierDemandFarmFilter='all',supplierDemandExpanded={},tourId=68,view='procurement',deliveryMode='stock',deliveryListMode='pending',deliveryPointMode='active',deliveryInvoicePrepared=new Set(),deliveryDraftSelection=new Set(),deliveryDraftPackages=new Map(),procurementMode='farm',procurementFarmFilter='all';
 async function api(path,opt={}){let r;try{r=await fetch(URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}})}catch(e){throw Error('Мрежна/CORS грешка · '+path+' · '+(e?.message||String(e)))}let t=await r.text();if(!r.ok)throw Error('Supabase HTTP '+r.status+' '+r.statusText+' · PUTANJA: '+path+' · ODGOVOR: '+(t||'(празан одговор)').slice(0,1200));try{return t?JSON.parse(t):[]}catch(e){throw Error('Неисправан JSON одговор · '+path+' · '+(t||'').slice(0,500))}}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=v=>Number(v||0),fmt=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:3}),cash=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.';
