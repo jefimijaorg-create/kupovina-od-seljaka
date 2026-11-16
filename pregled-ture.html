@@ -738,7 +738,7 @@ function renderTourHome(){
  else cards.push('<div class="tour-home-empty">Тренутно нема туре са статусом „У обради“.</div>');
  if(opened.length)opened.forEach(t=>cards.push(card(t,'open','ОТВОРЕНА ТУРА','fa-folder-open','Спремна за обраду')));
  else cards.push('<div class="tour-home-empty">Тренутно нема отворене туре.</div>');
- cards.push('<button type="button" class="tour-home-card archive" onclick="openClosedTours()"><span class="tour-home-icon"><i class="fa-solid fa-box-archive"></i></span><span class="tour-home-copy"><small>АРХИВА ТУРА</small><strong>Затворене туре</strong><em>'+closed.length+' '+(closed.length===1?'затворена тура':closed.length%10>=2&&closed.length%10<=4&&!(closed%100>=12&&closed%100<=14)?'затворене туре':'затворених тура')+' · Преглед целокупне архиве</em></span><i class="fa-solid fa-chevron-right tour-home-arrow"></i></button>');
+ cards.push('<button type="button" class="tour-home-card archive" onclick="openClosedTours()"><span class="tour-home-icon"><i class="fa-solid fa-box-archive"></i></span><span class="tour-home-copy"><small>АРХИВА ТУРА</small><strong>Затворене туре</strong><em>'+closed.length+' '+(closed.length===1?'затворена тура':closed.length%10>=2&&closed.length%10<=4&&!(closed.length%100>=12&&closed.length%100<=14)?'затворене туре':'затворених тура')+' · Преглед целокупне архиве</em></span><i class="fa-solid fa-chevron-right tour-home-arrow"></i></button>');
  root.innerHTML=cards.join('');
 }
 function renderClosedTours(){
@@ -748,8 +748,8 @@ function renderClosedTours(){
  if(count)count.textContent=closed.length+' тура у архиви';
  root.innerHTML=closed.length?closed.map(t=>'<button type="button" class="closed-tour-row" onclick="chooseTour('+Number(t.id)+')"><span><strong>'+esc(t.naziv||('Тура '+t.id))+'</strong><small>'+esc(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'long',year:'numeric'}):'Датум није наведен')+' · Тура #'+Number(t.id)+'</small></span><span class="closed-tag">ЗАТВОРЕНА</span></button>').join(''):'<div class="tour-home-empty">Нема затворених тура које одговарају претрази.</div>';
 }
-function openClosedTours(){renderClosedTours();document.getElementById('closed-tours-overlay')?.classList.remove('hidden');document.body.classList.add('closed-tours-open');}
-function closeClosedTours(){document.getElementById('closed-tours-overlay')?.classList.add('hidden');document.body.classList.remove('closed-tours-open');}
+function openClosedTours(){renderClosedTours();const overlay=document.getElementById('closed-tours-overlay');overlay?.classList.remove('hidden');overlay?.setAttribute('aria-hidden','false');document.body.classList.add('closed-tours-open');}
+function closeClosedTours(){const overlay=document.getElementById('closed-tours-overlay');overlay?.classList.add('hidden');overlay?.setAttribute('aria-hidden','true');document.body.classList.remove('closed-tours-open');}
 function chooseTour(id){closeClosedTours();const sel=document.getElementById('tour-select');if(sel)sel.value=String(id);loadTour();}
 async function loadTour(options={}){
  const select=document.getElementById('tour-select'),selected=select?.value;
