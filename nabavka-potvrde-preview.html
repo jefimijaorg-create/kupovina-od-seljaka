@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#075c46"><title>Требовање и потврде · Наручи домаће</title>
+<style>
+:root{--green:#087f5b;--dark:#075c46;--ink:#172b27;--muted:#667770;--line:#dce7e2;--bg:#f3f7f5;--amber:#a65b08;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(115deg,#064e3b,#087b59);color:#fff;padding:18px max(16px,calc((100% - 1180px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:22px;line-height:1.2;margin:4px 0}.sub{color:#d5eee4;font-size:13px}.pill{display:inline-flex;align-items:center;border-radius:99px;padding:5px 10px;background:#e9f7ef;color:#086346;font-size:11px;font-weight:900;letter-spacing:.04em}.demo{background:#fff0d6;color:#8b4b00}
+main{max-width:1180px;margin:auto;padding:20px 16px 60px}.notice{background:#fff8e8;border:1px solid #f0d59b;color:#70440c;padding:12px 14px;border-radius:14px;margin-bottom:16px;font-size:13px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}.toolbar select,.toolbar input{width:100%;max-width:300px;padding:12px;border:1px solid #cbd9d2;border-radius:11px;background:#fff;font:inherit}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.metric{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px}.metric span{display:block;color:var(--muted);font-size:12px;font-weight:700}.metric strong{display:block;font-size:27px;letter-spacing:-.04em;margin-top:4px}.metric small{color:var(--muted);font-size:11px}
+.tabs{display:flex;gap:8px;margin:18px 0;overflow:auto}.tab{border:1px solid var(--line);border-radius:11px;background:#fff;padding:11px 15px;font-weight:800;white-space:nowrap;color:#52645c}.tab.active{background:#e7f5ed;border-color:#9bd4b8;color:var(--dark)}
+.layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:16px}.panel{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden}.panel-head{padding:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center}.panel-head h2{font-size:17px;margin:0}.panel-body{padding:14px}
+.product{border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}.product:last-child{margin-bottom:0}.product-head{padding:13px;background:#f8fbf9;display:flex;justify-content:space-between;gap:10px;align-items:center}.product-head strong{font-size:15px}.product-head small{display:block;color:var(--muted);font-size:12px}
+.progress{height:8px;background:#edf2ef;border-radius:99px;overflow:hidden;margin:10px 0 7px}.progress i{display:block;height:100%;background:var(--green);border-radius:99px}
+.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 12px 12px}.number{background:#f7faf8;border-radius:10px;padding:9px;text-align:center}.number b{display:block;font-size:18px}.number span{font-size:10px;color:var(--muted);font-weight:800}
+.farm{border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}.farm-head{padding:13px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f8fbf9}.farm-head strong{font-size:15px}.farm-head small{display:block;color:var(--muted);font-size:11px}
+.line{padding:13px 14px;border-top:1px solid var(--line)}.line-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.line-title{font-weight:800}.line-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.status{font-size:10px;font-weight:900;border-radius:99px;padding:5px 8px;white-space:nowrap;background:#fff1d6;color:#8b4b00}.status.ok{background:#e5f6ec;color:#08734f}.status.partial{background:#fff1d6;color:#8b4b00}
+.confirm-row{display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:end;margin-top:12px}.confirm-row label{font-size:11px;color:var(--muted);font-weight:800}.confirm-row input{display:block;width:100%;margin-top:4px;border:1px solid #cbd9d2;border-radius:10px;padding:10px;font:inherit;font-weight:800}
+button{font:inherit;cursor:pointer}.btn{border:0;border-radius:10px;padding:11px 13px;font-weight:900;min-height:43px}.primary{background:var(--green);color:#fff}.soft{background:#edf5f0;color:var(--dark);border:1px solid #cfe5d8}.outline{background:#fff;border:1px solid var(--line);color:#41534b}
+.remaining{margin-top:10px;padding:12px;border-radius:12px;background:#fff7e9;border:1px solid #f0d8aa;display:flex;justify-content:space-between;gap:10px;align-items:center}.remaining strong{color:#92520b;font-size:18px}.remaining small{display:block;color:#8b652f;font-size:11px}
+.helper{font-size:12px;color:var(--muted);margin:10px 0 0}.empty{padding:22px;text-align:center;color:var(--muted)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#17352b;color:white;border-radius:12px;padding:12px 16px;box-shadow:0 8px 28px #102b201f;display:none;z-index:10}
+@media(max-width:760px){main{padding:14px 12px 40px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric{padding:12px}.metric strong{font-size:23px}.layout{grid-template-columns:1fr}.confirm-row{grid-template-columns:1fr 90px}.confirm-row button{grid-column:1/-1;width:100%}.panel-head{padding:14px}.panel-body{padding:10px}header{padding:14px 15px}}
+@media(min-width:761px){.farm-list{max-height:780px;overflow:auto}}
+</style>
+</head>
+<body>
+<header><div><div class="sub">ADMIN · НАБАВКА ЗА ТУРУ</div><h1>Требовање и потврде газдинстава</h1><div class="sub">Од укупне потребе до стварно потврђене набавке</div></div><span class="pill demo">ПРИКАЗ ДИЗАЈНА · DEMO</span></header>
+<main>
+<div class="notice"><b>Демо приказ:</b> вредности су илустративне и не читају нити мењају Supabase податке. Овде проверавамо радни ток и распоред екрана пре повезивања са стварном туром.</div>
+<div class="toolbar"><div><span class="pill">ИЗАБРАНА ТУРА</span> <strong style="margin-left:7px">Недељна тура · 21.11.2026.</strong></div><select id="viewMode" aria-label="Приказ"><option value="all">Сви производи</option><option value="milk">Домаће млеко</option><option value="cheese">Домаћи сир</option></select></div>
+<div class="metrics">
+ <div class="metric"><span>УКУПНО ПОТРЕБНО</span><strong id="mNeed">35</strong><small>паковања за туру</small></div>
+ <div class="metric"><span>ПОТВРЂЕНО</span><strong id="mConfirmed">13</strong><small>од свих газдинстава</small></div>
+ <div class="metric"><span>ЈОШ НЕДОСТАЈЕ</span><strong id="mLeft">22</strong><small>потребно − потврђено</small></div>
+ <div class="metric"><span>ГАЗДИНСТВА</span><strong>1</strong><small>са евидентираним требовањем</small></div>
+</div>
+<nav class="tabs"><button class="tab active" data-tab="needs">Потребе туре</button><button class="tab" data-tab="farms">Требовања по газдинствима</button></nav>
+<div id="needsView" class="layout">
+ <section class="panel"><div class="panel-head"><div><h2>Укупна потреба по производу и амбалажи</h2><div class="helper">Потврђена количина се одузима од потребе.</div></div></div><div class="panel-body" id="needsList"></div></section>
+ <aside class="panel"><div class="panel-head"><h2>Шта још треба набавити?</h2><span class="pill demo">УЖИВО</span></div><div class="panel-body" id="shortageList"></div></aside>
+</div>
+<div id="farmsView" class="layout" hidden>
+ <section class="panel"><div class="panel-head"><div><h2>Послата требовања</h2><div class="helper">Унеси колико је домаћин стварно прихватио.</div></div></div><div class="panel-body farm-list" id="farmList"></div></section>
+ <aside class="panel"><div class="panel-head"><h2>Следеће газдинство</h2></div><div class="panel-body"><p style="margin-top:0;color:var(--muted);font-size:13px">Овде одмах видиш преосталу потребу коју треба да понудиш следећем произвођачу.</p><div id="nextFarmList"></div><button class="btn soft" style="width:100%;margin-top:12px" onclick="notify('У повезаној верзији овде се отвара избор газдинства и понуђених паковања.')">＋ Додели остатак другом газдинству</button></div>
+</div>
+<p class="helper">Слање Viber поруке не мења количину ни статус. Статус се мења тек када ручно упишеш потврду домаћина.</p>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const state={
+ products:[
+  {id:'milk',name:'Домаће млеко',pack:'Флаша 1 л',unit:'флаша',need:20},
+  {id:'cheese',name:'Домаћи сир',pack:'Паковање 1 кг',unit:'паковање',need:15}
+ ],
+ farms:[{id:'misa',name:'Миша',phone:'',rows:[{product:'milk',requested:5,confirmed:3},{product:'cheese',requested:10,confirmed:10}]}]
+};
+const $=id=>document.getElementById(id),num=x=>Number(x||0),fmt=x=>num(x).toLocaleString('sr-RS',{maximumFractionDigits:2});
+function confirmed(id){return state.farms.reduce((s,f)=>s+f.rows.filter(r=>r.product===id).reduce((a,r)=>a+num(r.confirmed),0),0)}
+function requested(id){return state.farms.reduce((s,f)=>s+f.rows.filter(r=>r.product===id).reduce((a,r)=>a+num(r.requested),0),0)}
+function remaining(id){const p=state.products.find(x=>x.id===id);return Math.max(0,p.need-confirmed(id))}
+function status(r){return r.confirmed<=0?'ЧЕКА ПОТВРДУ':r.confirmed<r.requested?'ДЕЛИМИЧНО ПОТВРЂЕНО':'ПОТВРЂЕНО'}
+function render(){
+ const filter=$('viewMode').value,products=state.products.filter(p=>filter==='all'||p.id===filter);
+ const totalNeed=products.reduce((s,p)=>s+p.need,0),totalConfirmed=products.reduce((s,p)=>s+confirmed(p.id),0);
+ $('mNeed').textContent=fmt(totalNeed);$('mConfirmed').textContent=fmt(totalConfirmed);$('mLeft').textContent=fmt(Math.max(0,totalNeed-totalConfirmed));
+ $('needsList').innerHTML=products.map(p=>{const c=confirmed(p.id),left=remaining(p.id),pct=p.need?Math.min(100,c/p.need*100):0;return '<article class="product"><div class="product-head"><div><strong>'+p.name+'</strong><small>'+p.pack+' · потреба за целу туру</small></div><span class="pill">'+fmt(p.need)+' '+p.unit+'</span></div><div style="padding:0 12px"><div class="progress"><i style="width:'+pct+'%"></i></div></div><div class="numbers"><div class="number"><b>'+fmt(p.need)+'</b><span>ПОТРЕБНО</span></div><div class="number"><b>'+fmt(c)+'</b><span>ПОТВРЂЕНО</span></div><div class="number"><b style="color:'+(left?'#92520b':'#08734f')+'">'+fmt(left)+'</b><span>ЈОШ НЕДОСТАЈЕ</span></div></div></article>'}).join('');
+ $('shortageList').innerHTML=products.map(p=>'<div class="remaining"><div><b>'+p.name+'</b><small>'+p.pack+'</small></div><strong>'+fmt(remaining(p.id))+' '+p.unit+'</strong></div>').join('')||'<div class="empty">Нема ставки за приказ.</div>';
+ $('farmList').innerHTML=state.farms.map(f=>'<article class="farm"><div class="farm-head"><div><strong>'+f.name+'</strong><small>Требовање је послато · чека се/ажурира потврда</small></div><span class="pill">ГАЗДИНСТВО</span></div>'+f.rows.map((r,i)=>{const p=state.products.find(x=>x.id===r.product);return '<div class="line"><div class="line-top"><div><div class="line-title">'+p.name+'</div><div class="line-meta">Тражено: '+fmt(r.requested)+' '+p.unit+' · '+p.pack+'</div></div><span class="status '+(r.confirmed>=r.requested?'ok':r.confirmed>0?'partial':'')+'">'+status(r)+'</span></div><div class="confirm-row"><label>Домаћин потврдио<input type="number" min="0" max="'+r.requested+'" step="1" value="'+r.confirmed+'" id="confirm-'+f.id+'-'+i+'"></label><div class="line-meta">Од '+fmt(r.requested)+' тражених</div><button class="btn primary" onclick="saveConfirm(\''+f.id+'\','+i+')">Сачувај потврду</button></div><div class="helper">После чувања, остатак потребе се одмах прерачунава.</div></div>'}).join('')+'</article>').join('');
+ $('nextFarmList').innerHTML=products.map(p=>'<div class="remaining"><div><b>'+p.name+'</b><small>Потребно још за туру</small></div><strong>'+fmt(remaining(p.id))+'</strong></div>').join('');
+}
+function saveConfirm(farmId,index){const farm=state.farms.find(f=>f.id===farmId),r=farm?.rows[index],input=$('confirm-'+farmId+'-'+index);if(!r||!input)return;const raw=input.value,value=Number(raw);if(raw===''||!Number.isFinite(value)||value<0||value>r.requested){notify('Унеси количину од 0 до '+r.requested+'.');return}r.confirmed=value;render();notify('Потврда је евидентирана у DEMO приказу.');}
+function notify(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(window._toast);window._toast=setTimeout(()=>t.style.display='none',2600)}
+$('viewMode').addEventListener('change',render);
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));const farms=b.dataset.tab==='farms';$('needsView').hidden=farms;$('farmsView').hidden=!farms;render()}));
+render();
+</script>
+</body></html>
