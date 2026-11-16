@@ -152,6 +152,55 @@ main{padding-top:12px!important;padding-bottom:90px!important}
 .nw-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #263449;font-size:12px}.nw-row>span,.nw-row>strong{color:#fdba74;white-space:nowrap}.nw-row small{white-space:normal}
 .nw-products{display:grid;grid-template-columns:1fr;gap:8px}.nw-product,.nw-farm{display:block;width:100%;text-align:left;background:#17243b;border:1px solid #334155;border-radius:12px;padding:12px;color:#f8fafc}.nw-product>b,.nw-farm>b{display:block;font-size:14px}.nw-product span{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #334155;margin-top:7px;padding-top:6px;font-size:11px;color:#cbd5e1}.nw-product strong{color:#fdba74}.nw-farm{display:flex;justify-content:space-between;align-items:center;margin:7px 0}.nw-farm span{font-size:11px;font-weight:800;color:#fb923c}.nw-selected{font-weight:800;color:#fdba74;font-size:14px;margin-bottom:8px}.nw-actions{display:flex;justify-content:space-between;gap:9px;margin-top:12px}.nw-actions button{min-height:45px;padding:10px 15px;border-radius:11px;font-size:12px;font-weight:800}.nw-back{background:#263449;color:#cbd5e1}.nw-next{background:#ea580c;color:white;margin-left:auto}.nw-existing{max-height:52vh;overflow:auto}.nw-existing #supplier-sheet-content{display:none}
 @media(min-width:640px){.nw-products{grid-template-columns:repeat(2,minmax(0,1fr))}.nw-steps{gap:8px}.nw-step small{font-size:10px}}
+</style><style id="ux-refresh-v2">
+/* UX refresh v2 — compact, touch-first visual system; no business logic changes */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap');
+:root{--ui-bg:#0b1220;--ui-panel:#111c32;--ui-panel2:#17243b;--ui-line:#29384f;--ui-orange:#f97316;--ui-green:#10b981}
+html,body{background:var(--ui-bg)!important}
+body{font-family:'DM Sans',system-ui,sans-serif!important;line-height:1.45}
+header.sticky{position:sticky;top:0;z-index:55!important;background:rgba(11,18,32,.94)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+header.sticky>div{padding:10px 16px!important;gap:10px!important}
+header.sticky h1{font-size:clamp(19px,3vw,26px)!important;line-height:1.12!important;margin-top:5px!important}
+header.sticky p{font-size:12px!important}
+header.sticky button{min-height:42px!important;padding:9px 12px!important;font-size:12px!important}
+main{padding-top:16px!important;padding-bottom:calc(108px + env(safe-area-inset-bottom))!important}
+#message{margin-bottom:12px!important;padding:10px 13px!important;font-size:12px!important}
+#orders-tab>div,#procurement-tab>div,#delivery-tab>div,#debts-tab>div{padding:clamp(13px,2vw,22px)!important;border-radius:20px!important}
+#orders-tab h2,#procurement-tab h2,#delivery-tab h2,#debts-tab h2{font-size:clamp(18px,2.5vw,23px)!important;line-height:1.2!important}
+#bottom-tab-nav{z-index:90!important;padding-bottom:env(safe-area-inset-bottom)!important;background:rgba(8,14,27,.96)!important}
+#bottom-tab-nav>div{padding:7px 8px!important;gap:6px!important}
+#bottom-tab-nav button{min-height:58px!important;border:1px solid transparent!important}
+#bottom-tab-nav button.text-emerald-800{border-color:rgba(249,115,22,.32)!important}
+.unassigned-sheet-toggle{bottom:calc(78px + env(safe-area-inset-bottom))!important;z-index:75!important;left:12px!important;right:12px!important;width:auto!important;max-width:720px;margin:0 auto!important}
+.unassigned-sheet{bottom:calc(78px + env(safe-area-inset-bottom))!important;z-index:76!important;max-height:min(62dvh,560px)!important}
+.supplier-sheet-panel{z-index:100!important;max-height:88dvh!important;padding-bottom:env(safe-area-inset-bottom)!important}
+.supplier-sheet-backdrop{z-index:99!important}
+#supplier-sheet-content input,#supplier-sheet-content select,#supplier-sheet-content textarea{min-height:44px!important}
+#supplier-sheet-content button,#orders-summary button,#points button,#debts-list button{min-height:44px}
+#orders-summary>section,#points>section,#debts-list>details{overflow:hidden}
+#orders-summary summary,#points summary{padding:13px!important}
+#orders-summary details>div,#points details>div{max-width:100%}
+#tour-picker-panel{margin-bottom:14px!important}
+@media(max-width:767px){
+ body{font-size:14px!important}
+ header.sticky>div{padding:9px 12px!important}
+ header.sticky h1{font-size:20px!important;max-width:100%;line-height:1.1!important}
+ header.sticky p{font-size:11px!important}
+ header.sticky>div>div:last-child{display:flex;flex-wrap:wrap;gap:7px!important}
+ header.sticky button{flex:1 1 auto;min-height:40px!important;padding:8px 10px!important;font-size:11px!important}
+ header.sticky button[onclick*="copyAllPointsViber"],header.sticky button[onclick*="window.print"]{display:none!important}
+ main{padding-left:12px!important;padding-right:12px!important;padding-top:11px!important}
+ #bottom-tab-nav button{min-height:55px!important;font-size:9px!important;padding:5px 2px!important}
+ #bottom-tab-nav button span{max-width:100%;white-space:normal}
+ #bottom-tab-nav button i{font-size:17px!important}
+ .unassigned-sheet-toggle{bottom:calc(72px + env(safe-area-inset-bottom))!important;min-height:48px!important}
+ .unassigned-sheet{bottom:calc(72px + env(safe-area-inset-bottom))!important}
+}
+@media(min-width:768px){
+ main{padding-left:24px!important;padding-right:24px!important}
+ #bottom-tab-nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(900px,calc(100% - 48px));border:1px solid var(--ui-line)!important;border-radius:18px 18px 0 0}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style></head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div class="flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
