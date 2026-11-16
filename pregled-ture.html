@@ -1573,19 +1573,16 @@ function farmOrderPrepHtml(){
 function printFarmPrep(farmId){
  const f=farms.find(x=>Number(x.id)===Number(farmId)),list=items.filter(x=>String(assignedFarmId(x))===String(farmId));
  if(!list.length){say('Нема ставки за штампу.',true);return}
- const grouped={};list.forEach(x=>{const key=deliveryKey(x);if(!grouped[key])grouped[key]={sample:x,rows:[]};grouped[key].rows.push(x)});
- const body=Object.values(grouped).map(g=>'<tr><td>'+esc(productName(g.sample))+' · '+esc(variantFor(g.sample)?.name||g.sample.variant_name||pack(g.sample).label)+'</td><td>'+fmt(g.rows.reduce((s,x)=>s+pack(x).count,0))+'</td><td>'+fmt(g.rows.reduce((s,x)=>s+pack(x).total,0))+' '+esc(pack(g.sample).unit)+'</td><td>'+g.rows.map(x=>esc(buyer(ord(x)).ime_prezime||('Поруџбина #'+x.porudzbina_id))+' ('+fmt(pack(x).count)+' пак.)').join('<br>')+'</td></tr>').join('');
- const win=window.open('','_blank','width=900,height=700');if(!win){say('Прегледач је блокирао прозор за штампу. Дозволи искачуће прозоре.',true);return}
- win.document.write('<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Припрема — '+esc(farmName(f?.name||''))+'</title><style>body{font:14px Arial;padding:28px;color:#17212b}table{width:100%;border-collapse:collapse}th,td{padding:10px;border:1px solid #ddd;text-align:left}th{background:#f1f5f9}h1{font-size:22px}@media print{button{display:none}}
-/* TOUR WORKSPACE — three persistent destinations, fixed bottom on every screen */
-#bottom-tab-nav{position:fixed!important;top:auto!important;bottom:0!important;left:0!important;right:0!important;transform:none!important;width:100%!important;max-width:none!important;border-radius:18px 18px 0 0!important}
-#bottom-tab-nav>div{max-width:1320px!important}
-#bottom-tab-nav>div>div:last-child{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
-#bottom-tab-nav button{min-height:58px!important}
-body.tour-active{padding-bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}
-#tour-dashboard .rounded-xl{box-shadow:none}
-@media(min-width:900px){body.tour-active{padding-bottom:calc(5.8rem + env(safe-area-inset-bottom))!important}#bottom-tab-nav{top:auto!important;bottom:0!important}}
-</style></head><body><h1>СПИСАК ЗА ПРИПРЕМУ — '+esc(farmName(f?.name||''))+'</h1><p>'+esc(tours.find(t=>Number(t.id)===Number(tourId))?.naziv||('Тура '+tourId))+'</p><table><thead><tr><th>Производ / паковање</th><th>Паковања</th><th>Укупно</th><th>Распоред по купцима</th></tr></thead><tbody>'+body+'</tbody></table><p><button onclick="window.print()">ШТАМПАЈ</button></p></body></html>');win.document.close();
+ const grouped={};
+ list.forEach(x=>{const key=deliveryKey(x);if(!grouped[key])grouped[key]={sample:x,rows:[]};grouped[key].rows.push(x)});
+ const body=Object.values(grouped).map(g=>'<tr><td>'+esc(productName(g.sample))+' · '+esc(variantFor(g.sample)?.name||g.sample.variant_name||pack(g.sample).label)+'</td><td>'+fmt(g.rows.reduce((sum,x)=>sum+pack(x).count,0))+'</td><td>'+fmt(g.rows.reduce((sum,x)=>sum+pack(x).total,0))+' '+esc(pack(g.sample).unit)+'</td><td>'+g.rows.map(x=>esc(buyer(ord(x)).ime_prezime||('Поруџбина #'+x.porudzbina_id))+' ('+fmt(pack(x).count)+' пак.)').join('<br>')+'</td></tr>').join('');
+ const win=window.open('','_blank','width=900,height=700');
+ if(!win){say('Прегледач је блокирао прозор за штампу. Дозволи искачуће прозоре.',true);return}
+ const farmTitle=esc(farmName(f?.name||'')),tourTitle=esc(tours.find(t=>Number(t.id)===Number(tourId))?.naziv||('Тура '+tourId));
+ const html='<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Припрема — '+farmTitle+'</title>'+
+ '<style>body{font:14px Arial,sans-serif;padding:28px;color:#17212b}table{width:100%;border-collapse:collapse}th,td{padding:10px;border:1px solid #ddd;text-align:left;vertical-align:top}th{background:#f1f5f9}h1{font-size:22px}@media print{button{display:none}}</style>'+
+ '</head><body><h1>СПИСАК ЗА ПРИПРЕМУ — '+farmTitle+'</h1><p>'+tourTitle+'</p><table><thead><tr><th>Производ / паковање</th><th>Паковања</th><th>Укупно</th><th>Распоред по купцима</th></tr></thead><tbody>'+body+'</tbody></table><p><button onclick="window.print()">ШТАМПАЈ</button></p></body></html>';
+ win.document.write(html);win.document.close();
 }
 function supplierDemandSummaryHtml(){
  const farmGroups={};
