@@ -483,6 +483,19 @@ main{padding-top:16px!important;padding-bottom:calc(108px + env(safe-area-inset-
  .tour-dashboard-status{max-width:76px;font-size:8px;padding:4px 6px}
 }
 </style>
+<style id="tour-dashboard-compact-kpis">
+/* Kompaktne KPI kartice: podaci ostaju isti, zauzimaju manje visine */
+#tour-dashboard>.rounded-2xl>.grid.grid-cols-2{gap:6px!important}
+#tour-dashboard>.rounded-2xl>.grid.grid-cols-2>div{min-height:0!important;padding:7px 9px!important;border-radius:10px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+#tour-dashboard>.rounded-2xl>.grid.grid-cols-2>div>span{font-size:9px!important;line-height:1.15!important;letter-spacing:.04em!important}
+#tour-dashboard>.rounded-2xl>.grid.grid-cols-2>div>strong{font-size:17px!important;line-height:1.05!important;margin-top:3px!important}
+#tour-dashboard>.rounded-2xl>.grid.grid-cols-2>div>small{font-size:9px!important;line-height:1.1!important;margin-top:2px!important}
+@media(min-width:640px){
+ #tour-dashboard>.rounded-2xl>.grid.grid-cols-2>div{padding:10px 12px!important}
+ #tour-dashboard>.rounded-2xl>.grid.grid-cols-2>div>strong{font-size:20px!important}
+}
+
+</style>
 <style id="tour-dashboard-panels">
 #tour-dashboard{min-height:calc(100dvh - 170px)}
 .tour-dashboard-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:148px;padding:17px 14px;border:1px solid #334155;border-radius:18px;background:linear-gradient(145deg,#1b2940,#121d31);color:#f8fafc;box-shadow:0 8px 20px rgba(0,0,0,.18);-webkit-tap-highlight-color:transparent}
