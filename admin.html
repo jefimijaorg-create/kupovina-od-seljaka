@@ -14,7 +14,7 @@
 <section id="bootstrapPanel" class="panel login">
 <h2>Прво покретање — главни администратор</h2>
 <p class="muted">Ово користиш само једном, након што је код за почетно подешавање постављен на серверу.</p>
-<form id="bootstrapForm">
+<form id="bootstrapForm" novalidate>
 <div class="fields" style="margin:10px 0"><input id="bootstrapSecret" type="password" autocomplete="off" placeholder="Једнократни код за подешавање" required></div>
 <div class="fields" style="margin:10px 0"><input id="bootstrapPassword" type="password" minlength="12" autocomplete="new-password" placeholder="Нова лозинка (најмање 12 знакова)" required></div>
 <div class="fields" style="margin:10px 0"><input id="bootstrapPassword2" type="password" minlength="12" autocomplete="new-password" placeholder="Понови нову лозинку" required></div>
@@ -66,12 +66,25 @@ async function userAction(payload){
  return data;
 }
 $('bootstrapForm').addEventListener('submit',async e=>{
- e.preventDefault();$('bootstrapMessage').textContent='';
- const a=$('bootstrapPassword').value,b=$('bootstrapPassword2').value;
- if(a!==b){$('bootstrapMessage').textContent='Лозинке се не поклапају.';return;}
- if(a.length<12){$('bootstrapMessage').textContent='Лозинка мора имати најмање 12 знакова.';return;}
- try{const r=await userAction({action:'bootstrap',password:a,bootstrap_secret:$('bootstrapSecret').value});$('bootstrapMessage').textContent=r.message||'Налог је направљен. Сада се пријави.';$('bootstrapPassword').value='';$('bootstrapPassword2').value='';$('bootstrapSecret').value='';}
- catch(err){$('bootstrapMessage').textContent=err.message;}
+ e.preventDefault();
+ const msg=$('bootstrapMessage'),form=$('bootstrapForm'),button=form.querySelector('button[type="submit"]');
+ const secretValue=$('bootstrapSecret').value.trim(),a=$('bootstrapPassword').value,b=$('bootstrapPassword2').value;
+ msg.className='muted';msg.textContent='';
+ if(!secretValue){msg.className='error';msg.textContent='Унеси једнократни код за подешавање.';$('bootstrapSecret').focus();return;}
+ if(a.length<12){msg.className='error';msg.textContent='Лозинка мора имати најмање 12 знакова.';$('bootstrapPassword').focus();return;}
+ if(a!==b){msg.className='error';msg.textContent='Лозинке се не поклапају.';$('bootstrapPassword2').focus();return;}
+ button.disabled=true;button.textContent='Шаљем захтев…';msg.textContent='Повезујем се са сервером и проверавам подешавање…';
+ try{
+  const r=await userAction({action:'bootstrap',password:a,bootstrap_secret:secretValue});
+  msg.className='muted';msg.textContent=r.message||'Сервер је потврдио креирање налога.';
+  $('bootstrapPassword').value='';$('bootstrapPassword2').value='';$('bootstrapSecret').value='';
+ }catch(err){
+  msg.className='error';
+  const detail=String(err?.message||err);
+  msg.textContent=/Failed to fetch|NetworkError|Load failed|fetch/i.test(detail)
+   ?'Захтев није стигао до Supabase сервера (мрежа или CORS). Провери интернет и адресу странице. Детаљ: '+detail
+   :detail;
+ }finally{button.disabled=false;button.textContent='Направи главни налог';}
 });
 $('changeOwnPassword').onclick=async()=>{
  const old=$('currentPassword').value, next=$('newPassword').value;
