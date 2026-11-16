@@ -2270,12 +2270,14 @@ function procurementDemandData(){
  (items||[]).forEach(row=>{
   const productId=String(row.product_id||'');
   const product=productCatalog.find(p=>String(p.id)===productId);
+  // products.name je примарни извор; назив из саме ставке је резервни приказ ако каталог није доступан.
+  const resolvedProductName=String(product?.name||row.proizvod||row.product_name||'').trim();
   const count=Math.max(0,n(row.package_count));
   const size=Math.max(0,n(row.package_size));
   const unitName=normUnit(row.package_unit||'ком');
   const variantId=String(row.variant_id||'');
   const key=productId+'|'+variantId+'|'+String(size)+'|'+unitName;
-  if(!groups.has(key))groups.set(key,{productId,variantId,productName:product?.name||(productId?'Назив производа није учитан':'Неповезан производ'),size,unit:unitName,packages:0,total:0,orders:0,missing:!product});
+  if(!groups.has(key))groups.set(key,{productId,variantId,productName:resolvedProductName||(productId?'Назив производа није учитан':'Неповезан производ'),size,unit:unitName,packages:0,total:0,orders:0,missing:!resolvedProductName});
   const group=groups.get(key);group.packages+=count;group.total+=count*size;group.orders++;
  });
  const all=[...groups.values()].sort((a,b)=>a.productName.localeCompare(b.productName,'sr')||a.size-b.size||a.unit.localeCompare(b.unit,'sr'));
