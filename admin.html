@@ -120,18 +120,6 @@ async function initializeRecoveryFlow(){
   message.textContent='Линк за опоравак није потврђен: '+(error.message||String(error));
  }
 }
-$('requestPasswordReset').onclick=async()=>{
- const button=$('requestPasswordReset'),message=$('resetRequestMessage');
- button.disabled=true;message.className='muted';message.textContent='Шаљем захтев за опоравак…';
- try{
-  const response=await fetch(USER_FN,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({action:'request_super_admin_recovery'})});
-  const result=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(result.error||'Захтев није успео. Покушај поново касније.');
-  message.textContent=result.message||'Ако је налог доступан, послат је линк за опоравак.';
- }catch(error){
-  message.className='error';message.textContent='Није могуће послати захтев: '+(error.message||error);
- }finally{button.disabled=false;}
-};
 $('recoveryForm').addEventListener('submit',async event=>{
  event.preventDefault();
  const password=$('recoveryPassword').value,password2=$('recoveryPassword2').value;
