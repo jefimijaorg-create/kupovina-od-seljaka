@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.0.5
+ * Version: 1.0.6
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
  *              Viber message preparation and package order/confirmation/pickup tracking.
@@ -26,7 +26,6 @@ async function copyText(text) {
 const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined && value !== ''))];
 const unwrap = (result, label) => { if (result.error) throw new Error(label + ': ' + result.error.message); return result.data || []; };
 const keyOf = (productId, variantId) => String(productId) + '::' + String(variantId);
-const allocationKey = (farmId, productId, variantId) => String(farmId) + '::' + keyOf(productId, variantId);
 
 export async function mountProcurementManagement({ root, core, tourId, onBack }) {
   if (!root || !core || core.authenticated !== true || !core.client || !tourId) {
