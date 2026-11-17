@@ -1,9 +1,9 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.1
+ * Version: 1.1.2
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
- *              Viber message preparation and package order/confirmation/pickup tracking.
+ *              Viber message preparation, package tracking, and product-level grouped demand display.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -177,26 +177,44 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
   function renderProducts() {
     if (!state.demands.length) return '<div class="nd-proc-empty">За ову туру нису пронађене ставке са product_id и variant_id.</div>' +
       (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '');
-    return (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '') +
-      state.demands.map((demand) => {
-      const product = productFor(demand.productId);
+    const groups = new Map();
+    for (const demand of state.demands) {
+      const key = String(demand.productId);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(demand);
+    }
+    let html = state.invalidSourceRows
+      ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>'
+      : '';
+    for (const [productId, demands] of groups) {
+      const product = productFor(productId);
       const productName = product?.name || 'Назив производа није доступан у products.name';
-      const totalAssigned = assigned(demand.productId, demand.variantId);
-      const totalConfirmed = allocationsFor(demand.productId, demand.variantId).reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
-      const left = remaining(demand.productId, demand.variantId);
-      const suppliers = offersFor(demand.productId, demand.variantId)
-        .map((offer) => farmFor(offer.gazdinstvo_id)?.name).filter(Boolean);
-      return '<article class="nd-proc-card">' +
-        '<div class="nd-proc-card-head"><div><strong>' + esc(productName) + '</strong><small>' + esc(formatVariant(demand)) + '</small></div>' +
-        '<span class="nd-proc-pill ' + (left === 0 ? 'is-done' : 'is-open') + '">' + (left === 0 ? 'Распоређено' : 'Преостало ' + fmt(left)) + '</span></div>' +
-        '<div class="nd-proc-metrics"><span><b>' + fmt(demand.packages) + '</b><small>Потребно паковања</small></span>' +
-        '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span>' +
-        '<span><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></span></div>' +
-        '<div class="nd-proc-subline">Укупна количина: ' + fmt(demand.totalQuantity) + ' ' + esc(demand.packageUnit || '') + '</div>' +
-        (demand.valid ? '' : '<div class="nd-proc-warning">Недостаје исправан package_count, package_size или package_unit. Расподела за ову варијанту је блокирана.</div>') +
-        '<div class="nd-proc-suppliers"><small>Активне понуде за ову варијанту</small>' +
-        (suppliers.length ? suppliers.map((name) => '<span>' + esc(name) + '</span>').join('') : '<em>Нема активних понуда.</em>') + '</div></article>';
-    }).join('');
+      html += '<article class="nd-proc-card nd-proc-product-group">' +
+        '<header class="nd-proc-product-heading"><strong>' + esc(productName) + '</strong>' +
+        '<small>' + fmt(demands.length) + (demands.length === 1 ? ' варијанта' : ' варијанте') + '</small></header>';
+      html += demands.map((demand) => {
+        const totalAssigned = assigned(demand.productId, demand.variantId);
+        const totalConfirmed = allocationsFor(demand.productId, demand.variantId)
+          .reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
+        const left = remaining(demand.productId, demand.variantId);
+        const suppliers = offersFor(demand.productId, demand.variantId)
+          .map((offer) => farmFor(offer.gazdinstvo_id)?.name).filter(Boolean);
+        return '<section class="nd-proc-variant-block">' +
+          '<div class="nd-proc-card-head"><div><strong>' + esc(formatVariant(demand)) + '</strong></div>' +
+          '<span class="nd-proc-pill ' + (left === 0 ? 'is-done' : 'is-open') + '">' +
+          (left === 0 ? 'Распоређено' : 'Преостало ' + fmt(left)) + '</span></div>' +
+          '<div class="nd-proc-metrics"><span><b>' + fmt(demand.packages) + '</b><small>Потребно паковања</small></span>' +
+          '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span>' +
+          '<span><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></span></div>' +
+          '<div class="nd-proc-subline">Укупна количина: ' + fmt(demand.totalQuantity) + ' ' + esc(demand.packageUnit || '') + '</div>' +
+          (demand.valid ? '' : '<div class="nd-proc-warning">Недостаје исправан package_count, package_size или package_unit. Расподела за ову варијанту је блокирана.</div>') +
+          '<div class="nd-proc-suppliers"><small>Активне понуде за ову варијанту</small>' +
+          (suppliers.length ? suppliers.map((name) => '<span>' + esc(name) + '</span>').join('') : '<em>Нема активних понуда.</em>') +
+          '</div></section>';
+      }).join('');
+      html += '</article>';
+    }
+    return html;
   }
 
   function renderAllocation() {
