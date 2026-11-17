@@ -18,7 +18,7 @@
 @media(max-width:650px){#recoveryOverlay{align-items:flex-end;padding:0}.recovery-card{width:100%;border-radius:20px 20px 0 0;max-height:88dvh;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}}
 </style></head>
 <body>
-<header><div><h1>Наручи домаће — Оператива</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке · безбедна пријава</div><div id="appVersion" style="display:inline-block;margin-top:7px;padding:3px 9px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff18;font-size:12px;font-weight:700">ADMIN · верзија V7</div></div><button id="logout" class="hidden">Одјава</button></header>
+<header><div><h1>Наручи домаће — Оператива</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке · безбедна пријава</div><div id="appVersion" style="display:inline-block;margin-top:7px;padding:3px 9px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff18;font-size:12px;font-weight:700">ADMIN · верзија V8</div></div><button id="logout" class="hidden">Одјава</button></header>
 <main>
 <section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Унеси корисничко име и лозинку.</p><form id="loginForm" onsubmit="event.preventDefault(); document.getElementById('error-message').textContent='JavaScript обрада пријаве није покренута. Освежи страницу и покушај поново.'; return false;"><div class="fields" style="margin:10px 0"><input id="username" type="text" autocomplete="username" placeholder="Корисничко име" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button> <button id="requestPasswordReset" type="button">Заборављена лозинка?</button><p id="resetRequestMessage" class="muted" role="status"></p><p id="error-message" class="error" role="alert" aria-live="assertive"></p></form></section>
 <section id="bootstrapPanel" class="panel login">
@@ -251,8 +251,9 @@ $('loginForm').addEventListener('submit',async e=>{
   await authState();
  }catch(err){
   console.error('[ADMIN LOGIN] Пријава није успела:',err);
+  const errorMessage=err?.message||String(err)||'Непозната грешка.';
   out.className='error';
-  out.textContent='ПРОВЕРА ПРИЈАВЕ: '+(err?.message||String(err)||'Непозната грешка. Погледај конзолу за детаље.');
+  out.textContent='ГРЕШКА ПРИ ПРИЈАВИ: '+errorMessage;
  }finally{
   button.disabled=false;
  }
