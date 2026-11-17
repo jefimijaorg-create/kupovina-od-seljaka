@@ -620,12 +620,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     if (action === 'back') return onBack?.();
     if (action === 'refresh') {
       button.disabled = true;
-      try {
-    await load();
-    if (initialProductId !== null && initialProductId !== undefined && initialProductId !== '') {
-      openProductAllocation(String(initialProductId));
-    }
-  } catch (error) { setNotice(error.message || String(error), 'error'); }
+      try { await load(); } catch (error) { setNotice(error.message || String(error), 'error'); }
       return;
     }
     if (action === 'save-allocation') return saveAllocation();
@@ -644,7 +639,12 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   }
   shell.addEventListener('keydown', handleKeydown);
 
-  try { await load(); } catch (error) {
+  try {
+    await load();
+    if (initialProductId !== null && initialProductId !== undefined && initialProductId !== '') {
+      openProductAllocation(String(initialProductId));
+    }
+  } catch (error) {
     state.diagnostic.error = 'Модул је покренут, али учитавање података није успело: ' + (error.message || String(error));
     shell.innerHTML = '<div class="nd-proc-error"><strong>Набавка није учитана</strong><p>' + esc(state.diagnostic.error) +
       '</p><button type="button" data-action="back">Назад</button></div>';
