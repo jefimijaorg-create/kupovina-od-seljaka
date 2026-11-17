@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.6
+ * Version: 1.1.7
  * Updated: 2026-11-17
- * Description: Adds on-screen touch/click/modal diagnostics to identify why product allocation does not open on mobile.
+ * Description: Supports opening the selected product allocation directly from the existing tour products list.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -26,7 +26,7 @@ const uniq = (values) => [...new Set(values.filter((value) => value !== null && 
 const unwrap = (result, label) => { if (result.error) throw new Error(label + ': ' + result.error.message); return result.data || []; };
 const keyOf = (productId, variantId) => String(productId) + '::' + String(variantId);
 
-export async function mountProcurementManagement({ root, core, tourId, onBack }) {
+export async function mountProcurementManagement({ root, core, tourId, onBack, initialProductId = null }) {
   if (!root || !core || core.authenticated !== true || !core.client || !tourId) {
     throw new Error('Недостаје потврђено ADMIN језгро или ID туре.');
   }
@@ -639,7 +639,12 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
   }
   shell.addEventListener('keydown', handleKeydown);
 
-  try { await load(); } catch (error) {
+  try {
+    await load();
+    if (initialProductId !== null && initialProductId !== undefined && initialProductId !== '') {
+      openProductAllocation(String(initialProductId));
+    }
+  } catch (error) {
     state.diagnostic.error = 'Модул је покренут, али учитавање података није успело: ' + (error.message || String(error));
     shell.innerHTML = '<div class="nd-proc-error"><strong>Набавка није учитана</strong><p>' + esc(state.diagnostic.error) +
       '</p><button type="button" data-action="back">Назад</button></div>';
