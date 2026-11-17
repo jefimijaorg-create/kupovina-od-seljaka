@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.2.1
+ * Version: 1.2.2
  * Updated: 2026-11-18
- * Description: Adds database-backed demand guards and preserves legacy pickup records during tracking edits.
+ * Description: Clarifies per-variant allocation recap and absolute farm allocation limits.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -244,15 +244,25 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       const product = productFor(demand.productId);
       const existing = rowFor(state.selectedFarmId, demand.productId, demand.variantId);
       const current = existing ? num(existing.broj_pakovanja) : 0;
-      const max = remaining(demand.productId, demand.variantId, state.selectedFarmId);
+      const otherAssigned = allocationsFor(demand.productId, demand.variantId)
+        .filter((row) => String(row.gazdinstvo_id) !== String(state.selectedFarmId))
+        .reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
+      const maxForFarm = Math.max(0, demand.packages - otherAssigned);
+      const uncovered = Math.max(0, demand.packages - otherAssigned - current);
       const draftKey = keyOf(demand.productId, demand.variantId);
       const draft = state.allocationDraft[draftKey];
-      return '<article class="nd-proc-card"><div class="nd-proc-card-head"><div><strong>' +
+      return '<article class="nd-proc-card nd-proc-allocation-card"><div class="nd-proc-card-head"><div><strong>' +
         esc(product?.name || 'Назив производа није доступан') + '</strong><small>' + esc(formatVariant(demand)) + '</small></div>' +
-        '<span class="nd-proc-pill is-open">Преостало за ово газдинство ' + fmt(max) + '</span></div>' +
-        '<div class="nd-proc-input-row"><label>Број паковања</label><input type="number" min="0" max="' + max + '" step="1" inputmode="numeric" data-allocation-count="' + esc(draftKey) +
-        '" value="' + esc(draft ?? current) + '" aria-label="Број паковања за ' + esc(product?.name || 'производ') + '"></div>' +
-        (existing ? '<small class="nd-proc-subline">Већ сачувано: ' + fmt(current) + ' паковања</small>' : '') + '</article>';
+        '<span class="nd-proc-pill ' + (uncovered === 0 ? 'is-done' : 'is-open') + '">Непокривено за туру ' + fmt(uncovered) + '</span></div>' +
+        '<div class="nd-proc-allocation-recap" aria-label="Рекапитулација расподеле">' +
+        '<span><b>' + fmt(demand.packages) + '</b><small>Укупно потребно за туру</small></span>' +
+        '<span><b>' + fmt(otherAssigned) + '</b><small>Додељено другим газдинствима</small></span>' +
+        '<span><b>' + fmt(current) + '</b><small>Додељено овом газдинству</small></span>' +
+        '<span><b>' + fmt(uncovered) + '</b><small>Преостало непокривено</small></span></div>' +
+        '<div class="nd-proc-input-row"><label>Укупно паковања за ово газдинство</label><input type="number" min="0" max="' + maxForFarm + '" step="1" inputmode="numeric" data-allocation-count="' + esc(draftKey) +
+        '" value="' + esc(draft ?? current) + '" aria-label="Укупна додељена паковања за ' + esc(product?.name || 'производ') + '"></div>' +
+        '<small class="nd-proc-subline">Унеси нову укупну количину, не додатну. Максимум за ово газдинство: ' + fmt(maxForFarm) + ' паковања.</small>' +
+        (existing ? '<small class="nd-proc-subline">Тренутно сачувано у бази: ' + fmt(current) + ' паковања</small>' : '') + '</article>';
     }).join('');
     html += '<button type="button" class="nd-proc-primary" data-action="save-allocation" ' + (state.busy ? 'disabled' : '') + '>' + (state.busy ? 'Чувам…' : 'Сачувај расподелу овог газдинства') + '</button>';
     return html;
