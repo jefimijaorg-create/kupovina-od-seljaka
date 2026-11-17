@@ -1,0 +1,81 @@
+/*
+ * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
+ * Version: 1.0.0
+ * Updated: 2026-11-17
+ * Description: Read-only, tabbed operations view for one selected tour; reuses authenticated ADMIN core.
+ */
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined))];
+const fmtDate = (value) => value ? new Date(value + 'T12:00:00').toLocaleDateString('sr-RS') : 'Datum nije naveden';
+const fmtQty = (count, size, unit) => {
+  const a = Number(count), b = Number(size);
+  return Number.isFinite(a) && Number.isFinite(b) ? (a * b).toLocaleString('sr-RS') + ' ' + esc(unit || '') : 'Količina nije dostupna';
+};
+const fail = (result, label) => { if (result.error) throw new Error(label + ': ' + result.error.message); return result.data || []; };
+
+export async function mountTourOperations({ root, core, tourId, onBack }) {
+  if (!root || !core || core.authenticated !== true || !core.client || !tourId) throw new Error('Недостаје потврђено ADMIN језгро или ID туре.');
+  const client = core.client;
+  const role = core.getState().role;
+  const canReadProducts = ['admin','super_admin'].includes(role);
+  let activeTab = 'orders', disposed = false, loadToken = 0;
+  const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
+  root.innerHTML = '<section class="nd-tour-ops"><div class="nd-ops-loading">Учитавам податке из Supabase базе…</div></section>';
+  const shell = root.querySelector('.nd-tour-ops');
+  const load = async () => {
+    const token = ++loadToken;
+    shell.querySelector('[data-ops-error]')?.remove();
+    shell.querySelector('[data-ops-content]')?.remove();
+    const result = await client.from('ture').select('id,naziv,datum,status,dostavljac').eq('id', tourId).maybeSingle();
+    if (result.error) throw result.error;
+    if (!result.data) throw new Error('Изабрана тура није пронађена или немате дозволу за читање.');
+    state.tour = result.data;
+    const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,status_izdavanja,package_count,package_size,package_unit,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
+    state.items = fail(itemResult, 'Ставке поруџбина');
+    const orderIds = uniq(state.items.map(x=>x.porudzbina_id));
+    const productIds = uniq(state.items.map(x=>x.product_id));
+    const variantIds = uniq(state.items.map(x=>x.variant_id));
+    const farmIds = uniq(state.items.map(x=>x.gazdinstvo_id));
+    const ordersResult = orderIds.length ? await client.from('porudzbine').select('id,kupac_id,status,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at,ukupna_cena,dostavljac').in('id',orderIds) : {data:[],error:null};
+    state.orders = fail(ordersResult, 'Поруџбине');
+    const customerIds = uniq(state.orders.map(x=>x.kupac_id));
+    const customerResult = customerIds.length ? await client.from('kupci').select('id,ime_prezime,telefon').in('id',customerIds) : {data:[],error:null};
+    state.customers = fail(customerResult, 'Купци');
+    const stopsResult = await client.from('tura_punktovi').select('tura_id,punkt_id,redosled,aktivan,vreme').eq('tura_id',tourId).order('redosled',{ascending:true});
+    state.tourStops = fail(stopsResult,'Пунктови туре');
+    const pointIds = uniq(state.tourStops.map(x=>x.punkt_id));
+    const pointsResult = pointIds.length ? await client.from('punktovi').select('id,name,city,address,latitude,longitude,vreme').in('id',pointIds) : {data:[],error:null};
+    state.points = fail(pointsResult,'Пунктови');
+    if (canReadProducts) {
+      const [productsResult, variantsResult, farmsResult, itemAllocResult, procurementResult] = await Promise.all([
+        productIds.length ? client.from('products').select('id,name,gazdinstvo_id').in('id',productIds) : Promise.resolve({data:[],error:null}),
+        variantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,is_active').in('id',variantIds) : Promise.resolve({data:[],error:null}),
+        farmIds.length ? client.from('gazdinstva').select('id,name,phone').in('id',farmIds) : Promise.resolve({data:[],error:null}),
+        state.items.length ? client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',state.items.map(x=>x.id)) : Promise.resolve({data:[],error:null}),
+        client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,raspodela_kupcima,preuzeto_pakovanja,naruceno,potvrdjeno_pakovanja').eq('tura_id',tourId)
+      ]);
+      state.products=fail(productsResult,'Производи'); state.variants=fail(variantsResult,'Варијанте'); state.farms=fail(farmsResult,'Газдинства');
+      state.itemAllocations=fail(itemAllocResult,'Расподела ставки'); state.procurementAllocations=fail(procurementResult,'Набавка');
+    }
+    if (token !== loadToken || disposed) return;
+    render();
+  };
+  const mapBy=(rows,key)=>new Map(rows.map(row=>[row[key],row]));
+  function render() {
+    const orderMap=mapBy(state.orders,'id'), customerMap=mapBy(state.customers,'id'), productMap=mapBy(state.products,'id'), variantMap=mapBy(state.variants,'id'), farmMap=mapBy(state.farms,'id'), pointMap=mapBy(state.points,'id');
+    const title=esc(state.tour.naziv||('Тура #'+tourId));
+    const tabs=[['orders','Поруџбине'],['products','Производи'],['allocations','Расподела'],['delivery','Достава']];
+    let body='';
+    if(activeTab==='orders') body=state.items.length?state.items.map(item=>{const order=orderMap.get(item.porudzbina_id)||{}, customer=customerMap.get(order.kupac_id)||{};return '<article class="nd-ops-card"><strong>Поруџбина #'+esc(order.id||item.porudzbina_id||'—')+'</strong><div>'+esc(customer.ime_prezime||'Купац није доступан')+'</div><small>'+esc(customer.telefon||order.telefon||'Телефон није наведен')+' · '+esc(order.status||item.status||'Без статуса')+'</small><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div></article>'}).join(''):'<div class="nd-ops-empty">У овој тури нема ставки поруџбина.</div>';
+    if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id);return '<article class="nd-ops-card"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
+    if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
+    if(activeTab==='delivery') body=state.tourStops.length?state.tourStops.map(stop=>{const p=pointMap.get(stop.punkt_id);const orders=state.orders.filter(o=>o.punkt_id===stop.punkt_id);return '<article class="nd-ops-card"><strong>'+esc(stop.redosled)+'. '+esc(p?.name||'Пункт није доступан')+'</strong><div>'+esc(p?.city||'')+' · '+esc(p?.address||'')+'</div><small>'+esc(stop.vreme||p?.vreme||'Време није наведено')+' · '+orders.length+' поруџбина · '+(stop.aktivan?'Активан':'Неактиван')+'</small></article>'}).join(''):'<div class="nd-ops-empty">За ову туру нису дефинисани пунктови.</div>';
+    shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div></div><button type="button" data-back>← Назад</button></header><nav class="nd-ops-tabs" aria-label="Секције туре">'+tabs.map(([id,label])=>'<button type="button" data-tab="'+id+'" aria-selected="'+(activeTab===id)+'">'+label+'</button>').join('')+'</nav><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
+    shell.querySelector('[data-back]').addEventListener('click',onBack);
+    shell.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{activeTab=button.dataset.tab;render()}));
+    shell.querySelector('[data-refresh]').addEventListener('click',async e=>{e.currentTarget.disabled=true;try{await load()}catch(error){showError(error)}finally{if(e.currentTarget)e.currentTarget.disabled=false}});
+  }
+  function showError(error){shell.innerHTML='<div class="nd-ops-error"><strong>Подаци нису учитани</strong><p>'+esc(error.message||String(error))+'</p><button type="button" data-back>Назад</button></div>';shell.querySelector('[data-back]').addEventListener('click',onBack)}
+  try { await load(); } catch(error) { showError(error); }
+  return { destroy(){disposed=true;loadToken++;root.replaceChildren();} };
+}
