@@ -1,9 +1,9 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.2
+ * Version: 1.1.3
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
- *              Viber message preparation, package tracking, and product-level grouped demand display.
+ *              Preserve first Viber send timestamps and group demand by product with nested variants.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -456,19 +456,19 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     let updated = 0;
     try {
       const now = new Date().toISOString();
-      const patch = { viber_status: status, updated_at: now };
-      if (status === 'sent') {
-        rows.forEach((row) => { if (!row.viber_poslato_at) patch.viber_poslato_at = now; });
+      for (const row of rows) {
+        const patch = { viber_status: status, updated_at: now };
+        // Preserve the first recorded send time; only fill missing timestamps.
+        if (status === 'sent' && !row.viber_poslato_at) patch.viber_poslato_at = now;
+        let query = client.from('tura_nabavka_dodele').update(patch).eq('id', row.id);
+        if (status === 'sent' && !row.viber_poslato_at) query = query.is('viber_poslato_at', null);
+        const result = await query.select('id,viber_status,viber_poslato_at').maybeSingle();
+        if (result.error) throw new Error(result.error.message);
+        if (!result.data || result.data.viber_status !== status) {
+          throw new Error('База није потврдила Viber статус за ставку ' + row.id + '.');
+        }
+        updated += 1;
       }
-      const result = await client.from('tura_nabavka_dodele').update(patch)
-        .in('id', rows.map((row) => row.id))
-        .select('id,viber_status,viber_poslato_at');
-      if (result.error) throw new Error(result.error.message);
-      if (!Array.isArray(result.data) || result.data.length !== rows.length ||
-          result.data.some((row) => row.viber_status !== status)) {
-        throw new Error('База није потврдила Viber статус за све ставке газдинства.');
-      }
-      updated = result.data.length;
       await load();
       setNotice(status === 'sent' ? 'Ручно је потврђено слање Viber поруке за ово газдинство.' : 'Одговор газдинства је евидентиран.');
     } catch (error) {
