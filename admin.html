@@ -6,7 +6,7 @@
 <title>Оператива — Наручи домаће</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{color-scheme:light;--green:#166534;--line:#e5e7eb;--muted:#64748b}*{box-sizing:border-box}body{margin:0;background:#f3f5f4;color:#17211b;font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#14532d;color:white;padding:18px max(16px,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:21px;margin:0}main{max-width:1100px;margin:auto;padding:18px 14px 60px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 3px 12px #0f172a08}.login{max-width:430px;margin:7vh auto}.fields{display:flex;gap:9px;flex-wrap:wrap}input,select,button{font:inherit;border-radius:10px;padding:10px 12px;border:1px solid #cbd5e1;background:white}input{min-width:0;flex:1}button{cursor:pointer;font-weight:700}button.primary{background:var(--green);color:white;border-color:var(--green)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:13px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:22px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.stop{margin:14px 0 8px;font-size:17px;font-weight:800}.order{border:1px solid var(--line);border-radius:13px;padding:13px;margin:8px 0;background:white}.order-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.name{font-weight:800;font-size:16px}.muted{color:var(--muted);font-size:13px}.items{margin:8px 0;padding-left:19px}.items li{margin:3px 0}.amount{font-weight:900;white-space:nowrap}.pill{display:inline-block;border-radius:999px;padding:3px 9px;background:#ecfdf5;color:#166534;font-size:12px;font-weight:800}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.error{color:#b91c1c}.hidden{display:none!important}.empty{padding:20px;text-align:center;color:var(--muted)}footer{font-size:12px;color:var(--muted);text-align:center;margin:22px 0}@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.order-head{display:block}.amount{display:block;margin-top:5px}}@media print{header,.toolbar,.actions,.login,footer,.no-print{display:none!important}body{background:white}main{max-width:none;padding:0}.panel,.order{box-shadow:none;border-color:#bbb;break-inside:avoid}.stop{break-after:avoid}}
+:root{color-scheme:light;--green:#166534;--line:#e5e7eb;--muted:#64748b}*{box-sizing:border-box}body{margin:0;background:#f3f5f4;color:#17211b;font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#14532d;color:white;padding:18px max(16px,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:21px;margin:0}main{max-width:1100px;margin:auto;padding:18px 14px 60px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 3px 12px #0f172a08}.fields{display:flex;gap:9px;flex-wrap:wrap}input,select,button{font:inherit;border-radius:10px;padding:10px 12px;border:1px solid #cbd5e1;background:white}input{min-width:0;flex:1}button{cursor:pointer;font-weight:700}button.primary{background:var(--green);color:white;border-color:var(--green)}button:disabled{opacity:.5;cursor:wait}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:13px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:22px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.stop{margin:14px 0 8px;font-size:17px;font-weight:800}.order{border:1px solid var(--line);border-radius:13px;padding:13px;margin:8px 0;background:white}.order-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.name{font-weight:800;font-size:16px}.muted{color:var(--muted);font-size:13px}.items{margin:8px 0;padding-left:19px}.items li{margin:3px 0}.amount{font-weight:900;white-space:nowrap}.pill{display:inline-block;border-radius:999px;padding:3px 9px;background:#ecfdf5;color:#166534;font-size:12px;font-weight:800}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.error{color:#b91c1c}.hidden{display:none!important}.empty{padding:20px;text-align:center;color:var(--muted)}footer{font-size:12px;color:var(--muted);text-align:center;margin:22px 0}@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.order-head{display:block}.amount{display:block;margin-top:5px}}@media print{header,.toolbar,.actions,.login,footer,.no-print{display:none!important}body{background:white}main{max-width:none;padding:0}.panel,.order{box-shadow:none;border-color:#bbb;break-inside:avoid}.stop{break-after:avoid}}
 
 #recoveryOverlay{position:fixed;inset:0;z-index:9999;background:#0f172acc;display:flex;align-items:center;justify-content:center;padding:16px}
 #recoveryOverlay.hidden{display:none!important}
@@ -20,17 +20,7 @@
 <body>
 <header><div><h1>Наручи домаће — Оператива</h1><div style="opacity:.85;font-size:13px">Туре, поруџбине и испоруке · безбедна пријава</div><div id="appVersion" style="display:inline-block;margin-top:7px;padding:3px 9px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff18;font-size:12px;font-weight:700">ADMIN · верзија V8</div></div><button id="logout" class="hidden">Одјава</button></header>
 <main>
-<section id="loginPanel" class="panel login"><h2>Пријава администратора</h2><p class="muted">Унеси корисничко име и лозинку.</p><form id="loginForm" onsubmit="event.preventDefault(); document.getElementById('error-message').textContent='JavaScript обрада пријаве није покренута. Освежи страницу и покушај поново.'; return false;"><div class="fields" style="margin:10px 0"><input id="username" type="text" autocomplete="username" placeholder="Корисничко име" required></div><div class="fields" style="margin:10px 0"><input id="password" type="password" autocomplete="current-password" placeholder="Лозинка" required></div><button class="primary" type="submit">Пријави се</button> <button id="requestPasswordReset" type="button">Заборављена лозинка?</button><p id="resetRequestMessage" class="muted" role="status"></p><p id="error-message" class="error" role="alert" aria-live="assertive"></p></form></section>
-<section id="bootstrapPanel" class="panel login">
-<h2>Прво покретање — главни администратор</h2>
-<p class="muted">Ово користиш само једном, након што је код за почетно подешавање постављен на серверу.</p>
-<form id="bootstrapForm" novalidate>
-<div class="fields" style="margin:10px 0"><input id="bootstrapSecret" type="password" autocomplete="off" placeholder="Једнократни код за подешавање" required></div>
-<div class="fields" style="margin:10px 0"><input id="bootstrapPassword" type="password" minlength="12" autocomplete="new-password" placeholder="Нова лозинка (најмање 12 знакова)" required></div>
-<div class="fields" style="margin:10px 0"><input id="bootstrapPassword2" type="password" minlength="12" autocomplete="new-password" placeholder="Понови нову лозинку" required></div>
-<button class="primary" type="submit">Направи главни налог</button><p id="bootstrapMessage" class="muted"></p>
-</form></section>
-<section id="app" class="hidden">
+<section id="app" class="hidden"><section id="app" class="hidden">
 <div class="panel" id="accountPanel">
 <h2>Налог и корисници</h2>
 <p class="muted">Лозинке се мењају преко Auth сервиса; у бази се не чувају као читљив текст.</p>
@@ -54,7 +44,7 @@
 <div class="panel"><div class="toolbar"><input id="search" placeholder="Претрага: купац, производ, телефон…"><select id="dateFilter"><option value="">Сви датуми доставе</option></select><select id="stopFilter"><option value="">Сви пунктови</option></select><select id="statusFilter"><option value="nove" selected>Само нове поруџбине</option><option value="">Сви статуси</option><option value="nova">Нова — чека потврду</option><option value="primljeno">Нова — непрегледана</option><option value="primljena">Прегледана</option><option value="potvrdjena">Потврђена</option><option value="provera">Потребна провера</option><option value="u_pripremi">У припреми</option><option value="spremna">Спремна за доставу</option><option value="isporucena">Испоручена</option><option value="otkazana">Отказана</option></select></div><div class="actions"><button id="copy">Копирај списак</button><button id="print">Штампај / PDF</button></div></div>
 <div id="orders"></div><p id="message" class="muted"></p>
 </section>
-<footer>Пријава корисничким именом користи заштићени Supabase Auth налог. Не дели лозинку.</footer>
+<footer>Овај контролни панел је доступан само уз важећу Supabase сесију. Пријава се обавља преко ADMIN 2.</footer>
 <div id="recoveryOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle">
  <section class="recovery-card">
   <h2 id="recoveryTitle">Постави нову лозинку</h2>
@@ -85,8 +75,6 @@ const say=t=>$('message').textContent=t;
 let recoveryMode=false;
 function showRecoveryForm(){
  recoveryMode=true;
- $('loginPanel').classList.add('hidden');
- $('bootstrapPanel').classList.add('hidden');
  $('app').classList.add('hidden');
  $('logout').classList.add('hidden');
  $('recoveryOverlay').classList.remove('hidden');
@@ -96,12 +84,11 @@ function showRecoveryForm(){
 }
 sb.auth.onAuthStateChange((event,session)=>{
  if(event==="PASSWORD_RECOVERY"||(recoveryLinkRequested&&session)) showRecoveryForm();
+ if(event==="SIGNED_OUT"&&!recoveryMode) location.replace('/admin2.html');
 });
 async function initializeRecoveryFlow(){
  if(!recoveryLinkRequested) return;
  recoveryMode=true;
- $('loginPanel').classList.add('hidden');
- $('bootstrapPanel').classList.add('hidden');
  $('app').classList.add('hidden');
  $('logout').classList.add('hidden');
  $('recoveryOverlay').classList.remove('hidden');
@@ -175,27 +162,6 @@ async function userAction(payload){
  if(!res.ok)throw new Error(data.error||'Захтев није успео.');
  return data;
 }
-$('bootstrapForm').addEventListener('submit',async e=>{
- e.preventDefault();
- const msg=$('bootstrapMessage'),form=$('bootstrapForm'),button=form.querySelector('button[type="submit"]');
- const secretValue=$('bootstrapSecret').value.trim(),a=$('bootstrapPassword').value,b=$('bootstrapPassword2').value;
- msg.className='muted';msg.textContent='';
- if(!secretValue){msg.className='error';msg.textContent='Унеси једнократни код за подешавање.';$('bootstrapSecret').focus();return;}
- if(a.length<12){msg.className='error';msg.textContent='Лозинка мора имати најмање 12 знакова.';$('bootstrapPassword').focus();return;}
- if(a!==b){msg.className='error';msg.textContent='Лозинке се не поклапају.';$('bootstrapPassword2').focus();return;}
- button.disabled=true;button.textContent='Шаљем захтев…';msg.textContent='Повезујем се са сервером и проверавам подешавање…';
- try{
-  const r=await userAction({action:'bootstrap',password:a,bootstrap_secret:secretValue});
-  msg.className='muted';msg.textContent=r.message||'Сервер је потврдио креирање налога.';
-  $('bootstrapPassword').value='';$('bootstrapPassword2').value='';$('bootstrapSecret').value='';
- }catch(err){
-  msg.className='error';
-  const detail=String(err?.message||err);
-  msg.textContent=/Failed to fetch|NetworkError|Load failed|fetch/i.test(detail)
-   ?'Захтев није стигао до Supabase сервера (мрежа или CORS). Провери интернет и адресу странице. Детаљ: '+detail
-   :detail;
- }finally{button.disabled=false;button.textContent='Направи главни налог';}
-});
 $('changeOwnPassword').onclick=async()=>{
  const old=$('currentPassword').value, next=$('newPassword').value;
  if(!old||next.length<12){$('accountMessage').textContent='Унеси тренутну и нову лозинку од најмање 12 знакова.';return;}
@@ -220,45 +186,18 @@ async function loadUsers(){
  }catch(e){$('usersList').textContent='Управљање корисницима није доступно: '+e.message;}
 }
 
-async function authState(){if(recoveryMode){$("loginPanel").classList.add("hidden");$("bootstrapPanel").classList.add("hidden");$("app").classList.add("hidden");$("logout").classList.add("hidden");return;}const {data:{session}}=await sb.auth.getSession();$('loginPanel').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);$('logout').classList.toggle('hidden',!session);if(session){$('bootstrapPanel').classList.add('hidden');await load();await loadUsers();}else{$('bootstrapPanel').classList.remove('hidden');}}
-$('loginForm').addEventListener('submit',async e=>{
- e.preventDefault();
- const out=$('error-message'),button=$('loginForm').querySelector('button[type="submit"]');
- out.className='muted';
- out.textContent='1/4 Проверавам везу са сервером…';
- button.disabled=true;
- const username=$('username').value.trim().toLowerCase(),password=$('password').value;
- try{
-  if(!window.supabase||!sb)throw new Error('Supabase JavaScript библиотека није учитана. Провери интернет или блокирање CDN-а.');
-  out.textContent='2/4 Повезујем се са Supabase Edge Function…';
-  let res;
-  try{
-   res=await fetch(USER_FN,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({action:'login',username,password})});
-  }catch(net){
-   throw new Error('API/МРЕЖА: не могу да дохватим сервер. Провери интернет, адресу функције и CORS. Детаљ: '+(net.message||net));
-  }
-  let data;
-  try{data=await res.json();}
-  catch{
-   throw new Error('API ОДГОВОР: сервер је вратио нечитљив одговор (HTTP '+res.status+'). Могућ проблем са Edge Function-ом или API кључем.');
-  }
-  if(!res.ok)throw new Error('СЕРВЕР (HTTP '+res.status+'): '+(data.error||'Није прихватио пријаву.'));
-  if(!data.session?.access_token||!data.session?.refresh_token)throw new Error('AUTH ОДГОВОР: сервер није вратио сесију. Проверити Supabase Auth и publishable API key.');
-  out.textContent='3/4 Сервер је прихватио корисника и лозинку. Чувам сесију…';
-  const {error}=await sb.auth.setSession({access_token:data.session.access_token,refresh_token:data.session.refresh_token});
-  if(error)throw new Error('СЕСИЈА: корисник/лозинка су прихваћени, али Supabase није сачувао сесију. '+error.message);
-  out.textContent='4/4 Пријава успешна. Учитавање поруџбина…';
-  await authState();
- }catch(err){
-  console.error('[ADMIN LOGIN] Пријава није успела:',err);
-  const errorMessage=err?.message||String(err)||'Непозната грешка.';
-  out.className='error';
-  out.textContent='ГРЕШКА ПРИ ПРИЈАВИ: '+errorMessage;
- }finally{
-  button.disabled=false;
- }
-});
-$('logout').onclick=async()=>{await sb.auth.signOut();await authState();};
+async function authState(){
+ if(recoveryMode){$('app').classList.add('hidden');$('logout').classList.add('hidden');return;}
+ const {data:{session},error:sessionError}=await sb.auth.getSession();
+ if(sessionError||!session?.access_token){location.replace('/admin2.html');return;}
+ const {data:{user},error:userError}=await sb.auth.getUser();
+ if(userError||!user){await sb.auth.signOut();location.replace('/admin2.html');return;}
+ $('app').classList.remove('hidden');
+ $('logout').classList.remove('hidden');
+ await load();
+ await loadUsers();
+}
+$('logout').onclick=async()=>{await sb.auth.signOut();location.replace('/admin2.html');};
 $('refresh').onclick=()=>load(true);$('newCount').onclick=()=>showPendingOrders();$('search').addEventListener('input',render);$('stopFilter').onchange=render;$('statusFilter').onchange=render;$('dateFilter').onchange=render;$('print').onclick=()=>window.print();
 $('enableNotifications').onclick=async()=>{if(!('Notification' in window)){$('message').textContent='Овај прегледач не подржава обавештења.';return;}const p=await Notification.requestPermission();$('message').textContent=p==='granted'?'Обавештења су укључена. Провера нових поруџбина сваких 30 секунди.':'Обавештења нису дозвољена у прегледачу.';};
 $('copy').onclick=async()=>{const text=makeText(filtered());try{await navigator.clipboard.writeText(text);say('Списак је копиран.');}catch{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();say('Списак је копиран.');}};
