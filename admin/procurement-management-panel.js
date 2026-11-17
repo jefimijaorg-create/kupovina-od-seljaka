@@ -1,9 +1,9 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.3
+ * Version: 1.1.4
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
- *              Preserve first Viber send timestamps and group demand by product with nested variants.
+ *              Preserve first Viber send timestamps; open a product-scoped allocation form from each product card.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -39,7 +39,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
   const client = core.client;
   const state = {
     tour: null, items: [], invalidSourceRows: 0, products: [], variants: [], offers: [], farms: [],
-    allocations: [], demands: [], tab: 'products', selectedFarmId: '',
+    allocations: [], demands: [], tab: 'products', selectedFarmId: '', selectedProductId: null,
     allocationDraft: {}, trackingDraft: {}, busy: false, disposed: false, token: 0,
     notice: '', noticeType: 'success'
   };
@@ -189,7 +189,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     for (const [productId, demands] of groups) {
       const product = productFor(productId);
       const productName = product?.name || 'Назив производа није доступан у products.name';
-      html += '<article class="nd-proc-card nd-proc-product-group">' +
+      html += '<article class="nd-proc-card nd-proc-product-group" data-open-product="' + esc(productId) + '" role="button" tabindex="0" aria-label="Отвори расподелу за ' + esc(productName) + '">' +
         '<header class="nd-proc-product-heading"><strong>' + esc(productName) + '</strong>' +
         '<small>' + fmt(demands.length) + (demands.length === 1 ? ' варијанта' : ' варијанте') + '</small></header>';
       html += demands.map((demand) => {
@@ -217,13 +217,14 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     return html;
   }
 
-  function renderAllocation() {
-    const offeredFarmIds = uniq(state.offers.filter((offer) => state.demands.some((demand) =>
+  function renderAllocation(productId = null) {
+    const demands = productId === null ? state.demands : state.demands.filter((demand) => String(demand.productId) === String(productId));
+    const offeredFarmIds = uniq(state.offers.filter((offer) => demands.some((demand) =>
       String(demand.productId) === String(offer.product_id) && String(demand.variantId) === String(offer.variant_id)))
       .map((offer) => offer.gazdinstvo_id));
     if (!offeredFarmIds.length) return '<div class="nd-proc-empty">Нема активних понуда које одговарају производима и варијантама ове туре.</div>';
     const farm = farmFor(state.selectedFarmId);
-    const eligible = state.demands.filter((demand) => demand.valid &&
+    const eligible = demands.filter((demand) => demand.valid &&
       offersFor(demand.productId, demand.variantId).some((offer) => String(offer.gazdinstvo_id) === String(state.selectedFarmId)));
     let html = '<div class="nd-proc-form-head"><label for="ndProcFarmSelect">Изабери газдинство</label>' +
       '<select id="ndProcFarmSelect" data-farm-select>' +
@@ -248,6 +249,39 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     }).join('');
     html += '<button type="button" class="nd-proc-primary" data-action="save-allocation" ' + (state.busy ? 'disabled' : '') + '>' + (state.busy ? 'Чувам…' : 'Сачувај расподелу овог газдинства') + '</button>';
     return html;
+  }
+
+  function renderProductAllocationModal() {
+    const product = productFor(state.selectedProductId);
+    if (!product) return '';
+    const productDemands = state.demands.filter((demand) => String(demand.productId) === String(state.selectedProductId));
+    const needed = productDemands.reduce((sum, demand) => sum + demand.packages, 0);
+    const allocated = productDemands.reduce((sum, demand) => sum + assigned(demand.productId, demand.variantId), 0);
+    const left = Math.max(0, needed - allocated);
+    return '<div class="nd-proc-product-modal-backdrop" data-product-modal-backdrop>' +
+      '<section class="nd-proc-product-modal" role="dialog" aria-modal="true" aria-labelledby="ndProcProductModalTitle">' +
+      '<header class="nd-proc-product-modal-head"><div><small>РАСПОДЕЛА ПО ГАЗДИНСТВИМА</small>' +
+      '<h2 id="ndProcProductModalTitle">' + esc(product.name || 'Производ') + '</h2>' +
+      '<p>Изабери газдинство и расподели паковања по варијантама овог производа.</p></div>' +
+      '<button type="button" class="nd-proc-modal-close" data-action="close-product-modal" aria-label="Затвори форму">×</button></header>' +
+      '<div class="nd-proc-modal-summary"><span><b>' + fmt(needed) + '</b><small>Потребно паковања</small></span>' +
+      '<span><b>' + fmt(allocated) + '</b><small>Распоређено</small></span>' +
+      '<span><b>' + fmt(left) + '</b><small>Преостало</small></span></div>' +
+      '<div class="nd-proc-modal-body">' + renderAllocation(state.selectedProductId) + '</div>' +
+      '</section></div>';
+  }
+
+  function openProductAllocation(productId) {
+    const productDemands = state.demands.filter((demand) => String(demand.productId) === String(productId));
+    if (!productDemands.length) return;
+    const farmIds = uniq(state.offers.filter((offer) => productDemands.some((demand) =>
+      String(demand.productId) === String(offer.product_id) && String(demand.variantId) === String(offer.variant_id)))
+      .map((offer) => offer.gazdinstvo_id));
+    state.selectedProductId = String(productId);
+    if (!farmIds.some((id) => String(id) === String(state.selectedFarmId))) state.selectedFarmId = farmIds[0] ?? '';
+    state.allocationDraft = {};
+    state.notice = '';
+    render();
   }
 
   function renderFarmRecords() {
@@ -315,7 +349,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       (isProcessing ? '' : '<div class="nd-proc-warning">Тура није у статусу processing. Набавка је доступна само за читање; база ће одбити сваки покушај измене.</div>') +
       (state.notice ? '<div class="nd-proc-notice ' + (state.noticeType === 'error' ? 'is-error' : '') + '">' + esc(state.notice) + '</div>' : '') +
       '<section class="nd-proc-content">' + body + '</section>' +
-      '<footer class="nd-proc-foot"><span>Постојећи Supabase клијент · RLS активан</span><button type="button" class="nd-proc-secondary" data-action="refresh" ' + (state.busy ? 'disabled' : '') + '>Освежи</button></footer>';
+      '<footer class="nd-proc-foot"><span>Постојећи Supabase клијент · RLS активан</span><button type="button" class="nd-proc-secondary" data-action="refresh" ' + (state.busy ? 'disabled' : '') + '>Освежи</button></footer>' +
+      (state.selectedProductId !== null ? renderProductAllocationModal() : '');
   }
 
   function setNotice(message, type = 'success') {
@@ -516,11 +551,15 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     }
   });
   shell.addEventListener('click', async (event) => {
+    if (event.target.matches('[data-product-modal-backdrop]')) { state.selectedProductId = null; render(); return; }
+    const productCard = event.target.closest('[data-open-product]');
+    if (productCard) { openProductAllocation(productCard.dataset.openProduct); return; }
     const tab = event.target.closest('[data-tab]');
     if (tab) { state.tab = tab.dataset.tab; state.notice = ''; render(); return; }
     const button = event.target.closest('[data-action]');
     if (!button || state.busy) return;
     const action = button.dataset.action;
+    if (action === 'close-product-modal') { state.selectedProductId = null; render(); return; }
     if (action === 'back') return onBack?.();
     if (action === 'refresh') {
       button.disabled = true;
@@ -535,12 +574,19 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     if (action === 'mark-replied') return updateFarmViberStatus(button.dataset.farmId, 'replied');
   });
 
+  function handleKeydown(event) {
+    if (event.key === 'Escape' && state.selectedProductId !== null) { state.selectedProductId = null; render(); return; }
+    const card = event.target.closest?.('[data-open-product]');
+    if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProductAllocation(card.dataset.openProduct); }
+  }
+  shell.addEventListener('keydown', handleKeydown);
+
   try { await load(); } catch (error) {
     shell.innerHTML = '<div class="nd-proc-error"><strong>Набавка није учитана</strong><p>' + esc(error.message || String(error)) +
       '</p><button type="button" data-action="back">Назад</button></div>';
   }
 
   return {
-    destroy() { state.disposed = true; state.token += 1; shell.removeEventListener('input', handleInput); root.replaceChildren(); }
+    destroy() { state.disposed = true; state.token += 1; shell.removeEventListener('input', handleInput); shell.removeEventListener('keydown', handleKeydown); root.replaceChildren(); }
   };
 }
