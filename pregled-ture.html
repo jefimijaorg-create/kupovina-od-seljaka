@@ -794,45 +794,74 @@ function saveTourId(id){try{localStorage.setItem('naruci-domace-admin-tour-id',S
 function toggleTourPicker(show){const panel=document.getElementById('tour-picker-panel'),cancel=document.getElementById('cancel-tour-change');if(!panel)return;panel.classList.toggle('hidden',!show);if(cancel)cancel.classList.toggle('hidden',!show||!tourId);if(show){document.querySelector('#tour-home-cards button')?.focus();panel.scrollIntoView({behavior:'smooth',block:'start'})}}
 async function loadData(){
  try{
-  say('Учитавање података из базе…');
-  // Учитај туре прве и независно од помоћних табела.
-  tours=await api('ture?select=id,naziv,datum,status&order=datum.desc,id.desc&limit=300');
+  say('Учитавање тура из базе…');
+  // Тражи и прикажи туре прве: споредне табеле не смеју да блокирају избор туре.
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),15000);
+  try{
+   tours=await api('ture?select=id,naziv,datum,status&order=datum.desc,id.desc&limit=300',{signal:controller.signal});
+  }catch(error){
+   if(error?.name==='AbortError')throw Error('Табела тура није одговорила у року од 15 секунди. Провери интернет везу и Supabase доступност.');
+   throw error;
+  }finally{clearTimeout(timeout)}
   if(!Array.isArray(tours))throw Error('База није вратила списак тура.');
+  tours.sort((a,b)=>String(b.datum||'').localeCompare(String(a.datum||''))||Number(b.id)-Number(a.id));
+  const sel=document.getElementById('tour-select'),saved=savedTourId();
+  if(sel)sel.innerHTML='<option value="">Изабери туру</option>'+tours.map(t=>{const s=String(t.status||'').toLowerCase(),label=s==='processing'?' · У ОБРАДИ':s==='open'?' · АКТИВНА':s==='full'?' · ПОПУЊЕНА':s==='scheduled'?' · ПЛАНИРАНА':s?' · '+s.toUpperCase():'';return '<option value="'+t.id+'">'+(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+t.id)+label+' — '+esc(t.naziv||'Тура '+t.id)+'</option>'}).join('');
+  const tl=document.getElementById('tour-list-items');if(tl)tl.innerHTML=tours.map(t=>'<button type="button" onclick="chooseTour('+Number(t.id)+')" class="text-left rounded-lg border px-3 py-3 bg-white"><b class="block text-sm">'+esc(t.naziv||('Тура '+t.id))+'</b><span class="text-xs text-slate-600">'+esc(t.datum||'')+' · '+esc(t.status||'')+'</span></button>').join('')||'<span>Нема тура.</span>';
+  renderTourHome();
+  const dateBadge=document.getElementById('tour-date');if(dateBadge)dateBadge.textContent='Избор туре';
+  say(tours.length?'Туре су учитане. Учитавање оперативних података…':'У бази тренутно нема евидентираних тура.');
+  const warnings=[];
+  const safeList=async(label,request)=>{
+   try{const result=await request();if(!Array.isArray(result))throw Error('База није вратила списак.');return result}
+   catch(error){warnings.push(label+': '+(error?.message||String(error)));console.warn('[PREGLED-TURE] '+label+' nisu učitani:',error);return []}
+  };
+  // Помоћни подаци се учитавају независно. Грешка једне табеле не сме да сакрије туре.
   const core=await Promise.all([
-   api('gazdinstva?select=id,name,phone&order=name.asc').catch(e=>{console.warn('Газдинства нису учитана:',e);return []}),
-   api('punktovi?select=id,name,city,address,is_active,aktivan'),
-   api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at&limit=3000').catch(e=>{console.warn('Поруџбине нису учитане:',e);return []}),
-   api('kupci?select=id,ime_prezime,telefon').catch(e=>{console.warn('Купци нису учитани:',e);return []}),
-   api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme').catch(e=>{console.warn('Распоред пунктова није учитан:',e);return []})
+   safeList('Газдинства',()=>api('gazdinstva?select=id,name,phone&order=name.asc')),
+   safeList('Пунктови',()=>api('punktovi?select=id,name,city,address,is_active,aktivan')),
+   safeList('Поруџбине',()=>api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at&limit=3000')),
+   safeList('Купци',()=>api('kupci?select=id,ime_prezime,telefon')),
+   safeList('Распоред пунктова',()=>api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme'))
   ]);
   [farms,points,orders,customers,tourPoints]=core;
-  const optional=await Promise.all([api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true').catch(()=>[]),api('products?select=id,name,purchase_price,unit,calc_unit').catch(()=>[]),api('product_variants?select=id,product_id,name,size_label,unit,package_value,package_unit,is_active').catch(()=>[]),api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true').catch(()=>[])]);
-  [farmOffers,productCatalog,variantCatalog,farmProducts]=optional;try{await loadDebts()}catch(debtError){console.warn('Дуговања нису учитана; настављам са приказом тура:',debtError);procurementRows=[];producerPayouts=[];producerPayments=[];}
-  const sel=document.getElementById('tour-select'),saved=savedTourId();
-  tours.sort((a,b)=>String(b.datum||'').localeCompare(String(a.datum||''))||Number(b.id)-Number(a.id));
-  const selectableTours=tours.filter(t=>['open','full','scheduled','processing'].includes(String(t.status||'').toLowerCase()));
-  sel.innerHTML='<option value="">Изабери туру</option>'+tours.map(t=>{const s=String(t.status||'').toLowerCase(),label=s==='processing'?' · У ОБРАДИ':s==='open'?' · АКТИВНА':s==='full'?' · ПОПУЊЕНА':s==='scheduled'?' · ПЛАНИРАНА':s?' · '+s.toUpperCase():'';return '<option value="'+t.id+'">'+(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+t.id)+label+' — '+esc(t.naziv||'Тура '+t.id)+'</option>'}).join('');
-  const tl=document.getElementById('tour-list-items');if(tl)tl.innerHTML=tours.map(t=>'<button type="button" onclick="chooseTour('+Number(t.id)+')" class="text-left rounded-lg border px-3 py-3 bg-white"><b class="block text-sm">'+esc(t.naziv||('Тура '+t.id))+'</b><span class="text-xs text-slate-600">'+esc(t.datum||'')+' · '+esc(t.status||'')+'</span></button>').join('')||'<span>Нема тура.</span>';
-  // Ако је тура већ изабрана, врати је после освежавања и задржи активну секцију.
-  tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};sel.value='';
+  const optional=await Promise.all([
+   safeList('Понуде производа',()=>api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true')),
+   safeList('Каталог производа',()=>api('products?select=id,name,purchase_price,unit,calc_unit')),
+   safeList('Варијанте производа',()=>api('product_variants?select=id,product_id,name,size_label,unit,package_value,package_unit,is_active')),
+   safeList('Понуда газдинстава',()=>api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true'))
+  ]);
+  [farmOffers,productCatalog,variantCatalog,farmProducts]=optional;
+  try{await loadDebts()}catch(debtError){warnings.push('Дуговања: '+(debtError?.message||String(debtError)));console.warn('Дуговања нису учитана; настављам са приказом тура:',debtError);procurementRows=[];producerPayouts=[];producerPayments=[];}
+  // Освежи приказ након учитавања зависних података.
+  renderTourHome();
+  tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};
+  if(sel)sel.value='';
   document.body.classList.remove('tour-active');
   document.getElementById('bottom-tab-nav')?.classList.add('hidden');
   document.getElementById('procurement-tab')?.classList.add('hidden');
   document.getElementById('tour-actions')?.classList.add('hidden');
   document.getElementById('unassigned-toggle-wrap')?.classList.add('hidden');
-  renderTourHome();
   const savedTour=tours.find(t=>String(t.id)===String(saved));
   if(savedTour){
-   sel.value=String(savedTour.id);
+   if(sel)sel.value=String(savedTour.id);
    if(!['/ture','/porudzbine','/nabavka','/dostava'].includes(adminRouterPath()))adminRouterNavigate('/ture',{replace:true});
    const restored=await loadTour({preserveRoute:true});
-   if(restored)return;
+   if(restored){
+    if(warnings.length)say('Тура је учитана. Неке помоћне табеле нису доступне: '+warnings.join(' · '),true);
+    return;
+   }
   }
   saveTourId('');
-  sel.value='';
+  if(sel)sel.value='';
   toggleTourPicker(true);
-  say('Изабери туру за рад или отвори архиву затворених тура.');
- }catch(e){const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ТУРА\\n'+(e?.message||String(e))+'\\n\\nПровери: Supabase дозволе (RLS), назив табеле/колона и мрежну везу.\\nВреме: '+new Date().toLocaleString('sr-RS');say(detail,true);console.error('[PREGLED-TURE] loadData failed',e);const box=document.getElementById('message');box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere';}
+  if(warnings.length)say('Туре су приказане, али неки додатни подаци нису учитани: '+warnings.join(' · '),true);
+  else say(tours.length?'Изабери туру за рад или отвори архиву затворених тура.':'У бази тренутно нема тура.');
+ }catch(e){
+  const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ТУРА\\n'+(e?.message||String(e))+'\\n\\nПровери: Supabase дозволе (RLS), назив табеле/колона и мрежну везу.\\nВреме: '+new Date().toLocaleString('sr-RS');
+  say(detail,true);console.error('[PREGLED-TURE] loadData failed',e);const box=document.getElementById('message');if(box){box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere'}
+ }
 }
 function renderTourHome(){
  const root=document.getElementById('tour-home-cards');if(!root)return;
