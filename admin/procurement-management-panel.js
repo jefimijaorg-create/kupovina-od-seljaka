@@ -241,7 +241,9 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
           trackingInput(row, draft, 'potvrdjeno_pakovanja', 'Потврђено') +
           trackingInput(row, draft, 'preuzeto_pakovanja', 'Преузето') + '</div>' +
           '<div class="nd-proc-track-meta"><span>Додељено: ' + fmt(row.broj_pakovanja) + '</span>' +
-          '<span>Viber: ' + esc(row.viber_status === 'replied' ? 'Одговор примљен' : row.viber_status === 'sent' ? 'Послато' : 'Није послато') + '</span>' +\n          '<span>Слање: ' + esc(fmtDateTime(row.viber_poslato_at)) + '</span>' +\n          '<span>Потврда: ' + esc(fmtDateTime(row.potvrdjeno_at)) + '</span></div>' +
+          '<span>Viber: ' + esc(row.viber_status === 'replied' ? 'Одговор примљен' : row.viber_status === 'sent' ? 'Послато' : 'Није послато') + '</span>' +
+          '<span>Слање: ' + esc(fmtDateTime(row.viber_poslato_at)) + '</span>' +
+          '<span>Потврда: ' + esc(fmtDateTime(row.potvrdjeno_at)) + '</span></div>' +
           (row.naruceno === true && num(row.naruceno_pakovanja) === 0 ? '<div class="nd-proc-warning">Стара евиденција: наручено је означено, али број паковања није сачуван. Унеси стварну количину.</div>' : '') +
           '<button type="button" class="nd-proc-secondary" data-action="save-tracking" data-row-id="' + esc(row.id) + '" ' + (state.busy ? 'disabled' : '') + '>' + (state.busy ? 'Чувам…' : 'Сачувај количине') + '</button></article>';
       }).join('') + '</div>';
