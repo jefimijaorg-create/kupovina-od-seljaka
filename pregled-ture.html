@@ -810,32 +810,40 @@ async function loadData(){
   if(sel)sel.innerHTML='<option value="">Изабери туру</option>'+tours.map(t=>{const s=String(t.status||'').toLowerCase(),label=s==='processing'?' · У ОБРАДИ':s==='open'?' · АКТИВНА':s==='full'?' · ПОПУЊЕНА':s==='scheduled'?' · ПЛАНИРАНА':s?' · '+s.toUpperCase():'';return '<option value="'+t.id+'">'+(t.datum?new Date(t.datum+'T12:00:00').toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'}):'Тура '+t.id)+label+' — '+esc(t.naziv||'Тура '+t.id)+'</option>'}).join('');
   const tl=document.getElementById('tour-list-items');if(tl)tl.innerHTML=tours.map(t=>'<button type="button" onclick="chooseTour('+Number(t.id)+')" class="text-left rounded-lg border px-3 py-3 bg-white"><b class="block text-sm">'+esc(t.naziv||('Тура '+t.id))+'</b><span class="text-xs text-slate-600">'+esc(t.datum||'')+' · '+esc(t.status||'')+'</span></button>').join('')||'<span>Нема тура.</span>';
   renderTourHome();
+  document.querySelectorAll('#tour-home-cards button,#tour-list-items button,#tour-select').forEach(el=>el.disabled=true);
   const dateBadge=document.getElementById('tour-date');if(dateBadge)dateBadge.textContent='Избор туре';
   say(tours.length?'Туре су учитане. Учитавање оперативних података…':'У бази тренутно нема евидентираних тура.');
   const warnings=[];
   const safeList=async(label,request)=>{
-   try{const result=await request();if(!Array.isArray(result))throw Error('База није вратила списак.');return result}
-   catch(error){warnings.push(label+': '+(error?.message||String(error)));console.warn('[PREGLED-TURE] '+label+' nisu učitani:',error);return []}
+   const requestController=new AbortController();
+   const requestTimeout=setTimeout(()=>requestController.abort(),12000);
+   try{const result=await request(requestController.signal);if(!Array.isArray(result))throw Error('База није вратила списак.');return result}
+   catch(error){const reason=error?.name==='AbortError'?'захтев није одговорио у року од 12 секунди':(error?.message||String(error));warnings.push(label+': '+reason);console.warn('[PREGLED-TURE] '+label+' nisu učitani:',error);return []}
+   finally{clearTimeout(requestTimeout)}
   };
   // Помоћни подаци се учитавају независно. Грешка једне табеле не сме да сакрије туре.
   const core=await Promise.all([
-   safeList('Газдинства',()=>api('gazdinstva?select=id,name,phone&order=name.asc')),
-   safeList('Пунктови',()=>api('punktovi?select=id,name,city,address,is_active,aktivan')),
-   safeList('Поруџбине',()=>api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at&limit=3000')),
-   safeList('Купци',()=>api('kupci?select=id,ime_prezime,telefon')),
-   safeList('Распоред пунктова',()=>api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme'))
+   safeList('Газдинства',signal=>api('gazdinstva?select=id,name,phone&order=name.asc',{signal})),
+   safeList('Пунктови',signal=>api('punktovi?select=id,name,city,address,is_active,aktivan',{signal})),
+   safeList('Поруџбине',signal=>api('porudzbine?select=id,kupac_id,status,ukupna_cena,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at&limit=3000',{signal})),
+   safeList('Купци',signal=>api('kupci?select=id,ime_prezime,telefon',{signal})),
+   safeList('Распоред пунктова',signal=>api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme',{signal}))
   ]);
   [farms,points,orders,customers,tourPoints]=core;
   const optional=await Promise.all([
-   safeList('Понуде производа',()=>api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true')),
-   safeList('Каталог производа',()=>api('products?select=id,name,purchase_price,unit,calc_unit')),
-   safeList('Варијанте производа',()=>api('product_variants?select=id,product_id,name,size_label,unit,package_value,package_unit,is_active')),
-   safeList('Понуда газдинстава',()=>api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true'))
+   safeList('Понуде производа',signal=>api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true',{signal})),
+   safeList('Каталог производа',signal=>api('products?select=id,name,purchase_price,unit,calc_unit',{signal})),
+   safeList('Варијанте производа',signal=>api('product_variants?select=id,product_id,name,size_label,unit,package_value,package_unit,is_active',{signal})),
+   safeList('Понуда газдинстава',signal=>api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true',{signal}))
   ]);
   [farmOffers,productCatalog,variantCatalog,farmProducts]=optional;
-  try{await loadDebts()}catch(debtError){warnings.push('Дуговања: '+(debtError?.message||String(debtError)));console.warn('Дуговања нису учитана; настављам са приказом тура:',debtError);procurementRows=[];producerPayouts=[];producerPayments=[];}
+  let debtTimer;
+  try{await Promise.race([loadDebts(),new Promise((_,reject)=>{debtTimer=setTimeout(()=>reject(Error('учитавање дуговања је истекло после 15 секунди')),15000)})])}
+  catch(debtError){warnings.push('Дуговања: '+(debtError?.message||String(debtError)));console.warn('Дуговања нису учитана; настављам са приказом тура:',debtError);procurementRows=[];producerPayouts=[];producerPayments=[];}
+  finally{clearTimeout(debtTimer)}
   // Освежи приказ након учитавања зависних података.
   renderTourHome();
+  document.querySelectorAll('#tour-home-cards button,#tour-list-items button,#tour-select').forEach(el=>el.disabled=false);
   tourId=0;items=[];tourAllocations=[];orderItemsByOrder={};
   if(sel)sel.value='';
   document.body.classList.remove('tour-active');
