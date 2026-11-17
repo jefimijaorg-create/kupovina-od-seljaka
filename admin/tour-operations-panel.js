@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.0.0
+ * Version: 1.0.1
  * Updated: 2026-11-17
- * Description: Read-only, tabbed operations view for one selected tour; reuses authenticated ADMIN core.
+ * Description: Connects product cards to the existing procurement modal and resolves farm labels through product ownership.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined))];
@@ -13,7 +13,7 @@ const fmtQty = (count, size, unit) => {
 };
 const fail = (result, label) => { if (result.error) throw new Error(label + ': ' + result.error.message); return result.data || []; };
 
-export async function mountTourOperations({ root, core, tourId, onBack }) {
+export async function mountTourOperations({ root, core, tourId, onBack, onOpenProcurement }) {
   if (!root || !core || core.authenticated !== true || !core.client || !tourId) throw new Error('Недостаје потврђено ADMIN језгро или ID туре.');
   const client = core.client;
   const role = core.getState().role;
@@ -52,14 +52,16 @@ export async function mountTourOperations({ root, core, tourId, onBack }) {
       const allProductIds = uniq([...productIds,...procurementRows.map(x=>x.product_id)]);
       const allVariantIds = uniq([...variantIds,...procurementRows.map(x=>x.variant_id)]);
       const allFarmIds = uniq([...farmIds,...procurementRows.map(x=>x.gazdinstvo_id)]);
-      const [productsResult, variantsResult, farmsResult, itemAllocResult] = await Promise.all([
+      const [productsResult, variantsResult, itemAllocResult] = await Promise.all([
         allProductIds.length ? client.from('products').select('id,name,gazdinstvo_id').in('id',allProductIds) : Promise.resolve({data:[],error:null}),
         allVariantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,is_active').in('id',allVariantIds) : Promise.resolve({data:[],error:null}),
-        allFarmIds.length ? client.from('gazdinstva').select('id,name,phone').in('id',allFarmIds) : Promise.resolve({data:[],error:null}),
         state.items.length ? client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',state.items.map(x=>x.id)) : Promise.resolve({data:[],error:null})
       ]);
-      state.products=fail(productsResult,'Производи'); state.variants=fail(variantsResult,'Варијанте'); state.farms=fail(farmsResult,'Газдинства');
+      state.products=fail(productsResult,'Производи'); state.variants=fail(variantsResult,'Варијанте');
       state.itemAllocations=fail(itemAllocResult,'Расподела ставки'); state.procurementAllocations=procurementRows;
+      const resolvedFarmIds = uniq([...allFarmIds,...state.products.map(product=>product.gazdinstvo_id)]);
+      const farmsResult = resolvedFarmIds.length ? await client.from('gazdinstva').select('id,name,phone').in('id',resolvedFarmIds) : {data:[],error:null};
+      state.farms=fail(farmsResult,'Газдинства');
     }
     if (token !== loadToken || disposed) return;
     render();
@@ -71,11 +73,16 @@ export async function mountTourOperations({ root, core, tourId, onBack }) {
     const tabs=[['orders','Поруџбине'],['products','Производи'],['allocations','Расподела'],['delivery','Достава']];
     let body='';
     if(activeTab==='orders') body=state.items.length?state.items.map(item=>{const order=orderMap.get(item.porudzbina_id)||{}, customer=customerMap.get(order.kupac_id)||{};return '<article class="nd-ops-card"><strong>Поруџбина #'+esc(order.id||item.porudzbina_id||'—')+'</strong><div>'+esc(customer.ime_prezime||'Купац није доступан')+'</div><small>'+esc(customer.telefon||order.telefon||'Телефон није наведен')+' · '+esc(order.status||item.status||'Без статуса')+'</small><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div></article>'}).join(''):'<div class="nd-ops-empty">У овој тури нема ставки поруџбина.</div>';
-    if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id);return '<article class="nd-ops-card"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
+    if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id)||farmMap.get(p?.gazdinstvo_id);return '<article class="nd-ops-card" data-open-procurement-product="'+esc(item.product_id||'')+'" role="button" tabindex="0" aria-label="Отвори набавку за '+esc(p?.name||'производ')+'"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
     if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
     if(activeTab==='delivery') body=state.tourStops.length?state.tourStops.map(stop=>{const p=pointMap.get(stop.punkt_id);const orders=state.orders.filter(o=>o.punkt_id===stop.punkt_id);return '<article class="nd-ops-card"><strong>'+esc(stop.redosled)+'. '+esc(p?.name||'Пункт није доступан')+'</strong><div>'+esc(p?.city||'')+' · '+esc(p?.address||'')+'</div><small>'+esc(stop.vreme||p?.vreme||'Време није наведено')+' · '+orders.length+' поруџбина · '+(stop.aktivan?'Активан':'Неактиван')+'</small></article>'}).join(''):'<div class="nd-ops-empty">За ову туру нису дефинисани пунктови.</div>';
     shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div></div><button type="button" data-back>← Назад</button></header><nav class="nd-ops-tabs" aria-label="Секције туре">'+tabs.map(([id,label])=>'<button type="button" data-tab="'+id+'" aria-selected="'+(activeTab===id)+'">'+label+'</button>').join('')+'</nav><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     shell.querySelector('[data-back]').addEventListener('click',onBack);
+    shell.querySelectorAll('[data-open-procurement-product]').forEach(card=>{
+      const open=()=>{const productId=card.dataset.openProcurementProduct;if(productId)onOpenProcurement?.(productId);};
+      card.addEventListener('click',open);
+      card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});
+    });
     shell.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{activeTab=button.dataset.tab;render()}));
     shell.querySelector('[data-refresh]').addEventListener('click',async e=>{e.currentTarget.disabled=true;try{await load()}catch(error){showError(error)}finally{if(e.currentTarget)e.currentTarget.disabled=false}});
   }
