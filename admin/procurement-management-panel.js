@@ -407,7 +407,9 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         potvrdjeno_pakovanja: confirmed, preuzeto_pakovanja: collected,
         updated_at: new Date().toISOString()
       };
-      if (confirmed !== num(row.potvrdjeno_pakovanja) || (confirmed > 0 && !row.potvrdjeno_at)) {\n        patch.potvrdjeno_at = confirmed > 0 ? new Date().toISOString() : null;\n      }
+      if (confirmed !== num(row.potvrdjeno_pakovanja) || (confirmed > 0 && !row.potvrdjeno_at)) {
+        patch.potvrdjeno_at = confirmed > 0 ? new Date().toISOString() : null;
+      }
       const result = await client.from('tura_nabavka_dodele').update(patch).eq('id', row.id)
         .select('id,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja').maybeSingle();
       if (result.error) throw new Error(result.error.message);
