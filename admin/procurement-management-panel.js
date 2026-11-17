@@ -1,9 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.5
+ * Version: 1.1.6
  * Updated: 2026-11-17
- * Description: Product/variant procurement allocation by farm, independent farm records,
- *              Preserve first Viber send timestamps; capture product-card clicks at the panel root for reliable mobile activation.
+ * Description: Adds on-screen touch/click/modal diagnostics to identify why product allocation does not open on mobile.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -41,7 +40,14 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     tour: null, items: [], invalidSourceRows: 0, products: [], variants: [], offers: [], farms: [],
     allocations: [], demands: [], tab: 'products', selectedFarmId: '', selectedProductId: null,
     allocationDraft: {}, trackingDraft: {}, busy: false, disposed: false, token: 0,
-    notice: '', noticeType: 'success'
+    notice: '', noticeType: 'success',
+    diagnostic: {
+      tapToken: 0, clickSeen: false,
+      pointer: 'Чека се додир на картици производа.',
+      click: 'Клик још није регистрован.',
+      modal: 'Прозор још није отворен.',
+      error: ''
+    }
   };
 
   root.innerHTML = '<section class="nd-procurement"><div class="nd-proc-loading">Учитавам потребе, активне понуде и набавну евиденцију…</div></section>';
@@ -273,7 +279,12 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
 
   function openProductAllocation(productId) {
     const productDemands = state.demands.filter((demand) => String(demand.productId) === String(productId));
-    if (!productDemands.length) return;
+    if (!productDemands.length || !productFor(productId)) {
+      state.diagnostic.modal = 'Форма није направљена: производ није пронађен у учитаним подацима.';
+      state.diagnostic.error = 'Недостаје производ или његове ставке у подацима ове туре.';
+      render();
+      return;
+    }
     const farmIds = uniq(state.offers.filter((offer) => productDemands.some((demand) =>
       String(demand.productId) === String(offer.product_id) && String(demand.variantId) === String(offer.variant_id)))
       .map((offer) => offer.gazdinstvo_id));
@@ -281,6 +292,15 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     if (!farmIds.some((id) => String(id) === String(state.selectedFarmId))) state.selectedFarmId = farmIds[0] ?? '';
     state.allocationDraft = {};
     state.notice = '';
+    state.diagnostic.modal = 'Функција за отварање форме је позвана.';
+    state.diagnostic.error = '';
+    render();
+    if (shell.querySelector('.nd-proc-product-modal')) {
+      state.diagnostic.modal = 'ПРОЗОР ЈЕ УСПЕШНО ПРИКАЗАН.';
+    } else {
+      state.diagnostic.modal = 'Клик је примљен, али HTML прозора није приказан.';
+      state.diagnostic.error = 'Провера није пронашла елемент прозора у ADMIN приказу.';
+    }
     render();
   }
 
@@ -335,6 +355,17 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       '" value="' + esc(value) + '"></label>';
   }
 
+  function renderDiagnostic() {
+    return '<div class="nd-proc-notice" role="status" aria-live="polite">' +
+      '<strong>Дијагностика отварања производа</strong>' +
+      '<p>Модул набавке: учитан · Слушач додира: активан</p>' +
+      '<p>' + esc(state.diagnostic.pointer) + '</p>' +
+      '<p>' + esc(state.diagnostic.click) + '</p>' +
+      '<p>' + esc(state.diagnostic.modal) + '</p>' +
+      (state.diagnostic.error ? '<p class="is-error">' + esc(state.diagnostic.error) + '</p>' : '') +
+      '</div>';
+  }
+
   function render() {
     if (state.disposed) return;
     const isProcessing = state.tour?.status === 'processing';
@@ -344,6 +375,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       '</small><h1>' + esc(state.tour?.naziv || 'Тура #' + tourId) + '</h1><p>' +
       esc(String(state.tour?.status || '').toUpperCase()) + ' · Сви подаци из постојеће Supabase базе</p></div>' +
       '<button type="button" class="nd-proc-secondary" data-action="back">← Назад</button></header>' +
+      renderDiagnostic() +
       '<nav class="nd-proc-tabs" aria-label="Преглед набавке">' + tabs.map(([id, label]) =>
         '<button type="button" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + label + '</button>').join('') + '</nav>' +
       (isProcessing ? '' : '<div class="nd-proc-warning">Тура није у статусу processing. Набавка је доступна само за читање; база ће одбити сваки покушај измене.</div>') +
@@ -550,12 +582,35 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       render();
     }
   });
+  function handleProductPointerDown(event) {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const productCard = target?.closest('[data-open-product]');
+    if (!productCard) return;
+    state.diagnostic.pointer = 'Телефон је регистровао физички додир на картици производа.';
+    state.diagnostic.clickSeen = false;
+    const token = ++state.diagnostic.tapToken;
+    setTimeout(() => {
+      if (state.disposed || state.diagnostic.tapToken !== token || state.diagnostic.clickSeen) return;
+      state.diagnostic.click = 'Додир је регистрован, али click догађај није стигао до ADMIN модула.';
+      state.diagnostic.modal = 'Прозор није отворен јер клик није примљен.';
+      state.diagnostic.error = 'Потребно је проверити шта прекида click догађај на страници.';
+      render();
+    }, 700);
+  }
+
   async function handleClick(event) {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     if (!target) return;
     if (target.matches('[data-product-modal-backdrop]')) { state.selectedProductId = null; render(); return; }
     const productCard = target.closest('[data-open-product]');
-    if (productCard) { openProductAllocation(productCard.dataset.openProduct); return; }
+    if (productCard) {
+      state.diagnostic.clickSeen = true;
+      state.diagnostic.tapToken += 1;
+      state.diagnostic.click = 'ADMIN је примио клик за производ ID ' + productCard.dataset.openProduct + '.';
+      state.diagnostic.error = '';
+      openProductAllocation(productCard.dataset.openProduct);
+      return;
+    }
     const tab = target.closest('[data-tab]');
     if (tab) { state.tab = tab.dataset.tab; state.notice = ''; render(); return; }
     const button = target.closest('[data-action]');
@@ -575,7 +630,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     if (action === 'mark-sent') return updateFarmViberStatus(button.dataset.farmId, 'sent');
     if (action === 'mark-replied') return updateFarmViberStatus(button.dataset.farmId, 'replied');
   }
-  // Capture at the panel root so nested controls or parent bubble handlers cannot swallow card activation.
+  // Capture touch and click at the existing panel root; diagnostics distinguish pointer from click delivery.
+  root.addEventListener('pointerdown', handleProductPointerDown, true);
   root.addEventListener('click', handleClick, true);
 
   function handleKeydown(event) {
@@ -584,11 +640,12 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
   shell.addEventListener('keydown', handleKeydown);
 
   try { await load(); } catch (error) {
-    shell.innerHTML = '<div class="nd-proc-error"><strong>Набавка није учитана</strong><p>' + esc(error.message || String(error)) +
+    state.diagnostic.error = 'Модул је покренут, али учитавање података није успело: ' + (error.message || String(error));
+    shell.innerHTML = '<div class="nd-proc-error"><strong>Набавка није учитана</strong><p>' + esc(state.diagnostic.error) +
       '</p><button type="button" data-action="back">Назад</button></div>';
   }
 
   return {
-    destroy() { state.disposed = true; state.token += 1; shell.removeEventListener('input', handleInput); shell.removeEventListener('keydown', handleKeydown); root.removeEventListener('click', handleClick, true); root.replaceChildren(); }
+    destroy() { state.disposed = true; state.token += 1; shell.removeEventListener('input', handleInput); shell.removeEventListener('keydown', handleKeydown); root.removeEventListener('pointerdown', handleProductPointerDown, true); root.removeEventListener('click', handleClick, true); root.replaceChildren(); }
   };
 }
