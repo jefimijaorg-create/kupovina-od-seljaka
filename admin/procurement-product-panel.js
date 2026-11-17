@@ -1,5 +1,8 @@
 /* NARUCI DOMACE — namenski radni panel jednog proizvoda.
-   Koristi postojece globalne Supabase/API i poslovne funkcije iz pregled-ture.html. */
+ * Version: V1.1.0 · 2026-11-17
+ * Change: CSS премештен у заједнички /admin.css; пословна логика непромењена.
+ * Користи постојеће globalne Supabase/API и пословне функције из pregled-ture.html.
+ */
 (function(){
  'use strict';
  const ID='nd-product-procurement-panel';
@@ -13,27 +16,8 @@
 
  function ensure(){
   if(document.getElementById(ID))return;
-  const style=document.createElement('style');
-  style.textContent=`
-  #${ID}[hidden]{display:none!important}#${ID}{position:fixed;inset:0;z-index:135;background:rgba(2,6,23,.84);backdrop-filter:blur(7px);display:flex;align-items:flex-end;justify-content:center}
-  #${ID} .ndp-dialog{width:100%;max-width:820px;max-height:92dvh;overflow:auto;background:#111c32;color:#f8fafc;border:1px solid #334155;border-radius:22px 22px 0 0;padding:0 14px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -15px 50px rgba(0,0,0,.45)}
-  #${ID} .ndp-head{position:sticky;top:0;z-index:2;background:#111c32;border-bottom:1px solid #334155;margin:0 -14px 14px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  #${ID} .ndp-kicker{font-size:10px;font-weight:900;letter-spacing:.14em;color:#f4b36f}
-  #${ID} h2{font-size:22px;font-weight:900;line-height:1.2;margin-top:5px}
-  #${ID} .ndp-close{min-width:44px;min-height:44px;border-radius:12px;border:1px solid #475569;background:#1e293b;color:#fdba74;font-size:23px}
-  #${ID} .ndp-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:14px}
-  #${ID} .ndp-tab{min-height:48px;padding:8px 5px;border:1px solid #334155;border-radius:12px;background:#0b1426;color:#aab8cc;font-size:11px;font-weight:800}
-  #${ID} .ndp-tab[aria-selected=true]{background:rgba(234,88,12,.16);border-color:#c77b3e;color:#ffd09d}
-  #${ID} .ndp-card{border:1px solid #334155;background:#0c1629;border-radius:15px;padding:13px;margin:9px 0}
-  #${ID} .ndp-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  #${ID} .ndp-muted{color:#9eacc1;font-size:12px;line-height:1.5}
-  #${ID} .ndp-value{font-weight:900;color:#f7c58f}
-  #${ID} .ndp-action{width:100%;min-height:48px;border-radius:12px;padding:11px 14px;background:#9a4d20;color:white;font-weight:900;margin-top:12px}
-  #${ID} .ndp-empty{padding:18px;text-align:center;color:#9eacc1;border:1px dashed #475569;border-radius:14px;font-size:13px}
-  @media(min-width:768px){#${ID}{align-items:center;padding:20px}#${ID} .ndp-dialog{border-radius:22px;max-height:86dvh}}
-  `;
-  document.head.appendChild(style);
-  const root=document.createElement('div');root.id=ID;root.hidden=true;
+   /* Стилови панела учитавају се из заједничког /admin.css. */
+const root=document.createElement('div');root.id=ID;root.hidden=true;
   root.innerHTML='<section class="ndp-dialog" role="dialog" aria-modal="true" aria-labelledby="ndp-title"><header class="ndp-head"><div><div class="ndp-kicker">НАБАВКА · РАДНИ ПАНЕЛ ПРОИЗВОДА</div><h2 id="ndp-title">Производ</h2><div id="ndp-tour" class="ndp-muted"></div></div><button class="ndp-close" type="button" aria-label="Затвори">×</button></header><nav class="ndp-tabs" aria-label="Целине набавке"><button class="ndp-tab" data-tab="demand" aria-selected="true">1. Потражња</button><button class="ndp-tab" data-tab="allocation" aria-selected="false">2. Расподела</button><button class="ndp-tab" data-tab="confirmed" aria-selected="false">3. Потврђена набавка</button></nav><div id="ndp-content" aria-live="polite"></div></section>';
   root.querySelector('.ndp-close').addEventListener('click',close);
   root.addEventListener('click',e=>{if(e.target===root)close()});
