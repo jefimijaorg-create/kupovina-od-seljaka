@@ -10,6 +10,19 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'
 const num = (value) => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
 const fmt = (value) => num(value).toLocaleString('sr-RS', { maximumFractionDigits: 3 });
 const fmtDateTime = (value) => value ? new Date(value).toLocaleString('sr-RS', { dateStyle: 'short', timeStyle: 'short' }) : 'није евидентирано';
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+  const field = document.createElement('textarea');
+  field.value = text;
+  field.setAttribute('readonly', '');
+  field.style.position = 'fixed';
+  field.style.opacity = '0';
+  document.body.appendChild(field);
+  field.select();
+  const copied = document.execCommand('copy');
+  field.remove();
+  if (!copied) throw new Error('Clipboard API није доступан.');
+}
 const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined && value !== ''))];
 const unwrap = (result, label) => { if (result.error) throw new Error(label + ': ' + result.error.message); return result.data || []; };
 const keyOf = (productId, variantId) => String(productId) + '::' + String(variantId);
@@ -225,8 +238,9 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       const ordered = rows.reduce((sum, row) => sum + num(row.naruceno_pakovanja), 0);
       const confirmed = rows.reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
       const collected = rows.reduce((sum, row) => sum + num(row.preuzeto_pakovanja), 0);
-      const status = rows.some((row) => row.viber_status === 'replied') ? 'Одговор примљен' :
-        rows.some((row) => row.viber_status === 'sent') ? 'Послато' : 'Није послато';
+      const statuses = new Set(rows.map((row) => row.viber_status || 'not_sent'));
+      const status = statuses.size > 1 ? 'Делимично евидентирано' :
+        rows[0]?.viber_status === 'replied' ? 'Одговор примљен' : rows[0]?.viber_status === 'sent' ? 'Послато' : 'Није послато';
       let html = '<section class="nd-proc-farm-record"><header><div><strong>' + esc(farm?.name || 'Газдинство #' + farmId) +
         '</strong><small>' + esc(farm?.phone || 'Телефон није наведен') + '</small></div><span class="nd-proc-pill">' + status + '</span></header>';
       html += '<div class="nd-proc-metrics"><span><b>' + fmt(total) + '</b><small>Додељено</small></span><span><b>' + fmt(ordered) +
@@ -292,6 +306,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     if (state.tour?.status !== 'processing') return setNotice('Расподела је дозвољена само док је тура у статусу processing.', 'error');
     state.busy = true;
     render();
+    let wrote = false;
     try {
       const farmId = state.selectedFarmId;
       const eligible = state.demands.filter((demand) => demand.valid &&
@@ -333,11 +348,13 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
             }).select('id,broj_pakovanja').single();
         if (result.error) throw new Error('Чување расподеле није успело: ' + result.error.message);
         if (!result.data || num(result.data.broj_pakovanja) !== change.count) throw new Error('База није потврдила сачувану количину.');
+        wrote = true;
       }
       state.allocationDraft = {};
       await load();
       setNotice('Расподела је сачувана и поново прочитана из базе.');
     } catch (error) {
+      if (wrote) { try { await load(); } catch (_) {} }
       setNotice(error.message || String(error), 'error');
     } finally {
       state.busy = false;
@@ -398,6 +415,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     if (!rows.length) return setNotice('Ово газдинство нема сачувану расподелу.', 'error');
     state.busy = true;
     render();
+    let updated = 0;
     try {
       for (const row of rows) {
         const patch = { viber_status: status, updated_at: new Date().toISOString() };
@@ -406,10 +424,12 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
           .select('id,viber_status,viber_poslato_at').maybeSingle();
         if (result.error) throw new Error(result.error.message);
         if (!result.data || result.data.viber_status !== status) throw new Error('База није потврдила Viber статус.');
+        updated += 1;
       }
       await load();
       setNotice(status === 'sent' ? 'Ручно је потврђено слање Viber поруке за ово газдинство.' : 'Одговор газдинства је евидентиран.');
     } catch (error) {
+      if (updated) { try { await load(); } catch (_) {} }
       setNotice('Viber статус није у потпуности сачуван: ' + (error.message || String(error)), 'error');
     } finally {
       state.busy = false;
@@ -419,7 +439,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
 
   async function copyMessage(farmId) {
     try {
-      await navigator.clipboard.writeText(messageForFarm(farmId));
+      await copyText(messageForFarm(farmId));
       setNotice('Viber порука је копирана. Статус слања није промењен.');
     } catch (error) {
       setNotice('Копирање није успело. Можеш ручно да означиш текст поруке.', 'error');
@@ -430,7 +450,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     const farm = farmFor(farmId);
     const phone = String(farm?.phone || '').replace(/[^\d+]/g, '');
     if (!phone) return setNotice('За ово газдинство није наведен број телефона. Поруку можеш копирати.', 'error');
-    try { await navigator.clipboard.writeText(messageForFarm(farmId)); } catch (_) {}
+    try { await copyText(messageForFarm(farmId)); } catch (_) {}
     window.location.href = 'viber://chat?number=' + encodeURIComponent(phone);
     setNotice('Отворен је Viber разговор ако је апликација доступна. Слање није аутоматски евидентирано.');
   }
