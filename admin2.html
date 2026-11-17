@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<title>ADMIN 2 — Наручи домаће</title>
+<style>
+:root{color-scheme:light;--green:#14532d;--green2:#166534;--line:#d8e0da;--muted:#64748b;--red:#b91c1c;--amber:#92400e}
+*{box-sizing:border-box}
+body{margin:0;background:#f1f5f2;color:#17211b;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--green);color:#fff;padding:20px 16px}
+header h1{font-size:22px;line-height:1.2;margin:0}
+header p{margin:7px 0 0;color:#dcece1;font-size:14px}
+.version{display:inline-block;margin-top:10px;padding:4px 10px;border:1px solid #ffffff66;border-radius:999px;font-size:12px;font-weight:700}
+main{width:min(100% - 24px,620px);margin:22px auto 40px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 4px 16px #122a1a0b}
+h2{font-size:21px;margin:0 0 6px}
+.muted{color:var(--muted);font-size:14px}
+label{display:block;font-weight:650;margin:14px 0 6px}
+input{width:100%;min-height:52px;padding:12px 14px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;background:#fff}
+input:focus,button:focus{outline:3px solid #86b99a;outline-offset:2px}
+button{width:100%;min-height:50px;margin-top:13px;border:0;border-radius:11px;padding:12px 15px;background:var(--green2);color:#fff;font:inherit;font-weight:750;cursor:pointer}
+button.secondary{background:#e8efe9;color:#173d28;border:1px solid var(--line)}
+button:disabled{opacity:.6;cursor:wait}
+.status{margin:14px 0 0;padding:12px;border-radius:10px;background:#f1f5f9;color:#334155;overflow-wrap:anywhere}
+.status.error{background:#fef2f2;color:var(--red);border:1px solid #fecaca}
+.status.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.status.warn{background:#fffbeb;color:var(--amber);border:1px solid #fde68a}
+details{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:12px}
+summary{font-weight:700;cursor:pointer}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;color:#334155;margin:10px 0 0}
+.actions{display:grid;grid-template-columns:1fr;gap:8px}
+.small{font-size:12px;color:var(--muted);margin-top:12px}
+@media(min-width:520px){header{padding:24px max(20px,calc((100% - 620px)/2))}.panel{padding:24px}.actions{grid-template-columns:1fr 1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window.__supabaseSdkLoadFailed=true"></script>
+</head>
+<body>
+<header>
+  <h1>Наручи домаће — ADMIN 2</h1>
+  <p>Нова, засебна пријава за проверу приступа постојећем ADMIN систему</p>
+  <span class="version">ADMIN 2 · V1 · ДИЈАГНОСТИКА</span>
+</header>
+<main>
+  <section class="panel">
+    <h2>Пријава администратора</h2>
+    <p class="muted">Ова страница користи постојећи Supabase пројекат и постојећу серверску проверу корисничког имена и лозинке. Не прави нов налог.</p>
+    <form id="loginForm" novalidate>
+      <label for="username">Корисничко име</label>
+      <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <label for="password">Лозинка</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button id="loginButton" type="submit">Пријави се</button>
+      <p id="message" class="status" role="status" aria-live="polite">Проверавам да ли су потребне библиотеке доступне…</p>
+    </form>
+    <div class="actions">
+      <button id="testButton" class="secondary" type="button">Тестирај везу са сервером</button>
+      <button id="copyButton" class="secondary" type="button">Копирај дијагностику</button>
+    </div>
+    <p class="small">Ако пријава успе, ова страница чува Supabase сесију и отвара постојећи ADMIN са поруџбинама и осталим модулима.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Дијагностика</h2>
+    <p class="muted">Овде се приказује шта је учитано и у ком кораку евентуално настаје грешка. Лозинка се никада не исписује.</p>
+    <div id="diagnostics" class="status">Дијагностика се покреће…</div>
+    <details open>
+      <summary>Детаљни запис</summary>
+      <pre id="log" aria-live="polite"></pre>
+    </details>
+  </section>
+</main>
+<script>
+(function(){
+  'use strict';
+
+  const SUPABASE_URL = 'https://kszkehxrcuagymlfowqj.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+  const LOGIN_ENDPOINT = SUPABASE_URL + '/functions/v1/app-user-management';
+  const $ = (id) => document.getElementById(id);
+  const logLines = [];
+  let supabaseClient = null;
+
+  function log(message, detail) {
+    const line = new Date().toLocaleTimeString('sr-RS') + ' · ' + message + (detail ? ' · ' + detail : '');
+    logLines.push(line);
+    $('log').textContent = logLines.join('\n');
+    console.info('[ADMIN 2]', message, detail || '');
+  }
+
+  function showMessage(message, type) {
+    $('message').className = 'status' + (type ? ' ' + type : '');
+    $('message').textContent = message;
+  }
+
+  function showDiagnostic(message, type) {
+    $('diagnostics').className = 'status' + (type ? ' ' + type : '');
+    $('diagnostics').textContent = message;
+  }
+
+  window.addEventListener('error', function(event) {
+    const detail = event.message || (event.target && event.target.src) || 'Непозната JavaScript грешка';
+    log('BROWSER ERROR', String(detail));
+    showDiagnostic('JavaScript грешка: ' + String(detail), 'error');
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    const detail = event.reason && event.reason.message ? event.reason.message : String(event.reason || 'Непозната Promise грешка');
+    log('UNHANDLED PROMISE', detail);
+    showDiagnostic('Необрађена асинхрона грешка: ' + detail, 'error');
+  });
+
+  function getClient() {
+    if (supabaseClient) return supabaseClient;
+    if (window.__supabaseSdkLoadFailed || !window.supabase || typeof window.supabase.createClient !== 'function') {
+      throw new Error('Supabase JavaScript библиотека није учитана. Провери интернет или CDN блокаду.');
+    }
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { detectSessionInUrl: false }
+    });
+    return supabaseClient;
+  }
+
+  async function callLoginEndpoint(payload) {
+    let response;
+    try {
+      response = await fetch(LOGIN_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      throw new Error('Мрежа/CORS: захтев није стигао до Supabase Edge Function-а. ' + (error.message || String(error)));
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (_) {
+      throw new Error('Сервер је вратио нечитљив одговор. HTTP ' + response.status + '.');
+    }
+    return { response, data };
+  }
+
+  async function runDiagnostics() {
+    const checks = [];
+    checks.push('HTTPS: ' + (location.protocol === 'https:' ? 'ДА' : 'НЕ'));
+    checks.push('Интернет прегледач: ' + (navigator.onLine ? 'пријављена је веза' : 'прегледач пријављује да нема интернета'));
+    try {
+      getClient();
+      checks.push('Supabase JS библиотека: УЧИТАНА');
+      const result = await supabaseClient.auth.getSession();
+      if (result.error) throw result.error;
+      checks.push('Supabase клијент: ПОКРЕНУТ');
+      checks.push('Локална сесија: ' + (result.data.session ? 'ПОСТОЈИ' : 'НИЈЕ ПРИЈАВЉЕН'));
+      showDiagnostic(checks.join('\n'), 'ok');
+      log('Основна провера завршена', 'Supabase SDK и клијент су доступни.');
+    } catch (error) {
+      checks.push('Провера није успела: ' + (error.message || String(error)));
+      showDiagnostic(checks.join('\n'), 'error');
+      log('Основна провера није успела', error.message || String(error));
+    }
+  }
+
+  $('loginForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const button = $('loginButton');
+    const username = $('username').value.trim().toLowerCase();
+    const password = $('password').value;
+    if (!username || !password) {
+      showMessage('Унеси корисничко име и лозинку.', 'error');
+      return;
+    }
+
+    button.disabled = true;
+    showMessage('Корак 1/4: проверавам Supabase библиотеку…');
+    log('Почетак пријаве', 'Корисничко име је унето; лозинка се не бележи.');
+
+    try {
+      const client = getClient();
+      showMessage('Корак 2/4: шаљем захтев постојећој серверској функцији…');
+      const result = await callLoginEndpoint({ action: 'login', username, password });
+      log('Edge Function одговор', 'HTTP ' + result.response.status);
+
+      if (!result.response.ok) {
+        throw new Error('СЕРВЕР HTTP ' + result.response.status + ': ' + (result.data.error || 'Пријава није прихваћена.'));
+      }
+      if (!result.data.session || !result.data.session.access_token || !result.data.session.refresh_token) {
+        throw new Error('Сервер није вратио комплетну Supabase сесију.');
+      }
+
+      showMessage('Корак 3/4: Supabase потврђује и чува сесију…');
+      const sessionResult = await client.auth.setSession({
+        access_token: result.data.session.access_token,
+        refresh_token: result.data.session.refresh_token
+      });
+      if (sessionResult.error) throw new Error('Сесија није сачувана: ' + sessionResult.error.message);
+
+      const check = await client.auth.getSession();
+      if (check.error || !check.data.session) {
+        throw new Error('Провера сесије није успела после пријаве.');
+      }
+
+      $('password').value = '';
+      showMessage('Пријава је успела. Отварам постојећи ADMIN…', 'ok');
+      log('Пријава успела', 'Сесија је сачувана; отварам admin.html.');
+      window.location.replace('/admin.html');
+    } catch (error) {
+      const message = error && error.message ? error.message : String(error);
+      showMessage(message, 'error');
+      showDiagnostic('ПРИЈАВА НИЈЕ УСПЕЛА: ' + message, 'error');
+      log('ГРЕШКА ПРИ ПРИЈАВИ', message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('testButton').addEventListener('click', async function() {
+    const button = $('testButton');
+    button.disabled = true;
+    showMessage('Проверавам да ли Edge Function одговара…');
+    try {
+      getClient();
+      const result = await callLoginEndpoint({ action: '__diagnostic_ping__' });
+      if (result.response.status === 401) {
+        showMessage('Supabase Edge Function је доступан. Сервер је одговорио HTTP 401 јер ова пробна радња намерно нема сесију. То је очекивано.', 'ok');
+        log('Edge Function доступан', 'HTTP 401 је очекиван за пробни захтев без пријаве.');
+      } else {
+        showMessage('Edge Function је одговорио HTTP ' + result.response.status + ': ' + (result.data.error || 'Одговор је примљен.'), result.response.ok ? 'ok' : 'warn');
+        log('Одговор Edge Function-а', 'HTTP ' + result.response.status);
+      }
+    } catch (error) {
+      showMessage(error.message || String(error), 'error');
+      log('Тест сервера није успео', error.message || String(error));
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('copyButton').addEventListener('click', async function() {
+    const report = [
+      'ADMIN 2 V1',
+      'URL: ' + location.href,
+      'HTTPS: ' + (location.protocol === 'https:'),
+      'ONLINE: ' + navigator.onLine,
+      'SUPABASE SDK: ' + (window.supabase ? 'loaded' : 'missing'),
+      '',
+      ...logLines
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(report);
+      showMessage('Дијагностика је копирана.', 'ok');
+    } catch (_) {
+      $('log').textContent = report;
+      showMessage('Не могу аутоматски да копирам. Детаљни запис је приказан испод — можеш га означити и копирати.', 'warn');
+    }
+  });
+
+  if (location.protocol !== 'https:') {
+    showDiagnostic('УПОЗОРЕЊЕ: отвори страницу преко HTTPS адресе narucidomace.rs.', 'warn');
+  }
+  log('Страница ADMIN 2 је покренута', 'Верзија V1.');
+  runDiagnostics();
+})();
+</script>
+</body>
+</html>
