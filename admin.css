@@ -750,7 +750,7 @@ body.closed-tours-open{overflow:hidden!important}
 @media(max-width:640px){.nd-workspace .nd-ops-head{display:block}.nd-workspace .nd-ops-head>button{width:100%;margin-top:13px}.nd-workspace .nd-ops-tabs{top:68px;gap:3px;padding:5px}.nd-workspace .nd-ops-tabs button{font-size:10px;min-height:50px}.nd-workspace .nd-ops-content{grid-template-columns:1fr}.nd-workspace .nd-ops-card{padding:13px}.nd-workspace .nd-tour-ops{min-height:calc(100dvh - 82px)}}
 
 
-/* 21. ADMIN procurement management panel — version 1.0.2 */
+/* 21. ADMIN procurement management panel — version 1.0.3 */
 .nd-workspace .nd-procurement-entry{min-width:82px;padding:0 10px;font-size:11px;font-weight:900;color:#fdba74;border-color:#7c3f1e}
 .nd-workspace .nd-procurement{display:flex;flex-direction:column;gap:13px;min-height:calc(100dvh - 100px);color:#f8fafc}
 .nd-workspace .nd-proc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;border:1px solid #334155;border-radius:16px;background:#111c32}
@@ -827,3 +827,14 @@ body.closed-tours-open{overflow:hidden!important}
 }
 
 .nd-workspace .nd-proc button:disabled{opacity:.55;cursor:wait;filter:saturate(.55)}
+
+
+/* 21.1. Product-level grouping — version 1.0.0 */
+.nd-workspace .nd-proc-product-group{display:block;grid-column:1/-1;padding:15px}
+.nd-workspace .nd-proc-product-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 1px 12px;border-bottom:1px solid #334155}
+.nd-workspace .nd-proc-product-heading strong{font-size:17px;font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .nd-proc-product-heading small{flex:0 0 auto;color:#94a3b8;font-size:10px;font-weight:800}
+.nd-workspace .nd-proc-variant-block{padding:13px 0 2px}
+.nd-workspace .nd-proc-variant-block+.nd-proc-variant-block{margin-top:12px;border-top:1px solid #334155}
+.nd-workspace .nd-proc-variant-block .nd-proc-card-head strong{font-size:13px}
+@media(max-width:760px){.nd-workspace .nd-proc-product-group{padding:14px}.nd-workspace .nd-proc-product-heading strong{font-size:16px}}
