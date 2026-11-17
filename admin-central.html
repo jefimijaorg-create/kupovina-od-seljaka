@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10251f">
+<title>ADMIN центар · Наручи домаће</title>
+<script>if(location.protocol==="http:"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:dark;--bg:#0c1714;--panel:#14231e;--panel2:#192c25;--line:#294238;--text:#f2f7f3;--muted:#a8b9ae;--green:#8ed1a5;--gold:#e7c77c;--red:#ff9d9d}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}body{min-height:100vh}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+.shell{width:min(1120px,100%);margin:auto;padding:18px 16px 42px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 22px}.brand{display:flex;align-items:center;gap:12px}.mark{width:44px;height:44px;border-radius:14px;background:#244b38;display:grid;place-items:center;font-size:23px}.brand small{display:block;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.16em}.brand strong{font-size:18px;letter-spacing:-.03em}.top-actions{display:flex;gap:8px}.quiet{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;padding:10px 13px;min-height:42px}
+.hero{padding:24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,#1b382b,#14231e 65%);box-shadow:0 18px 50px #0003}.eyebrow{font-size:11px;letter-spacing:.15em;color:var(--green);font-weight:800}.hero h1{font-size:clamp(26px,5vw,40px);line-height:1.08;margin:10px 0}.hero p{color:var(--muted);margin:0;max-width:680px;line-height:1.55}.identity{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.pill{border:1px solid #41624e;background:#20392d;border-radius:99px;padding:7px 11px;color:#d9f1df;font-size:12px}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 2px 12px}.section-head h2{font-size:17px;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:5px 0 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.module{min-height:122px;text-align:left;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--text);padding:17px;display:flex;gap:14px;align-items:flex-start;transition:.18s}.module.active{border-color:#558565;background:linear-gradient(145deg,#1d382a,#14231e)}.module.active:active{transform:scale(.99)}.module:disabled{cursor:not-allowed;opacity:.64}.module-icon{flex:0 0 42px;height:42px;border-radius:13px;background:#243a30;display:grid;place-items:center;font-size:20px}.module-copy{min-width:0}.module-copy strong{display:block;font-size:15px;margin:1px 0 6px}.module-copy span{display:block;font-size:12px;line-height:1.45;color:var(--muted)}.status{display:inline-flex!important;margin-top:10px;border-radius:99px;padding:4px 8px;font-size:10px!important;font-weight:800;letter-spacing:.04em}.status.ok{background:#21432e;color:#b9efc6}.status.off{background:#3a3020;color:#e9d5a7}
+.diag{margin-top:24px;border:1px solid var(--line);border-radius:18px;background:#101d19;overflow:hidden}.diag-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line)}.diag-head strong{font-size:13px}.diag-state{font-size:11px;color:var(--gold)}.diag-body{padding:12px 15px}.diag-line{font:11px/1.55 ui-monospace,SFMono-Regular,monospace;color:var(--muted);overflow-wrap:anywhere;padding:3px 0}.diag-line.error{color:var(--red)}.diag-line.ok{color:var(--green)}.diag-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.diag-actions button{font-size:11px;padding:8px 10px}
+.footer{padding:20px 2px 0;color:#71877a;font-size:11px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#app{display:none}#boot{padding:30px 16px;color:var(--muted);text-align:center}
+.overlay{position:fixed;inset:0;z-index:50;background:#030907eF;display:none;flex-direction:column;padding:10px}.overlay.open{display:flex}.modal{width:min(1500px,100%);height:100%;margin:auto;background:var(--bg);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line)}.modal-head strong{font-size:13px}.modal-head button{min-width:42px;min-height:42px}.module-frame{border:0;width:100%;height:100%;background:white;flex:1}
+@media(max-width:620px){.shell{padding:12px 12px 30px}.top{padding:5px 0 16px}.brand strong{font-size:16px}.top-actions .quiet{padding:9px}.hero{padding:20px;border-radius:20px}.grid{grid-template-columns:1fr;gap:9px}.module{min-height:100px;padding:15px}.section-head{margin-top:23px}.overlay{padding:0}.modal{border-radius:0;border:0}.modal-head{padding-top:max(8px,env(safe-area-inset-top))}}
+</style>
+</head>
+<body>
+<div id="boot">Покрећем безбедносну проверу ADMIN система…</div>
+<div id="app">
+<div class="shell">
+<header class="top">
+ <div class="brand"><div class="mark">🌿</div><div><small>NARUČI DOMAĆE · ADMIN</small><strong>Централни панел</strong></div></div>
+ <div class="top-actions"><button class="quiet" id="refreshBtn" type="button">Освежи</button><button class="quiet" id="logoutBtn" type="button">Одјава</button></div>
+</header>
+<section class="hero">
+ <div class="eyebrow">ADMIN CENTRAL · V1</div>
+ <h1>Једно место за управљање.</h1>
+ <p>Централна контролна тачка административног система. Модули се отварају унутар овог екрана, а сваки модул мора засебно да потврди сесију и овлашћења.</p>
+ <div class="identity"><span class="pill" id="rolePill">Провера улоге…</span><span class="pill" id="userPill">Провера корисника…</span><span class="pill">Supabase сесија активна</span></div>
+</section>
+<div class="section-head"><div><h2>Оперативни модули</h2><p>Доступни су само модули са потврђеном заштитом.</p></div></div>
+<div class="grid" id="modules">
+ <button class="module active" type="button" data-module="tour">
+  <span class="module-icon">🧭</span><span class="module-copy"><strong>Преглед туре</strong><span>Постојећи оперативни систем за туре, набавку, преузимање и доставу.</span><span class="status ok">● ЗАШТИЋЕНО · ДОСТУПНО</span></span>
+ </button>
+ <button class="module" type="button" disabled><span class="module-icon">🛒</span><span class="module-copy"><strong>Поруџбине</strong><span>Модул постоји, али самостална ADMIN ауторизација није потврђена.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
+ <button class="module" type="button" disabled><span class="module-icon">🥕</span><span class="module-copy"><strong>Производи</strong><span>Приступ ће бити укључен након провере сесије и улога у модулу.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
+ <button class="module" type="button" disabled><span class="module-icon">🏡</span><span class="module-copy"><strong>Произвођачи</strong><span>Постојећи модул није пуштен из централног панела док се не потврди заштита.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
+ <button class="module" type="button" disabled><span class="module-icon">📍</span><span class="module-copy"><strong>Пунктови</strong><span>Чека проверу аутентификације и овлашћења.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
+ <button class="module" type="button" disabled><span class="module-icon">👥</span><span class="module-copy"><strong>Купци</strong><span>Чека проверу аутентификације и овлашћења.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
+ <button class="module" type="button" disabled><span class="module-icon">📊</span><span class="module-copy"><strong>Извештаји</strong><span>Биће доступни када се потврде извори података и дозволе.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
+</div>
+<section class="diag" aria-live="polite">
+ <div class="diag-head"><strong>Трајна дијагностика система</strong><span class="diag-state" id="diagState">ПОКРЕТАЊЕ</span></div>
+ <div class="diag-body"><div id="diagLog"></div><div class="diag-actions"><button class="quiet" id="copyDiag" type="button">Копирај запис</button><button class="quiet" id="clearDiag" type="button">Очисти запис</button></div></div>
+</section>
+<footer class="footer"><span>Наручи домаће · ADMIN</span><span>Верзија V1 · примена: admin-central.html</span></footer>
+</div>
+</div>
+<div class="overlay" id="moduleOverlay" role="dialog" aria-modal="true" aria-label="Оперативни модул">
+ <div class="modal"><div class="modal-head"><strong>🧭 Преглед туре · постојећи модул</strong><button class="quiet" id="closeModule" type="button" aria-label="Затвори модул">✕</button></div><iframe class="module-frame" id="moduleFrame" title="Преглед туре" referrerpolicy="same-origin"></iframe></div>
+</div>
+<script>
+(function(){
+'use strict';
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const SUPABASE_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const LOGIN='/admin2.html?next=%2Fadmin-central.html';
+const LOG_KEY='nd_admin_central_diagnostics_v1';
+const $=id=>document.getElementById(id);
+let client=null, currentUser=null, currentRole=null, logEntries=[];
+function persist(){try{localStorage.setItem(LOG_KEY,JSON.stringify(logEntries.slice(-120)))}catch(_){}}
+function log(message,type='info'){
+ const item={time:new Date().toLocaleString('sr-RS'),message:String(message),type};
+ logEntries.push(item);logEntries=logEntries.slice(-120);persist();renderLog();
+}
+function renderLog(){
+ const root=$('diagLog');if(!root)return;
+ root.replaceChildren();
+ logEntries.slice(-18).reverse().forEach(entry=>{const row=document.createElement('div');row.className='diag-line '+(entry.type==='error'?'error':entry.type==='ok'?'ok':'');row.textContent='['+entry.time+'] '+entry.message;root.appendChild(row)});
+}
+function restoreLog(){try{const saved=JSON.parse(localStorage.getItem(LOG_KEY)||'[]');if(Array.isArray(saved))logEntries=saved.filter(x=>x&&typeof x.message==='string').slice(-120)}catch(_){logEntries=[]}renderLog()}
+function fail(message){log(message,'error');$('diagState').textContent='ГРЕШКА';$('boot').textContent='Приступ ADMIN систему није одобрен. Погледај дијагностику.';setTimeout(()=>location.replace(LOGIN),900)}
+async function verifyAccess(){
+ log('Провера HTTPS, Supabase SDK и ADMIN сесије…');
+ if(location.protocol!=='https:')throw Error('ADMIN мора бити отворен преко HTTPS-а.');
+ if(!window.supabase?.createClient)throw Error('Supabase SDK није учитан.');
+ client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+ const {data:{session},error:sessionError}=await client.auth.getSession();
+ if(sessionError)throw Error('Грешка при читању сесије: '+sessionError.message);
+ if(!session?.access_token)throw Error('Нема активне Supabase сесије.');
+ const {data:{user},error:userError}=await client.auth.getUser();
+ if(userError||!user)throw Error('Провера идентитета није успела: '+(userError?.message||'корисник није пронађен'));
+ const {data:record,error:roleError}=await client.from('app_users').select('role,is_active').eq('auth_user_id',user.id).maybeSingle();
+ const allowed=['super_admin','admin','operator','viewer'];
+ if(roleError)throw Error('Провера ADMIN улоге није успела: '+roleError.message);
+ if(!record||record.is_active!==true||!allowed.includes(record.role))throw Error('Приступ одбијен: ADMIN налог није активан или улога није дозвољена.');
+ currentUser=user;currentRole=record.role;
+ $('rolePill').textContent='УЛОГА: '+record.role.toUpperCase();
+ $('userPill').textContent='НАЛОГ: '+(user.email||user.id);
+ $('diagState').textContent='СЕСИЈА ПОТВРЂЕНА';
+ log('Приступ одобрен · корисник '+user.id+' · улога '+record.role,'ok');
+ $('boot').style.display='none';$('app').style.display='block';
+}
+function openTour(){
+ if(!client||!currentUser){log('Покушај отварања модула без потврђене сесије.','error');return}
+ $('moduleFrame').src='/pregled-ture.html?source=admin-central-v1';
+ $('moduleOverlay').classList.add('open');document.body.style.overflow='hidden';
+ log('Отворен је постојећи преглед-туре.html у заштићеном модалном панелу.','ok');
+}
+function closeTour(){$('moduleOverlay').classList.remove('open');$('moduleFrame').src='about:blank';document.body.style.overflow='';}
+document.querySelector('[data-module="tour"]').addEventListener('click',openTour);
+$('closeModule').addEventListener('click',closeTour);
+$('moduleOverlay').addEventListener('click',e=>{if(e.target===$('moduleOverlay'))closeTour()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('moduleOverlay').classList.contains('open'))closeTour()});
+$('refreshBtn').addEventListener('click',async()=>{const b=$('refreshBtn');b.disabled=true;try{await verifyAccess();log('Ручна провера сесије завршена.','ok')}catch(e){fail(e.message)}finally{b.disabled=false}});
+$('logoutBtn').addEventListener('click',async()=>{if(!client)return;const b=$('logoutBtn');b.disabled=true;try{const {error}=await client.auth.signOut();if(error)throw error;log('Корисник је одјављен.','ok');location.replace('/admin2.html')}catch(e){log('Одјава није успела: '+e.message,'error');b.disabled=false}});
+$('copyDiag').addEventListener('click',async()=>{const txt=logEntries.map(x=>'['+x.time+'] '+x.message).join('\n');try{await navigator.clipboard.writeText(txt);log('Дијагностички запис је копиран.','ok')}catch(e){log('Копирање није доступно: '+e.message,'error')}});
+$('clearDiag').addEventListener('click',()=>{logEntries=[];persist();renderLog();log('Дијагностички запис је очишћен.')});
+window.addEventListener('error',e=>log('JavaScript грешка: '+(e.message||'непозната грешка')+' · '+(e.filename||'')+':'+(e.lineno||''),'error'));
+window.addEventListener('unhandledrejection',e=>log('Необрађено Promise одбијање: '+(e.reason?.message||String(e.reason)),'error'));
+document.addEventListener('DOMContentLoaded',async()=>{
+ restoreLog();
+ try{
+  log('ADMIN CENTRAL V1 је покренут.');
+  await verifyAccess();
+  client.auth.onAuthStateChange((event,session)=>{
+   if(event==='SIGNED_OUT'||!session?.access_token){log('Сесија је истекла или је корисник одјављен.','error');closeTour();location.replace(LOGIN)}
+   else log('Supabase сесија ажурирана: '+event,'ok');
+  });
+ }catch(e){fail(e.message||String(e))}
+});
+})();
+</script>
+</body>
+</html>
