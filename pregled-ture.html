@@ -638,7 +638,19 @@ body.closed-tours-open{overflow:hidden!important}
 </head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
 <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div id="tour-actions" class="hidden flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6"><div id="message" class="bg-white border border-slate-200 rounded-xl p-3 mb-5 text-sm">Повезивање са базом…</div>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6"><div id="message" class="bg-white border border-slate-200 rounded-xl p-3 mb-5 text-sm">Повезивање са базом…</div><style id="nd-diagnostics-style">
+#nd-diagnostics{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:9999;max-width:900px;margin:0 auto;background:#07111f;border:1px solid #475569;border-radius:15px;box-shadow:0 12px 38px rgba(0,0,0,.55);color:#e2e8f0;font:12px/1.45 system-ui,sans-serif}
+#nd-diagnostics header{display:flex;align-items:center;gap:8px;padding:9px 11px}
+#nd-diagnostics strong{font-size:12px;color:#fdba74;flex:1}
+#nd-diagnostics button{min-height:34px;padding:5px 9px;border:1px solid #475569;border-radius:8px;background:#17243b;color:#f8fafc;font-weight:800}
+#nd-diagnostics pre{max-height:25dvh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:9px 11px;border-top:1px solid #334155;color:#cbd5e1;font:11px/1.45 ui-monospace,monospace}
+#nd-diagnostics.nd-collapsed pre{display:none}
+#nd-diagnostics .nd-ok{color:#6ee7b7}#nd-diagnostics .nd-error{color:#fca5a5}
+</style>
+<div id="nd-diagnostics" aria-live="polite">
+ <header><strong>ADMIN V9 · ТЕХНИЧКА ДИЈАГНОСТИКА</strong><button type="button" onclick="ndCopyDiagnostics()">КОПИРАЈ</button><button type="button" onclick="ndToggleDiagnostics()">САКРИЈ</button></header>
+ <pre id="nd-diagnostics-log">Покретање дијагностике…</pre>
+</div>
 <div class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print"><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Вредност набавке</span><strong id="stat-price" class="block mt-1 text-xl sm:text-2xl font-black text-emerald-700">—</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето млека</span><strong id="stat-milk" class="block mt-1 text-xl sm:text-2xl font-black text-blue-700">0 л</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето сира</span><strong id="stat-cheese" class="block mt-1 text-xl sm:text-2xl font-black text-amber-700">0 кг</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето јаја</span><strong id="stat-eggs" class="block mt-1 text-xl sm:text-2xl font-black text-yellow-600">0 ком</strong></div></div>
 <section id="tour-picker-panel" class="mb-6 no-print">
  <div class="tour-home-heading"><div><p class="tour-home-eyebrow">НАРУЧИ ДОМАЋЕ · ADMIN</p><h2>Избор туре</h2><p>Изабери туру за наставак рада.</p></div><span class="tour-home-live"><i class="fa-solid fa-circle"></i> ПОВЕЗАНО СА БАЗОМ</span></div>
@@ -704,23 +716,25 @@ const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6sk
 const authClient=window.supabase.createClient(URL,KEY,{auth:{detectSessionInUrl:false}});
 let adminAuthSession=null;
 async function requireAdminAccess(){
+ ndDebug('Провера Supabase сесије и ADMIN дозволе…');
  try{
   const {data:{session},error:sessionError}=await authClient.auth.getSession();
-  if(sessionError||!session?.access_token){location.replace('/admin2.html');return false;}
+  if(sessionError||!session?.access_token){ndDebug('НЕМА АКТИВНЕ СЕСИЈЕ: '+(sessionError?.message||'access token није доступан'),'error');location.replace('/admin2.html');return false;}
   const {data:{user},error:userError}=await authClient.auth.getUser();
-  if(userError||!user){await authClient.auth.signOut();location.replace('/admin2.html');return false;}
+  if(userError||!user){ndDebug('ПРОВЕРА КОРИСНИКА НИЈЕ УСПЕЛА: '+(userError?.message||'корисник није пронађен'),'error');await authClient.auth.signOut();location.replace('/admin2.html');return false;}
   const {data:adminRecord,error:adminError}=await authClient.from('app_users').select('role,is_active').eq('auth_user_id',user.id).maybeSingle();
   const allowedRoles=['super_admin','admin','operator','viewer'];
-  if(adminError||!adminRecord||adminRecord.is_active!==true||!allowedRoles.includes(adminRecord.role)){
+  if(adminError||!adminRecord||adminRecord.is_active!==true||!allowedRoles.includes(adminRecord.role)){ndDebug('ADMIN ДОЗВОЛА ОДБИЈЕНА: '+(adminError?.message||JSON.stringify(adminRecord)||'нема активног admin записа'),'error');
    await authClient.auth.signOut();
    location.replace('/admin2.html');
    return false;
   }
   adminAuthSession=session;
   HEAD.Authorization='Bearer '+session.access_token;
+  ndDebug('ПРИЈАВА ПОТВРЂЕНА · корисник '+user.id+' · улога '+adminRecord.role,'ok');
   return true;
  }catch(error){
-  console.error('Провера ADMIN приступа није успела:',error);
+  console.error('Провера ADMIN приступа није успела:',error);ndDebug('ГРЕШКА ПРИ ПРОВЕРИ ПРИСТУПА: '+(error?.message||String(error)),'error');
   location.replace('/admin2.html');
   return false;
  }
@@ -748,7 +762,20 @@ function assertTourWriteAllowed(path,opt={}){
   throw Error(label+'. Додавање газдинстава, измена и расподела дозвољени су само док је тура „У обради“.');
  }
 }
-async function api(path,opt={}){assertTourWriteAllowed(path,opt);let r;try{r=await fetch(URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}})}catch(e){throw Error('Мрежна/CORS грешка · '+path+' · '+(e?.message||String(e)))}let t=await r.text();if(!r.ok)throw Error('Supabase HTTP '+r.status+' '+r.statusText+' · PUTANJA: '+path+' · ODGOVOR: '+(t||'(празан одговор)').slice(0,1200));try{return t?JSON.parse(t):[]}catch(e){throw Error('Неисправан JSON одговор · '+path+' · '+(t||'').slice(0,500))}}
+async function api(path,opt={}){
+ assertTourWriteAllowed(path,opt);
+ const started=Date.now();ndDebug('ЗАХТЕВ → '+String(opt.method||'GET').toUpperCase()+' /rest/v1/'+path);
+ let r;
+ try{r=await fetch(URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}})}
+ catch(e){const msg='МРЕЖНА/CORS ГРЕШКА · '+path+' · '+(e?.message||String(e));ndDebug(msg,'error');throw Error(msg)}
+ let t=await r.text();
+ if(!r.ok){const msg='Supabase HTTP '+r.status+' '+r.statusText+' · PUTANJA: '+path+' · ODGOVOR: '+(t||'(празан одговор)').slice(0,1200);ndDebug('НЕУСПЕХ ('+(Date.now()-started)+' ms): '+msg,'error');throw Error(msg)}
+ try{
+  const data=t?JSON.parse(t):[];
+  ndDebug('УСПЕХ HTTP '+r.status+' ('+(Date.now()-started)+' ms) · '+path+' · '+(Array.isArray(data)?data.length+' редова':'JSON објекат'),'ok');
+  return data;
+ }catch(e){const msg='Неисправан JSON одговор · '+path+' · '+(t||'').slice(0,500);ndDebug(msg,'error');throw Error(msg)}
+}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=v=>Number(v||0),fmt=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:3}),cash=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.';
 function variantFor(x){return x?.variant_id?variantCatalog.find(v=>String(v.id)===String(x.variant_id))||null:null}
@@ -788,18 +815,36 @@ function viberPack(x){
 function hasItemPrice(x){return x.cena_stavke!==null&&x.cena_stavke!==undefined&&x.cena_stavke!==''&&n(x.cena_stavke)>0 || x.unit_price!==null&&x.unit_price!==undefined&&x.unit_price!==''&&n(x.unit_price)>0}
 function viberItemPrice(x){return hasItemPrice(x)?cash(price(x)):'⚠️ цена није унета'}
 
-function say(t,bad=false){let e=document.getElementById('message');e.textContent=t;e.className='bg-white border rounded-xl p-3 mb-5 text-sm '+(bad?'border-red-300 text-red-700':'border-emerald-200 text-emerald-800')}
+function ndDebug(message,type='info'){
+ const line='['+new Date().toLocaleTimeString('sr-RS')+'] '+String(message);
+ console[type==='error'?'error':type==='warn'?'warn':'log']('[ADMIN DIJAGNOSTIKA]',line);
+ const box=document.getElementById('nd-diagnostics-log');if(!box)return;
+ const lines=(box.textContent||'').split('\\n').filter(Boolean);lines.push(line);
+ box.textContent=lines.slice(-45).join('\\n');box.scrollTop=box.scrollHeight;
+}
+function ndToggleDiagnostics(){document.getElementById('nd-diagnostics')?.classList.toggle('nd-collapsed');}
+async function ndCopyDiagnostics(){
+ const value=document.getElementById('nd-diagnostics-log')?.textContent||'Нема дијагностичких података.';
+ try{await navigator.clipboard.writeText(value);ndDebug('Извештај је копиран.');}
+ catch(e){ndDebug('Копирање није доступно: '+(e.message||e),'warn');}
+}
+window.addEventListener('error',e=>ndDebug('JAVASCRIPT: '+(e.message||'непозната грешка')+' · '+(e.filename||'')+':'+(e.lineno||''),'error'));
+window.addEventListener('unhandledrejection',e=>ndDebug('НЕОБРАЂЕНО ОБЕЋАЊЕ: '+(e.reason?.message||String(e.reason)),'error'));
+function say(t,bad=false){let e=document.getElementById('message');e.textContent=t;e.className='bg-white border rounded-xl p-3 mb-5 text-sm '+(bad?'border-red-300 text-red-700':'border-emerald-200 text-emerald-800');ndDebug('СТАТУС: '+String(t).replace(/\\n/g,' · '),bad?'error':'info')}
 function savedTourId(){try{return localStorage.getItem('naruci-domace-admin-tour-id')||''}catch(e){return ''}}
 function saveTourId(id){try{localStorage.setItem('naruci-domace-admin-tour-id',String(id))}catch(e){console.warn('Чување изабране туре није доступно',e)}}
 function toggleTourPicker(show){const panel=document.getElementById('tour-picker-panel'),cancel=document.getElementById('cancel-tour-change');if(!panel)return;panel.classList.toggle('hidden',!show);if(cancel)cancel.classList.toggle('hidden',!show||!tourId);if(show){document.querySelector('#tour-home-cards button')?.focus();panel.scrollIntoView({behavior:'smooth',block:'start'})}}
 async function loadData(){
+ ndDebug('ПОЧЕТАК loadData()');
  try{
   say('Учитавање тура из базе…');
   // Тражи и прикажи туре прве: споредне табеле не смеју да блокирају избор туре.
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),15000);
   try{
+   ndDebug('КОРАК 1/4: читање табеле ture (id,naziv,datum,status)…');
    tours=await api('ture?select=id,naziv,datum,status&order=datum.desc,id.desc&limit=300',{signal:controller.signal});
+   ndDebug('ТУРЕ УЧИТАНЕ: '+tours.length+' · ID: '+tours.map(t=>t.id).join(', '),'ok');
   }catch(error){
    if(error?.name==='AbortError')throw Error('Табела тура није одговорила у року од 15 секунди. Провери интернет везу и Supabase доступност.');
    throw error;
@@ -822,6 +867,7 @@ async function loadData(){
    finally{clearTimeout(requestTimeout)}
   };
   // Помоћни подаци се учитавају независно. Грешка једне табеле не сме да сакрије туре.
+  ndDebug('КОРАК 2/4: читање газдинстава, пунктова, поруџбина, купаца и распореда…');
   const core=await Promise.all([
    safeList('Газдинства',signal=>api('gazdinstva?select=id,name,phone&order=name.asc',{signal})),
    safeList('Пунктови',signal=>api('punktovi?select=id,name,city,address,is_active,aktivan',{signal})),
@@ -830,6 +876,7 @@ async function loadData(){
    safeList('Распоред пунктова',signal=>api('tura_punktovi?select=tura_id,punkt_id,redosled,aktivan,vreme',{signal}))
   ]);
   [farms,points,orders,customers,tourPoints]=core;
+  ndDebug('КОРАК 3/4: читање каталога и понуда производа…');
   const optional=await Promise.all([
    safeList('Понуде производа',signal=>api('product_offers?select=gazdinstvo_id,product_id,variant_id,purchase_price,is_active&is_active=eq.true',{signal})),
    safeList('Каталог производа',signal=>api('products?select=id,name,purchase_price,unit,calc_unit',{signal})),
@@ -837,6 +884,7 @@ async function loadData(){
    safeList('Понуда газдинстава',signal=>api('gazdinstva_proizvodi?select=gazdinstvo_id,proizvod,jedinica,nabavna_cena&aktivno=eq.true',{signal}))
   ]);
   [farmOffers,productCatalog,variantCatalog,farmProducts]=optional;
+  ndDebug('КОРАК 4/4: читање дуговања…');
   let debtTimer;
   try{await Promise.race([loadDebts(),new Promise((_,reject)=>{debtTimer=setTimeout(()=>reject(Error('учитавање дуговања је истекло после 15 секунди')),15000)})])}
   catch(debtError){warnings.push('Дуговања: '+(debtError?.message||String(debtError)));console.warn('Дуговања нису учитана; настављам са приказом тура:',debtError);procurementRows=[];producerPayouts=[];producerPayments=[];}
@@ -868,7 +916,7 @@ async function loadData(){
   else say(tours.length?'Изабери туру за рад или отвори архиву затворених тура.':'У бази тренутно нема тура.');
  }catch(e){
   const detail='ГРЕШКА ПРИ УЧИТАВАЊУ ТУРА\\n'+(e?.message||String(e))+'\\n\\nПровери: Supabase дозволе (RLS), назив табеле/колона и мрежну везу.\\nВреме: '+new Date().toLocaleString('sr-RS');
-  say(detail,true);console.error('[PREGLED-TURE] loadData failed',e);const box=document.getElementById('message');if(box){box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere'}
+  say(detail,true);console.error('[PREGLED-TURE] loadData failed',e);ndDebug('loadData ПРЕКИНУТ: '+(e?.message||String(e)),'error');const box=document.getElementById('message');if(box){box.style.whiteSpace='pre-wrap';box.style.overflowWrap='anywhere'}
  }
 }
 function renderTourHome(){
@@ -2673,10 +2721,12 @@ function renderProcurement(){
 }
 
 document.addEventListener('DOMContentLoaded',async()=>{
+ ndDebug('Страница је покренута · build V9 · commit дијагностике');
  const authorized=await requireAdminAccess();
  if(!authorized)return;
  ensureProcurementAllocationModal();
  await loadData();
+ ndDebug('ИНИЦИЈАЛИЗАЦИЈА loadData() ЗАВРШЕНА');
  initAdminRouter();
 });
 </script><script src="admin/procurement-product-panel.js?v=1" defer></script></body></html>
