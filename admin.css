@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.0.3
- * Updated: 2026-11-17
- * Description: Shared ADMIN SPA styles; adds responsive workspace and tabbed tour operations panel.
+ * Version: 1.0.4
+ * Updated: 2026-11-18
+ * Description: Adds responsive per-variant allocation recap in procurement.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -866,4 +866,19 @@ body.closed-tours-open{overflow:hidden!important}
  .nd-workspace .nd-proc-modal-summary span{padding:8px}
  .nd-workspace .nd-proc-modal-summary b{font-size:16px}
  .nd-workspace .nd-proc-modal-body{padding:0 14px 14px}
+}
+
+/* 22. Procurement allocation recap — absolute per-farm quantities */
+.nd-workspace .nd-proc-allocation-recap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0;padding:10px;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:rgba(15,23,42,.38)}
+.nd-workspace .nd-proc-allocation-recap span{min-width:0;padding:5px}
+.nd-workspace .nd-proc-allocation-recap b{display:block;color:#fdba74;font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
+.nd-workspace .nd-proc-allocation-recap small{display:block;margin-top:4px;color:#94a3b8;font-size:11px;line-height:1.35}
+.nd-workspace .nd-proc-allocation-card .nd-proc-input-row label{max-width:52%;line-height:1.35}
+.nd-workspace .nd-proc-allocation-card .nd-proc-subline{display:block;margin-top:8px}
+@media(max-width:640px){
+ .nd-workspace .nd-proc-allocation-recap{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px}
+ .nd-workspace .nd-proc-allocation-recap span{padding:6px}
+ .nd-workspace .nd-proc-allocation-recap b{font-size:17px}
+ .nd-workspace .nd-proc-allocation-recap small{font-size:10px}
+ .nd-workspace .nd-proc-allocation-card .nd-proc-input-row label{max-width:42%}
 }
