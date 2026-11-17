@@ -580,8 +580,6 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
 
   function handleKeydown(event) {
     if (event.key === 'Escape' && state.selectedProductId !== null) { state.selectedProductId = null; render(); return; }
-    const card = event.target.closest?.('[data-open-product]');
-    if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProductAllocation(card.dataset.openProduct); }
   }
   shell.addEventListener('keydown', handleKeydown);
 
