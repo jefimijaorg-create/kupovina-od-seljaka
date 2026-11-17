@@ -750,7 +750,7 @@ body.closed-tours-open{overflow:hidden!important}
 @media(max-width:640px){.nd-workspace .nd-ops-head{display:block}.nd-workspace .nd-ops-head>button{width:100%;margin-top:13px}.nd-workspace .nd-ops-tabs{top:68px;gap:3px;padding:5px}.nd-workspace .nd-ops-tabs button{font-size:10px;min-height:50px}.nd-workspace .nd-ops-content{grid-template-columns:1fr}.nd-workspace .nd-ops-card{padding:13px}.nd-workspace .nd-tour-ops{min-height:calc(100dvh - 82px)}}
 
 
-/* 21. ADMIN procurement management panel — version 1.0.1 */
+/* 21. ADMIN procurement management panel — version 1.0.2 */
 .nd-workspace .nd-procurement-entry{min-width:82px;padding:0 10px;font-size:11px;font-weight:900;color:#fdba74;border-color:#7c3f1e}
 .nd-workspace .nd-procurement{display:flex;flex-direction:column;gap:13px;min-height:calc(100dvh - 100px);color:#f8fafc}
 .nd-workspace .nd-proc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;border:1px solid #334155;border-radius:16px;background:#111c32}
@@ -768,7 +768,7 @@ body.closed-tours-open{overflow:hidden!important}
 .nd-workspace .nd-proc-pill{flex:0 0 auto;padding:5px 8px;border:1px solid #475569;border-radius:99px;color:#cbd5e1;font-size:10px;font-weight:900}
 .nd-workspace .nd-proc-pill.is-done{border-color:#166534;background:#14532d33;color:#86efac}
 .nd-workspace .nd-proc-pill.is-open{border-color:#854d0e;background:#713f1233;color:#fcd34d}
-.nd-workspace .nd-proc-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:13px}
+.nd-workspace .nd-proc-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:13px}
 .nd-workspace .nd-proc-farm-record .nd-proc-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
 .nd-workspace .nd-proc-metrics span{min-width:0;padding:9px;border-radius:10px;background:#17243b}
 .nd-workspace .nd-proc-metrics b{display:block;font-size:17px;font-weight:900;color:#fdba74;overflow-wrap:anywhere}
