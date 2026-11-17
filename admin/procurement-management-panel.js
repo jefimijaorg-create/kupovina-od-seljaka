@@ -376,7 +376,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       esc(String(state.tour?.status || '').toUpperCase()) + ' · Сви подаци из постојеће Supabase базе</p></div>' +
       '<button type="button" class="nd-proc-secondary" data-action="back">← Назад</button></header>' +
       renderDiagnostic() +
-      '<nav class="nd-proc-tabs' aria-label="Преглед набавке">' + tabs.map(([id, label]) =>
+      '<nav class="nd-proc-tabs" aria-label="Преглед набавке">' + tabs.map(([id, label]) =>
         '<button type="button" data-tab="' + id + '" aria-selected="' + (state.tab === id) + '">' + label + '</button>').join('') + '</nav>' +
       (isProcessing ? '' : '<div class="nd-proc-warning">Тура није у статусу processing. Набавка је доступна само за читање; база ће одбити сваки покушај измене.</div>') +
       (state.notice ? '<div class="nd-proc-notice ' + (state.noticeType === 'error' ? 'is-error' : '') + '">' + esc(state.notice) + '</div>' : '') +
