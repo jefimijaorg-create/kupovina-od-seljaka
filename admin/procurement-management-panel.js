@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.0
+ * Version: 1.1.1
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
  *              Viber message preparation and package order/confirmation/pickup tracking.
@@ -407,7 +407,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         potvrdjeno_pakovanja: confirmed, preuzeto_pakovanja: collected,
         updated_at: new Date().toISOString()
       };
-      if (confirmed !== num(row.potvrdjeno_pakovanja)) patch.potvrdjeno_at = confirmed > 0 ? new Date().toISOString() : null;
+      if (confirmed !== num(row.potvrdjeno_pakovanja) || (confirmed > 0 && !row.potvrdjeno_at)) {\n        patch.potvrdjeno_at = confirmed > 0 ? new Date().toISOString() : null;\n      }
       const result = await client.from('tura_nabavka_dodele').update(patch).eq('id', row.id)
         .select('id,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja').maybeSingle();
       if (result.error) throw new Error(result.error.message);
@@ -435,15 +435,20 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     render();
     let updated = 0;
     try {
-      for (const row of rows) {
-        const patch = { viber_status: status, updated_at: new Date().toISOString() };
-        if (status === 'sent' && !row.viber_poslato_at) patch.viber_poslato_at = new Date().toISOString();
-        const result = await client.from('tura_nabavka_dodele').update(patch).eq('id', row.id)
-          .select('id,viber_status,viber_poslato_at').maybeSingle();
-        if (result.error) throw new Error(result.error.message);
-        if (!result.data || result.data.viber_status !== status) throw new Error('База није потврдила Viber статус.');
-        updated += 1;
+      const now = new Date().toISOString();
+      const patch = { viber_status: status, updated_at: now };
+      if (status === 'sent') {
+        rows.forEach((row) => { if (!row.viber_poslato_at) patch.viber_poslato_at = now; });
       }
+      const result = await client.from('tura_nabavka_dodele').update(patch)
+        .in('id', rows.map((row) => row.id))
+        .select('id,viber_status,viber_poslato_at');
+      if (result.error) throw new Error(result.error.message);
+      if (!Array.isArray(result.data) || result.data.length !== rows.length ||
+          result.data.some((row) => row.viber_status !== status)) {
+        throw new Error('База није потврдила Viber статус за све ставке газдинства.');
+      }
+      updated = result.data.length;
       await load();
       setNotice(status === 'sent' ? 'Ручно је потврђено слање Viber поруке за ово газдинство.' : 'Одговор газдинства је евидентиран.');
     } catch (error) {
