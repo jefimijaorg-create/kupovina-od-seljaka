@@ -303,7 +303,7 @@ main{padding-top:12px!important;padding-bottom:90px!important}
 
 /* 04. UX refresh v2 */
 /* UX refresh v2 — compact, touch-first visual system; no business logic changes */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap');
+
 :root{--ui-bg:#0b1220;--ui-panel:#111c32;--ui-panel2:#17243b;--ui-line:#29384f;--ui-orange:#f97316;--ui-green:#10b981}
 html,body{background:var(--ui-bg)!important}
 body{font-family:'DM Sans',system-ui,sans-serif!important;line-height:1.45}
