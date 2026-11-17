@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1512">
+<title>ADMIN радни простор · Наручи домаће</title>
+<link rel="stylesheet" href="admin.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="boot" class="aw-message">Покрећем проверу ADMIN приступа…</div>
+
+<section id="authGate" class="aw-auth" hidden>
+  <div class="aw-eyebrow">NARUČI DOMAĆE · ADMIN</div>
+  <h1>Потребна је пријава</h1>
+  <p>Овај радни простор користи постојећу Supabase сесију. Пријави се преко постојеће ADMIN странице, па поново отвори овај радни простор.</p>
+  <a href="/admin2.html?next=%2Fadmin-central.html">Отвори ADMIN пријаву</a>
+</section>
+
+<div id="app" hidden>
+  <header class="aw-topbar">
+    <button class="aw-menu-btn" id="menuOpen" type="button" aria-label="Отвори мени" aria-expanded="false">☰</button>
+    <a class="aw-brand" href="admin-workspace.html" aria-label="ADMIN радни простор">
+      <span class="aw-brand-mark">🌿</span>
+      <span class="aw-brand-copy"><small>NARUČI DOMAĆE · ADMIN</small><strong>Радни простор</strong></span>
+    </a>
+    <span class="aw-topbar-spacer"></span>
+    <span class="aw-user" id="userLabel">Проверен налог</span>
+    <button class="aw-logout" id="logoutBtn" type="button">Одјава</button>
+  </header>
+
+  <div class="aw-drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="aw-drawer" id="drawer" aria-label="Главна навигација" aria-hidden="true">
+    <div class="aw-drawer-head">
+      <span class="aw-drawer-title">ADMIN МЕНИ</span>
+      <button class="aw-icon-btn" id="menuClose" type="button" aria-label="Затвори мени">×</button>
+    </div>
+    <nav class="aw-drawer-nav">
+      <a class="aw-drawer-link active" href="#dashboard"><span>⌂</span>Почетна</a>
+      <a class="aw-drawer-link" href="#openTours"><span>🟢</span>Отворене туре</a>
+      <a class="aw-drawer-link" href="#processingTours"><span>🕒</span>Туре у обради</a>
+      <a class="aw-drawer-link" href="/admin-central.html"><span>▦</span>Постојећи ADMIN центар</a>
+      <a class="aw-drawer-link" href="/"><span>↗</span>Јавни сајт</a>
+    </nav>
+  </aside>
+
+  <div class="aw-layout">
+    <main class="aw-main" id="dashboard">
+      <section class="aw-welcome">
+        <div>
+          <div class="aw-eyebrow">ADMIN WORKSPACE · ПОЧЕТНИ ПРЕГЛЕД</div>
+          <h1>Добро дошли у радни простор.</h1>
+          <p>На једном месту су приказане туре које су отворене и оне које су тренутно у обради.</p>
+        </div>
+        <span class="aw-session-pill" id="roleLabel">СЕСИЈА ПОТВРЂЕНА</span>
+      </section>
+
+      <section class="aw-stats" aria-label="Сажетак тура">
+        <article class="aw-stat"><span class="aw-stat-label">Укупно учитаних тура</span><strong class="aw-stat-value" id="totalCount">—</strong><span class="aw-stat-note">Подаци из постојеће табеле ture</span></article>
+        <article class="aw-stat"><span class="aw-stat-label">Отворене туре</span><strong class="aw-stat-value" id="openCount">—</strong><span class="aw-stat-note">Туре које су активне или планиране</span></article>
+        <article class="aw-stat"><span class="aw-stat-label">У обради</span><strong class="aw-stat-value" id="processingCount">—</strong><span class="aw-stat-note">Туре са статусом „processing“</span></article>
+      </section>
+
+      <section class="aw-section" id="openTours">
+        <div class="aw-section-head"><div><h2>Отворене туре</h2><p>Активне, планиране и попуњене туре.</p></div><span class="aw-section-count" id="openLabel">Учитавање…</span></div>
+        <div class="aw-tour-grid" id="openList"><div class="aw-empty">Учитавање тура…</div></div>
+      </section>
+
+      <section class="aw-section" id="processingTours">
+        <div class="aw-section-head"><div><h2>Туре у обради</h2><p>Туре које захтевају даљи оперативни рад.</p></div><span class="aw-section-count" id="processingLabel">Учитавање…</span></div>
+        <div class="aw-tour-grid" id="processingList"><div class="aw-empty">Учитавање тура…</div></div>
+      </section>
+
+      <footer class="aw-footer">Наручи домаће · ADMIN Workspace · Почетни оквир, без измена постојећих модула.</footer>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const SUPABASE_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const LOGIN='/admin2.html?next=%2Fadmin-central.html';
+const $=id=>document.getElementById(id);
+let client=null,currentUser=null,currentRole=null;
+
+function showAuth(message){
+  $('boot').hidden=true;
+  $('app').hidden=true;
+  $('authGate').hidden=false;
+  if(message)$('authGate').querySelector('p').textContent=message;
+}
+function statusLabel(status){
+  return ({processing:'У ОБРАДИ',open:'ОТВОРЕНА',closed:'ЗАТВОРЕНА',full:'ПОПУЊЕНА',scheduled:'ПЛАНИРАНА'})[String(status||'').toLowerCase()]||String(status||'БЕЗ СТАТУСА').toUpperCase();
+}
+function dateLabel(value){
+  if(!value)return 'Датум није наведен';
+  const d=new Date(value+'T12:00:00');
+  return Number.isNaN(d.getTime())?'Датум није наведен':d.toLocaleDateString('sr-RS',{day:'2-digit',month:'long',year:'numeric'});
+}
+function renderTourList(rootId,items,kind){
+  const root=$(rootId);root.replaceChildren();
+  if(!items.length){
+    const empty=document.createElement('div');empty.className='aw-empty';empty.textContent='Тренутно нема тура у овој категорији.';root.appendChild(empty);return;
+  }
+  items.forEach(t=>{
+    const button=document.createElement('button');button.type='button';button.className='aw-tour-card';
+    button.addEventListener('click',()=>openTour(t));
+    const icon=document.createElement('span');icon.className='aw-tour-icon';icon.textContent=kind==='processing'?'🕒':'🧭';
+    const copy=document.createElement('span');copy.className='aw-tour-copy';
+    const name=document.createElement('strong');name.textContent=t.naziv||('Тура '+t.id);
+    const meta=document.createElement('small');meta.textContent=dateLabel(t.datum)+' · Тура #'+t.id;
+    const badge=document.createElement('span');badge.className='aw-tour-status'+(kind==='processing'?' processing':'');badge.textContent=statusLabel(t.status);
+    copy.append(name,meta,badge);
+    const arrow=document.createElement('span');arrow.className='aw-tour-arrow';arrow.textContent='›';
+    button.append(icon,copy,arrow);root.appendChild(button);
+  });
+}
+function openTour(tour){
+  if(!client||!currentUser)return;
+  try{localStorage.setItem('naruci-domace-admin-tour-id',String(tour.id));}
+  catch(_){return;}
+  location.href='/pregled-ture.html?source=admin-workspace&tour='+encodeURIComponent(tour.id);
+}
+async function loadDashboard(){
+  const {data,error}=await client.from('ture').select('id,naziv,datum,status').order('datum',{ascending:false}).order('id',{ascending:false}).limit(300);
+  if(error)throw error;
+  if(!Array.isArray(data))throw new Error('База није вратила исправан списак тура.');
+  const processing=data.filter(t=>String(t.status||'').toLowerCase()==='processing');
+  const open=data.filter(t=>['open','scheduled','full'].includes(String(t.status||'').toLowerCase()));
+  $('totalCount').textContent=String(data.length);
+  $('openCount').textContent=String(open.length);
+  $('processingCount').textContent=String(processing.length);
+  $('openLabel').textContent=open.length+' тура';
+  $('processingLabel').textContent=processing.length+' тура';
+  renderTourList('openList',open,'open');
+  renderTourList('processingList',processing,'processing');
+}
+async function verifyAccess(){
+  if(location.protocol!=='https:')throw new Error('ADMIN мора бити отворен преко HTTPS-а.');
+  if(!window.supabase?.createClient)throw new Error('Supabase JavaScript библиотека није учитана.');
+  client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  const {data:{session},error:sessionError}=await client.auth.getSession();
+  if(sessionError)throw new Error('Грешка при читању Supabase сесије: '+sessionError.message);
+  if(!session?.access_token){showAuth();return false;}
+  const {data:{user},error:userError}=await client.auth.getUser();
+  if(userError||!user)throw new Error('Провера идентитета није успела: '+(userError?.message||'корисник није пронађен'));
+  const {data:record,error:roleError}=await client.from('app_users').select('role,is_active').eq('auth_user_id',user.id).maybeSingle();
+  const allowed=['super_admin','admin','operator','viewer'];
+  if(roleError)throw new Error('Провера ADMIN улоге није успела: '+roleError.message);
+  if(!record||record.is_active!==true||!allowed.includes(record.role))throw new Error('Приступ одбијен: ADMIN налог није активан или улога није дозвољена.');
+  currentUser=user;currentRole=record.role;
+  $('userLabel').textContent=user.email||user.id;
+  $('roleLabel').textContent='УЛОГА: '+record.role.toUpperCase();
+  $('boot').hidden=true;$('authGate').hidden=true;$('app').hidden=false;
+  await loadDashboard();
+  client.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'||!session?.access_token){location.replace('/admin2.html');}
+  });
+  return true;
+}
+function setDrawer(open){
+  $('drawer').classList.toggle('open',open);
+  $('drawerBackdrop').classList.toggle('open',open);
+  $('drawer').setAttribute('aria-hidden',String(!open));
+  $('menuOpen').setAttribute('aria-expanded',String(open));
+}
+$('menuOpen').addEventListener('click',()=>setDrawer(true));
+$('menuClose').addEventListener('click',()=>setDrawer(false));
+$('drawerBackdrop').addEventListener('click',()=>setDrawer(false));
+document.querySelectorAll('.aw-drawer-link[href^="#"]').forEach(link=>link.addEventListener('click',()=>setDrawer(false)));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')setDrawer(false);});
+$('logoutBtn').addEventListener('click',async()=>{
+  if(!client)return;
+  const button=$('logoutBtn');button.disabled=true;
+  try{const {error}=await client.auth.signOut();if(error)throw error;location.replace('/admin2.html');}
+  catch(error){button.disabled=false;alert('Одјава није успела: '+(error.message||String(error)));}
+});
+verifyAccess().catch(error=>{
+  $('boot').textContent='Приступ ADMIN систему није одобрен: '+(error.message||String(error));
+  showAuth('Приступ није одобрен или провера није успела. Отвори постојећу ADMIN пријаву и провери статус налога.');
+});
+})();
+</script>
+</body>
+</html>
