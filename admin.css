@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.0.2
+ * Version: 1.0.3
  * Updated: 2026-11-17
- * Description: Shared ADMIN SPA styles; adds the responsive admin-workspace foundation.
+ * Description: Shared ADMIN SPA styles; adds responsive workspace and tabbed tour operations panel.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -720,3 +720,31 @@ body.closed-tours-open{overflow:hidden!important}
 @media(max-width:767px){.nd-workspace .nd-layout{display:block}.nd-workspace .nd-sidebar{display:none}.nd-workspace .nd-main{padding-top:20px}.nd-workspace .nd-tour-grid{grid-template-columns:1fr}.nd-workspace .nd-page-head{display:block}.nd-workspace .nd-page-head .nd-status{margin-top:12px}}
 @media(min-width:768px) and (max-width:899px){.nd-workspace .nd-layout{grid-template-columns:210px minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.nd-workspace *{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* 20. ADMIN tour operations panel — version 1.0.3 */
+.nd-workspace .nd-tour-operations-root[hidden],.nd-workspace [hidden]{display:none!important}
+.nd-workspace .nd-tour-ops{display:flex;flex-direction:column;min-height:calc(100dvh - 100px);gap:14px}
+.nd-workspace .nd-ops-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px;border:1px solid #334155;border-radius:16px;background:#111c32}
+.nd-workspace .nd-ops-head small{color:#fb923c;font-size:10px;font-weight:900;letter-spacing:.13em}
+.nd-workspace .nd-ops-head h1{margin:6px 0;font-size:clamp(22px,4vw,30px)}
+.nd-workspace .nd-ops-head p{margin:0;color:#94a3b8;font-size:12px}
+.nd-workspace .nd-ops-head>button,.nd-workspace .nd-ops-foot button{min-height:44px;padding:9px 13px;border:1px solid #475569;border-radius:11px;background:#17243b;color:#f8fafc;font-weight:800}
+.nd-workspace .nd-ops-stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.nd-workspace .nd-ops-stats span{padding:6px 9px;border-radius:99px;background:#1e293b;color:#cbd5e1;font-size:11px;font-weight:800}
+.nd-workspace .nd-ops-tabs{position:sticky;top:68px;z-index:5;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:7px;border:1px solid #334155;border-radius:14px;background:#0b1222}
+.nd-workspace .nd-ops-tabs button{min-height:48px;padding:8px 5px;border:1px solid transparent;border-radius:10px;background:transparent;color:#a7b4c7;font-size:12px;font-weight:900}
+.nd-workspace .nd-ops-tabs button[aria-selected=true]{border-color:#7c3f1e;background:rgba(234,88,12,.16);color:#fdba74}
+.nd-workspace .nd-ops-content{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-content:start}
+.nd-workspace .nd-ops-content h3{grid-column:1/-1;margin:8px 0 0;font-size:15px}
+.nd-workspace .nd-ops-card{min-width:0;padding:14px;border:1px solid #334155;border-radius:14px;background:#111c32}
+.nd-workspace .nd-ops-card strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.nd-workspace .nd-ops-card div{margin-top:6px;color:#cbd5e1;font-size:12px;overflow-wrap:anywhere}
+.nd-workspace .nd-ops-card small{display:block;margin-top:7px;color:#94a3b8;font-size:11px}
+.nd-workspace .nd-ops-card .nd-ops-qty{color:#fdba74;font-size:16px;font-weight:900}
+.nd-workspace .nd-ops-empty,.nd-workspace .nd-ops-notice,.nd-workspace .nd-ops-error,.nd-workspace .nd-ops-loading{grid-column:1/-1;padding:20px;border:1px dashed #475569;border-radius:14px;color:#a7b4c7;font-size:13px;line-height:1.55}
+.nd-workspace .nd-ops-notice{border-color:#a16207;background:rgba(217,119,6,.1);color:#fde68a}
+.nd-workspace .nd-ops-error{border-color:#b91c1c;color:#fecaca}
+.nd-workspace .nd-ops-error button{min-height:44px;margin-top:10px;padding:8px 14px;border:1px solid #475569;border-radius:10px;background:#17243b;color:#fff}
+.nd-workspace .nd-ops-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;color:#94a3b8;font-size:11px}
+@media(max-width:640px){.nd-workspace .nd-ops-head{display:block}.nd-workspace .nd-ops-head>button{width:100%;margin-top:13px}.nd-workspace .nd-ops-tabs{top:68px;gap:3px;padding:5px}.nd-workspace .nd-ops-tabs button{font-size:10px;min-height:50px}.nd-workspace .nd-ops-content{grid-template-columns:1fr}.nd-workspace .nd-ops-card{padding:13px}.nd-workspace .nd-tour-ops{min-height:calc(100dvh - 82px)}}
