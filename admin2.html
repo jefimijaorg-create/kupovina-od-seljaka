@@ -206,7 +206,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monos
       $('password').value = '';
       showMessage('Пријава је успела. Отварам постојећи ADMIN…', 'ok');
       const requestedNext = new URLSearchParams(location.search).get('next');
-      const safeNext = requestedNext === '/pregled-ture-novo.html' ? requestedNext : '/pregled-ture.html';
+      const allowedNext = ['/admin-central.html', '/pregled-ture-novo.html'];
+      const safeNext = allowedNext.includes(requestedNext) ? requestedNext : '/admin-central.html';
       log('Пријава успела', 'Сесија је сачувана; отварам ' + safeNext + '.');
       window.location.replace(safeNext);
     } catch (error) {
