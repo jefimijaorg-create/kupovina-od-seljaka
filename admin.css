@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.0.3
- * Updated: 2026-11-17
- * Description: Shared ADMIN SPA styles; adds responsive workspace and tabbed tour operations panel.
+ * Version: 1.0.4
+ * Updated: 2026-11-18
+ * Description: Adds responsive per-variant allocation recap styles for procurement management.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -867,3 +867,13 @@ body.closed-tours-open{overflow:hidden!important}
  .nd-workspace .nd-proc-modal-summary b{font-size:16px}
  .nd-workspace .nd-proc-modal-body{padding:0 14px 14px}
 }
+
+
+/* 21.2. Procurement allocation recap — version 1.0.0 */
+.nd-workspace .nd-proc-allocation-card{display:block;padding:13px;margin-top:10px}
+.nd-workspace .nd-proc-allocation-recap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:12px}
+.nd-workspace .nd-proc-allocation-recap span{min-width:0;padding:10px;border:1px solid #334155;border-radius:11px;background:#0c1629}
+.nd-workspace .nd-proc-allocation-recap b{display:block;color:#fdba74;font-size:18px;font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .nd-proc-allocation-recap small{display:block;margin-top:4px;color:#a7b4c7;font-size:10px;line-height:1.35}
+.nd-workspace .nd-proc-allocation-card .nd-proc-input-row{grid-template-columns:1fr minmax(100px,150px)}
+@media(max-width:390px){.nd-workspace .nd-proc-allocation-recap{gap:5px}.nd-workspace .nd-proc-allocation-recap span{padding:8px}.nd-workspace .nd-proc-allocation-recap b{font-size:16px}}
