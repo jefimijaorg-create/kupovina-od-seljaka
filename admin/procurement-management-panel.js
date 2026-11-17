@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.0.9
+ * Version: 1.1.0
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
  *              Viber message preparation and package order/confirmation/pickup tracking.
@@ -182,6 +182,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       const product = productFor(demand.productId);
       const productName = product?.name || 'Назив производа није доступан у products.name';
       const totalAssigned = assigned(demand.productId, demand.variantId);
+      const totalConfirmed = allocationsFor(demand.productId, demand.variantId).reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
       const left = remaining(demand.productId, demand.variantId);
       const suppliers = offersFor(demand.productId, demand.variantId)
         .map((offer) => farmFor(offer.gazdinstvo_id)?.name).filter(Boolean);
@@ -189,7 +190,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         '<div class="nd-proc-card-head"><div><strong>' + esc(productName) + '</strong><small>' + esc(formatVariant(demand)) + '</small></div>' +
         '<span class="nd-proc-pill ' + (left === 0 ? 'is-done' : 'is-open') + '">' + (left === 0 ? 'Распоређено' : 'Преостало ' + fmt(left)) + '</span></div>' +
         '<div class="nd-proc-metrics"><span><b>' + fmt(demand.packages) + '</b><small>Потребно паковања</small></span>' +
-        '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span></div>' +
+        '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span>' +\n        '<span><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></span></div>' +
         '<div class="nd-proc-subline">Укупна количина: ' + fmt(demand.totalQuantity) + ' ' + esc(demand.packageUnit || '') + '</div>' +
         (demand.valid ? '' : '<div class="nd-proc-warning">Недостаје исправан package_count, package_size или package_unit. Расподела за ову варијанту је блокирана.</div>') +
         '<div class="nd-proc-suppliers"><small>Активне понуде за ову варијанту</small>' +
@@ -250,6 +251,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       html += '<div class="nd-proc-farm-lines">' + rows.map((row) => {
         const product = productFor(row.product_id), variant = variantFor(row.variant_id);
         const draft = state.trackingDraft[row.id] || {};
+        const missing = Math.max(0, num(row.broj_pakovanja) - num(row.potvrdjeno_pakovanja));
         return '<article class="nd-proc-track-row"><div class="nd-proc-track-title"><strong>' + esc(product?.name || 'Назив производа није доступан') +
           '</strong><small>' + esc(variant?.name || variant?.size_label || 'Варијанта није доступна') + '</small></div>' +
           '<div class="nd-proc-track-grid">' +
