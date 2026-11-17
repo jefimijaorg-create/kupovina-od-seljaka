@@ -129,8 +129,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         demand.packages += count;
         demand.totalQuantity += count * size;
       }
-      if (String(demand.packageSize) !== String(row.package_size) ||
-          String(demand.packageUnit) !== String(row.package_unit)) demand.valid = false;
+      if (Number(demand.packageSize) !== size || demand.packageUnit !== row.package_unit) demand.valid = false;
       demand.sourceRows += 1;
     }
     state.demands = [...demandMap.values()].sort((a, b) => {
@@ -211,7 +210,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         '" value="' + esc(draft ?? current) + '" aria-label="Број паковања за ' + esc(product?.name || 'производ') + '"></div>' +
         (existing ? '<small class="nd-proc-subline">Већ сачувано: ' + fmt(current) + ' паковања</small>' : '') + '</article>';
     }).join('');
-    html += '<button type="button" class="nd-proc-primary" data-action="save-allocation">Сачувај расподелу овог газдинства</button>';
+    html += '<button type="button" class="nd-proc-primary" data-action="save-allocation" ' + (state.busy ? 'disabled' : '') + '>' + (state.busy ? 'Чувам…' : 'Сачувај расподелу овог газдинства') + '</button>';
     return html;
   }
 
@@ -242,13 +241,13 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
           trackingInput(row, draft, 'preuzeto_pakovanja', 'Преузето') + '</div>' +
           '<div class="nd-proc-track-meta"><span>Додељено: ' + fmt(row.broj_pakovanja) + '</span>' +
           '<span>Viber: ' + esc(row.viber_status === 'replied' ? 'Одговор примљен' : row.viber_status === 'sent' ? 'Послато' : 'Није послато') + '</span></div>' +
-          '<button type="button" class="nd-proc-secondary" data-action="save-tracking" data-row-id="' + esc(row.id) + '">Сачувај количине</button></article>';
+          '<button type="button" class="nd-proc-secondary" data-action="save-tracking" data-row-id="' + esc(row.id) + '" ' + (state.busy ? 'disabled' : '') + '>' + (state.busy ? 'Чувам…' : 'Сачувај количине') + '</button></article>';
       }).join('') + '</div>';
       html += '<div class="nd-proc-message"><label>Viber порука за ово газдинство</label><textarea readonly rows="5">' + esc(messageForFarm(farmId)) + '</textarea>' +
         '<div class="nd-proc-actions"><button type="button" class="nd-proc-secondary" data-action="copy-message" data-farm-id="' + esc(farmId) + '">Копирај поруку</button>' +
-        (farm?.phone ? '<button type="button" class="nd-proc-secondary" data-action="open-viber" data-farm-id="' + esc(farmId) + '">Отвори Viber</button>' : '') +
-        '<button type="button" class="nd-proc-secondary" data-action="mark-sent" data-farm-id="' + esc(farmId) + '">Потврди слање</button>' +
-        '<button type="button" class="nd-proc-secondary" data-action="mark-replied" data-farm-id="' + esc(farmId) + '">Евидентирај одговор</button></div>' +
+        (farm?.phone ? '<button type="button" class="nd-proc-secondary" data-action="open-viber" data-farm-id="' + esc(farmId) + '" ' + (state.busy ? 'disabled' : '') + '>Отвори Viber</button>' : '') +
+        '<button type="button" class="nd-proc-secondary" data-action="mark-sent" data-farm-id="' + esc(farmId) + '" ' + (state.busy ? 'disabled' : '') + '>Потврди слање</button>' +
+        '<button type="button" class="nd-proc-secondary" data-action="mark-replied" data-farm-id="' + esc(farmId) + '" ' + (state.busy ? 'disabled' : '') + '>Евидентирај одговор</button></div>' +
         '<small>Копирање или отварање Viber-а не мења статус слања. Статус се мења само ручном потврдом.</small></div></section>';
       return html;
     }).join('');
@@ -275,7 +274,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       (isProcessing ? '' : '<div class="nd-proc-warning">Тура није у статусу processing. Набавка је доступна само за читање; база ће одбити сваки покушај измене.</div>') +
       (state.notice ? '<div class="nd-proc-notice ' + (state.noticeType === 'error' ? 'is-error' : '') + '">' + esc(state.notice) + '</div>' : '') +
       '<section class="nd-proc-content">' + body + '</section>' +
-      '<footer class="nd-proc-foot"><span>Постојећи Supabase клијент · RLS активан</span><button type="button" class="nd-proc-secondary" data-action="refresh">Освежи</button></footer>';
+      '<footer class="nd-proc-foot"><span>Постојећи Supabase клијент · RLS активан</span><button type="button" class="nd-proc-secondary" data-action="refresh" ' + (state.busy ? 'disabled' : '') + '>Освежи</button></footer>';
   }
 
   function setNotice(message, type = 'success') {
