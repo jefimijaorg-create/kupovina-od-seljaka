@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.2.0
+ * Version: 1.2.1
  * Updated: 2026-11-18
- * Description: Adds three-part procurement tracking, NDAdmin context sourcing, and aggregate quantity guards.
+ * Description: Adds database-backed demand guards and preserves legacy pickup records during tracking edits.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -377,7 +377,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
 
   function trackingInput(row, draft, field, label) {
     const value = draft[field] ?? row[field] ?? 0;
-    const maxValue = field === 'naruceno_pakovanja' ? num(row.broj_pakovanja) : field === 'potvrdjeno_pakovanja' ? Math.min(num(row.broj_pakovanja), num(draft.naruceno_pakovanja ?? row.naruceno_pakovanja)) : Math.min(num(row.broj_pakovanja), num(draft.potvrdjeno_pakovanja ?? row.potvrdjeno_pakovanja));
+    const maxValue = field === 'naruceno_pakovanja' ? num(row.broj_pakovanja) : field === 'potvrdjeno_pakovanja' ? Math.min(num(row.broj_pakovanja), num(draft.naruceno_pakovanja ?? row.naruceno_pakovanja)) : Math.max(num(row.preuzeto_pakovanja), Math.min(num(row.broj_pakovanja), num(draft.potvrdjeno_pakovanja ?? row.potvrdjeno_pakovanja)));
     return '<label>' + label + '<input type="number" min="0" max="' + esc(maxValue) +
       '" step="1" inputmode="numeric" data-tracking-input data-row-id="' + esc(row.id) + '" data-field="' + field +
       '" value="' + esc(value) + '"></label>';
@@ -509,7 +509,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     if (row.naruceno === true && num(row.naruceno_pakovanja) === 0 && ordered === 0) {
       return setNotice('Стара евиденција означава наруџбину, али број није сачуван. Унеси стварни број наручених паковања пре чувања.', 'error');
     }
-    if (ordered > assignedCount || confirmed > ordered || collected > confirmed) {
+    if (ordered > assignedCount || confirmed > ordered || (collected > confirmed && (collected !== num(row.preuzeto_pakovanja) || confirmed !== num(row.potvrdjeno_pakovanja)))) {
       return setNotice('Услови нису испуњени: наручено ≤ додељено, потврђено ≤ наручено, преузето ≤ потврђено.', 'error');
     }
     const demand = demandFor(row.product_id, row.variant_id);
@@ -517,7 +517,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     const relatedRows = allocationsFor(row.product_id, row.variant_id);
     const totalConfirmed = relatedRows.reduce((sum, item) => sum + (String(item.id) === String(row.id) ? confirmed : num(item.potvrdjeno_pakovanja)), 0);
     const totalCollected = relatedRows.reduce((sum, item) => sum + (String(item.id) === String(row.id) ? collected : num(item.preuzeto_pakovanja)), 0);
-    if (totalConfirmed > demand.packages || totalCollected > demand.packages || totalCollected > totalConfirmed) {
+    if (totalConfirmed > demand.packages || totalCollected > demand.packages || (totalCollected > totalConfirmed && (collected !== num(row.preuzeto_pakovanja) || confirmed !== num(row.potvrdjeno_pakovanja)))) {
       return setNotice('Потврђена и преузета количина за све добављаче заједно не смеју премашити требовање од ' + fmt(demand.packages) + ' паковања.', 'error');
     }
     state.busy = true;
