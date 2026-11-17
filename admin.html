@@ -136,7 +136,7 @@ $('recoveryForm').addEventListener('submit',async event=>{
   await sb.auth.signOut();
   recoveryMode=false;
   $('recoveryOverlay').classList.add('hidden');
-  $('error-message').textContent='Лозинка је промењена. Пријави се новом лозинком.';
+  message.textContent='Лозинка је промењена. Преусмеравам те на ADMIN 2 за пријаву.';
   await authState();
  }catch(error){message.className='error';message.textContent='Промена лозинке није успела: '+(error.message||error);}
  finally{button.disabled=false;}
