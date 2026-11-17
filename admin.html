@@ -74,7 +74,7 @@ const KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 // Handle recovery links explicitly so the recovery flow works with both token-hash and PKCE email links.
 const recoveryQuery=new URLSearchParams(location.search);
 const recoveryHash=new URLSearchParams(location.hash.replace(/^#/,''));
-const recoveryLinkRequested=(recoveryQuery.get('type')==='recovery'||recoveryHash.get('type')==='recovery');
+const recoveryLinkRequested=(recoveryQuery.get('type')==='recovery'||recoveryHash.get('type')==='recovery'||recoveryQuery.has('code')||recoveryQuery.has('token_hash')||recoveryHash.has('token_hash')||(recoveryHash.has('access_token')&&recoveryHash.has('refresh_token')));
 const sb=window.supabase.createClient(URL,KEY,{auth:{detectSessionInUrl:false}});
 let tour=null, orders=[], points=[], items=[], tours=[], baselineLoaded=false, knownNewIds=new Set(), pollHandle=null;
 const requestedOrderId=new URLSearchParams(location.search).get('porudzbina');
