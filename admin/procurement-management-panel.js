@@ -1,9 +1,9 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.4
+ * Version: 1.1.5
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
- *              Preserve first Viber send timestamps; open a product-scoped allocation form from each product card.
+ *              Preserve first Viber send timestamps; capture product-card clicks at the panel root for reliable mobile activation.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -550,13 +550,15 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       render();
     }
   });
-  shell.addEventListener('click', async (event) => {
-    if (event.target.matches('[data-product-modal-backdrop]')) { state.selectedProductId = null; render(); return; }
-    const productCard = event.target.closest('[data-open-product]');
+  async function handleClick(event) {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    if (!target) return;
+    if (target.matches('[data-product-modal-backdrop]')) { state.selectedProductId = null; render(); return; }
+    const productCard = target.closest('[data-open-product]');
     if (productCard) { openProductAllocation(productCard.dataset.openProduct); return; }
-    const tab = event.target.closest('[data-tab]');
+    const tab = target.closest('[data-tab]');
     if (tab) { state.tab = tab.dataset.tab; state.notice = ''; render(); return; }
-    const button = event.target.closest('[data-action]');
+    const button = target.closest('[data-action]');
     if (!button || state.busy) return;
     const action = button.dataset.action;
     if (action === 'close-product-modal') { state.selectedProductId = null; render(); return; }
@@ -572,12 +574,12 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     if (action === 'open-viber') return openViber(button.dataset.farmId);
     if (action === 'mark-sent') return updateFarmViberStatus(button.dataset.farmId, 'sent');
     if (action === 'mark-replied') return updateFarmViberStatus(button.dataset.farmId, 'replied');
-  });
+  }
+  // Capture at the panel root so nested controls or parent bubble handlers cannot swallow card activation.
+  root.addEventListener('click', handleClick, true);
 
   function handleKeydown(event) {
     if (event.key === 'Escape' && state.selectedProductId !== null) { state.selectedProductId = null; render(); return; }
-    const card = event.target.closest?.('[data-open-product]');
-    if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProductAllocation(card.dataset.openProduct); }
   }
   shell.addEventListener('keydown', handleKeydown);
 
@@ -587,6 +589,6 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
   }
 
   return {
-    destroy() { state.disposed = true; state.token += 1; shell.removeEventListener('input', handleInput); shell.removeEventListener('keydown', handleKeydown); root.replaceChildren(); }
+    destroy() { state.disposed = true; state.token += 1; shell.removeEventListener('input', handleInput); shell.removeEventListener('keydown', handleKeydown); root.removeEventListener('click', handleClick, true); root.replaceChildren(); }
   };
 }
