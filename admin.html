@@ -71,7 +71,11 @@
 <script>
 const URL='https://kszkehxrcuagymlfowqj.supabase.co';
 const KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
-const sb=window.supabase.createClient(URL,KEY);
+// Handle recovery links explicitly so the recovery flow works with both token-hash and PKCE email links.
+const recoveryQuery=new URLSearchParams(location.search);
+const recoveryHash=new URLSearchParams(location.hash.replace(/^#/,''));
+const recoveryLinkRequested=(recoveryQuery.get('type')==='recovery'||recoveryHash.get('type')==='recovery');
+const sb=window.supabase.createClient(URL,KEY,{auth:{detectSessionInUrl:false}});
 let tour=null, orders=[], points=[], items=[], tours=[], baselineLoaded=false, knownNewIds=new Set(), pollHandle=null;
 const requestedOrderId=new URLSearchParams(location.search).get('porudzbina');
 const $=id=>document.getElementById(id);
@@ -79,17 +83,56 @@ const money=n=>new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(N
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=t=>$('message').textContent=t;
 let recoveryMode=false;
-sb.auth.onAuthStateChange((event)=>{
- if(event==="PASSWORD_RECOVERY"){
-  recoveryMode=true;
-  $('loginPanel').classList.add('hidden');
-  $('bootstrapPanel').classList.add('hidden');
-  $('app').classList.add('hidden');
-  $('logout').classList.add('hidden');
-  $('recoveryOverlay').classList.remove('hidden');
-  setTimeout(()=>$('recoveryPassword').focus(),0);
- }
+function showRecoveryForm(){
+ recoveryMode=true;
+ $('loginPanel').classList.add('hidden');
+ $('bootstrapPanel').classList.add('hidden');
+ $('app').classList.add('hidden');
+ $('logout').classList.add('hidden');
+ $('recoveryOverlay').classList.remove('hidden');
+ $('recoveryMessage').className='muted';
+ $('recoveryMessage').textContent='Линк је потврђен. Унеси нову лозинку.';
+ setTimeout(()=>$('recoveryPassword').focus(),100);
+}
+sb.auth.onAuthStateChange((event,session)=>{
+ if(event==="PASSWORD_RECOVERY"||(recoveryLinkRequested&&session)) showRecoveryForm();
 });
+async function initializeRecoveryFlow(){
+ if(!recoveryLinkRequested) return;
+ recoveryMode=true;
+ $('loginPanel').classList.add('hidden');
+ $('bootstrapPanel').classList.add('hidden');
+ $('app').classList.add('hidden');
+ $('logout').classList.add('hidden');
+ $('recoveryOverlay').classList.remove('hidden');
+ const message=$('recoveryMessage');
+ message.className='muted';
+ message.textContent='Проверавам линк за опоравак…';
+ try{
+  const code=recoveryQuery.get('code');
+  const tokenHash=recoveryQuery.get('token_hash')||recoveryHash.get('token_hash');
+  const accessToken=recoveryHash.get('access_token')||recoveryQuery.get('access_token');
+  const refreshToken=recoveryHash.get('refresh_token')||recoveryQuery.get('refresh_token');
+  let result={error:null};
+  if(code) result=await sb.auth.exchangeCodeForSession(code);
+  else if(tokenHash) result=await sb.auth.verifyOtp({token_hash:tokenHash,type:'recovery'});
+  else if(accessToken&&refreshToken) result=await sb.auth.setSession({access_token:accessToken,refresh_token:refreshToken});
+  else {
+   const {data,error}=await sb.auth.getSession();
+   result={error};
+   if(!error&&data.session){showRecoveryForm();return;}
+   throw new Error('Линк не садржи важећи токен за опоравак. Пошаљи нови захтев када се ослободи лимит имејла.');
+  }
+  if(result.error) throw result.error;
+  const {data,error}=await sb.auth.getSession();
+  if(error) throw error;
+  if(!data.session) throw new Error('Supabase није успоставио сесију за опоравак.');
+  showRecoveryForm();
+ }catch(error){
+  message.className='error';
+  message.textContent='Линк за опоравак није потврђен: '+(error.message||String(error));
+ }
+}
 $('requestPasswordReset').onclick=async()=>{
  const button=$('requestPasswordReset'),message=$('resetRequestMessage');
  button.disabled=true;message.className='muted';message.textContent='Шаљем захтев за опоравак…';
@@ -255,42 +298,11 @@ function render(){
  $('orders').querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const o=rows.find(x=>String(x.id)===b.dataset.copy);try{await navigator.clipboard.writeText(makeText([o]));say('Поруџбина #'+o.id+' је копирана.');}catch(e){say('Копирање није доступно у овом прегледачу.');}});
 }
 async function changeStatus(id,status,control){control.disabled=true;say('Чување статуса…');try{const {error}=await sb.from('porudzbine').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;const o=orders.find(o=>String(o.id)===String(id));if(o)o.status=status;render();say('Статус поруџбине #'+id+' је сачуван.');}catch(e){control.disabled=false;say('Статус није сачуван: '+e.message);}}
-authState();
+initializeRecoveryFlow().then(()=>authState());
 if(!pollHandle)pollHandle=setInterval(async()=>{if(!document.hidden){const {data:{session}}=await sb.auth.getSession();if(session)load(true);}},30000);
 document.addEventListener('visibilitychange',async()=>{if(!document.hidden){const {data:{session}}=await sb.auth.getSession();if(session)load(true);}});
 </script>
-<script>
-// RECOVERY_STANDALONE_HANDLER: independent from the main ADMIN application script.
-(function () {
-  const button = document.getElementById('requestPasswordReset');
-  const message = document.getElementById('resetRequestMessage');
-  if (!button || !message) return;
-  button.onclick = async function () {
-    if (button.disabled) return;
-    button.disabled = true;
-    message.className = 'muted';
-    message.textContent = 'Повезујем се са сервером за опоравак…';
-    try {
-      const response = await fetch('https://kszkehxrcuagymlfowqj.supabase.co/functions/v1/app-user-management', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532'
-        },
-        body: JSON.stringify({ action: 'request_super_admin_recovery' })
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || ('HTTP ' + response.status));
-      message.textContent = result.message || 'Захтев је прихваћен. Провери Gmail и Spam.';
-    } catch (error) {
-      message.className = 'error';
-      message.textContent = 'Опоравак није покренут: ' + (error && error.message ? error.message : String(error));
-    } finally {
-      button.disabled = false;
-    }
-  };
-})();
-</script>
+
 
 </body>
 </html>
