@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<script>if(location.protocol==="http:"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
+<title>Преглед тура — Наручи домаће ADMIN</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#111c32;--line:#334155;--ink:#f8fafc;--muted:#a7b4c7;--orange:#f97316;--green:#059669}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:5;background:#0b1220ed;border-bottom:1px solid var(--line);padding:16px}
+.wrap{width:min(100% - 24px,900px);margin:18px auto 40px}
+h1{font-size:22px;margin:0;color:#fdba74}header p{margin:4px 0;color:var(--muted);font-size:13px}
+.version{display:inline-block;margin-top:8px;padding:3px 9px;border:1px solid #475569;border-radius:99px;font-size:11px;font-weight:800}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+#status{padding:12px;border-radius:11px;background:#17243b;color:#e2e8f0;overflow-wrap:anywhere}
+#status.error{background:#3b1720;color:#fecaca;border:1px solid #7f1d1d}
+#status.ok{background:#123329;color:#a7f3d0;border:1px solid #166534}
+.tours{display:grid;gap:10px;margin-top:14px}
+.tour{width:100%;text-align:left;padding:15px;border:1px solid var(--line);border-radius:13px;background:#0f192c;color:var(--ink)}
+.tour strong{display:block;font-size:16px}.meta{color:var(--muted);font-size:13px;margin-top:4px}
+.pill{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:99px;background:#26364e;color:#cbd5e1;font-size:11px;font-weight:800}
+button{min-height:46px;padding:10px 14px;border:1px solid #475569;border-radius:11px;background:#1e293b;color:white;font:inherit;font-weight:700}
+button:focus-visible{outline:3px solid #fb923c;outline-offset:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.empty{color:var(--muted);padding:14px;text-align:center}
+@media(min-width:650px){.panel{padding:20px}.tours{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><div class="wrap" style="margin:0 auto"><h1>Наручи домаће · Преглед тура</h1><p>ADMIN — приступ само пријављеним и активним корисницима</p><span class="version">ADMIN · V1 · ПРИМЕНА: НОВИ ПРЕГЛЕД ТУРА</span></div></header>
+<main class="wrap">
+<section class="panel">
+<div id="status" role="status" aria-live="polite">Проверавам пријаву…</div>
+<div class="actions"><button id="refresh" type="button" disabled>Освежи списак</button><button id="logout" type="button" disabled>Одјави се</button></div>
+<div id="tour-list" class="tours" aria-live="polite"></div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const SUPABASE_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const LOGIN='/admin2.html?next=%2Fpregled-ture-novo.html';
+const statusEl=document.getElementById('status');
+const listEl=document.getElementById('tour-list');
+const refreshBtn=document.getElementById('refresh');
+const logoutBtn=document.getElementById('logout');
+let client=null;
+function status(message,type){statusEl.className=type||'';statusEl.textContent=message;}
+function esc(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function dateLabel(value){if(!value)return 'Датум није наведен';const d=new Date(String(value).slice(0,10)+'T12:00:00');return Number.isNaN(d.getTime())?esc(value):d.toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function statusLabel(value){const map={open:'Отворена',full:'Попуњена',scheduled:'Планирана',processing:'У обради',closed:'Затворена',completed:'Завршена',cancelled:'Отказана'};return map[value]||value||'Без статуса';}
+function redirectLogin(){location.replace(LOGIN);}
+async function loadTours(){
+ refreshBtn.disabled=true;listEl.innerHTML='';status('Пријава је потврђена. Учитавање тура из постојеће базе…');
+ try{
+  const {data,error}=await client.from('ture').select('id,naziv,datum,status').order('datum',{ascending:false}).order('id',{ascending:false}).limit(300);
+  if(error)throw error;
+  if(!Array.isArray(data))throw new Error('База није вратила исправан списак тура.');
+  if(!data.length){status('Пријављени сте, али у бази тренутно нема евидентираних тура.','ok');listEl.innerHTML='<div class="empty">Нема тура за приказ.</div>';return;}
+  listEl.innerHTML=data.map(t=>'<article class="tour"><strong>'+esc(t.naziv||('Тура #'+t.id))+'</strong><div class="meta">Тура #'+esc(t.id)+' · '+dateLabel(t.datum)+'</div><span class="pill">'+esc(statusLabel(t.status))+'</span></article>').join('');
+  status('Приступ потврђен · учитано тура: '+data.length,'ok');
+ }catch(error){status('Не могу да учитам туре: '+(error.message||String(error)),'error');}
+ finally{refreshBtn.disabled=false;}
+}
+async function start(){
+ try{
+  if(!window.supabase||typeof window.supabase.createClient!=='function')throw new Error('Supabase библиотека није учитана. Освежи страницу.');
+  client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  const {data:{session},error:sessionError}=await client.auth.getSession();
+  if(sessionError)throw sessionError;
+  if(!session||!session.access_token){redirectLogin();return;}
+  const {data:{user},error:userError}=await client.auth.getUser();
+  if(userError||!user){await client.auth.signOut();redirectLogin();return;}
+  const {data:record,error:roleError}=await client.from('app_users').select('role,is_active').eq('auth_user_id',user.id).maybeSingle();
+  const roles=['super_admin','admin','operator','viewer'];
+  if(roleError||!record||record.is_active!==true||!roles.includes(record.role)){status('Налог нема активну ADMIN дозволу. Приступ је одбијен.','error');await client.auth.signOut();setTimeout(redirectLogin,1200);return;}
+  refreshBtn.disabled=false;logoutBtn.disabled=false;
+  await loadTours();
+ }catch(error){status('Провера пријаве није успела: '+(error.message||String(error)),'error');}
+}
+refreshBtn.addEventListener('click',loadTours);
+logoutBtn.addEventListener('click',async()=>{logoutBtn.disabled=true;try{const {error}=await client.auth.signOut();if(error)throw error;redirectLogin();}catch(error){status('Одјава није успела: '+error.message,'error');logoutBtn.disabled=false;}});
+clientScriptGuard();
+function clientScriptGuard(){if(!navigator.onLine)status('Уређај тренутно није на интернету. Провери везу.','error');}
+start();
+})();
+</script>
+</body>
+</html>
