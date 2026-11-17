@@ -637,7 +637,7 @@ body.closed-tours-open{overflow:hidden!important}
 </style>
 </head>
 <body class="min-h-full bg-slate-50 text-slate-800 antialiased pb-28">
-<header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span><span class="bg-orange-500/20 text-orange-100 text-xs font-black px-2.5 py-1 rounded-full border border-orange-300/40">ADMIN · V10</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div id="tour-actions" class="hidden flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
+<header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50 no-print"><div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"><div><div class="flex gap-2 items-center"><span id="tour-date" class="bg-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full">Учитавање туре…</span><span class="bg-emerald-950/60 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30">Supabase база</span><span class="bg-orange-500/20 text-orange-100 text-xs font-black px-2.5 py-1 rounded-full border border-orange-300/40">ADMIN · V11</span></div><h1 id="tour-title" class="text-2xl font-black mt-1">Преузимање &amp; Достава</h1><p class="text-emerald-100 text-sm">Наручи домаће из Велике Плане</p></div><div id="tour-actions" class="hidden flex flex-wrap gap-2"><button id="change-tour-btn" onclick="toggleTourPicker(true)" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-right-left mr-1"></i> Промени туру</button><button onclick="loadData()" class="bg-emerald-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-rotate mr-1"></i> Освежи</button><button onclick="copyAllPointsViber()" class="bg-purple-700 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-brands fa-viber mr-1"></i> Отвори Viber + копирај</button><button onclick="window.print()" class="bg-slate-100 text-emerald-950 px-3 py-2 rounded-lg text-sm font-bold"><i class="fa-solid fa-print mr-1"></i> Штампај</button></div></div></header>
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6"><div id="message" class="bg-white border border-slate-200 rounded-xl p-3 mb-5 text-sm">Повезивање са базом…</div><style id="nd-diagnostics-style">
 #nd-diagnostics{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:9999;max-width:900px;margin:0 auto;background:#07111f;border:1px solid #475569;border-radius:15px;box-shadow:0 12px 38px rgba(0,0,0,.55);color:#e2e8f0;font:12px/1.45 system-ui,sans-serif}
 #nd-diagnostics header{display:flex;align-items:center;gap:8px;padding:9px 11px}
@@ -648,7 +648,7 @@ body.closed-tours-open{overflow:hidden!important}
 #nd-diagnostics .nd-ok{color:#6ee7b7}#nd-diagnostics .nd-error{color:#fca5a5}
 </style>
 <div id="nd-diagnostics" aria-live="polite">
- <header><strong>ADMIN V10 · ТЕХНИЧКА ДИЈАГНОСТИКА</strong><button type="button" onclick="ndCopyDiagnostics()">КОПИРАЈ</button><button type="button" onclick="ndToggleDiagnostics()">САКРИЈ</button></header>
+ <header><strong>ADMIN V11 · ТЕХНИЧКА ДИЈАГНОСТИКА</strong><button type="button" onclick="ndCopyDiagnostics()">КОПИРАЈ</button><button type="button" onclick="ndToggleDiagnostics()">САКРИЈ</button></header>
  <pre id="nd-diagnostics-log">Покретање дијагностике…</pre>
 </div>
 <script id="nd-early-diagnostics">
@@ -657,7 +657,7 @@ body.closed-tours-open{overflow:hidden!important}
   const line='['+new Date().toLocaleTimeString('sr-RS')+'] '+String(message);
   const box=document.getElementById('nd-diagnostics-log');
   if(box){const lines=(box.textContent||'').split('\\n').filter(Boolean);lines.push(line);box.textContent=lines.slice(-45).join('\\n');box.scrollTop=box.scrollHeight;}
-  try{(type==='error'?console.error:type==='warn'?console.warn:console.log)('[ADMIN V10 EARLY]',line)}catch(_){}
+  try{(type==='error'?console.error:type==='warn'?console.warn:console.log)('[ADMIN V11 EARLY]',line)}catch(_){}
  };
  window.ndEarlyDebug=write;window.__ndMainStarted=false;
  window.addEventListener('error',function(e){
@@ -735,9 +735,9 @@ body.closed-tours-open{overflow:hidden!important}
 </nav></main>
 <script>
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
-const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
 if(!window.supabase?.createClient){ndEarlyDebug('ГЛАВНА СКРИПТА ЗАУСТАВЉЕНА: window.supabase.createClient не постоји. Supabase CDN није учитан.','error');throw Error('Supabase SDK nije učitan. Proveri CDN/mrežu.');}
-const authClient=window.supabase.createClient(URL,KEY,{auth:{detectSessionInUrl:false}});
+const authClient=window.supabase.createClient(SUPABASE_URL,KEY,{auth:{detectSessionInUrl:false}});
 window.__ndMainStarted=true;ndEarlyDebug('ГЛАВНА INLINE СКРИПТА ЈЕ СТАРТОВАЛА; Supabase SDK је доступан.');
 let adminAuthSession=null;
 async function requireAdminAccess(){
@@ -791,7 +791,7 @@ async function api(path,opt={}){
  assertTourWriteAllowed(path,opt);
  const started=Date.now();ndDebug('ЗАХТЕВ → '+String(opt.method||'GET').toUpperCase()+' /rest/v1/'+path);
  let r;
- try{r=await fetch(URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}})}
+ try{r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{cache:'no-store',...opt,headers:{...HEAD,'Cache-Control':'no-cache',...(opt.headers||{})}})}
  catch(e){const msg='МРЕЖНА/CORS ГРЕШКА · '+path+' · '+(e?.message||String(e));ndDebug(msg,'error');throw Error(msg)}
  let t=await r.text();
  if(!r.ok){const msg='Supabase HTTP '+r.status+' '+r.statusText+' · PUTANJA: '+path+' · ODGOVOR: '+(t||'(празан одговор)').slice(0,1200);ndDebug('НЕУСПЕХ ('+(Date.now()-started)+' ms): '+msg,'error');throw Error(msg)}
@@ -2493,7 +2493,7 @@ function goProcurementStep(step){
  renderProcurement();
 }
 
-/* ADMIN SPA ROUTER — URL se menja bez osvežavanja dokumenta.
+/* ADMIN SPA ROUTER — SUPABASE_URL se menja bez osvežavanja dokumenta.
    Sekcije su postojeći DOM paneli; tura ostaje zajednički kontekst. */
 const ADMIN_ROUTES={
  '/izbor-ture':{title:'Izbor ture',render:()=>{showTourDashboard();toggleTourPicker(true)}},
@@ -2746,7 +2746,7 @@ function renderProcurement(){
 }
 
 document.addEventListener('DOMContentLoaded',async()=>{
- ndDebug('Страница је покренута · build V10 · ПРЕНОС ПОСТОЈЕЋЕГ РАДНОГ ТОКА');
+ ndDebug('Страница је покренута · build V11 · ПРЕНОС ПОСТОЈЕЋЕГ РАДНОГ ТОКА');
  const authorized=await requireAdminAccess();
  if(!authorized)return;
  ensureProcurementAllocationModal();
