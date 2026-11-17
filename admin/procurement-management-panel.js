@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.0.0
+ * Version: 1.0.5
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
  *              Viber message preparation and package order/confirmation/pickup tracking.
