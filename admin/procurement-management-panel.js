@@ -119,9 +119,11 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         });
       }
       const demand = demandMap.get(key);
+      const variant = variantFor(row.variant_id);
+      if (!productFor(row.product_id)?.name || !variant || String(variant.product_id) !== String(row.product_id) || variant.is_active === false) demand.valid = false;
       const count = Number(row.package_count);
       const size = Number(row.package_size);
-      if (!Number.isFinite(count) || count < 0 || !Number.isFinite(size) || size <= 0 || !row.package_unit) {
+      if (!Number.isInteger(count) || count < 0 || !Number.isFinite(size) || size <= 0 || !row.package_unit) {
         demand.valid = false;
       } else {
         demand.packages += count;
