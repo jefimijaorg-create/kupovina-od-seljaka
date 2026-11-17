@@ -550,7 +550,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       render();
     }
   });
-  function handleClick(event) {
+  async function handleClick(event) {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     if (!target) return;
     if (target.matches('[data-product-modal-backdrop]')) { state.selectedProductId = null; render(); return; }
