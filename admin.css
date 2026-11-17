@@ -750,7 +750,7 @@ body.closed-tours-open{overflow:hidden!important}
 @media(max-width:640px){.nd-workspace .nd-ops-head{display:block}.nd-workspace .nd-ops-head>button{width:100%;margin-top:13px}.nd-workspace .nd-ops-tabs{top:68px;gap:3px;padding:5px}.nd-workspace .nd-ops-tabs button{font-size:10px;min-height:50px}.nd-workspace .nd-ops-content{grid-template-columns:1fr}.nd-workspace .nd-ops-card{padding:13px}.nd-workspace .nd-tour-ops{min-height:calc(100dvh - 82px)}}
 
 
-/* 21. ADMIN procurement management panel — version 1.0.0 */
+/* 21. ADMIN procurement management panel — version 1.0.1 */
 .nd-workspace .nd-procurement-entry{min-width:82px;padding:0 10px;font-size:11px;font-weight:900;color:#fdba74;border-color:#7c3f1e}
 .nd-workspace .nd-procurement{display:flex;flex-direction:column;gap:13px;min-height:calc(100dvh - 100px);color:#f8fafc}
 .nd-workspace .nd-proc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;border:1px solid #334155;border-radius:16px;background:#111c32}
@@ -825,3 +825,5 @@ body.closed-tours-open{overflow:hidden!important}
   .nd-workspace .nd-proc-metrics span{padding:7px}
   .nd-workspace .nd-proc-metrics b{font-size:15px}
 }
+
+.nd-workspace .nd-proc button:disabled{opacity:.55;cursor:wait;filter:saturate(.55)}
