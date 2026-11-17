@@ -327,7 +327,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         const existing = rowFor(farmId, demand.productId, demand.variantId);
         if (count === 0 && !existing) continue;
         if (existing && count === 0 && (num(existing.naruceno_pakovanja) > 0 || num(existing.potvrdjeno_pakovanja) > 0 || num(existing.preuzeto_pakovanja) > 0)) {
-          throw new Error('Расподела са нарученим, потврђеним или преузетим паковањима не може бити обрисана.');\n        }
+          throw new Error('Расподела са нарученим, потврђеним или преузетим паковањима не може бити обрисана.');
+        }
         if (existing && existing.naruceno === true && num(existing.naruceno_pakovanja) === 0) {
           throw new Error('Стара евиденција означава да је наручено, али не садржи број паковања. Прво унеси стварну наручену количину у евиденцији газдинства.');
         }
@@ -341,7 +342,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       if (!changes.length) throw new Error('Нема измењених количина за чување.');
       const removals = changes.filter((change) => change.existing && change.count === 0);
       if (removals.length && !window.confirm('Да ли сигурно желиш да уклониш ' + removals.length + ' постојећих расподела?')) {
-        throw new Error('Уклањање расподеле је отказано.');\n      }
+        throw new Error('Уклањање расподеле је отказано.');
+      }
       for (const change of changes) {
         if (change.existing && change.count === 0) {
           const deleted = await client.from('tura_nabavka_dodele').delete().eq('id', change.existing.id).select('id').maybeSingle();
