@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.1.7
- * Updated: 2026-11-17
- * Description: Supports opening the selected product allocation directly from the existing tour products list.
+ * Version: 1.2.1
+ * Updated: 2026-11-18
+ * Description: Adds database-backed demand guards and preserves legacy pickup records during tracking edits.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -27,15 +27,16 @@ const unwrap = (result, label) => { if (result.error) throw new Error(label + ':
 const keyOf = (productId, variantId) => String(productId) + '::' + String(variantId);
 
 export async function mountProcurementManagement({ root, core, tourId, onBack, initialProductId = null }) {
-  if (!root || !core || core.authenticated !== true || !core.client || !tourId) {
-    throw new Error('Недостаје потврђено ADMIN језгро или ID туре.');
+  const adminCore = window.NDAdmin?.getContext?.() || core;
+  if (!root || !adminCore || adminCore.authenticated !== true || !adminCore.client || !tourId) {
+    throw new Error('Недостаје потврђено NDAdmin језгро или ID туре.');
   }
-  const role = core.getState()?.role;
+  const role = adminCore.getState()?.role;
   if (!['admin', 'super_admin'].includes(role)) {
     throw new Error('Ваша ADMIN улога нема дозволу за управљање набавком. RLS правила нису заобиђена.');
   }
 
-  const client = core.client;
+  const client = adminCore.client;
   const state = {
     tour: null, items: [], invalidSourceRows: 0, products: [], variants: [], offers: [], farms: [],
     allocations: [], demands: [], tab: 'products', selectedFarmId: '', selectedProductId: null,
@@ -314,43 +315,70 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       const ordered = rows.reduce((sum, row) => sum + num(row.naruceno_pakovanja), 0);
       const confirmed = rows.reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
       const collected = rows.reduce((sum, row) => sum + num(row.preuzeto_pakovanja), 0);
-      const statuses = new Set(rows.map((row) => row.viber_status || 'not_sent'));
-      const status = statuses.size > 1 ? 'Делимично евидентирано' :
-        rows[0]?.viber_status === 'replied' ? 'Одговор примљен' : rows[0]?.viber_status === 'sent' ? 'Послато' : 'Није послато';
       let html = '<section class="nd-proc-farm-record"><header><div><strong>' + esc(farm?.name || 'Газдинство #' + farmId) +
-        '</strong><small>' + esc(farm?.phone || 'Телефон није наведен') + '</small></div><span class="nd-proc-pill">' + status + '</span></header>';
+        '</strong><small>' + esc(farm?.phone || 'Телефон није наведен') + '</small></div></header>';
       html += '<div class="nd-proc-metrics"><span><b>' + fmt(total) + '</b><small>Додељено</small></span><span><b>' + fmt(ordered) +
         '</b><small>Наручено</small></span><span><b>' + fmt(confirmed) + '</b><small>Потврђено</small></span><span><b>' + fmt(collected) + '</b><small>Преузето</small></span></div>';
       html += '<div class="nd-proc-farm-lines">' + rows.map((row) => {
         const product = productFor(row.product_id), variant = variantFor(row.variant_id);
         const draft = state.trackingDraft[row.id] || {};
-        const missing = Math.max(0, num(row.broj_pakovanja) - num(row.potvrdjeno_pakovanja));
         return '<article class="nd-proc-track-row"><div class="nd-proc-track-title"><strong>' + esc(product?.name || 'Назив производа није доступан') +
           '</strong><small>' + esc(variant?.name || variant?.size_label || 'Варијанта није доступна') + '</small></div>' +
+          '<div class="nd-proc-track-meta"><span>Додељено: ' + fmt(row.broj_pakovanja) + '</span><span>Преостало за потврду: ' +
+          fmt(Math.max(0, num(row.naruceno_pakovanja) - num(row.potvrdjeno_pakovanja))) + '</span></div>' +
           '<div class="nd-proc-track-grid">' +
           trackingInput(row, draft, 'naruceno_pakovanja', 'Наручено') +
           trackingInput(row, draft, 'potvrdjeno_pakovanja', 'Потврђено') +
           trackingInput(row, draft, 'preuzeto_pakovanja', 'Преузето') + '</div>' +
-          '<div class="nd-proc-track-meta"><span>Додељено: ' + fmt(row.broj_pakovanja) + '</span>' +
-          '<span>Viber: ' + esc(row.viber_status === 'replied' ? 'Одговор примљен' : row.viber_status === 'sent' ? 'Послато' : 'Није послато') + '</span>' +
-          '<span>Слање: ' + esc(fmtDateTime(row.viber_poslato_at)) + '</span>' +
-          '<span>Потврда: ' + esc(fmtDateTime(row.potvrdjeno_at)) + '</span></div>' +
           (row.naruceno === true && num(row.naruceno_pakovanja) === 0 ? '<div class="nd-proc-warning">Стара евиденција: наручено је означено, али број паковања није сачуван. Унеси стварну количину.</div>' : '') +
-          '<button type="button" class="nd-proc-secondary" data-action="save-tracking" data-row-id="' + esc(row.id) + '" ' + (state.busy ? 'disabled' : '') + '>' + (state.busy ? 'Чувам…' : 'Сачувај количине') + '</button></article>';
-      }).join('') + '</div>';
-      html += '<div class="nd-proc-message"><label>Viber порука за ово газдинство</label><textarea readonly rows="5">' + esc(messageForFarm(farmId)) + '</textarea>' +
-        '<div class="nd-proc-actions"><button type="button" class="nd-proc-secondary" data-action="copy-message" data-farm-id="' + esc(farmId) + '">Копирај поруку</button>' +
-        (farm?.phone ? '<button type="button" class="nd-proc-secondary" data-action="open-viber" data-farm-id="' + esc(farmId) + '" ' + (state.busy ? 'disabled' : '') + '>Отвори Viber</button>' : '') +
-        '<button type="button" class="nd-proc-secondary" data-action="mark-sent" data-farm-id="' + esc(farmId) + '" ' + (state.busy ? 'disabled' : '') + '>Потврди слање</button>' +
-        '<button type="button" class="nd-proc-secondary" data-action="mark-replied" data-farm-id="' + esc(farmId) + '" ' + (state.busy ? 'disabled' : '') + '>Евидентирај одговор</button></div>' +
-        '<small>Копирање или отварање Viber-а не мења статус слања. Статус се мења само ручном потврдом.</small></div></section>';
+          '<button type="button" class="nd-proc-secondary" data-action="save-tracking" data-row-id="' + esc(row.id) + '" ' + (state.busy ? 'disabled' : '') + '>' +
+          (state.busy ? 'Чувам…' : 'Сачувај количине') + '</button></article>';
+      }).join('') + '</div></section>';
       return html;
+    }).join('');
+  }
+
+  function renderViberRecords() {
+    const farmIds = uniq(state.allocations.map((row) => row.gazdinstvo_id));
+    if (!farmIds.length) return '<div class="nd-proc-empty">Viber комуникација ће бити доступна након прве расподеле по газдинству.</div>';
+    return farmIds.map((farmId) => {
+      const farm = farmFor(farmId);
+      const rows = state.allocations.filter((row) => String(row.gazdinstvo_id) === String(farmId));
+      const statuses = new Set(rows.map((row) => row.viber_status || 'not_sent'));
+      const status = statuses.size > 1 ? 'Различити статуси по ставкама' :
+        rows[0]?.viber_status === 'replied' ? 'Одговор примљен' :
+        rows[0]?.viber_status === 'sent' ? 'Послато' : 'Није послато';
+      const statusClass = statuses.has('replied') ? 'is-done' : statuses.has('sent') ? 'is-open' : '';
+      const latestSent = rows.map((row) => row.viber_poslato_at).filter(Boolean).sort().at(-1);
+      const latestReply = rows.map((row) => row.potvrdjeno_at).filter(Boolean).sort().at(-1);
+      const lines = rows.filter((row) => num(row.broj_pakovanja) > 0).map((row) => {
+        const product = productFor(row.product_id), variant = variantFor(row.variant_id);
+        return '<li>' + esc(product?.name || 'Назив производа није доступан') + ' · ' +
+          esc(variant?.name || variant?.size_label || 'Варијанта') + ': <strong>' + fmt(row.broj_pakovanja) + ' пак.</strong></li>';
+      }).join('');
+      return '<section class="nd-proc-farm-record nd-proc-viber-record"><header><div><strong>' +
+        esc(farm?.name || 'Газдинство #' + farmId) + '</strong><small>' + esc(farm?.phone || 'Телефон није наведен') +
+        '</small></div><span class="nd-proc-pill ' + statusClass + '">' + status + '</span></header>' +
+        '<ul class="nd-proc-viber-lines">' + lines + '</ul>' +
+        '<div class="nd-proc-track-meta"><span>Слање: ' + esc(fmtDateTime(latestSent)) +
+        '</span><span>Одговор: ' + esc(fmtDateTime(latestReply)) + '</span></div>' +
+        '<div class="nd-proc-message"><label>Јединствена Viber порука за газдинство</label><textarea readonly rows="5">' +
+        esc(messageForFarm(farmId)) + '</textarea><div class="nd-proc-actions">' +
+        '<button type="button" class="nd-proc-secondary" data-action="copy-message" data-farm-id="' + esc(farmId) + '">Копирај поруку</button>' +
+        (farm?.phone ? '<button type="button" class="nd-proc-secondary" data-action="open-viber" data-farm-id="' + esc(farmId) + '" ' +
+          (state.busy ? 'disabled' : '') + '>Отвори Viber</button>' : '') +
+        '<button type="button" class="nd-proc-secondary" data-action="mark-sent" data-farm-id="' + esc(farmId) + '" ' +
+          (state.busy ? 'disabled' : '') + '>Потврди слање</button>' +
+        '<button type="button" class="nd-proc-secondary" data-action="mark-replied" data-farm-id="' + esc(farmId) + '" ' +
+          (state.busy ? 'disabled' : '') + '>Евидентирај одговор</button></div>' +
+        '<small>Копирање или отварање Viber-а не мења статус. Статус се мења само ручном потврдом.</small></div></section>';
     }).join('');
   }
 
   function trackingInput(row, draft, field, label) {
     const value = draft[field] ?? row[field] ?? 0;
-    return '<label>' + label + '<input type="number" min="0" max="' + esc(row.broj_pakovanja) +
+    const maxValue = field === 'naruceno_pakovanja' ? num(row.broj_pakovanja) : field === 'potvrdjeno_pakovanja' ? Math.min(num(row.broj_pakovanja), num(draft.naruceno_pakovanja ?? row.naruceno_pakovanja)) : Math.max(num(row.preuzeto_pakovanja), Math.min(num(row.broj_pakovanja), num(draft.potvrdjeno_pakovanja ?? row.potvrdjeno_pakovanja)));
+    return '<label>' + label + '<input type="number" min="0" max="' + esc(maxValue) +
       '" step="1" inputmode="numeric" data-tracking-input data-row-id="' + esc(row.id) + '" data-field="' + field +
       '" value="' + esc(value) + '"></label>';
   }
@@ -369,8 +397,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   function render() {
     if (state.disposed) return;
     const isProcessing = state.tour?.status === 'processing';
-    const tabs = [['products', 'По производима'], ['allocation', 'Расподела'], ['farms', 'По газдинствима']];
-    let body = state.tab === 'products' ? renderProducts() : state.tab === 'allocation' ? renderAllocation() : renderFarmRecords();
+    const tabs = [['products', 'По производима'], ['farms', 'По газдинствима'], ['viber', 'Viber комуникација']];
+    let body = state.tab === 'products' ? renderProducts() : state.tab === 'farms' ? renderFarmRecords() : renderViberRecords();
     shell.innerHTML = '<header class="nd-proc-head"><div><small>УПРАВЉАЊЕ НАБАВКОМ · ТУРА #' + esc(tourId) +
       '</small><h1>' + esc(state.tour?.naziv || 'Тура #' + tourId) + '</h1><p>' +
       esc(String(state.tour?.status || '').toUpperCase()) + ' · Сви подаци из постојеће Supabase базе</p></div>' +
@@ -481,8 +509,16 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     if (row.naruceno === true && num(row.naruceno_pakovanja) === 0 && ordered === 0) {
       return setNotice('Стара евиденција означава наруџбину, али број није сачуван. Унеси стварни број наручених паковања пре чувања.', 'error');
     }
-    if (ordered > assignedCount || confirmed > ordered || collected > confirmed) {
+    if (ordered > assignedCount || confirmed > ordered || (collected > confirmed && (collected !== num(row.preuzeto_pakovanja) || confirmed !== num(row.potvrdjeno_pakovanja)))) {
       return setNotice('Услови нису испуњени: наручено ≤ додељено, потврђено ≤ наручено, преузето ≤ потврђено.', 'error');
+    }
+    const demand = demandFor(row.product_id, row.variant_id);
+    if (!demand) return setNotice('За ову ставку није пронађено требовање у поруџбинама.', 'error');
+    const relatedRows = allocationsFor(row.product_id, row.variant_id);
+    const totalConfirmed = relatedRows.reduce((sum, item) => sum + (String(item.id) === String(row.id) ? confirmed : num(item.potvrdjeno_pakovanja)), 0);
+    const totalCollected = relatedRows.reduce((sum, item) => sum + (String(item.id) === String(row.id) ? collected : num(item.preuzeto_pakovanja)), 0);
+    if (totalConfirmed > demand.packages || totalCollected > demand.packages || (totalCollected > totalConfirmed && (collected !== num(row.preuzeto_pakovanja) || confirmed !== num(row.potvrdjeno_pakovanja)))) {
+      return setNotice('Потврђена и преузета количина за све добављаче заједно не смеју премашити требовање од ' + fmt(demand.packages) + ' паковања.', 'error');
     }
     state.busy = true;
     render();
