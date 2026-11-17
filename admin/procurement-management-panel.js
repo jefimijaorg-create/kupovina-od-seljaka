@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.0.6
+ * Version: 1.0.7
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
  *              Viber message preparation and package order/confirmation/pickup tracking.
@@ -38,7 +38,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
 
   const client = core.client;
   const state = {
-    tour: null, items: [], products: [], variants: [], offers: [], farms: [],
+    tour: null, items: [], invalidSourceRows: 0, products: [], variants: [], offers: [], farms: [],
     allocations: [], demands: [], tab: 'products', selectedFarmId: '',
     allocationDraft: {}, trackingDraft: {}, busy: false, disposed: false, token: 0,
     notice: '', noticeType: 'success'
@@ -107,6 +107,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       .eq('tura_id', tourId);
     state.items = unwrap(itemResult, 'Ставке поруџбина');
 
+    state.invalidSourceRows = state.items.filter((row) => !row.product_id || !row.variant_id).length;
     const productIds = uniq(state.items.map((row) => row.product_id));
     const variantIds = uniq(state.items.map((row) => row.variant_id));
     const [productsResult, variantsResult, allocationsResult] = await Promise.all([
@@ -174,8 +175,10 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
   }
 
   function renderProducts() {
-    if (!state.demands.length) return '<div class="nd-proc-empty">За ову туру нису пронађене ставке са product_id и variant_id.</div>';
-    return state.demands.map((demand) => {
+    if (!state.demands.length) return '<div class="nd-proc-empty">За ову туру нису пронађене ставке са product_id и variant_id.</div>' +
+      (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '');
+    return (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '') +
+      state.demands.map((demand) => {
       const product = productFor(demand.productId);
       const productName = product?.name || 'Назив производа није доступан у products.name';
       const totalAssigned = assigned(demand.productId, demand.variantId);
