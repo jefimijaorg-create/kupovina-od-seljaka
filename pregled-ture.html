@@ -651,6 +651,28 @@ body.closed-tours-open{overflow:hidden!important}
  <header><strong>ADMIN V9 · ТЕХНИЧКА ДИЈАГНОСТИКА</strong><button type="button" onclick="ndCopyDiagnostics()">КОПИРАЈ</button><button type="button" onclick="ndToggleDiagnostics()">САКРИЈ</button></header>
  <pre id="nd-diagnostics-log">Покретање дијагностике…</pre>
 </div>
+<script id="nd-early-diagnostics">
+(function(){
+ const write=function(message,type){
+  const line='['+new Date().toLocaleTimeString('sr-RS')+'] '+String(message);
+  const box=document.getElementById('nd-diagnostics-log');
+  if(box){const lines=(box.textContent||'').split('\\n').filter(Boolean);lines.push(line);box.textContent=lines.slice(-45).join('\\n');box.scrollTop=box.scrollHeight;}
+  try{(type==='error'?console.error:type==='warn'?console.warn:console.log)('[ADMIN V9 EARLY]',line)}catch(_){}
+ };
+ window.ndEarlyDebug=write;
+ window.addEventListener('error',function(e){
+  write('ГРЕШКА ПРЕ ПОКРЕТАЊА/У РАДУ СКРИПТЕ: '+(e.message||'непозната грешка')+' · '+(e.filename||'')+':'+(e.lineno||0)+':'+(e.colno||0),'error');
+ });
+ window.addEventListener('unhandledrejection',function(e){
+  write('НЕОБРАЂЕНО ОБЕЋАЊЕ: '+(e.reason?.stack||e.reason?.message||String(e.reason)),'error');
+ });
+ write('РАНА ДИЈАГНОСТИКА ЈЕ ПОКРЕНУТА. ЧЕКАМ ГЛАВНУ СКРИПТУ…');
+ document.addEventListener('DOMContentLoaded',function(){
+  write('DOM ЈЕ УЧИТАН. Supabase SDK: '+(window.supabase?.createClient?'ДОСТУПАН':'НИЈЕ УЧИТАН'),'info');
+  if(!window.supabase?.createClient)write('УЗРОК: Supabase JavaScript библиотека није доступна (CDN/мрежа).','error');
+ });
+})();
+</script>
 <div class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print"><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Вредност набавке</span><strong id="stat-price" class="block mt-1 text-xl sm:text-2xl font-black text-emerald-700">—</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето млека</span><strong id="stat-milk" class="block mt-1 text-xl sm:text-2xl font-black text-blue-700">0 л</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето сира</span><strong id="stat-cheese" class="block mt-1 text-xl sm:text-2xl font-black text-amber-700">0 кг</strong></div><div class="bg-white p-4 rounded-xl shadow-sm border"><span class="text-xs font-semibold text-slate-500 uppercase block">Преузето јаја</span><strong id="stat-eggs" class="block mt-1 text-xl sm:text-2xl font-black text-yellow-600">0 ком</strong></div></div>
 <section id="tour-picker-panel" class="mb-6 no-print">
  <div class="tour-home-heading"><div><p class="tour-home-eyebrow">НАРУЧИ ДОМАЋЕ · ADMIN</p><h2>Избор туре</h2><p>Изабери туру за наставак рада.</p></div><span class="tour-home-live"><i class="fa-solid fa-circle"></i> ПОВЕЗАНО СА БАЗОМ</span></div>
@@ -713,7 +735,9 @@ body.closed-tours-open{overflow:hidden!important}
 <script>
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+if(!window.supabase?.createClient){ndEarlyDebug('ГЛАВНА СКРИПТА ЗАУСТАВЉЕНА: window.supabase.createClient не постоји. Supabase CDN није учитан.','error');throw Error('Supabase SDK nije učitan. Proveri CDN/mrežu.');}
 const authClient=window.supabase.createClient(URL,KEY,{auth:{detectSessionInUrl:false}});
+ndEarlyDebug('Главна скрипта је почела да ради; Supabase SDK је доступан.');
 let adminAuthSession=null;
 async function requireAdminAccess(){
  ndDebug('Провера Supabase сесије и ADMIN дозволе…');
