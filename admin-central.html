@@ -14,12 +14,12 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 .shell{width:min(1120px,100%);margin:auto;padding:18px 16px 42px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 22px}.brand{display:flex;align-items:center;gap:12px}.mark{width:44px;height:44px;border-radius:14px;background:#244b38;display:grid;place-items:center;font-size:23px}.brand small{display:block;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.16em}.brand strong{font-size:18px;letter-spacing:-.03em}.top-actions{display:flex;gap:8px}.quiet{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;padding:10px 13px;min-height:42px}
 .hero{padding:24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,#1b382b,#14231e 65%);box-shadow:0 18px 50px #0003}.eyebrow{font-size:11px;letter-spacing:.15em;color:var(--green);font-weight:800}.hero h1{font-size:clamp(26px,5vw,40px);line-height:1.08;margin:10px 0}.hero p{color:var(--muted);margin:0;max-width:680px;line-height:1.55}.identity{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.pill{border:1px solid #41624e;background:#20392d;border-radius:99px;padding:7px 11px;color:#d9f1df;font-size:12px}
 .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 2px 12px}.section-head h2{font-size:17px;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:5px 0 0}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.module{min-height:122px;text-align:left;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--text);padding:17px;display:flex;gap:14px;align-items:flex-start;transition:.18s}.module.active{border-color:#558565;background:linear-gradient(145deg,#1d382a,#14231e)}.module.active:active{transform:scale(.99)}.module:disabled{cursor:not-allowed;opacity:.64}.module-icon{flex:0 0 42px;height:42px;border-radius:13px;background:#243a30;display:grid;place-items:center;font-size:20px}.module-copy{min-width:0}.module-copy strong{display:block;font-size:15px;margin:1px 0 6px}.module-copy span{display:block;font-size:12px;line-height:1.45;color:var(--muted)}.status{display:inline-flex!important;margin-top:10px;border-radius:99px;padding:4px 8px;font-size:10px!important;font-weight:800;letter-spacing:.04em}.status.ok{background:#21432e;color:#b9efc6}.status.off{background:#3a3020;color:#e9d5a7}
+.count{font-size:12px;color:var(--green);font-weight:800}.tour-tools{display:grid;gap:10px;margin:14px 0}.tour-tools input{width:100%;min-height:50px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--text);padding:0 15px;font:inherit;outline:none}.tour-tools input:focus{border-color:var(--green)}.filters{display:flex;gap:8px;flex-wrap:wrap}.filter{min-height:42px;padding:9px 14px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-weight:700;font-size:12px}.filter.active{background:#244b38;border-color:#558565;color:#e6f7e9}.tour-list{display:grid;gap:10px}.tour-card{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:16px;border:1px solid var(--line);border-radius:17px;background:var(--panel);color:var(--text);min-height:88px}.tour-card:active{transform:scale(.99)}.tour-symbol{width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;border-radius:13px;background:#243a30;font-size:20px}.tour-copy{min-width:0;flex:1}.tour-copy strong{display:block;font-size:14px;line-height:1.35;overflow-wrap:anywhere}.tour-copy small{display:block;color:var(--muted);font-size:11px;margin-top:5px}.tour-status{display:inline-flex;margin-top:7px;padding:4px 8px;border-radius:99px;font-size:10px;font-weight:800;background:#243a30;color:#bde8c8}.tour-status.closed{background:#34313a;color:#d5cce2}.tour-status.processing{background:#423820;color:#f0d79b}.tour-arrow{color:var(--green);font-size:20px}.empty{padding:25px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px;line-height:1.5}.modal-actions{display:flex;gap:8px;align-items:center}.modal-actions button{min-height:42px}
 .diag{margin-top:24px;border:1px solid var(--line);border-radius:18px;background:#101d19;overflow:hidden}.diag-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line)}.diag-head strong{font-size:13px}.diag-state{font-size:11px;color:var(--gold)}.diag-body{padding:12px 15px}.diag-line{font:11px/1.55 ui-monospace,SFMono-Regular,monospace;color:var(--muted);overflow-wrap:anywhere;padding:3px 0}.diag-line.error{color:var(--red)}.diag-line.ok{color:var(--green)}.diag-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.diag-actions button{font-size:11px;padding:8px 10px}
 .footer{padding:20px 2px 0;color:#71877a;font-size:11px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 #app{display:none}#boot{padding:30px 16px;color:var(--muted);text-align:center}
 .overlay{position:fixed;inset:0;z-index:50;background:#030907eF;display:none;flex-direction:column;padding:10px}.overlay.open{display:flex}.modal{width:min(1500px,100%);height:100%;margin:auto;background:var(--bg);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line)}.modal-head strong{font-size:13px}.modal-head button{min-width:42px;min-height:42px}.module-frame{border:0;width:100%;height:100%;background:white;flex:1}
-@media(max-width:620px){.shell{padding:12px 12px 30px}.top{padding:5px 0 16px}.brand strong{font-size:16px}.top-actions .quiet{padding:9px}.hero{padding:20px;border-radius:20px}.grid{grid-template-columns:1fr;gap:9px}.module{min-height:100px;padding:15px}.section-head{margin-top:23px}.overlay{padding:0}.modal{border-radius:0;border:0}.modal-head{padding-top:max(8px,env(safe-area-inset-top))}}
+@media(max-width:620px){.shell{padding:12px 12px 30px}.top{padding:5px 0 16px}.brand strong{font-size:16px}.top-actions .quiet{padding:9px}.hero{padding:20px;border-radius:20px}.section-head{margin-top:23px}.overlay{padding:0}.modal{border-radius:0;border:0}.modal-head{padding-top:max(8px,env(safe-area-inset-top));align-items:flex-start}.modal-actions{gap:5px}.modal-actions button{padding:8px;font-size:11px}}
 </style>
 </head>
 <body>
@@ -27,36 +27,34 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 <div id="app">
 <div class="shell">
 <header class="top">
- <div class="brand"><div class="mark">🌿</div><div><small>NARUČI DOMAĆE · ADMIN</small><strong>Централни панел</strong></div></div>
+ <div class="brand"><div class="mark">🌿</div><div><small>NARUČI DOMAĆE · ADMIN</small><strong>Избор туре</strong></div></div>
  <div class="top-actions"><button class="quiet" id="refreshBtn" type="button">Освежи</button><button class="quiet" id="logoutBtn" type="button">Одјава</button></div>
 </header>
 <section class="hero">
- <div class="eyebrow">ADMIN CENTRAL · V1</div>
- <h1>Једно место за управљање.</h1>
- <p>Централна контролна тачка административног система. Модули се отварају унутар овог екрана, а сваки модул мора засебно да потврди сесију и овлашћења.</p>
+ <div class="eyebrow">ADMIN CENTRAL · V2</div>
+ <h1>Изабери туру и настави са радом.</h1>
+ <p>Ово је почетна страна ADMIN система. Изабери туру из стварне базе података да би отворио њен оперативни преглед.</p>
  <div class="identity"><span class="pill" id="rolePill">Провера улоге…</span><span class="pill" id="userPill">Провера корисника…</span><span class="pill">Supabase сесија активна</span></div>
 </section>
-<div class="section-head"><div><h2>Оперативни модули</h2><p>Доступни су само модули са потврђеном заштитом.</p></div></div>
-<div class="grid" id="modules">
- <button class="module active" type="button" data-module="tour">
-  <span class="module-icon">🧭</span><span class="module-copy"><strong>Преглед туре</strong><span>Постојећи оперативни систем за туре, набавку, преузимање и доставу.</span><span class="status ok">● ЗАШТИЋЕНО · ДОСТУПНО</span></span>
- </button>
- <button class="module" type="button" disabled><span class="module-icon">🛒</span><span class="module-copy"><strong>Поруџбине</strong><span>Модул постоји, али самостална ADMIN ауторизација није потврђена.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
- <button class="module" type="button" disabled><span class="module-icon">🥕</span><span class="module-copy"><strong>Производи</strong><span>Приступ ће бити укључен након провере сесије и улога у модулу.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
- <button class="module" type="button" disabled><span class="module-icon">🏡</span><span class="module-copy"><strong>Произвођачи</strong><span>Постојећи модул није пуштен из централног панела док се не потврди заштита.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
- <button class="module" type="button" disabled><span class="module-icon">📍</span><span class="module-copy"><strong>Пунктови</strong><span>Чека проверу аутентификације и овлашћења.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
- <button class="module" type="button" disabled><span class="module-icon">👥</span><span class="module-copy"><strong>Купци</strong><span>Чека проверу аутентификације и овлашћења.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
- <button class="module" type="button" disabled><span class="module-icon">📊</span><span class="module-copy"><strong>Извештаји</strong><span>Биће доступни када се потврде извори података и дозволе.</span><span class="status off">ЗАКЉУЧАНО · ПРОВЕРА ПОТРЕБНА</span></span></button>
+<div class="section-head"><div><h2>Изабери туру за рад</h2><p>Прво изабери туру. Тек затим се отвара њен оперативни преглед.</p></div><span class="count" id="tourCount">Учитавање…</span></div>
+<div class="tour-tools">
+ <input id="tourSearch" type="search" placeholder="Претражи туре по називу или броју…" autocomplete="off" aria-label="Претражи туре">
+ <div class="filters" role="group" aria-label="Филтер тура">
+  <button type="button" class="filter active" data-filter="all">Све туре</button>
+  <button type="button" class="filter" data-filter="active">Активне</button>
+  <button type="button" class="filter" data-filter="closed">Архива</button>
+ </div>
 </div>
+<div class="tour-list" id="tourList" aria-live="polite"><div class="empty">Учитавање тура из Supabase базе…</div></div>
 <section class="diag" aria-live="polite">
  <div class="diag-head"><strong>Трајна дијагностика система</strong><span class="diag-state" id="diagState">ПОКРЕТАЊЕ</span></div>
  <div class="diag-body"><div id="diagLog"></div><div class="diag-actions"><button class="quiet" id="copyDiag" type="button">Копирај запис</button><button class="quiet" id="clearDiag" type="button">Очисти запис</button></div></div>
 </section>
-<footer class="footer"><span>Наручи домаће · ADMIN</span><span>Верзија V1 · примена: admin-central.html</span></footer>
+<footer class="footer"><span>Наручи домаће · ADMIN</span><span>Верзија V2 · примена: admin-central.html · избор туре</span></footer>
 </div>
 </div>
 <div class="overlay" id="moduleOverlay" role="dialog" aria-modal="true" aria-label="Оперативни модул">
- <div class="modal"><div class="modal-head"><strong>🧭 Преглед туре · постојећи модул</strong><button class="quiet" id="closeModule" type="button" aria-label="Затвори модул">✕</button></div><iframe class="module-frame" id="moduleFrame" title="Преглед туре" referrerpolicy="same-origin"></iframe></div>
+ <div class="modal"><div class="modal-head"><strong id="modalTourTitle">🧭 Оперативни преглед туре</strong><div class="modal-actions"><button class="quiet" id="changeTour" type="button">← Избор туре</button><button class="quiet" id="closeModule" type="button" aria-label="Затвори модул">✕</button></div></div><iframe class="module-frame" id="moduleFrame" title="Преглед туре" referrerpolicy="same-origin"></iframe></div>
 </div>
 <script>
 (function(){
@@ -66,7 +64,7 @@ const SUPABASE_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
 const LOGIN='/admin2.html?next=%2Fadmin-central.html';
 const LOG_KEY='nd_admin_central_diagnostics_v1';
 const $=id=>document.getElementById(id);
-let client=null, currentUser=null, currentRole=null, logEntries=[];
+let client=null, currentUser=null, currentRole=null, logEntries=[], tours=[], tourFilter='all';
 function persist(){try{localStorage.setItem(LOG_KEY,JSON.stringify(logEntries.slice(-120)))}catch(_){}}
 function log(message,type='info'){
  const item={time:new Date().toLocaleString('sr-RS'),message:String(message),type};
@@ -98,20 +96,65 @@ async function verifyAccess(){
  $('userPill').textContent='НАЛОГ: '+(user.email||user.id);
  $('diagState').textContent='СЕСИЈА ПОТВРЂЕНА';
  log('Приступ одобрен · корисник '+user.id+' · улога '+record.role,'ok');
- $('boot').style.display='none';$('app').style.display='block';
+ $('boot').style.display='none';$('app').style.display='block';await loadTours();
 }
-function openTour(){
- if(!client||!currentUser){log('Покушај отварања модула без потврђене сесије.','error');return}
- $('moduleFrame').src='/pregled-ture.html?source=admin-central-v1';
+function statusLabel(status){return ({processing:'У ОБРАДИ',open:'АКТИВНА',closed:'ЗАТВОРЕНА',full:'ПОПУЊЕНА',scheduled:'ПЛАНИРАНА'})[String(status||'').toLowerCase()]||String(status||'БЕЗ СТАТУСА').toUpperCase()}
+function dateLabel(value){if(!value)return 'Датум није наведен';const d=new Date(value+'T12:00:00');return Number.isNaN(d.getTime())?'Датум није наведен':d.toLocaleDateString('sr-RS',{day:'2-digit',month:'long',year:'numeric'})}
+async function loadTours(){
+ const root=$('tourList');if(!root)return;
+ root.innerHTML='<div class="empty">Учитавање тура из Supabase базе…</div>';
+ try{
+  const {data,error}=await client.from('ture').select('id,naziv,datum,status').order('datum',{ascending:false}).order('id',{ascending:false}).limit(300);
+  if(error)throw error;
+  if(!Array.isArray(data))throw Error('База није вратила исправан списак тура.');
+  tours=data;
+  renderTours();
+  log('Учитавање тура завршено · '+tours.length+' тура из табеле ture.','ok');
+ }catch(e){
+  root.innerHTML='';
+  const box=document.createElement('div');box.className='empty';box.textContent='Туре нису учитане: '+(e.message||String(e))+' · Провери Supabase дозволе и интернет везу.';root.appendChild(box);
+  $('tourCount').textContent='Грешка';
+  log('Грешка при учитавању тура: '+(e.message||String(e)),'error');
+ }
+}
+function renderTours(){
+ const root=$('tourList');if(!root)return;
+ const q=String($('tourSearch')?.value||'').trim().toLocaleLowerCase('sr');
+ const visible=tours.filter(t=>{
+  const s=String(t.status||'').toLowerCase();
+  const matchesFilter=tourFilter==='all'||(tourFilter==='active'&&s!=='closed')||(tourFilter==='closed'&&s==='closed');
+  const matchesQuery=!q||(String(t.naziv||'').toLocaleLowerCase('sr').includes(q)||String(t.id).includes(q));
+  return matchesFilter&&matchesQuery;
+ });
+ $('tourCount').textContent=visible.length+' / '+tours.length+' тура';
+ root.replaceChildren();
+ if(!visible.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=tours.length?'Нема тура које одговарају претрази.':'У бази тренутно нема тура.';root.appendChild(empty);return}
+ visible.forEach(t=>{
+  const button=document.createElement('button');button.type='button';button.className='tour-card';button.addEventListener('click',()=>openTour(t));
+  const symbol=document.createElement('span');symbol.className='tour-symbol';symbol.textContent='🧭';
+  const copy=document.createElement('span');copy.className='tour-copy';
+  const name=document.createElement('strong');name.textContent=t.naziv||('Тура '+t.id);
+  const meta=document.createElement('small');meta.textContent=dateLabel(t.datum)+' · Тура #'+t.id;
+  const status=document.createElement('span');status.className='tour-status '+(String(t.status)==='closed'?'closed':String(t.status)==='processing'?'processing':'');status.textContent=statusLabel(t.status);
+  copy.append(name,meta,status);
+  const arrow=document.createElement('span');arrow.className='tour-arrow';arrow.textContent='›';
+  button.append(symbol,copy,arrow);root.appendChild(button);
+ });
+}
+function openTour(tour){
+ if(!client||!currentUser){log('Покушај отварања туре без потврђене сесије.','error');return}
+ try{localStorage.setItem('naruci-domace-admin-tour-id',String(tour.id))}catch(e){log('Изабрана тура није могла да се сачува у овом прегледачу.','error');return}
+ $('modalTourTitle').textContent='🧭 '+(tour.naziv||('Тура '+tour.id));
+ $('moduleFrame').src='/pregled-ture.html?source=admin-central-v2&tour='+encodeURIComponent(tour.id);
  $('moduleOverlay').classList.add('open');document.body.style.overflow='hidden';
- log('Отворен је постојећи преглед-туре.html у заштићеном модалном панелу.','ok');
+ log('Изабрана тура #'+tour.id+' · '+(tour.naziv||'без назива')+' · отварање оперативног прегледа.','ok');
 }
 function closeTour(){$('moduleOverlay').classList.remove('open');$('moduleFrame').src='about:blank';document.body.style.overflow='';}
-document.querySelector('[data-module="tour"]').addEventListener('click',openTour);
-$('closeModule').addEventListener('click',closeTour);
+$('tourSearch').addEventListener('input',renderTours);\ndocument.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{tourFilter=btn.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderTours()}));
+$('closeModule').addEventListener('click',closeTour);\n$('changeTour').addEventListener('click',closeTour);
 $('moduleOverlay').addEventListener('click',e=>{if(e.target===$('moduleOverlay'))closeTour()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('moduleOverlay').classList.contains('open'))closeTour()});
-$('refreshBtn').addEventListener('click',async()=>{const b=$('refreshBtn');b.disabled=true;try{await verifyAccess();log('Ручна провера сесије завршена.','ok')}catch(e){fail(e.message)}finally{b.disabled=false}});
+$('refreshBtn').addEventListener('click',async()=>{const b=$('refreshBtn');b.disabled=true;try{await verifyAccess();await loadTours();log('Сесија и списак тура су освежени.','ok')}catch(e){fail(e.message)}finally{b.disabled=false}});
 $('logoutBtn').addEventListener('click',async()=>{if(!client)return;const b=$('logoutBtn');b.disabled=true;try{const {error}=await client.auth.signOut();if(error)throw error;log('Корисник је одјављен.','ok');location.replace('/admin2.html')}catch(e){log('Одјава није успела: '+e.message,'error');b.disabled=false}});
 $('copyDiag').addEventListener('click',async()=>{const txt=logEntries.map(x=>'['+x.time+'] '+x.message).join('\n');try{await navigator.clipboard.writeText(txt);log('Дијагностички запис је копиран.','ok')}catch(e){log('Копирање није доступно: '+e.message,'error')}});
 $('clearDiag').addEventListener('click',()=>{logEntries=[];persist();renderLog();log('Дијагностички запис је очишћен.')});
