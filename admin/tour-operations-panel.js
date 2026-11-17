@@ -47,15 +47,19 @@ export async function mountTourOperations({ root, core, tourId, onBack }) {
     const pointsResult = pointIds.length ? await client.from('punktovi').select('id,name,city,address,latitude,longitude,vreme').in('id',pointIds) : {data:[],error:null};
     state.points = fail(pointsResult,'Пунктови');
     if (canReadProducts) {
-      const [productsResult, variantsResult, farmsResult, itemAllocResult, procurementResult] = await Promise.all([
-        productIds.length ? client.from('products').select('id,name,gazdinstvo_id').in('id',productIds) : Promise.resolve({data:[],error:null}),
-        variantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,is_active').in('id',variantIds) : Promise.resolve({data:[],error:null}),
-        farmIds.length ? client.from('gazdinstva').select('id,name,phone').in('id',farmIds) : Promise.resolve({data:[],error:null}),
-        state.items.length ? client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',state.items.map(x=>x.id)) : Promise.resolve({data:[],error:null}),
-        client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,raspodela_kupcima,preuzeto_pakovanja,naruceno,potvrdjeno_pakovanja').eq('tura_id',tourId)
+      const procurementResult = await client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,raspodela_kupcima,preuzeto_pakovanja,naruceno,potvrdjeno_pakovanja').eq('tura_id',tourId);
+      const procurementRows = fail(procurementResult,'Набавка');
+      const allProductIds = uniq([...productIds,...procurementRows.map(x=>x.product_id)]);
+      const allVariantIds = uniq([...variantIds,...procurementRows.map(x=>x.variant_id)]);
+      const allFarmIds = uniq([...farmIds,...procurementRows.map(x=>x.gazdinstvo_id)]);
+      const [productsResult, variantsResult, farmsResult, itemAllocResult] = await Promise.all([
+        allProductIds.length ? client.from('products').select('id,name,gazdinstvo_id').in('id',allProductIds) : Promise.resolve({data:[],error:null}),
+        allVariantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,is_active').in('id',allVariantIds) : Promise.resolve({data:[],error:null}),
+        allFarmIds.length ? client.from('gazdinstva').select('id,name,phone').in('id',allFarmIds) : Promise.resolve({data:[],error:null}),
+        state.items.length ? client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',state.items.map(x=>x.id)) : Promise.resolve({data:[],error:null})
       ]);
       state.products=fail(productsResult,'Производи'); state.variants=fail(variantsResult,'Варијанте'); state.farms=fail(farmsResult,'Газдинства');
-      state.itemAllocations=fail(itemAllocResult,'Расподела ставки'); state.procurementAllocations=fail(procurementResult,'Набавка');
+      state.itemAllocations=fail(itemAllocResult,'Расподела ставки'); state.procurementAllocations=procurementRows;
     }
     if (token !== loadToken || disposed) return;
     render();
