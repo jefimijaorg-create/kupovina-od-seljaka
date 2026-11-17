@@ -240,7 +240,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
           trackingInput(row, draft, 'potvrdjeno_pakovanja', 'Потврђено') +
           trackingInput(row, draft, 'preuzeto_pakovanja', 'Преузето') + '</div>' +
           '<div class="nd-proc-track-meta"><span>Додељено: ' + fmt(row.broj_pakovanja) + '</span>' +
-          '<span>Viber: ' + esc(row.viber_status === 'replied' ? 'Одговор примљен' : row.viber_status === 'sent' ? 'Послато' : 'Није послато') + '</span></div>' +\n          (row.naruceno === true && num(row.naruceno_pakovanja) === 0 ? '<div class="nd-proc-warning">Стара евиденција: наручено је означено, али број паковања није сачуван. Унеси стварну количину.</div>' : '') +
+          '<span>Viber: ' + esc(row.viber_status === 'replied' ? 'Одговор примљен' : row.viber_status === 'sent' ? 'Послато' : 'Није послато') + '</span></div>' +
+          (row.naruceno === true && num(row.naruceno_pakovanja) === 0 ? '<div class="nd-proc-warning">Стара евиденција: наручено је означено, али број паковања није сачуван. Унеси стварну количину.</div>' : '') +
           '<button type="button" class="nd-proc-secondary" data-action="save-tracking" data-row-id="' + esc(row.id) + '" ' + (state.busy ? 'disabled' : '') + '>' + (state.busy ? 'Чувам…' : 'Сачувај количине') + '</button></article>';
       }).join('') + '</div>';
       html += '<div class="nd-proc-message"><label>Viber порука за ово газдинство</label><textarea readonly rows="5">' + esc(messageForFarm(farmId)) + '</textarea>' +
@@ -306,7 +307,10 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         const existing = rowFor(farmId, demand.productId, demand.variantId);
         if (count === 0 && !existing) continue;
         if (existing && count === 0) throw new Error('Постојећу расподелу није могуће обрисати овим пољем. Унеси количину већу од нуле.');
-        if (existing && existing.naruceno === true && num(existing.naruceno_pakovanja) === 0) {\n          throw new Error('Стара евиденција означава да је наручено, али не садржи број паковања. Прво унеси стварну наручену количину у евиденцији газдинства.');\n        }\n        if (existing && count < Math.max(num(existing.naruceno_pakovanja), num(existing.potvrdjeno_pakovanja), num(existing.preuzeto_pakovanja))) {
+        if (existing && existing.naruceno === true && num(existing.naruceno_pakovanja) === 0) {
+          throw new Error('Стара евиденција означава да је наручено, али не садржи број паковања. Прво унеси стварну наручену количину у евиденцији газдинства.');
+        }
+        if (existing && count < Math.max(num(existing.naruceno_pakovanja), num(existing.potvrdjeno_pakovanja), num(existing.preuzeto_pakovanja))) {
           throw new Error('Нова расподела не може бити мања од већ наручене, потврђене или преузете количине.');
         }
         const offer = offersFor(demand.productId, demand.variantId).find((item) => String(item.gazdinstvo_id) === String(farmId));
@@ -351,7 +355,10 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
     if (![ordered, confirmed, collected].every((value) => Number.isInteger(value) && value >= 0)) {
       return setNotice('Количине морају бити цели ненегативни бројеви.', 'error');
     }
-    if (row.naruceno === true && num(row.naruceno_pakovanja) === 0 && ordered === 0) {\n      return setNotice('Стара евиденција означава наруџбину, али број није сачуван. Унеси стварни број наручених паковања пре чувања.', 'error');\n    }\n    if (ordered > assignedCount || confirmed > ordered || collected > confirmed) {
+    if (row.naruceno === true && num(row.naruceno_pakovanja) === 0 && ordered === 0) {
+      return setNotice('Стара евиденција означава наруџбину, али број није сачуван. Унеси стварни број наручених паковања пре чувања.', 'error');
+    }
+    if (ordered > assignedCount || confirmed > ordered || collected > confirmed) {
       return setNotice('Услови нису испуњени: наручено ≤ додељено, потврђено ≤ наручено, преузето ≤ потврђено.', 'error');
     }
     state.busy = true;
