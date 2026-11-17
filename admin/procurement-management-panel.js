@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.0.7
+ * Version: 1.0.8
  * Updated: 2026-11-17
  * Description: Product/variant procurement allocation by farm, independent farm records,
  *              Viber message preparation and package order/confirmation/pickup tracking.
@@ -222,7 +222,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
       return '<article class="nd-proc-card"><div class="nd-proc-card-head"><div><strong>' +
         esc(product?.name || 'Назив производа није доступан') + '</strong><small>' + esc(formatVariant(demand)) + '</small></div>' +
         '<span class="nd-proc-pill is-open">Преостало за ово газдинство ' + fmt(max) + '</span></div>' +
-        '<div class="nd-proc-input-row"><label>Број паковања</label><input type="number" min="' + (existing ? '1' : '0') + '" max="' + max + '" step="1" inputmode="numeric" data-allocation-count="' + esc(draftKey) +
+        '<div class="nd-proc-input-row"><label>Број паковања</label><input type="number" min="0" max="' + max + '" step="1" inputmode="numeric" data-allocation-count="' + esc(draftKey) +
         '" value="' + esc(draft ?? current) + '" aria-label="Број паковања за ' + esc(product?.name || 'производ') + '"></div>' +
         (existing ? '<small class="nd-proc-subline">Већ сачувано: ' + fmt(current) + ' паковања</small>' : '') + '</article>';
     }).join('');
@@ -326,7 +326,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
           ' прелази преосталу потребну количину (' + fmt(max) + ').');
         const existing = rowFor(farmId, demand.productId, demand.variantId);
         if (count === 0 && !existing) continue;
-        if (existing && count === 0) throw new Error('Постојећу расподелу није могуће обрисати овим пољем. Унеси количину већу од нуле.');
+        if (existing && count === 0 && (num(existing.naruceno_pakovanja) > 0 || num(existing.potvrdjeno_pakovanja) > 0 || num(existing.preuzeto_pakovanja) > 0)) {\n          throw new Error('Расподела са нарученим, потврђеним или преузетим паковањима не може бити обрисана.');\n        }
         if (existing && existing.naruceno === true && num(existing.naruceno_pakovanja) === 0) {
           throw new Error('Стара евиденција означава да је наручено, али не садржи број паковања. Прво унеси стварну наручену количину у евиденцији газдинства.');
         }
@@ -338,7 +338,16 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         changes.push({ demand, count, existing, offer });
       }
       if (!changes.length) throw new Error('Нема измењених количина за чување.');
+      const removals = changes.filter((change) => change.existing && change.count === 0);
+      if (removals.length && !window.confirm('Да ли сигурно желиш да уклониш ' + removals.length + ' постојећих расподела?')) {\n        throw new Error('Уклањање расподеле је отказано.');\n      }
       for (const change of changes) {
+        if (change.existing && change.count === 0) {
+          const deleted = await client.from('tura_nabavka_dodele').delete().eq('id', change.existing.id).select('id').maybeSingle();
+          if (deleted.error) throw new Error('Брисање расподеле није успело: ' + deleted.error.message);
+          if (!deleted.data) throw new Error('База није потврдила уклањање расподеле.');
+          wrote = true;
+          continue;
+        }
         const payload = { broj_pakovanja: change.count, nabavna_cena: num(change.offer.purchase_price), updated_at: new Date().toISOString() };
         const result = change.existing
           ? await client.from('tura_nabavka_dodele').update(payload).eq('id', change.existing.id).select('id,broj_pakovanja').maybeSingle()
