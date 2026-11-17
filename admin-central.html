@@ -150,8 +150,10 @@ function openTour(tour){
  log('Изабрана тура #'+tour.id+' · '+(tour.naziv||'без назива')+' · отварање оперативног прегледа.','ok');
 }
 function closeTour(){$('moduleOverlay').classList.remove('open');$('moduleFrame').src='about:blank';document.body.style.overflow='';}
-$('tourSearch').addEventListener('input',renderTours);\ndocument.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{tourFilter=btn.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderTours()}));
-$('closeModule').addEventListener('click',closeTour);\n$('changeTour').addEventListener('click',closeTour);
+$('tourSearch').addEventListener('input',renderTours);
+document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{tourFilter=btn.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderTours()}));
+$('closeModule').addEventListener('click',closeTour);
+$('changeTour').addEventListener('click',closeTour);
 $('moduleOverlay').addEventListener('click',e=>{if(e.target===$('moduleOverlay'))closeTour()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('moduleOverlay').classList.contains('open'))closeTour()});
 $('refreshBtn').addEventListener('click',async()=>{const b=$('refreshBtn');b.disabled=true;try{await verifyAccess();await loadTours();log('Сесија и списак тура су освежени.','ok')}catch(e){fail(e.message)}finally{b.disabled=false}});
