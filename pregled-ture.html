@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sr" class="h-full bg-slate-50"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Тура — Преузимање и достава | Наручи домаће</title><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>@media print{.no-print{display:none!important}body{background:white;color:black;font-size:11pt}.card{break-inside:avoid;margin-bottom:1rem}}body{font-family:Arial,sans-serif}@media(min-width:768px){.unassigned-sheet{left:50%;transform:translateX(-50%);width:min(900px,calc(100% - 2rem))}} .unassigned-sheet{position:fixed!important;z-index:70;left:0;right:0;bottom:0;max-height:72dvh;overflow:auto;margin:0!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22)} .unassigned-sheet-toggle{position:fixed!important;z-index:65;left:1rem;right:1rem;bottom:1rem;width:auto;box-shadow:0 6px 20px rgba(15,23,42,.2)} body{padding-bottom:6rem!important}  .supplier-sheet-backdrop{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.48)}.supplier-sheet-panel{position:fixed!important;z-index:81;left:0;right:0;bottom:0;max-height:88dvh;overflow:auto;margin:0 auto!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22);width:100%;max-width:900px}@media(min-width:768px){.supplier-sheet-panel{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(900px,calc(100% - 2rem));border-radius:1.25rem!important;max-height:85dvh}} .supplier-sheet-backdrop[hidden],.supplier-sheet-panel[hidden]{display:none!important}
+<html lang="sr" class="h-full bg-slate-50"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Тура — Преузимање и достава | Наручи домаће</title><script src="https://cdn.tailwindcss.com"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>@media print{.no-print{display:none!important}body{background:white;color:black;font-size:11pt}.card{break-inside:avoid;margin-bottom:1rem}}body{font-family:Arial,sans-serif}@media(min-width:768px){.unassigned-sheet{left:50%;transform:translateX(-50%);width:min(900px,calc(100% - 2rem))}} .unassigned-sheet{position:fixed!important;z-index:70;left:0;right:0;bottom:0;max-height:72dvh;overflow:auto;margin:0!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22)} .unassigned-sheet-toggle{position:fixed!important;z-index:65;left:1rem;right:1rem;bottom:1rem;width:auto;box-shadow:0 6px 20px rgba(15,23,42,.2)} body{padding-bottom:6rem!important}  .supplier-sheet-backdrop{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.48)}.supplier-sheet-panel{position:fixed!important;z-index:81;left:0;right:0;bottom:0;max-height:88dvh;overflow:auto;margin:0 auto!important;border-radius:1.25rem 1.25rem 0 0!important;box-shadow:0 -12px 35px rgba(15,23,42,.22);width:100%;max-width:900px}@media(min-width:768px){.supplier-sheet-panel{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(900px,calc(100% - 2rem));border-radius:1.25rem!important;max-height:85dvh}} .supplier-sheet-backdrop[hidden],.supplier-sheet-panel[hidden]{display:none!important}
 /* ЈУНАЧКО СРЦЕ — тамни теренски интерфејс. Само визуелни слој; постојећи HTML ID-еви и JS логика остају нетакнути. */
 :root{color-scheme:dark;--ui-bg:#0F172A;--ui-panel:#111C32;--ui-panel-2:#17243B;--ui-line:#334155;--ui-ink:#F8FAFC;--ui-muted:#94A3B8;--ui-orange:#EA580C;--ui-orange-soft:rgba(234,88,12,.14);--ui-green:#059669}
 html{scroll-behavior:smooth;background:var(--ui-bg);color-scheme:dark}
@@ -701,6 +701,36 @@ body.closed-tours-open{overflow:hidden!important}
 <script>
 const VIBER_COMMUNITY_URL='https://invite.viber.com/?g2=AQBzEMpHOYv%2B1VY%2BFr%2FXK1wAQtohrqpwgZQIP%2FNehuBqGI%2BeL0OR9rkG0OYgMZ04';
 const URL='https://kszkehxrcuagymlfowqj.supabase.co',KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532',HEAD={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+const authClient=window.supabase.createClient(URL,KEY,{auth:{detectSessionInUrl:false}});
+let adminAuthSession=null;
+async function requireAdminAccess(){
+ try{
+  const {data:{session},error:sessionError}=await authClient.auth.getSession();
+  if(sessionError||!session?.access_token){location.replace('/admin2.html');return false;}
+  const {data:{user},error:userError}=await authClient.auth.getUser();
+  if(userError||!user){await authClient.auth.signOut();location.replace('/admin2.html');return false;}
+  const {data:adminRecord,error:adminError}=await authClient.from('app_users').select('role,is_active').eq('auth_user_id',user.id).maybeSingle();
+  const allowedRoles=['super_admin','admin','operator','viewer'];
+  if(adminError||!adminRecord||adminRecord.is_active!==true||!allowedRoles.includes(adminRecord.role)){
+   await authClient.auth.signOut();
+   location.replace('/admin2.html');
+   return false;
+  }
+  adminAuthSession=session;
+  HEAD.Authorization='Bearer '+session.access_token;
+  return true;
+ }catch(error){
+  console.error('Провера ADMIN приступа није успела:',error);
+  location.replace('/admin2.html');
+  return false;
+ }
+}
+authClient.auth.onAuthStateChange((event,session)=>{
+ adminAuthSession=session||null;
+ if(session?.access_token)HEAD.Authorization='Bearer '+session.access_token;
+ if(event==='SIGNED_OUT')location.replace('/admin2.html');
+});
+
 let tours=[],items=[],orderItemsByOrder={},farms=[],points=[],orders=[],customers=[],tourPoints=[],farmOffers=[],productCatalog=[],variantCatalog=[],farmProducts=[],allocations=[],procurementRows=[],producerPayouts=[],producerPayments=[],tourAllocations=[],supplierSheetFarmId='',supplierSheetProductId='',supplierSheetFilter='all',supplierSheetDraft={},supplierDemandFarmFilter='all',supplierDemandExpanded={},tourId=0,view='procurement',deliveryMode='stock',deliveryListMode='pending',deliveryPointMode='active',deliveryInvoicePrepared=new Set(),deliveryDraftSelection=new Set(),deliveryDraftPackages=new Map(),procurementMode='farm',procurementFarmFilter='all';
 function tourStatus(id=tourId){return String(tours.find(t=>String(t.id)===String(id))?.status||'').toLowerCase()}
 function assertTourWriteAllowed(path,opt={}){
@@ -2605,5 +2635,11 @@ function renderProcurement(){
  box.innerHTML='<div class="proc-demand-screen"><div class="proc-demand-intro"><div class="proc-demand-kicker">TURA '+esc(tourId)+' · NABAVKA</div><h3>Potražnja po proizvodima</h3><p>'+intro+'</p></div>'+(cards||'<div class="proc-demand-empty">Nema stavki za nabavku u izabranoj turi.</div>')+'</div>';
 }
 
-document.addEventListener('DOMContentLoaded',async()=>{ensureProcurementAllocationModal();await loadData();initAdminRouter();});
+document.addEventListener('DOMContentLoaded',async()=>{
+ const authorized=await requireAdminAccess();
+ if(!authorized)return;
+ ensureProcurementAllocationModal();
+ await loadData();
+ initAdminRouter();
+});
 </script><script src="admin/procurement-product-panel.js?v=1" defer></script></body></html>
