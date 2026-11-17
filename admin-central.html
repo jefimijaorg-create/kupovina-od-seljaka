@@ -78,7 +78,7 @@ function renderLog(){
  logEntries.slice(-18).reverse().forEach(entry=>{const row=document.createElement('div');row.className='diag-line '+(entry.type==='error'?'error':entry.type==='ok'?'ok':'');row.textContent='['+entry.time+'] '+entry.message;root.appendChild(row)});
 }
 function restoreLog(){try{const saved=JSON.parse(localStorage.getItem(LOG_KEY)||'[]');if(Array.isArray(saved))logEntries=saved.filter(x=>x&&typeof x.message==='string').slice(-120)}catch(_){logEntries=[]}renderLog()}
-function fail(message){log(message,'error');$('diagState').textContent='ГРЕШКА';$('boot').textContent='Приступ ADMIN систему није одобрен. Погледај дијагностику.';setTimeout(()=>location.replace(LOGIN),900)}
+function fail(message){log(message,'error');$('diagState').textContent='ГРЕШКА';$('app').style.display='none';$('boot').style.display='block';$('boot').innerHTML='Приступ ADMIN систему није одобрен.<br><strong>'+String(message).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))+'</strong><br><small>Дијагностика је сачувана на овом уређају. Бићеш преусмерен на пријаву.</small>';setTimeout(()=>location.replace(LOGIN),5000)}
 async function verifyAccess(){
  log('Провера HTTPS, Supabase SDK и ADMIN сесије…');
  if(location.protocol!=='https:')throw Error('ADMIN мора бити отворен преко HTTPS-а.');
