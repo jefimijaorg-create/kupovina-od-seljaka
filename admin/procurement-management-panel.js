@@ -190,7 +190,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack })
         '<div class="nd-proc-card-head"><div><strong>' + esc(productName) + '</strong><small>' + esc(formatVariant(demand)) + '</small></div>' +
         '<span class="nd-proc-pill ' + (left === 0 ? 'is-done' : 'is-open') + '">' + (left === 0 ? 'Распоређено' : 'Преостало ' + fmt(left)) + '</span></div>' +
         '<div class="nd-proc-metrics"><span><b>' + fmt(demand.packages) + '</b><small>Потребно паковања</small></span>' +
-        '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span>' +\n        '<span><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></span></div>' +
+        '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span>' +
+        '<span><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></span></div>' +
         '<div class="nd-proc-subline">Укупна количина: ' + fmt(demand.totalQuantity) + ' ' + esc(demand.packageUnit || '') + '</div>' +
         (demand.valid ? '' : '<div class="nd-proc-warning">Недостаје исправан package_count, package_size или package_unit. Расподела за ову варијанту је блокирана.</div>') +
         '<div class="nd-proc-suppliers"><small>Активне понуде за ову варијанту</small>' +
