@@ -28,7 +28,6 @@ export function buildTourAnalytics({tour,items=[],allocations=[],products=[],var
   const k=key(a.product_id,a.variant_id,fid);
   matrix.set(k,row);
   if(row.activatedPackages>row.confirmedPackages||(row.activatedPackages>0&&row.viberStatus!=='replied'))exceptions.unconfirmed.push({...row,gapPackages:Math.max(0,row.activatedPackages-row.confirmedPackages),reason:row.viberStatus==='replied'?'Потврђена количина је мања од наручене.':'Нема евидентираног Viber одговора произвођача.'});
-  if(row.collectedPackages!==row.activatedPackages)exceptions.physical.push({...row,gapPackages:row.activatedPackages-row.collectedPackages,reason:row.collectedPackages<row.activatedPackages?'Физички није преузета цела наручена количина.':'Преузета количина је већа од наручене.'});
  }
  for(const [k,p] of plans){
   const row=matrix.get(k);
@@ -36,6 +35,11 @@ export function buildTourAnalytics({tour,items=[],allocations=[],products=[],var
   else matrix.set(k,{source:'plan',productId:p.productId,variantId:p.variantId,farmId:p.farmId,productName:p.productName,variantName:p.variantName,farmName:p.farmName,plannedPackages:p.packages,activatedPackages:0,confirmedPackages:0,collectedPackages:0,packageSize:p.packageSize,packageUnit:p.packageUnit});
  }
  const rows=[...matrix.values()].map(r=>({...r,statePackages:r.plannedPackages-r.collectedPackages,state:r.plannedPackages>r.collectedPackages?'deficit':r.plannedPackages<r.collectedPackages?'surplus':'balanced'}));
+ for(const row of rows){
+  if(row.collectedPackages!==row.activatedPackages||row.plannedPackages!==row.collectedPackages){
+   exceptions.physical.push({...row,gapPackages:row.activatedPackages-row.collectedPackages,reason:row.collectedPackages<row.activatedPackages?'Физички није преузета цела планирана/наручена количина.':'Преузета количина је већа од наручене.'});
+  }
+ }
  const actionItems=rows.filter(r=>r.state!=='balanced').map(r=>({...r,id:key(r.productId,r.variantId,r.farmId),type:r.state,suggestedActions:r.state==='deficit'?['reassign','cancel','book_difference']:['reassign']}));
  const totals=rows.reduce((t,r)=>{t.planned+=r.plannedPackages;t.activated+=r.activatedPackages;t.confirmed+=r.confirmedPackages;t.collected+=r.collectedPackages;t.toResolve+=r.statePackages;return t;},{planned:0,activated:0,confirmed:0,collected:0,toResolve:0});
  return {tour,tourId:tour?.id,generatedAt:new Date().toISOString(),totals,rows,exceptions,actionItems,counts:{unassigned:exceptions.unassigned.length,unconfirmed:exceptions.unconfirmed.length,physical:exceptions.physical.length,managerActions:actionItems.length}};
