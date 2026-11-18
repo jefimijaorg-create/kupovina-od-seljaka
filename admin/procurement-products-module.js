@@ -6,7 +6,7 @@
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
-import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js';
+import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.1.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
 import { getProcurementStage, getProcurementStageLabel, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.1';
 
