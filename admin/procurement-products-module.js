@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT PRODUCTS MODULE
- * Version: 1.0.1
+ * Version: 1.0.2
  * Updated: 2026-11-18
- * Description: Fixes initial KPI quantity accumulator in the responsive procurement operations dashboard.
+ * Description: Fixes KPI quantity aggregation initialization and accumulation in the procurement operations dashboard.
  * Scope: ADMIN Workspace only; existing Supabase client, tables, RLS and triggers.
  */
 import { mountProcurementManagement } from './procurement-management-panel.js';
@@ -52,7 +52,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   const data=await loadProcurementData({client:core.client,tourId});
   if(disposed)return {destroy(){}};
   const demands=buildProcurementDemands({items:data.items,products:data.products,variants:data.variants});
-  const totals=demands.reduce((a,d)=>({needed:a.needed+d.packages,quantity:0+d.totalQuantity}),{needed:0,quantity:a.quantity}),alloc=data.allocations;
+  const totals=demands.reduce((a,d)=>({needed:a.needed+d.packages,quantity:a.quantity+d.totalQuantity}),{needed:0,quantity:0}),alloc=data.allocations;
   const assigned=alloc.reduce((s,r)=>s+n(r.broj_pakovanja),0),ordered=alloc.reduce((s,r)=>s+n(r.naruceno_pakovanja),0),collected=alloc.reduce((s,r)=>s+n(r.preuzeto_pakovanja),0);
   const farms=new Map();for(const r of alloc){const id=String(r.gazdinstvo_id);if(!farms.has(id))farms.set(id,{a:0,o:0,c:0,p:0});const x=farms.get(id);x.a+=n(r.broj_pakovanja);x.o+=n(r.naruceno_pakovanja);x.c+=n(r.potvrdjeno_pakovanja);x.p+=n(r.preuzeto_pakovanja);}
   const farmHtml=[...farms].map(([id,x])=>{const farm=data.farms.find(v=>String(v.id)===id);return '<div class="ndpm-farm"><strong>'+esc(farm?.name||('Газдинство #'+id))+'</strong><span>Додељено '+fmt(x.a)+' · Наручено '+fmt(x.o)+' · Потврђено '+fmt(x.c)+' · Преузето '+fmt(x.p)+'</span></div>';}).join('');
