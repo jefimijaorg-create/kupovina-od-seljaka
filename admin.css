@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.0.4
- * Updated: 2026-11-18
- * Description: Adds responsive per-variant allocation recap styles for procurement management.
+ * Version: 1.0.5
+ * Updated: 2026-11-19
+ * Description: Adds responsive order-detail action styling to ADMIN Workspace tour operations.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -742,6 +742,7 @@ body.closed-tours-open{overflow:hidden!important}
 .nd-workspace .nd-ops-card div{margin-top:6px;color:#cbd5e1;font-size:12px;overflow-wrap:anywhere}
 .nd-workspace .nd-ops-card small{display:block;margin-top:7px;color:#94a3b8;font-size:11px}
 .nd-workspace .nd-ops-card .nd-ops-qty{color:#fdba74;font-size:16px;font-weight:900}
+.nd-workspace .nd-ops-order-open{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin-top:12px;padding:10px 12px;border:1px solid #9a4b20;border-radius:11px;background:rgba(234,88,12,.16);color:#fdba74;font-size:12px;font-weight:900;cursor:pointer}.nd-workspace .nd-ops-order-open:disabled{opacity:.55;cursor:wait}
 .nd-workspace .nd-ops-empty,.nd-workspace .nd-ops-notice,.nd-workspace .nd-ops-error,.nd-workspace .nd-ops-loading{grid-column:1/-1;padding:20px;border:1px dashed #475569;border-radius:14px;color:#a7b4c7;font-size:13px;line-height:1.55}
 .nd-workspace .nd-ops-notice{border-color:#a16207;background:rgba(217,119,6,.1);color:#fde68a}
 .nd-workspace .nd-ops-error{border-color:#b91c1c;color:#fecaca}
