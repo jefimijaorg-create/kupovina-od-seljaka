@@ -283,8 +283,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       '</section></div>';
   }
 
-  function openProductAllocation(productId) {
-    const productDemands = state.demands.filter((demand) => String(demand.productId) === String(productId));
+  function openProductAllocation(productId, variantId = null) {
+    const productDemands = state.demands.filter((demand) => String(demand.productId) === String(productId) && (variantId === null || String(demand.variantId) === String(variantId)));
     if (!productDemands.length || !productFor(productId)) {
       state.diagnostic.modal = 'Форма није направљена: производ није пронађен у учитаним подацима.';
       state.diagnostic.error = 'Недостаје производ или његове ставке у подацима ове туре.';
@@ -295,6 +295,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       String(demand.productId) === String(offer.product_id) && String(demand.variantId) === String(offer.variant_id)))
       .map((offer) => offer.gazdinstvo_id));
     state.selectedProductId = String(productId);
+    state.selectedVariantId = variantId === null ? null : String(variantId);
     if (!farmIds.some((id) => String(id) === String(state.selectedFarmId))) state.selectedFarmId = farmIds[0] ?? '';
     state.allocationDraft = {};
     state.notice = '';
