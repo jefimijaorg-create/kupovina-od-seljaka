@@ -882,3 +882,27 @@ body.closed-tours-open{overflow:hidden!important}
  .nd-workspace .nd-proc-allocation-recap small{font-size:10px}
  .nd-workspace .nd-proc-allocation-card .nd-proc-input-row label{max-width:42%}
 }
+
+
+/* 23. Packaging-first procurement overview — version 1.0.0 */
+.nd-workspace .nd-proc-table-intro{display:grid;gap:5px;padding:3px 2px 4px}
+.nd-workspace .nd-proc-table-intro strong{font-size:15px;font-weight:900}
+.nd-workspace .nd-proc-table-intro span{color:#94a3b8;font-size:11px;line-height:1.5}
+.nd-workspace .nd-proc-package-group{grid-column:1/-1;min-width:0;overflow:hidden;border:1px solid #334155;border-radius:14px;background:#111c32}
+.nd-workspace .nd-proc-package-group>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;border-bottom:1px solid #334155;background:#17243b}
+.nd-workspace .nd-proc-package-group>header strong{font-size:13px;font-weight:900}
+.nd-workspace .nd-proc-package-group>header small{color:#94a3b8;font-size:10px}
+.nd-workspace .nd-proc-table-wrap{width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.nd-workspace .nd-proc-table{width:100%;min-width:790px;border-collapse:collapse;font-size:12px}
+.nd-workspace .nd-proc-table th{padding:10px 11px;background:#0b1426;color:#94a3b8;text-align:left;font-size:10px;font-weight:900;white-space:nowrap}
+.nd-workspace .nd-proc-table td{padding:11px;border-top:1px solid #29374d;vertical-align:middle}
+.nd-workspace .nd-proc-table td:first-child{min-width:180px}
+.nd-workspace .nd-proc-table td:first-child strong{display:block;color:#f8fafc;font-size:12px}
+.nd-workspace .nd-proc-table td:first-child small{display:block;margin-top:4px;color:#94a3b8;font-size:10px}
+.nd-workspace .nd-proc-table .nd-proc-number{font-size:15px;font-weight:900;color:#fdba74;font-variant-numeric:tabular-nums}
+.nd-workspace .nd-proc-table .nd-proc-stage b{display:block;font-size:14px;font-weight:900;font-variant-numeric:tabular-nums}
+.nd-workspace .nd-proc-table .nd-proc-stage small{display:block;margin-top:3px;color:#94a3b8;font-size:10px}
+.nd-workspace .nd-proc-row-action{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:7px 10px;border:1px solid #7c3f1e;border-radius:9px;background:#713f1233;color:#fdba74;font-size:11px;font-weight:900;white-space:nowrap}
+.nd-workspace .nd-proc-row-action:hover{background:#9a3412;color:#fff}
+.nd-workspace .nd-proc-row-action:focus-visible{outline:3px solid #fb923c;outline-offset:2px}
+@media(max-width:640px){.nd-workspace .nd-proc-package-group>header{padding:12px}.nd-workspace .nd-proc-table{min-width:760px}}
