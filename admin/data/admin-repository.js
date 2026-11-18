@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — ADMIN DATA REPOSITORY
- * Version: 1.0.1
+ * Version: 1.0.2
  * Updated: 2026-11-18
- * Description: Reads procurement workspace data from the existing authenticated Supabase client, including product categories for the aggregate procurement map; performs no writes and changes no schema or RLS.
+ * Description: Reads procurement workspace data and source order IDs for procurement traceability; performs no writes and changes no schema or RLS.
  * Scope: ADMIN Workspace only.
  */
 
@@ -29,7 +29,7 @@ export async function loadProcurementData({ client, tourId }) {
   const tour = tourResult.data;
 
   const itemResult = await client.from('stavke_porudzbine')
-    .select('id,product_id,variant_id,package_count,package_size,package_unit')
+    .select('id,porudzbina_id,product_id,variant_id,package_count,package_size,package_unit')
     .eq('tura_id', tourId);
   const items = unwrap(itemResult, 'Ставке поруџбина');
   const invalidSourceRows = items.filter((row) => !row.product_id || !row.variant_id).length;
