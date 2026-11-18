@@ -1,12 +1,13 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.5.0
+ * Version: 1.6.0
  * Updated: 2026-11-18
- * Description: Shows required, activated, ordered, and remaining procurement quantities with per-farm breakdown.
+ * Description: Coordinates procurement workflow and delegates pure demand and allocation calculations to a dedicated module.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 import { renderProcurementRequestBasket } from './procurement-request-basket.js';
 import { loadProcurementData } from './data/admin-repository.js';
+import { buildProcurementDemands, sumAllocatedPackages, calculateRemainingPackages } from './procurement/procurement-calculations.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const num = (value) => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
@@ -76,15 +77,10 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       String(row.product_id) === String(productId) && String(row.variant_id) === String(variantId));
   }
   function assigned(productId, variantId) {
-    return allocationsFor(productId, variantId).reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
+    return sumAllocatedPackages({ allocations: state.allocations, productId, variantId });
   }
   function remaining(productId, variantId, excludingFarmId = null) {
-    const demand = demandFor(productId, variantId);
-    if (!demand) return 0;
-    const otherAssigned = allocationsFor(productId, variantId)
-      .filter((row) => excludingFarmId === null || String(row.gazdinstvo_id) !== String(excludingFarmId))
-      .reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
-    return Math.max(0, demand.packages - otherAssigned);
+    return calculateRemainingPackages({ demand: demandFor(productId, variantId), allocations: state.allocations, excludingFarmId });
   }
   function formatVariant(demand) {
     const variant = variantFor(demand.variantId);
@@ -127,36 +123,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       invalidSourceRows: data.invalidSourceRows
     });
 
-    const demandMap = new Map();
-    for (const row of state.items) {
-      if (!row.product_id || !row.variant_id) continue;
-      const key = keyOf(row.product_id, row.variant_id);
-      if (!demandMap.has(key)) {
-        demandMap.set(key, {
-          productId: row.product_id, variantId: row.variant_id, packages: 0,
-          packageSize: row.package_size, packageUnit: row.package_unit,
-          totalQuantity: 0, valid: true, sourceRows: 0
-        });
-      }
-      const demand = demandMap.get(key);
-      const variant = variantFor(row.variant_id);
-      if (!productFor(row.product_id)?.name || !variant || String(variant.product_id) !== String(row.product_id) || variant.is_active === false) demand.valid = false;
-      const count = Number(row.package_count);
-      const size = Number(row.package_size);
-      if (!Number.isInteger(count) || count < 0 || !Number.isFinite(size) || size <= 0 || !row.package_unit) {
-        demand.valid = false;
-      } else {
-        demand.packages += count;
-        demand.totalQuantity += count * size;
-      }
-      if (Number(demand.packageSize) !== size || demand.packageUnit !== row.package_unit) demand.valid = false;
-      demand.sourceRows += 1;
-    }
-    state.demands = [...demandMap.values()].sort((a, b) => {
-      const an = productFor(a.productId)?.name || '';
-      const bn = productFor(b.productId)?.name || '';
-      return an.localeCompare(bn, 'sr') || formatVariant(a).localeCompare(formatVariant(b), 'sr');
-    });
+    state.demands = buildProcurementDemands({ items: state.items, products: state.products, variants: state.variants });
 
     const relevantOffers = data.relevantOffers;
 
