@@ -220,7 +220,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   }
 
   function renderAllocation(productId = null) {
-    const demands = (productId === null ? state.demands : state.demands.filter((demand) => String(demand.productId) === String(productId)))\n      .filter((demand) => state.selectedVariantId === null || String(demand.variantId) === String(state.selectedVariantId));
+    const demands = (productId === null ? state.demands : state.demands.filter((demand) => String(demand.productId) === String(productId)))
+      .filter((demand) => state.selectedVariantId === null || String(demand.variantId) === String(state.selectedVariantId));
     const offeredFarmIds = uniq(state.offers.filter((offer) => demands.some((demand) =>
       String(demand.productId) === String(offer.product_id) && String(demand.variantId) === String(offer.variant_id)))
       .map((offer) => offer.gazdinstvo_id));
