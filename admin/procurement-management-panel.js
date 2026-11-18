@@ -1,10 +1,12 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.2.2
+ * Version: 1.3.0
  * Updated: 2026-11-18
- * Description: Clarifies absolute farm allocation values and adds per-variant demand/allocation recap.
+ * Description: Adds a tour-wide producer request basket and grouped, isolated Viber specifications.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
+import { renderProcurementRequestBasket } from './procurement-request-basket.js';
+
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const num = (value) => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
 const fmt = (value) => num(value).toLocaleString('sr-RS', { maximumFractionDigits: 3 });
@@ -349,40 +351,18 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   }
 
   function renderViberRecords() {
-    const farmIds = uniq(state.allocations.map((row) => row.gazdinstvo_id));
-    if (!farmIds.length) return '<div class="nd-proc-empty">Viber комуникација ће бити доступна након прве расподеле по газдинству.</div>';
-    return farmIds.map((farmId) => {
-      const farm = farmFor(farmId);
-      const rows = state.allocations.filter((row) => String(row.gazdinstvo_id) === String(farmId));
-      const statuses = new Set(rows.map((row) => row.viber_status || 'not_sent'));
-      const status = statuses.size > 1 ? 'Различити статуси по ставкама' :
-        rows[0]?.viber_status === 'replied' ? 'Одговор примљен' :
-        rows[0]?.viber_status === 'sent' ? 'Послато' : 'Није послато';
-      const statusClass = statuses.has('replied') ? 'is-done' : statuses.has('sent') ? 'is-open' : '';
-      const latestSent = rows.map((row) => row.viber_poslato_at).filter(Boolean).sort().at(-1);
-      const latestReply = rows.map((row) => row.potvrdjeno_at).filter(Boolean).sort().at(-1);
-      const lines = rows.filter((row) => num(row.broj_pakovanja) > 0).map((row) => {
-        const product = productFor(row.product_id), variant = variantFor(row.variant_id);
-        return '<li>' + esc(product?.name || 'Назив производа није доступан') + ' · ' +
-          esc(variant?.name || variant?.size_label || 'Варијанта') + ': <strong>' + fmt(row.broj_pakovanja) + ' пак.</strong></li>';
-      }).join('');
-      return '<section class="nd-proc-farm-record nd-proc-viber-record"><header><div><strong>' +
-        esc(farm?.name || 'Газдинство #' + farmId) + '</strong><small>' + esc(farm?.phone || 'Телефон није наведен') +
-        '</small></div><span class="nd-proc-pill ' + statusClass + '">' + status + '</span></header>' +
-        '<ul class="nd-proc-viber-lines">' + lines + '</ul>' +
-        '<div class="nd-proc-track-meta"><span>Слање: ' + esc(fmtDateTime(latestSent)) +
-        '</span><span>Одговор: ' + esc(fmtDateTime(latestReply)) + '</span></div>' +
-        '<div class="nd-proc-message"><label>Јединствена Viber порука за газдинство</label><textarea readonly rows="5">' +
-        esc(messageForFarm(farmId)) + '</textarea><div class="nd-proc-actions">' +
-        '<button type="button" class="nd-proc-secondary" data-action="copy-message" data-farm-id="' + esc(farmId) + '">Копирај поруку</button>' +
-        (farm?.phone ? '<button type="button" class="nd-proc-secondary" data-action="open-viber" data-farm-id="' + esc(farmId) + '" ' +
-          (state.busy ? 'disabled' : '') + '>Отвори Viber</button>' : '') +
-        '<button type="button" class="nd-proc-secondary" data-action="mark-sent" data-farm-id="' + esc(farmId) + '" ' +
-          (state.busy ? 'disabled' : '') + '>Потврди слање</button>' +
-        '<button type="button" class="nd-proc-secondary" data-action="mark-replied" data-farm-id="' + esc(farmId) + '" ' +
-          (state.busy ? 'disabled' : '') + '>Евидентирај одговор</button></div>' +
-        '<small>Копирање или отварање Viber-а не мења статус. Статус се мења само ручном потврдом.</small></div></section>';
-    }).join('');
+    return renderProcurementRequestBasket({
+      allocations: state.allocations,
+      farms: state.farms,
+      products: state.products,
+      variants: state.variants,
+      demands: state.demands,
+      tourId,
+      esc,
+      fmt,
+      fmtDateTime,
+      busy: state.busy
+    });
   }
 
   function trackingInput(row, draft, field, label) {
