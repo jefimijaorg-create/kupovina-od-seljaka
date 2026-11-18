@@ -1,6 +1,6 @@
 /* ADMIN PROCUREMENT ORDER SHEET · V1.0.1 · 2026-11-19
  * Одговорност: детаљ поруџбине, статус набавке, додела пункта и количине паковања.
- * Не приступа бази директно; користи постојећи ADMIN api() и прослеђено стање.
+ * Користи постојећи аутентификовани Supabase клијент ADMIN Workspace-а и прослеђено стање.
  */
 export function createProcurementOrderSheet({ client, getState, refresh }) {
   if (!client || typeof client.from !== 'function' || typeof getState !== 'function') {
