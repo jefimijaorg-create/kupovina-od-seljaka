@@ -352,13 +352,14 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       const farm = farmFor(farmId);
       const rows = state.allocations.filter((row) => String(row.gazdinstvo_id) === String(farmId));
       const total = rows.reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
-      const ordered = rows.reduce((sum, row) => sum + num(row.naruceno_pakovanja), 0);
+      const sent = rows.filter((row) => row.viber_status === 'sent' || row.viber_status === 'replied')
+        .reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
       const confirmed = rows.reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
       const collected = rows.reduce((sum, row) => sum + num(row.preuzeto_pakovanja), 0);
       let html = '<section class="nd-proc-farm-record"><header><div><strong>' + esc(farm?.name || 'Газдинство #' + farmId) +
         '</strong><small>' + esc(farm?.phone || 'Телефон није наведен') + '</small></div></header>';
-      html += '<div class="nd-proc-metrics"><span><b>' + fmt(total) + '</b><small>Додељено</small></span><span><b>' + fmt(ordered) +
-        '</b><small>Наручено</small></span><span><b>' + fmt(confirmed) + '</b><small>Потврђено</small></span><span><b>' + fmt(collected) + '</b><small>Преузето</small></span></div>';
+      html += '<div class="nd-proc-metrics"><span><b>' + fmt(total) + '</b><small>Додељено</small></span><span><b>' + fmt(sent) +
+        '</b><small>Послато</small></span><span><b>' + fmt(confirmed) + '</b><small>Потврђено</small></span><span><b>' + fmt(collected) + '</b><small>Преузето</small></span></div>';
       html += '<div class="nd-proc-farm-lines">' + rows.map((row) => {
         const product = productFor(row.product_id), variant = variantFor(row.variant_id);
         const draft = state.trackingDraft[row.id] || {};
