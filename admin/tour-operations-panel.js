@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.0.3
+ * Version: 1.0.4
  * Updated: 2026-11-19
  * Description: Adds grouped point/customer order view and retains the order-detail Bottom Sheet.
  */
