@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.3.0
+ * Version: 3.3.1
  * Updated: 2026-11-18
  * Description: Adds strict package-level four-stage workflow and explicit user confirmation after manual Viber sending.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js';
 import { buildProcurementDemands } from './procurement/procurement-calculations.js';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { getProcurementStage, getProcurementStageLabel, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.0';
+import { getProcurementStage, getProcurementStageLabel, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.1';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
@@ -144,7 +144,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(!s.farmId||!s.cart.length||s.busy)return;const farmId=s.farmId,cartSnapshot=s.cart.map(x=>({...x})),ff=farm(farmId);
   const text='Поштовани'+(ff?.name?' '+ff.name:'')+',\n\nМолимо вас да потврдите захтев за туру #'+tourId+':\n'+cartSnapshot.map(x=>{const d=demand(x.productId,x.variantId);return '• '+(prod(x.productId)?.name||'Производ')+' — '+(variant(x.variantId)?.name||variant(x.variantId)?.size_label||'Варијанта')+': '+f(x.count)+' паковања ('+qty(x.count,d)+')';}).join('\n')+'\n\nМолимо потврдите количине које можете да припремите. Хвала!';
   const saved=await saveCart();if(!saved)return;
-  try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);const phone=String(ff?.phone||'').replace(/[^\d+]/g,'');const ids=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&cartSnapshot.some(c=>key(c.productId,c.variantId)===key(x.product_id,x.variant_id))).map(x=>String(x.id));ids.forEach(id=>s.preparedSentIds.add(id));if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);s.tab='field';setNote(phone?'Додела је сачувана, порука је копирана и Viber је отворен. Након стварног слања потврди га у теренском протоколу.':'Додела је сачувана и порука копирана. Нема телефона за отварање Viber-а; статус слања није промењен.',false);}
+  try{const copied=!!navigator.clipboard?.writeText;if(copied)await navigator.clipboard.writeText(text);const phone=String(ff?.phone||'').replace(/[^\d+]/g,'');const ids=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&cartSnapshot.some(c=>key(c.productId,c.variantId)===key(x.product_id,x.variant_id))).map(x=>String(x.id));ids.forEach(id=>s.preparedSentIds.add(id));if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);s.tab='field';setNote(phone?(copied?'Додела је сачувана, порука је копирана и Viber је отворен. Након стварног слања потврди га у теренском протоколу.':'Додела је сачувана и Viber је отворен. Поруку пошаљи ручно; статус није промењен.'):(copied?'Додела је сачувана и порука копирана. Нема телефона за отварање Viber-а; статус слања није промењен.':'Додела је сачувана. Нема телефона нити доступног копирања; статус слања није промењен.'),false);}
   catch(err){setNote('Додела је сачувана, али припрема поруке није успела: '+(err.message||String(err)),true);}
  }
  host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmId=ev.target.value;s.cart=[];s.tab='basket';render();}});

@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT WORKFLOW
- * Version: 1.0.0
+ * Version: 1.0.1
  * Updated: 2026-11-18
  * Description: Pure validation and transition rules for the four-stage, package-variant procurement lifecycle.
  * Scope: Existing ADMIN Workspace only. No schema, trigger, RLS, or legacy changes.
@@ -17,8 +17,8 @@ export function getProcurementStage(row) {
 }
 export function getProcurementStageLabel(stage) { return ({unassigned:'У припреми',assigned:'Додељено',sent:'Послато',confirmed:'Потврђено',collected:'Преузето'})[stage] || 'Непознат статус'; }
 export function canMarkProcurementSent(row) { return getProcurementStage(row) === PROCUREMENT_STAGES.ASSIGNED && number(row.broj_pakovanja) > 0; }
-export function canConfirmProcurement(row) { return getProcurementStage(row) === PROCUREMENT_STAGES.SENT && number(row.naruceno_pakovanja) > 0; }
-export function canCollectProcurement(row) { return getProcurementStage(row) === PROCUREMENT_STAGES.CONFIRMED && number(row.potvrdjeno_pakovanja) > 0; }
+export function canConfirmProcurement(row) { const stage=getProcurementStage(row); return [PROCUREMENT_STAGES.SENT,PROCUREMENT_STAGES.CONFIRMED,PROCUREMENT_STAGES.COLLECTED].includes(stage) && number(row.potvrdjeno_pakovanja) < number(row.naruceno_pakovanja); }
+export function canCollectProcurement(row) { const stage=getProcurementStage(row); return [PROCUREMENT_STAGES.CONFIRMED,PROCUREMENT_STAGES.COLLECTED].includes(stage) && number(row.preuzeto_pakovanja) < number(row.potvrdjeno_pakovanja); }
 export function validateProcurementCounts(row, {confirmed,collected} = {}) {
  if (!wholeNonNegative(confirmed) || !wholeNonNegative(collected)) return {valid:false,error:'Количине морају бити цели ненегативни бројеви паковања.'};
  if (!canConfirmProcurement(row) && Number(confirmed) !== number(row.potvrdjeno_pakovanja)) return {valid:false,error:'Потврда је дозвољена тек након евидентираног слања захтева.'};
