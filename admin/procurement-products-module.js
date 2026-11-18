@@ -1,12 +1,12 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.3.1
+ * Version: 3.4.0
  * Updated: 2026-11-18
- * Description: Adds strict package-level four-stage workflow and explicit user confirmation after manual Viber sending.
+ * Description: Adds verified per-packaging demand and allocation recaps while preserving the four-stage workflow.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
-import { buildProcurementDemands } from './procurement/procurement-calculations.js';
+import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
 import { getProcurementStage, getProcurementStageLabel, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.1';
 
@@ -26,6 +26,20 @@ const CSS=`
 .ndp3-item{padding:11px 0;border-top:1px solid var(--line)}.ndp3-item:first-child{border-top:0}.ndp3-item-title{font-size:13px;font-weight:900}.ndp3-meta{font-size:10px;color:var(--muted);margin-top:4px}.ndp3-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.ndp3-actions>*{flex:1 1 125px}.ndp3-empty{padding:15px;border:1px dashed #405572;border-radius:12px;color:var(--muted);font-size:12px}.ndp3-note{padding:11px;border-radius:12px;background:#18334a;color:#c9e2f5;font-size:12px;margin:10px 0}.ndp3-note.error{background:#48272e;color:#ffc4c9}.ndp3-message{min-height:125px;white-space:pre-wrap}.ndp3-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:9px 0}.ndp3-grid span{background:#09172a;padding:8px;border-radius:10px;font-size:10px;color:var(--muted)}.ndp3-grid b{display:block;color:#fff;font-size:15px}.ndp3-record-inputs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.ndp3-record-inputs label{font-size:10px}.ndp3-foot{font-size:10px;color:var(--muted);margin:12px 0}
 @media(min-width:760px){.ndp3{padding:19px}.ndp3-toolbar{grid-template-columns:minmax(260px,.8fr) 1.2fr;align-items:end}.ndp3-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.ndp3-work{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:12px}.ndp3-side{position:sticky;top:10px;align-self:start}}
 @media(max-width:390px){.ndp3{padding:9px}.ndp3-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.ndp3-package-group{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:13px;background:rgba(8,20,37,.55)}
+.ndp3-package-group>header{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}
+.ndp3-package-group>header strong{font-size:13px}
+.ndp3-package-group>header small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.ndp3-package-totals,.ndp3-package-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}
+.ndp3-package-totals span,.ndp3-package-metrics span{display:block;min-width:0;padding:7px;border-radius:9px;background:#09172a;color:var(--muted);font-size:9px}
+.ndp3-package-totals b,.ndp3-package-metrics b{display:block;color:#fff;font-size:14px;font-variant-numeric:tabular-nums}
+.ndp3-package-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ndp3-package-warning{margin-top:7px;color:#fecaca;font-size:10px}
+.ndp3-allocation-recap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:9px 0}
+.ndp3-allocation-recap span{padding:8px;border-radius:9px;background:#09172a;color:var(--muted);font-size:9px}
+.ndp3-allocation-recap b{display:block;color:#fff;font-size:14px;font-variant-numeric:tabular-nums}
+@media(min-width:760px){.ndp3-package-totals{grid-template-columns:repeat(3,minmax(90px,1fr))}.ndp3-package-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}}
 `;
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
@@ -66,21 +80,33 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  function render(){
   if(s.disposed)return;
   const writable=s.tour?.status==='processing',selected=!!s.farmId,ff=farm(s.farmId),farmRows=rowsForFarm();
-  const groups=new Map();
-  for(const d of s.demands.filter(x=>x.valid)){
-   const p=prod(d.productId),v=variant(d.variantId),cat=p?.category||'Остало';
-   if(selected&&!offer(d.productId,d.variantId)&&!allocation(d.productId,d.variantId,s.farmId))continue;
-   if(!groups.has(cat))groups.set(cat,[]);
-   groups.get(cat).push({d,p,v});
+  const packagingGroups=buildProcurementPackagingSummary({demands:s.demands,allocations:s.allocations});
+  const categories=new Map();
+  for(const group of packagingGroups){
+   const cat=prod(group.productId)?.category||'Остало';
+   if(!categories.has(cat))categories.set(cat,[]);
+   categories.get(cat).push(group);
   }
-  const aggregateHtml=[...groups].map(([cat,rows])=>'<div class="ndp3-category">'+e(cat)+'</div>'+rows.map(({d,p,v})=>{
-   const a=allocated(d.productId,d.variantId),col=allocationsFor(d.productId,d.variantId).reduce((z,x)=>z+n(x.preuzeto_pakovanja),0),percent=d.packages?Math.min(100,100*a/d.packages):0;
-   return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+(e(v?.name||v?.size_label||'Варијанта'))+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip '+(col>=d.packages?'green':a?'blue':'amber')+'">'+(col>=d.packages?'Преузето':a?'Активирано':'Непокривено')+'</span></div><p>Потребно: <b>'+qty(d.packages,d)+'</b> · Активирано: '+qty(a,d)+' · Преузето: '+qty(col,d)+'</p><div class="ndp3-coverage"><i style="width:'+percent+'%"></i></div><p>Покривено '+qty(a,d)+' / '+qty(d.packages,d)+'</p></article>';
+  const aggregateHtml=[...categories].map(([cat,groups])=>'<div class="ndp3-category">'+e(cat)+'</div>'+groups.map(group=>{
+   const p=prod(group.productId);
+   const variantsHtml=group.variants.map(row=>{
+    const d=demand(row.productId,row.variantId),v=variant(row.variantId);
+    const percent=row.neededPackages?Math.min(100,100*row.assignedPackages/row.neededPackages):0;
+    const warning=row.overAllocatedPackages>0?'<div class="ndp3-package-warning">ПРЕКОРАЧЕЊЕ: додељено је '+f(row.overAllocatedPackages)+' паковања више од потребе.</div>':'';
+    const sentWarning=row.statusMismatchRows?'<div class="ndp3-package-warning">Провери Viber статус и наручену количину: '+row.statusMismatchRows+' неусаглашених евиденција.</div>':'';
+    return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(v?.name||v?.size_label||'Варијанта')+'</strong><small>'+f(row.packageSize)+' '+e(row.packageUnit)+' по паковању</small></div><span class="ndp3-chip '+(row.collectedPackages>=row.neededPackages?'green':row.assignedPackages?'blue':'amber')+'">'+(row.collectedPackages>=row.neededPackages?'Преузето':row.assignedPackages?'Активирано':'Непокривено')+'</span></div><div class="ndp3-package-metrics"><span><b>'+f(row.neededPackages)+'</b>Потребно пак.</span><span><b>'+f(row.assignedPackages)+'</b>Додељено</span><span><b>'+f(row.sentPackages)+'</b>Послато</span><span><b>'+f(row.confirmedPackages)+'</b>Потврђено</span><span><b>'+f(row.collectedPackages)+'</b>Преузето</span><span><b>'+f(row.remainingPackages)+'</b>Преостало</span></div><p>Укупна количина: <b>'+qty(row.neededPackages,d)+'</b> · Додељено: '+qty(row.assignedPackages,d)+' · Преузето: '+qty(row.collectedPackages,d)+'</p><div class="ndp3-coverage"><i style="width:'+percent+'%"></i></div>'+warning+sentWarning+'</article>';
+   }).join('');
+   return '<section class="ndp3-package-group"><header><div><strong>'+e(p?.name||'Производ')+' · '+f(group.packageSize)+' '+e(group.packageUnit)+'</strong><small>'+f(group.neededPackages)+' паковања · '+f(group.totalQuantity)+' '+e(group.packageUnit)+' укупно</small></div><div class="ndp3-chip">'+f(group.variants.length)+' варијанти</div></header><div class="ndp3-package-totals"><span><b>'+f(group.neededPackages)+'</b>Потребно пак.</span><span><b>'+f(group.assignedPackages)+'</b>Додељено</span><span><b>'+f(group.remainingPackages)+'</b>Преостало</span></div>'+variantsHtml+'</section>';
   }).join('')).join('')||'<div class="ndp3-empty">'+(selected?'Ово газдинство нема понуду за производе потребне тури.':'Нема валидних ставки потреба за ову туру.')+'</div>';
+  const invalidDemandCount=s.demands.filter(x=>!x.valid).length;
+  const invalidSourceCount=s.items.filter(x=>!x.product_id||!x.variant_id).length;
+  const demandWarning=(invalidDemandCount||invalidSourceCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација производа/варијанте и '+invalidSourceCount+' изворних ставки без производа или варијанте нису укључене у збирове нити су доступне за расподелу.</div>':'';
   const farmCatalog=s.demands.filter(d=>d.valid&&offer(d.productId,d.variantId)).map(d=>{
-   const p=prod(d.productId),v=variant(d.variantId),al=allocation(d.productId,d.variantId,s.farmId),pending=s.cart.find(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId));
-   const count=pending?.count||0,remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)-count);
-   return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+e(v?.name||v?.size_label||'Варијанта')+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip">'+qty(d.packages,d)+'</span></div><p>Потребно '+qty(d.packages,d)+' · Активирано '+qty(Math.max(0,allocated(d.productId,d.variantId)-ordered(d.productId,d.variantId)),d)+' · Наручено '+qty(ordered(d.productId,d.variantId),d)+' · У корпи '+qty(count,d)+' · Преостало '+qty(remaining,d)+'</p><div class="ndp3-row"><span class="ndp3-meta">Количина за захтев</span><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="step" data-delta="-1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Умањи">−</button><output>'+f(count)+'</output><button class="ndp3-btn plus" data-action="step" data-delta="1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Увећај" '+(remaining<=0?'disabled':'')+'>+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="add" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||remaining<=0?'disabled':'')+'>Додај у корпу</button></div></article>';
+   const p=prod(d.productId),v=variant(d.variantId),al=allocation(d.productId,d.variantId,s.farmId),pendingItem=s.cart.find(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId));
+   const count=pendingItem?.count||0,currentAssigned=n(al?.broj_pakovanja),totalAssigned=allocated(d.productId,d.variantId);
+   const otherAssigned=Math.max(0,totalAssigned-currentAssigned),remaining=Math.max(0,d.packages-totalAssigned-count);
+   const maxAdditional=Math.max(0,d.packages-totalAssigned);
+   return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+e(v?.name||v?.size_label||'Варијанта')+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip">'+qty(d.packages,d)+'</span></div><div class="ndp3-allocation-recap"><span><b>'+f(d.packages)+'</b>Потребно за туру</span><span><b>'+f(otherAssigned)+'</b>Додељено другим газдинствима</span><span><b>'+f(currentAssigned)+'</b>Тренутно код овог газдинства</span><span><b>'+f(remaining)+'</b>Преостало после корпе</span></div><p>Наручено: '+qty(ordered(d.productId,d.variantId),d)+' · У корпи: '+qty(count,d)+' · Још може да се дода: '+f(maxAdditional)+' пак.</p><div class="ndp3-row"><span class="ndp3-meta">Додатна количина за захтев</span><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="step" data-delta="-1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Умањи">−</button><output>'+f(count)+'</output><button class="ndp3-btn plus" data-action="step" data-delta="1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Увећај" '+(remaining<=0?'disabled':'')+'>+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="add" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||remaining<=0?'disabled':'')+'>Додај у корпу</button></div></article>';
   }).join('')||'<div class="ndp3-empty">Нема активних понуда овог газдинства за потребе туре.</div>';
   const cartHtml=s.cart.length?s.cart.map((x,i)=>{const d=demand(x.productId,x.variantId);return '<div class="ndp3-item"><div class="ndp3-row"><div><div class="ndp3-item-title">'+e(prod(x.productId)?.name)+' · '+e(variant(x.variantId)?.name||variant(x.variantId)?.size_label)+'</div><div class="ndp3-meta">'+f(x.count)+' паковања · '+qty(x.count,d)+'</div></div><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="cart-step" data-i="'+i+'" data-delta="-1">−</button><output>'+f(x.count)+'</output><button class="ndp3-btn plus" data-action="cart-step" data-i="'+i+'" data-delta="1">+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn" data-action="remove" data-i="'+i+'">Уклони</button></div></div>';}).join(''):'<div class="ndp3-empty">Корпа је празна. Изабери производ и додај количину.</div>';
   const protocol=farmRows.length?farmRows.map(x=>{
@@ -96,7 +122,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   '<section class="ndp3-panel"><div class="ndp3-toolbar"><label>Изабери газдинство<select class="ndp3-select" data-farm><option value="">Сва газдинства · збирни преглед туре</option>'+s.farms.map(x=>'<option value="'+e(x.id)+'" '+(String(x.id)===String(s.farmId)?'selected':'')+'>'+e(x.name)+'</option>').join('')+'</select></label><div class="ndp3-status"><span class="ndp3-chip">'+(selected?'ОПЕРАТИВНИ РЕЖИМ':'ЗБИРНИ РЕЖИМ')+'</span><span class="ndp3-chip">'+s.demands.filter(x=>x.valid).length+' ставки потреба</span></div></div></section>'+
   '<section class="ndp3-kpis"><div class="ndp3-kpi"><b>'+totalNeeded()+'</b><span>УКУПНО ПОТРЕБНО</span></div><div class="ndp3-kpi"><b>'+totalActivated()+'</b><span>АКТИВИРАНО · НЕНАРУЧЕНО</span></div><div class="ndp3-kpi"><b>'+totalOrdered()+'</b><span>НАРУЧЕНО</span></div><div class="ndp3-kpi"><b>'+totalCollected()+'</b><span>СТВАРНО ПРЕУЗЕТО</span></div><div class="ndp3-kpi"><b>'+totalRemaining()+'</b><span>ПРЕОСТАЛО</span></div></section>'+
   (s.notice?'<div class="ndp3-note '+(s.error?'error':'')+'" role="status">'+e(s.notice)+'</div>':'')+(!writable?'<div class="ndp3-note">Тура није у статусу за измене. Приказ је само за читање.</div>':'')+
-  '<div class="ndp3-work"><main class="ndp3-panel"><h2>'+(selected?'Каталог изабраног газдинства':'Потребе целе туре')+'</h2><p>'+(selected?'Приказани су само производи које ово газдинство има у активној понуди.':'Производи су груписани по категорији и варијанти амбалаже, без избора добављача.')+'</p>'+(selected?farmCatalog:aggregateHtml)+'</main>'+
+  '<div class="ndp3-work"><main class="ndp3-panel"><h2>'+(selected?'Каталог изабраног газдинства':'Потребе целе туре')+'</h2><p>'+(selected?'Приказани су само производи које ово газдинство има у активној понуди.':'Производи су груписани по категорији и варијанти амбалаже, без избора добављача.')+'</p>'+(selected?farmCatalog:demandWarning+aggregateHtml)+'</main>'+
   '<aside class="ndp3-side"><section class="ndp3-panel"><div class="ndp3-tabs"><button class="ndp3-tab" data-tab="basket" aria-selected="'+(s.tab==='basket')+'">Корпа захтева ('+s.cart.length+')</button><button class="ndp3-tab" data-tab="field" aria-selected="'+(s.tab==='field')+'">Теренски протокол</button></div>'+
   (s.tab==='basket'?'<h2>Корпа · '+(ff?.name?e(ff.name):'изабери газдинство')+'</h2>'+(selected?cartHtml:'<div class="ndp3-empty">Изабери газдинство да би додавао производе у његову корпу.</div>')+'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="generate" '+(!selected||!s.cart.length||!writable||s.busy?'disabled':'')+'>'+(s.busy?'Чувам…':'Генериши Viber поруку и активирај захтев')+'</button></div><p>Кликом се захтев чува као наручен, припрема Viber порука и отвара ручно слање. Статус „Послато“ бележи се само ако газдинство има број телефона.</p>':'<h2>Теренско преузимање · '+e(ff?.name||'Изабери газдинство')+'</h2>'+(selected?protocol:'<div class="ndp3-empty">Изабери газдинство да видиш његов теренски протокол.</div>'))+
   '</section></aside></div><div class="ndp3-foot">Подаци се читају и уписују у постојеће Supabase табеле. Назив производа долази преко product_id → products.name. Количине се рачунају из package_count × package_size.</div>';
