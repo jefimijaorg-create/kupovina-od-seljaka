@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.0.0
+ * Version: 1.0.1
  * Updated: 2026-11-19
  * Description: Groups tour orders by distribution point and buyer; supports touch/desktop drag assignment.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -86,11 +86,11 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
       '<option value="' + esc(point.id) + '"' + (String(order.punkt_id || '') === String(point.id) ? ' selected' : '') + '>' + esc(point.name || ('Пункт ' + point.id)) + '</option>'
     ).join('');
     return '<article class="nd-go-order-card" data-order-card="' + esc(order.id) + '">' +
-      '<div class="nd-go-order"><button type="button" class="nd-go-drag" data-drag-order="' + esc(order.id) + '" aria-label="Превуци поруџбину #' + esc(order.id) + '" title="Превуци поруџбину">⠿</button>' +
+      '<div class="nd-go-order"><button type="button" class="nd-go-drag" data-drag-order="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + ' aria-label="Превуци поруџбину #' + esc(order.id) + '" title="Превуци поруџбину">⠿</button>' +
       '<div style="min-width:0;flex:1"><div class="nd-go-customer-top"><div class="nd-go-order-meta"><strong>Поруџбина #' + esc(order.id) + '</strong><span class="nd-go-pill">Статус: ' + esc(order.procurement_status || order.status || '—') + '</span><span class="nd-go-pill">' + lines.length + ' ставки</span></div>' +
       '<button type="button" class="nd-go-order-open" data-open-order="' + esc(order.id) + '">Отвори поруџбину</button></div>' +
       '<div class="nd-go-lines">' + lineHtml + '</div>' +
-      (canManage ? '<div class="nd-go-assign"><label for="nd-go-point-' + esc(order.id) + '">Додели пункт:</label><select id="nd-go-point-' + esc(order.id) + '" data-assign-order="' + esc(order.id) + '">' + pointOptions + '</select></div>' : '') +
+      (canManage ? '<div class="nd-go-assign"><label for="nd-go-point-' + esc(order.id) + '">Додели пункт:</label><select id="nd-go-point-' + esc(order.id) + '" data-assign-order="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + '>' + pointOptions + '</select></div>' : '') +
       '</div></div></article>';
   };
 
