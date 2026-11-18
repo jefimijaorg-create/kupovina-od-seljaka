@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.8.0
+ * Version: 3.8.1
  * Updated: 2026-11-18
- * Description: Coordinates procurement operations and delegates all stage rendering to the dedicated procurement-stage-view ES module.
+ * Description: Adds bounded initial loading, explicit failure diagnostics and retry without leaving the existing ADMIN SPA.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.2';
@@ -46,7 +46,7 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.8.0';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.8.1';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],draftCounts:{},tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
@@ -231,6 +231,7 @@ host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmI
   if(b.dataset.view){s.view=b.dataset.view;render();return;}
   if(b.dataset.tab){s.tab=b.dataset.tab;render();return;}
   const a=b.dataset.action;
+  if(a==='retry-load'){initialize();return;}
   if(a==='back')return onBack?.();
   if(a==='open-request'){s.requestOpen=true;render();return;}
   if(a==='close-request'){s.requestOpen=false;render();return;}
@@ -263,6 +264,26 @@ host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmI
   if(a==='mark-sent')return markSent(b.dataset.id);
   if(a==='generate')return generateViber();
  });
-  try{await load();render();}catch(err){host.innerHTML='<div class="ndp3-empty"><b>Набавка није учитана</b><p>'+e(err.message||String(err))+'</p><button class="ndp3-btn" data-action="back">Назад</button></div>';}
- return{destroy(){s.disposed=true;s.analyticsHandle?.destroy();style.remove();root.replaceChildren();}};
+  let loadAttempt=0;
+ async function initialize(){
+  const attempt=++loadAttempt;
+  if(s.disposed)return;
+  host.innerHTML='<div class="ndp3-empty"><b>Учитавам потребе туре…</b><p>Проверавам туру и стварне податке у бази.</p></div>';
+  let timeoutId;
+  try{
+   await Promise.race([
+    load(),
+    new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Учитавање из базе није завршено у року од 20 секунди. Провери везу и покушај поново.')),20000);})
+   ]);
+   clearTimeout(timeoutId);
+   if(attempt!==loadAttempt||s.disposed)return;
+   render();
+  }catch(err){
+   clearTimeout(timeoutId);
+   if(attempt!==loadAttempt||s.disposed)return;
+   host.innerHTML='<div class="ndp3-empty"><b>Набавка није учитана</b><p>'+e(err.message||String(err))+'</p><p>Подаци нису мењани. Можеш безбедно поново да покренеш читање.</p><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="retry-load">Покушај поново</button><button class="ndp3-btn" data-action="back">Назад</button></div></div>';
+  }
+ }
+ initialize();
+ return{destroy(){s.disposed=true;loadAttempt++;s.analyticsHandle?.destroy();style.remove();root.replaceChildren();}};
 }
