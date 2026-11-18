@@ -1,10 +1,10 @@
-/* ADMIN PROCUREMENT ORDER SHEET · V1.0.0 · 2026-11-19
+/* ADMIN PROCUREMENT ORDER SHEET · V1.0.1 · 2026-11-19
  * Одговорност: детаљ поруџбине, статус набавке, додела пункта и количине паковања.
  * Не приступа бази директно; користи постојећи ADMIN api() и прослеђено стање.
  */
-export function createProcurementOrderSheet({ api, getState, refresh }) {
-  if (typeof api !== 'function' || typeof getState !== 'function') {
-    throw new TypeError('Недостаје ADMIN api или приступ стању.');
+export function createProcurementOrderSheet({ client, getState, refresh }) {
+  if (!client || typeof client.from !== 'function' || typeof getState !== 'function') {
+    throw new TypeError('Недостаје потврђени Supabase клијент или приступ стању ADMIN Workspace-а.');
   }
 
   const STATUS = [
@@ -189,7 +189,8 @@ export function createProcurementOrderSheet({ api, getState, refresh }) {
     $('.nd-order-sheet').hidden = false;
     document.body.style.overflow = 'hidden';
     try {
-      const rows = await api('stavke_porudzbine?select=id,porudzbina_id,product_id,package_count,package_size,package_unit,total_quantity,quantity_unit,unit_price,cena_stavke&porudzbina_id=eq.' + encodeURIComponent(orderId) + '&order=id.asc');
+      const { data: rows, error: linesError } = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,package_count,package_size,package_unit,total_quantity,quantity_unit,unit_price,cena_stavke').eq('porudzbina_id', orderId).order('id', { ascending: true });
+      if (linesError) throw linesError;
       if (!Array.isArray(rows)) throw new Error('База није вратила исправне ставке поруџбине.');
       state.lines = rows;
       state.loading = false;
@@ -215,12 +216,9 @@ export function createProcurementOrderSheet({ api, getState, refresh }) {
     if (button) { button.disabled = true; button.textContent = 'ЧУВАМ…'; }
     try {
       const payload = { procurement_status: status, punkt_id: pointValue ? Number(pointValue) : null };
-      const result = await api('porudzbine?id=eq.' + encodeURIComponent(state.order.id), {
-        method: 'PATCH',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify(payload)
-      });
-      const saved = Array.isArray(result) ? result.find(row => String(row.id) === String(state.order.id)) : null;
+      const { data: savedRows, error: saveError } = await client.from('porudzbine').update(payload).eq('id', state.order.id).select('*');
+      if (saveError) throw saveError;
+      const saved = Array.isArray(savedRows) ? savedRows.find(row => String(row.id) === String(state.order.id)) : null;
       if (!saved || (saved.procurement_status || null) !== status ||
           String(saved.punkt_id || '') !== String(payload.punkt_id || '')) {
         throw new Error('База није потврдила статус и пункт поруџбине.');
@@ -263,19 +261,17 @@ export function createProcurementOrderSheet({ api, getState, refresh }) {
     let savedCount = 0;
     try {
       for (const item of prepared) {
-        const result = await api('stavke_porudzbine?id=eq.' + encodeURIComponent(item.line.id), {
-          method: 'PATCH',
-          headers: { Prefer: 'return=representation' },
-          body: JSON.stringify({ package_count: item.count })
-        });
-        const saved = Array.isArray(result) ? result.find(row => String(row.id) === String(item.line.id)) : null;
+        const { data: savedRows, error: saveError } = await client.from('stavke_porudzbine').update({ package_count: item.count }).eq('id', item.line.id).select('*');
+        if (saveError) throw saveError;
+        const saved = Array.isArray(savedRows) ? savedRows.find(row => String(row.id) === String(item.line.id)) : null;
         if (!saved || Math.abs(Number(saved.package_count) - item.count) > 0.000001) {
           throw new Error('База није потврдила број паковања за ставку #' + item.line.id + '.');
         }
         Object.assign(item.line, saved);
         savedCount++;
       }
-      const verified = await api('porudzbine?select=id,ukupna_cena&id=eq.' + encodeURIComponent(state.order.id));
+      const { data: verified, error: verifyError } = await client.from('porudzbine').select('id,ukupna_cena').eq('id', state.order.id);
+      if (verifyError) throw verifyError;
       const orderRow = Array.isArray(verified) ? verified.find(row => String(row.id) === String(state.order.id)) : null;
       if (!orderRow) throw new Error('Није могуће проверити укупан износ поруџбине.');
       state.order.ukupna_cena = orderRow.ukupna_cena;
