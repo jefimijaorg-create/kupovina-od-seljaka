@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.1.1
+ * Version: 3.2.0
  * Updated: 2026-11-18
- * Description: Two-level procurement workspace: tour-wide demand overview and farm-first execution with basket and field protocol tabs.
+ * Description: Two-level procurement workspace with embedded reusable tour analytics, reconciliation matrix, exception review, farm-first execution, basket and field protocol.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
