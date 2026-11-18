@@ -84,7 +84,7 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
     if (!groups.has(groupKey)) {
       groups.set(groupKey, {
         productId: demand.productId, packageSize: size, packageUnit: unit,
-        neededPackages: 0, totalQuantity: 0, assignedPackages: 0,
+        neededPackages: 0, totalQuantity: 0, assignedPackages: 0, orderedPackages: 0,
         sentPackages: 0, confirmedPackages: 0, collectedPackages: 0,
         remainingPackages: 0, overAllocatedPackages: 0,
         statusMismatchRows: 0, variants: []
@@ -102,7 +102,7 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
     const collected = rows.reduce((sum, row) => sum + toNumber(row.preuzeto_pakovanja), 0);
     const statusMismatchRows = rows.filter((row) => {
       const hasSentStatus = row.viber_status === 'sent' || row.viber_status === 'replied';
-      return hasSentStatus !== (toNumber(row.naruceno_pakovanja) > 0);
+      return hasSentStatus ? toNumber(row.naruceno_pakovanja) !== toNumber(row.broj_pakovanja) : toNumber(row.naruceno_pakovanja) > 0;
     }).length;
     const remaining = Math.max(0, demand.packages - assigned);
     const overAllocated = Math.max(0, assigned - demand.packages);
@@ -111,6 +111,7 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
     group.neededPackages += demand.packages;
     group.totalQuantity += demand.packages * size;
     group.assignedPackages += assigned;
+    group.orderedPackages += ordered;
     group.sentPackages += sent;
     group.confirmedPackages += confirmed;
     group.collectedPackages += collected;
@@ -120,8 +121,8 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
     group.variants.push({
       productId: demand.productId, variantId: demand.variantId,
       packageSize: size, packageUnit: unit, neededPackages: demand.packages,
-      totalQuantity: demand.packages * size, assignedPackages: assigned,
-      sentPackages: sent, orderedPackages: ordered,
+      totalQuantity: demand.packages * size, assignedPackages: assigned, orderedPackages: ordered,
+      sentPackages: sent,
       confirmedPackages: confirmed, collectedPackages: collected,
       remainingPackages: remaining, overAllocatedPackages: overAllocated,
       statusMismatchRows
