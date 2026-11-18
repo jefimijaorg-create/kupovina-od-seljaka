@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   NARUČI DOMAĆE — ADMIN WORKSPACE
-  Version: 1.2.6
+  Version: 1.2.7
   Updated: 2026-11-18
-  Description: Loads procurement panel v1.5.0 with four procurement totals and per-farm tracking.
+  Description: Connects the Workspace Products navigation item to the selected-tour procurement panel.
   Scope: Existing authenticated ADMIN workspace; procurement writes are protected by RLS and a database trigger.
 -->
 <html lang="sr">
@@ -81,7 +81,7 @@ async function openTour(tour){if(!tour||!tour.id)return;activeTourId=String(tour
 async function openProcurementPanel(initialProductId=null){if(!activeTourId||!['admin','super_admin'].includes(currentRole))return;if(tourPanel){tourPanel.destroy();tourPanel=null}const root=$('tourOperationsRoot');root.hidden=false;root.innerHTML='<div class="nd-loading">Otvaram upravljanje nabavkom…</div>';try{const mod=await import('/admin/procurement-management-panel.js?v=1.5.0');if(!activeTourId)return;const core=window.NDAdmin.getContext();const selectedTourId=activeTourId;tourPanel=await mod.mountProcurementManagement({root,core,tourId:selectedTourId,initialProductId,onBack:()=>{if(tourPanel){tourPanel.destroy();tourPanel=null;}mountTourOperationsView(selectedTourId)}});}catch(error){root.innerHTML='<div class="nd-proc-error"><strong>Дијагностика: модул набавке није покренут</strong><p></p></div>';root.querySelector('.nd-proc-error p').textContent=error.message||String(error);}}
 function statusLabel(s){return s==='open'?'OTVORENA':s==='processing'?'U OBRADI':String(s||'BEZ STATUSA').toUpperCase()}
 function dateLabel(v){if(!v)return 'Datum nije naveden';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?'Datum nije naveden':d.toLocaleDateString('sr-RS',{day:'2-digit',month:'short',year:'numeric'})}
-function renderNav(root){root.replaceChildren();NAV.forEach(([ico,label],i)=>{const b=document.createElement('button');b.type='button';b.innerHTML='<span aria-hidden="true">'+ico+'</span><span>'+label+'</span>';if(i===0)b.setAttribute('aria-current','page');b.addEventListener('click',()=>{if(i===0){closeDrawer();return}showDialog(label,'Ovaj modul nije deo prve celine. Biće povezan tek kada njegova funkcionalnost bude zasebno analizirana i odobrena.');closeDrawer()});root.appendChild(b)})}
+function renderNav(root){root.replaceChildren();NAV.forEach(([ico,label],i)=>{const b=document.createElement('button');b.type='button';b.innerHTML='<span aria-hidden="true">'+ico+'</span><span>'+label+'</span>';if(i===0)b.setAttribute('aria-current','page');b.addEventListener('click',()=>{if(i===0){closeDrawer();return}if(i===2){closeDrawer();if(!activeTourId){showDialog('Изабери туру','Прво отвори туру са контролне табле, па из менија Proizvodi отвори евиденцију набавке.');return}if(!['admin','super_admin'].includes(currentRole)){showDialog('Нема дозволе','Евиденцију набавке могу да отворе само администратори.');return}openProcurementPanel();return}showDialog(label,'Ovaj modul nije deo prve celine. Biće povezan tek kada njegova funkcionalnost bude zasebno analizirana i odobrena.');closeDrawer()});root.appendChild(b)})}
 function showDialog(title,message){$('dialogTitle').textContent=title;$('dialogContent').textContent='';const p=document.createElement('p');p.textContent=message;$('dialogContent').appendChild(p);$('dialogOverlay').classList.add('open');$('dialogOverlay').setAttribute('aria-hidden','false')}
 function closeDialog(){$('dialogOverlay').classList.remove('open');$('dialogOverlay').setAttribute('aria-hidden','true')}
 function openDrawer(){$('drawerOverlay').classList.add('open');$('drawerOverlay').setAttribute('aria-hidden','false');$('menuBtn').setAttribute('aria-expanded','true')}
