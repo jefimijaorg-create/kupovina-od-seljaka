@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.0.1
+ * Version: 1.0.2
  * Updated: 2026-11-19
  * Description: Groups tour orders by distribution point and buyer; supports touch/desktop drag assignment.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -51,7 +51,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     .nd-go-drag{width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:#26364e;color:#fdba74;font-size:19px;touch-action:none;cursor:grab}
     .nd-go-drag:active{cursor:grabbing}
     .nd-go-order{display:flex;gap:10px;align-items:flex-start}
-    .nd-go-order.nd-go-dragging{opacity:.42;transform:scale(.985)}
+    .nd-go-order-card.nd-go-dragging{opacity:.42;transform:scale(.985)}
     .nd-go-empty{padding:18px;text-align:center;color:#94a3b8;font-size:13px}
     .nd-go-feedback{padding:11px 13px;border-radius:12px;background:rgba(5,150,105,.13);border:1px solid rgba(16,185,129,.35);color:#a7f3d0;font-size:12px}
     .nd-go-error{background:rgba(220,38,38,.13);border-color:rgba(248,113,113,.4);color:#fecaca}
@@ -77,7 +77,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
       const product = line.product_id ? productMap.get(String(line.product_id)) : null;
       const name = product?.name || (line.product_id ? 'Производ није пронађен у каталогу' : 'Неповезана ставка');
       const count = Number(line.package_count), size = Number(line.package_size);
-      const qty = Number.isFinite(count) && Number.isFinite(size) && line.package_unit
+      const qty = line.package_count !== null && line.package_count !== undefined && line.package_size !== null && line.package_size !== undefined && Number.isFinite(count) && Number.isFinite(size) && line.package_unit
         ? fmt(count) + ' пак. × ' + fmt(size) + ' = ' + fmt(count * size) + ' ' + esc(line.package_unit)
         : 'Амбалажа није потпуна';
       return '<div class="nd-go-line"><span>' + esc(name) + '</span><strong>' + qty + '</strong></div>';
@@ -186,14 +186,21 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
       feedback = 'Поруџбина #' + orderId + ' је сачувана у пункту ' + (nextPoint === null ? '„без пункта“' : '„' + (pointMap.get(String(nextPoint))?.name || ('#' + nextPoint)) + '“') + '.';
       feedbackError = false;
       busyOrderId = null;
-      if (typeof onRefresh === 'function') await onRefresh();
-      else render();
     } catch (error) {
       busyOrderId = null;
       feedback = 'Додела није потврђена: ' + (error.message || String(error));
       feedbackError = true;
       render();
+      return;
     }
+    if (typeof onRefresh === 'function') {
+      try { await onRefresh(); }
+      catch (error) {
+        feedback = 'Пункт је сачуван у бази, али освежавање приказа није успело: ' + (error.message || String(error));
+        feedbackError = true;
+        render();
+      }
+    } else render();
   }
 
   render();
