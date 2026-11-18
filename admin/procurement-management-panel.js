@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.2.2
+ * Version: 1.3.0
  * Updated: 2026-11-18
- * Description: Clarifies per-variant allocation recap and absolute farm allocation limits.
+ * Description: Adds packaging-first procurement overview with four-stage farm tracking.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -39,7 +39,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   const client = adminCore.client;
   const state = {
     tour: null, items: [], invalidSourceRows: 0, products: [], variants: [], offers: [], farms: [],
-    allocations: [], demands: [], tab: 'products', selectedFarmId: '', selectedProductId: null,
+    allocations: [], demands: [], tab: 'products', selectedFarmId: '', selectedProductId: null, selectedVariantId: null,
     allocationDraft: {}, trackingDraft: {}, busy: false, disposed: false, token: 0,
     notice: '', noticeType: 'success',
     diagnostic: {
@@ -186,46 +186,41 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '');
     const groups = new Map();
     for (const demand of state.demands) {
-      const key = String(demand.productId);
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(demand);
+      const packageKey = String(demand.packageSize ?? '') + ' ' + String(demand.packageUnit ?? '');
+      if (!groups.has(packageKey)) groups.set(packageKey, []);
+      groups.get(packageKey).push(demand);
     }
-    let html = state.invalidSourceRows
-      ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>'
-      : '';
-    for (const [productId, demands] of groups) {
-      const product = productFor(productId);
-      const productName = product?.name || 'Назив производа није доступан у products.name';
-      html += '<article class="nd-proc-card nd-proc-product-group" data-open-product="' + esc(productId) + '" role="button" tabindex="0" aria-label="Отвори расподелу за ' + esc(productName) + '">' +
-        '<header class="nd-proc-product-heading"><strong>' + esc(productName) + '</strong>' +
-        '<small>' + fmt(demands.length) + (demands.length === 1 ? ' варијанта' : ' варијанте') + '</small></header>';
-      html += demands.map((demand) => {
-        const totalAssigned = assigned(demand.productId, demand.variantId);
-        const totalConfirmed = allocationsFor(demand.productId, demand.variantId)
-          .reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
-        const left = remaining(demand.productId, demand.variantId);
-        const suppliers = offersFor(demand.productId, demand.variantId)
-          .map((offer) => farmFor(offer.gazdinstvo_id)?.name).filter(Boolean);
-        return '<section class="nd-proc-variant-block">' +
-          '<div class="nd-proc-card-head"><div><strong>' + esc(formatVariant(demand)) + '</strong></div>' +
-          '<span class="nd-proc-pill ' + (left === 0 ? 'is-done' : 'is-open') + '">' +
-          (left === 0 ? 'Распоређено' : 'Преостало ' + fmt(left)) + '</span></div>' +
-          '<div class="nd-proc-metrics"><span><b>' + fmt(demand.packages) + '</b><small>Потребно паковања</small></span>' +
-          '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span>' +
-          '<span><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></span></div>' +
-          '<div class="nd-proc-subline">Укупна количина: ' + fmt(demand.totalQuantity) + ' ' + esc(demand.packageUnit || '') + '</div>' +
-          (demand.valid ? '' : '<div class="nd-proc-warning">Недостаје исправан package_count, package_size или package_unit. Расподела за ову варијанту је блокирана.</div>') +
-          '<div class="nd-proc-suppliers"><small>Активне понуде за ову варијанту</small>' +
-          (suppliers.length ? suppliers.map((name) => '<span>' + esc(name) + '</span>').join('') : '<em>Нема активних понуда.</em>') +
-          '</div></section>';
+    let html = '<div class="nd-proc-table-intro"><strong>Преглед потреба по амбалажи</strong><span>Свака количина је исказана у паковањима. Изабери газдинства у последњој колони за расподелу и праћење.</span></div>';
+    if (state.invalidSourceRows) html += '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>';
+    for (const [packageKey, demands] of groups) {
+      const rows = demands.map((demand) => {
+        const product = productFor(demand.productId);
+        const allocationRows = allocationsFor(demand.productId, demand.variantId);
+        const totalAssigned = allocationRows.reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
+        const totalOrdered = allocationRows.reduce((sum, row) => sum + num(row.naruceno_pakovanja), 0);
+        const totalConfirmed = allocationRows.reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
+        const totalCollected = allocationRows.reduce((sum, row) => sum + num(row.preuzeto_pakovanja), 0);
+        const stages = [
+          ['Додељено', totalAssigned],
+          ['Наручено', totalOrdered],
+          ['Потврђено', totalConfirmed],
+          ['Преузето', totalCollected]
+        ];
+        return '<tr>' +
+          '<td><strong>' + esc(product?.name || 'Производ није доступан') + '</strong><small>' + esc(formatVariant(demand)) + '</small></td>' +
+          '<td class="nd-proc-number">' + fmt(demand.packages) + '</td>' +
+          stages.map(([label, value]) => '<td class="nd-proc-stage"><b>' + fmt(value) + '</b><small>' + label + '</small></td>').join('') +
+          '<td><button type="button" class="nd-proc-row-action" data-open-product="' + esc(demand.productId) + '" data-open-variant="' + esc(demand.variantId) + '">Газдинства <span aria-hidden="true">→</span></button></td>' +
+          '</tr>';
       }).join('');
-      html += '</article>';
+      html += '<section class="nd-proc-package-group"><header><strong>Амбалажа: ' + esc(packageKey.trim() || 'Није наведена') + '</strong><small>' + fmt(demands.length) + (demands.length === 1 ? ' ставка' : ' ставки') + '</small></header>' +
+        '<div class="nd-proc-table-wrap"><table class="nd-proc-table"><thead><tr><th>Производ / варијанта</th><th>Потребно</th><th>Додељено</th><th>Наручено</th><th>Потврђено</th><th>Преузето</th><th>Управљање</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>';
     }
     return html;
   }
 
   function renderAllocation(productId = null) {
-    const demands = productId === null ? state.demands : state.demands.filter((demand) => String(demand.productId) === String(productId));
+    const demands = (productId === null ? state.demands : state.demands.filter((demand) => String(demand.productId) === String(productId)))\n      .filter((demand) => state.selectedVariantId === null || String(demand.variantId) === String(state.selectedVariantId));
     const offeredFarmIds = uniq(state.offers.filter((offer) => demands.some((demand) =>
       String(demand.productId) === String(offer.product_id) && String(demand.variantId) === String(offer.variant_id)))
       .map((offer) => offer.gazdinstvo_id));
@@ -271,7 +266,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   function renderProductAllocationModal() {
     const product = productFor(state.selectedProductId);
     if (!product) return '';
-    const productDemands = state.demands.filter((demand) => String(demand.productId) === String(state.selectedProductId));
+    const productDemands = state.demands.filter((demand) => String(demand.productId) === String(state.selectedProductId) && (state.selectedVariantId === null || String(demand.variantId) === String(state.selectedVariantId)));
     const needed = productDemands.reduce((sum, demand) => sum + demand.packages, 0);
     const allocated = productDemands.reduce((sum, demand) => sum + assigned(demand.productId, demand.variantId), 0);
     const left = Math.max(0, needed - allocated);
@@ -279,7 +274,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       '<section class="nd-proc-product-modal" role="dialog" aria-modal="true" aria-labelledby="ndProcProductModalTitle">' +
       '<header class="nd-proc-product-modal-head"><div><small>РАСПОДЕЛА ПО ГАЗДИНСТВИМА</small>' +
       '<h2 id="ndProcProductModalTitle">' + esc(product.name || 'Производ') + '</h2>' +
-      '<p>Изабери газдинство и расподели паковања по варијантама овог производа.</p></div>' +
+      '<p>' + (state.selectedVariantId !== null ? 'Изабери газдинство за ову варијанту амбалаже.' : 'Изабери газдинство и расподели паковања по варијантама овог производа.') + '</p></div>' +
       '<button type="button" class="nd-proc-modal-close" data-action="close-product-modal" aria-label="Затвори форму">×</button></header>' +
       '<div class="nd-proc-modal-summary"><span><b>' + fmt(needed) + '</b><small>Потребно паковања</small></span>' +
       '<span><b>' + fmt(allocated) + '</b><small>Распоређено</small></span>' +
@@ -407,7 +402,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   function render() {
     if (state.disposed) return;
     const isProcessing = state.tour?.status === 'processing';
-    const tabs = [['products', 'По производима'], ['farms', 'По газдинствима'], ['viber', 'Viber комуникација']];
+    const tabs = [['products', 'Набавка'], ['farms', 'По газдинствима'], ['viber', 'Viber комуникација']];
     let body = state.tab === 'products' ? renderProducts() : state.tab === 'farms' ? renderFarmRecords() : renderViberRecords();
     shell.innerHTML = '<header class="nd-proc-head"><div><small>УПРАВЉАЊЕ НАБАВКОМ · ТУРА #' + esc(tourId) +
       '</small><h1>' + esc(state.tour?.naziv || 'Тура #' + tourId) + '</h1><p>' +
@@ -647,14 +642,14 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   async function handleClick(event) {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     if (!target) return;
-    if (target.matches('[data-product-modal-backdrop]')) { state.selectedProductId = null; render(); return; }
+    if (target.matches('[data-product-modal-backdrop]')) { state.selectedProductId = null; state.selectedVariantId = null; render(); return; }
     const productCard = target.closest('[data-open-product]');
     if (productCard) {
       state.diagnostic.clickSeen = true;
       state.diagnostic.tapToken += 1;
       state.diagnostic.click = 'ADMIN је примио клик за производ ID ' + productCard.dataset.openProduct + '.';
       state.diagnostic.error = '';
-      openProductAllocation(productCard.dataset.openProduct);
+      openProductAllocation(productCard.dataset.openProduct, productCard.dataset.openVariant || null);
       return;
     }
     const tab = target.closest('[data-tab]');
@@ -662,7 +657,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     const button = target.closest('[data-action]');
     if (!button || state.busy) return;
     const action = button.dataset.action;
-    if (action === 'close-product-modal') { state.selectedProductId = null; render(); return; }
+    if (action === 'close-product-modal') { state.selectedProductId = null; state.selectedVariantId = null; render(); return; }
     if (action === 'back') return onBack?.();
     if (action === 'refresh') {
       button.disabled = true;
@@ -681,7 +676,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   root.addEventListener('click', handleClick, true);
 
   function handleKeydown(event) {
-    if (event.key === 'Escape' && state.selectedProductId !== null) { state.selectedProductId = null; render(); return; }
+    if (event.key === 'Escape' && state.selectedProductId !== null) { state.selectedProductId = null; state.selectedVariantId = null; render(); return; }
   }
   shell.addEventListener('keydown', handleKeydown);
 
