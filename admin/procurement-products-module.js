@@ -104,7 +104,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   const farmCatalog=s.demands.filter(d=>d.valid&&offer(d.productId,d.variantId)).map(d=>{
    const p=prod(d.productId),v=variant(d.variantId),al=allocation(d.productId,d.variantId,s.farmId),pendingItem=s.cart.find(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId));
    const count=pendingItem?.count||0,totalAssigned=allocated(d.productId,d.variantId),alreadyRequested=ordered(d.productId,d.variantId);
-   const canRequest=Math.max(0,Math.min(d.packages-alreadyRequested,d.packages-totalAssigned)),remaining=Math.max(0,canRequest-count);
+   const canRequest=Math.max(0,d.packages-alreadyRequested),remaining=Math.max(0,canRequest-count);
    const maxAdditional=remaining;
    return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+e(v?.name||v?.size_label||'Варијанта')+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip">'+qty(d.packages,d)+'</span></div><div class="ndp3-allocation-recap"><span><b>'+f(d.packages)+'</b>Потребно</span>'+(alreadyRequested>0?'<span><b>'+f(alreadyRequested)+'</b>Захтевано</span>':'')+(canRequest>0?'<span><b>'+f(canRequest)+'</b>Може још</span>':'')+(count>0?'<span><b>'+f(count)+'</b>У овом захтеву</span>':'')+'</div><p>Максимум који још можеш да припремиш за ово газдинство: '+f(maxAdditional)+' паковања. Старе припремне евиденције не рачунају се као послати захтев.</p><div class="ndp3-row"><span class="ndp3-meta">Додатна количина за захтев</span><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="step" data-delta="-1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Умањи">−</button><output>'+f(count)+'</output><button class="ndp3-btn plus" data-action="step" data-delta="1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Увећај" '+(remaining<=0?'disabled':'')+'>+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn" data-action="fill-all" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||remaining<=0?'disabled':'')+'>Све преостало</button><button class="ndp3-btn primary" data-action="add" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||remaining<=0?'disabled':'')+'>Додај у корпу</button></div></article>';
   }).join('')||'<div class="ndp3-empty">Нема активних понуда овог газдинства за потребе туре.</div>';
@@ -137,7 +137,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
     const d=demand(item.productId,item.variantId),o=offer(item.productId,item.variantId),old=allocation(item.productId,item.variantId,s.farmId);
     if(!d?.valid||!o)throw Error('Понуда или подаци о паковању нису важећи. Освежи податке.');
     if(old&&getProcurementStage(old)!=='assigned')throw Error('Већ послата или потврђена додела не може се мењати кроз нову корпу.');
-    const requested=n(old?.broj_pakovanja)+item.count,already=allocated(item.productId,item.variantId)-n(old?.broj_pakovanja);
+    const requested=item.count,already=allocated(item.productId,item.variantId)-n(old?.broj_pakovanja);
     const check=validateAllocationCount({requested,alreadyAllocated:already,demand:d.packages});if(!check.valid)throw Error(check.error);
     if(old){const q=await client.from('tura_nabavka_dodele').update({broj_pakovanja:requested,nabavna_cena:n(o.purchase_price),updated_at:new Date().toISOString()}).eq('id',old.id).select('id,broj_pakovanja').maybeSingle();if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==requested)throw Error('База није потврдила измену доделе.');}
     else{const q=await client.from('tura_nabavka_dodele').insert({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,naruceno_pakovanja:0,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent'}).select('id,broj_pakovanja').single();if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==requested)throw Error('База није потврдила нову доделу.');}
@@ -184,7 +184,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(a==='fill-all'){
    const p=b.dataset.p,v=b.dataset.v,d=demand(p,v);if(!d?.valid)return setNote('Подаци о производу и амбалажи нису важећи.',true);
    const item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
-   const already=allocated(p,v),requested=ordered(p,v),limit=Math.max(0,Math.min(d.packages-already,d.packages-requested));
+   const requested=ordered(p,v),limit=Math.max(0,d.packages-requested);
    if(limit<=0)return setNote('Нема више слободне количине за припрему захтева.',true);
    if(item)item.count=limit;else s.cart.push({productId:p,variantId:v,count:limit});
    render();return;
@@ -192,13 +192,13 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(a==='step'||a==='add'){
    const p=b.dataset.p,v=b.dataset.v,d=demand(p,v);let item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
    const next=(item?.count||0)+(a==='add'?1:Number(b.dataset.delta));
-   const already=allocated(p,v),limit=Math.max(0,d.packages-already);
+   const limit=Math.max(0,d.packages-ordered(p,v));
    if(next>limit)return setNote('Не можеш тражити више од преостале потребе ('+qty(limit,d)+').',true);
    if(next<=0){s.cart=s.cart.filter(x=>key(x.productId,x.variantId)!==key(p,v));}
    else if(item)item.count=next;else s.cart.push({productId:p,variantId:v,count:next});
    render();return;
   }
-  if(a==='cart-step'){const x=s.cart[Number(b.dataset.i)];if(!x)return;const d=demand(x.productId,x.variantId),limit=Math.max(0,d.packages-allocated(x.productId,x.variantId));x.count=Math.max(0,Math.min(limit,x.count+Number(b.dataset.delta)));s.cart=s.cart.filter(y=>y.count>0);render();return;}
+  if(a==='cart-step'){const x=s.cart[Number(b.dataset.i)];if(!x)return;const d=demand(x.productId,x.variantId),limit=Math.max(0,d.packages-ordered(x.productId,x.variantId));x.count=Math.max(0,Math.min(limit,x.count+Number(b.dataset.delta)));s.cart=s.cart.filter(y=>y.count>0);render();return;}
   if(a==='remove'){s.cart.splice(Number(b.dataset.i),1);render();return;}
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
