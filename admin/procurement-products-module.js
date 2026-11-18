@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.6.1
+ * Version: 3.6.2
  * Updated: 2026-11-18
- * Description: Shows only the three business quantities; keeps legacy allocation checks internal and saves grouped requests atomically by the existing unique key.
+ * Description: Prefills the remaining request quantity, separates the draft stepper from the cart, and enables adding the selected quantity without a zero-remaining lock.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
@@ -46,7 +46,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.6.0';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],tab:'basket',notice:'',error:false};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],draftCounts:{},tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -103,10 +103,11 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   const demandWarning=(invalidDemandCount||invalidSourceCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација производа/варијанте и '+invalidSourceCount+' изворних ставки без производа или варијанте нису укључене у збирове нити су доступне за захтевање.</div>':'';
   const farmCatalog=s.demands.filter(d=>d.valid&&d.packages>ordered(d.productId,d.variantId)&&offer(d.productId,d.variantId)).map(d=>{
    const p=prod(d.productId),v=variant(d.variantId),al=allocation(d.productId,d.variantId,s.farmId),locked=!!al&&(al.viber_status==='sent'||al.viber_status==='replied'||n(al.potvrdjeno_pakovanja)>0||n(al.preuzeto_pakovanja)>0),pendingItem=s.cart.find(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId));
-   const count=pendingItem?.count||0,alreadyRequested=ordered(d.productId,d.variantId);
-   const canRequest=Math.max(0,d.packages-alreadyRequested),remaining=Math.max(0,canRequest-count);
-   const maxAdditional=remaining;
-   return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+e(v?.name||v?.size_label||'Варијанта')+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip">'+qty(d.packages,d)+'</span></div><div class="ndp3-allocation-recap"><span><b>'+f(d.packages)+'</b>Потребно</span>'+(alreadyRequested>0?'<span><b>'+f(alreadyRequested)+'</b>Захтевано</span>':'')+(canRequest>0?'<span><b>'+f(canRequest)+'</b>Може још</span>':'')+(count>0?'<span><b>'+f(count)+'</b>У овом захтеву</span>':'')+'</div><p>Максимум који још можеш да захтеваш од овог газдинства: '+f(maxAdditional)+' паковања. Старе припремне евиденције не рачунају се као послати захтев.</p><div class="ndp3-row"><span class="ndp3-meta">Додатна количина за захтев</span><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="step" data-delta="-1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Умањи">−</button><output>'+f(count)+'</output><button class="ndp3-btn plus" data-action="step" data-delta="1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Увећај" '+(locked||remaining<=0?'disabled':'')+'>+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn" data-action="fill-all" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||locked||remaining<=0?'disabled':'')+'>Све преостало</button><button class="ndp3-btn primary" data-action="add" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||locked||remaining<=0?'disabled':'')+'>Додај у корпу</button></div></article>';
+   const pendingCount=pendingItem?.count||0,alreadyRequested=ordered(d.productId,d.variantId);
+   const canRequest=Math.max(0,d.packages-alreadyRequested),remaining=Math.max(0,canRequest-pendingCount);
+   const draftKey=key(d.productId,d.variantId),count=Object.prototype.hasOwnProperty.call(s.draftCounts,draftKey)?s.draftCounts[draftKey]:remaining;
+   const maxAdditional=canRequest;
+   return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+e(v?.name||v?.size_label||'Варијанта')+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip">'+qty(d.packages,d)+'</span></div><div class="ndp3-allocation-recap"><span><b>'+f(d.packages)+'</b>Потребно</span>'+(alreadyRequested>0?'<span><b>'+f(alreadyRequested)+'</b>Захтевано</span>':'')+(canRequest>0?'<span><b>'+f(canRequest)+'</b>Може још</span>':'')+(pendingCount>0?'<span><b>'+f(pendingCount)+'</b>У корпи</span>':'')+'</div><p>Максимум који још можеш да захтеваш од овог газдинства: '+f(maxAdditional)+' паковања. Старе припремне евиденције не рачунају се као послати захтев.</p><div class="ndp3-row"><span class="ndp3-meta">Додатна количина за захтев</span><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="step" data-delta="-1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Умањи">−</button><output>'+f(count)+'</output><button class="ndp3-btn plus" data-action="step" data-delta="1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Увећај" '+(locked||remaining<=count?'disabled':'')+'>+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn" data-action="fill-all" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||locked||remaining<=0?'disabled':'')+'>Све преостало</button><button class="ndp3-btn primary" data-action="add" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||locked||count<=0||count>remaining?'disabled':'')+'>Додај у корпу</button></div></article>';
   }).join('')||'<div class="ndp3-empty">Нема производа са незахтеваном количином и активном понудом овог газдинства.</div>';
   const cartHtml=s.cart.length?s.cart.map((x,i)=>{const d=demand(x.productId,x.variantId);return '<div class="ndp3-item"><div class="ndp3-row"><div><div class="ndp3-item-title">'+e(prod(x.productId)?.name)+' · '+e(variant(x.variantId)?.name||variant(x.variantId)?.size_label)+'</div><div class="ndp3-meta">'+f(x.count)+' паковања · '+qty(x.count,d)+'</div></div><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="cart-step" data-i="'+i+'" data-delta="-1">−</button><output>'+f(x.count)+'</output><button class="ndp3-btn plus" data-action="cart-step" data-i="'+i+'" data-delta="1">+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn" data-action="remove" data-i="'+i+'">Уклони</button></div></div>';}).join(''):'<div class="ndp3-empty">Корпа је празна. Изабери производ и додај количину.</div>';
   const protocol=farmRows.length?farmRows.map(x=>{
@@ -183,7 +184,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   try{const copied=!!navigator.clipboard?.writeText;if(copied)await navigator.clipboard.writeText(text);const phone=String(ff?.phone||'').replace(/[^\d+]/g,'');const ids=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&cartSnapshot.some(c=>key(c.productId,c.variantId)===key(x.product_id,x.variant_id))).map(x=>String(x.id));ids.forEach(id=>s.preparedSentIds.add(id));if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);s.tab='field';setNote(phone?(copied?'Додела је сачувана, порука је копирана и Viber је отворен. Након стварног слања потврди га у теренском протоколу.':'Додела је сачувана и Viber је отворен. Поруку пошаљи ручно; статус није промењен.'):(copied?'Додела је сачувана и порука копирана. Нема телефона за отварање Viber-а; статус слања није промењен.':'Додела је сачувана. Нема телефона нити доступног копирања; статус слања није промењен.'),false);}
   catch(err){setNote('Додела је сачувана, али припрема поруке није успела: '+(err.message||String(err)),true);}
  }
- host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmId=ev.target.value;s.cart=[];s.tab='basket';render();}});
+ host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmId=ev.target.value;s.cart=[];s.draftCounts={};s.tab='basket';render();}});
  host.addEventListener('click',async ev=>{
   const b=ev.target.closest('[data-action],[data-tab]');if(!b)return;
   if(b.dataset.tab){s.tab=b.dataset.tab;render();return;}
@@ -194,19 +195,25 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(a==='fill-all'){
    const p=b.dataset.p,v=b.dataset.v,d=demand(p,v);if(!d?.valid)return setNote('Подаци о производу и амбалажи нису важећи.',true);
    const item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
-   const requested=ordered(p,v),limit=Math.max(0,d.packages-requested);
+   const requested=ordered(p,v),limit=Math.max(0,d.packages-requested-(item?.count||0));
    if(limit<=0)return setNote('Нема више слободне количине за припрему захтева.',true);
-   if(item)item.count=limit;else s.cart.push({productId:p,variantId:v,count:limit});
+   s.draftCounts[key(p,v)]=limit;
    render();return;
   }
-  if(a==='step'||a==='add'){
-   const p=b.dataset.p,v=b.dataset.v,d=demand(p,v);let item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
-   const next=(item?.count||0)+(a==='add'?1:Number(b.dataset.delta));
-   const limit=Math.max(0,d.packages-ordered(p,v));
-   if(next>limit)return setNote('Не можеш тражити више од преостале потребе ('+qty(limit,d)+').',true);
-   if(next<=0){s.cart=s.cart.filter(x=>key(x.productId,x.variantId)!==key(p,v));}
-   else if(item)item.count=next;else s.cart.push({productId:p,variantId:v,count:next});
-   render();return;
+  if(a==='step'){
+   const p=b.dataset.p,v=b.dataset.v,d=demand(p,v),item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
+   const draftKey=key(p,v),limit=Math.max(0,d.packages-ordered(p,v)-(item?.count||0));
+   const current=Object.prototype.hasOwnProperty.call(s.draftCounts,draftKey)?s.draftCounts[draftKey]:limit;
+   const next=Math.max(0,Math.min(limit,current+Number(b.dataset.delta)));
+   s.draftCounts[draftKey]=next;render();return;
+  }
+  if(a==='add'){
+   const p=b.dataset.p,v=b.dataset.v,d=demand(p,v),item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
+   const draftKey=key(p,v),limit=Math.max(0,d.packages-ordered(p,v)-(item?.count||0));
+   const count=Object.prototype.hasOwnProperty.call(s.draftCounts,draftKey)?s.draftCounts[draftKey]:limit;
+   if(!Number.isInteger(count)||count<=0||count>limit)return setNote('Изабери количину у оквиру преостале потребе ('+qty(limit,d)+').',true);
+   if(item)item.count+=count;else s.cart.push({productId:p,variantId:v,count});
+   s.draftCounts[draftKey]=0;render();return;
   }
   if(a==='cart-step'){const x=s.cart[Number(b.dataset.i)];if(!x)return;const d=demand(x.productId,x.variantId),limit=Math.max(0,d.packages-ordered(x.productId,x.variantId));x.count=Math.max(0,Math.min(limit,x.count+Number(b.dataset.delta)));s.cart=s.cart.filter(y=>y.count>0);render();return;}
   if(a==='remove'){s.cart.splice(Number(b.dataset.i),1);render();return;}
