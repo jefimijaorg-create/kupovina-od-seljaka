@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT PRODUCTS WORKSPACE
- * Version: 2.0.0
+ * Version: 2.0.1
  * Updated: 2026-11-18
- * Description: Replaces the legacy allocation-panel wrapper with a standalone farm-first procurement workflow: product selection, multi-item request basket, Viber status, and collection accounting.
+ * Description: Standalone farm-first procurement workflow with aggregated multi-add basket entries, Viber status, and collection accounting.
  * Scope: Existing ADMIN Workspace and existing Supabase tables/RLS only. No schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
@@ -177,7 +177,7 @@ export async function mountProcurementProductsModule({ root, core, tourId, onBac
       if(!d?.valid||!offer(state.productId,state.variantId))return setNotice('Изабрани производ нема исправну активну понуду за ово газдинство.',true);
       const already=state.cart.filter(x=>pair(x.productId,x.variantId)===pair(state.productId,state.variantId)).reduce((s,x)=>s+x.count,0);
       if(already+count>remaining(state.productId,state.variantId))return setNotice('Количина у корпи прелази преосталу потребу туре ('+fmt(remaining(state.productId,state.variantId))+' паковања).',true);
-      state.cart.push({productId:state.productId,variantId:state.variantId,count});state.notice='';render();return;
+      const pending=state.cart.find(x=>pair(x.productId,x.variantId)===pair(state.productId,state.variantId));if(pending)pending.count+=count;else state.cart.push({productId:state.productId,variantId:state.variantId,count});state.notice='';render();return;
     }
     if(a==='remove-cart'){state.cart.splice(Number(b.dataset.index),1);render();return;}
     if(a==='save-cart')return persistCart();
