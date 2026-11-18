@@ -1,13 +1,14 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.2.1
+ * Version: 3.3.0
  * Updated: 2026-11-18
- * Description: Two-level procurement workspace with embedded reusable tour analytics, reconciliation matrix, exception review, farm-first execution, basket and field protocol.
+ * Description: Adds strict package-level four-stage workflow and explicit user confirmation after manual Viber sending.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
 import { buildProcurementDemands } from './procurement/procurement-calculations.js';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
+import { getProcurementStage, getProcurementStageLabel, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.0';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
@@ -30,7 +31,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.0.0';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],tab:'basket',notice:'',error:false};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -83,8 +84,13 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   }).join('')||'<div class="ndp3-empty">Нема активних понуда овог газдинства за потребе туре.</div>';
   const cartHtml=s.cart.length?s.cart.map((x,i)=>{const d=demand(x.productId,x.variantId);return '<div class="ndp3-item"><div class="ndp3-row"><div><div class="ndp3-item-title">'+e(prod(x.productId)?.name)+' · '+e(variant(x.variantId)?.name||variant(x.variantId)?.size_label)+'</div><div class="ndp3-meta">'+f(x.count)+' паковања · '+qty(x.count,d)+'</div></div><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="cart-step" data-i="'+i+'" data-delta="-1">−</button><output>'+f(x.count)+'</output><button class="ndp3-btn plus" data-action="cart-step" data-i="'+i+'" data-delta="1">+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn" data-action="remove" data-i="'+i+'">Уклони</button></div></div>';}).join(''):'<div class="ndp3-empty">Корпа је празна. Изабери производ и додај количину.</div>';
   const protocol=farmRows.length?farmRows.map(x=>{
-   const d=demand(x.product_id,x.variant_id),p=prod(x.product_id),v=variant(x.variant_id);
-   return '<div class="ndp3-item"><div class="ndp3-row"><div><div class="ndp3-item-title">'+e(p?.name)+' · '+e(v?.name||v?.size_label)+'</div><div class="ndp3-meta">Активирано '+qty(x.broj_pakovanja,d)+'</div></div><span class="ndp3-chip '+(n(x.preuzeto_pakovanja)>=n(x.broj_pakovanja)?'green':x.viber_status==='sent'?'blue':'amber')+'">'+(n(x.preuzeto_pakovanja)>=n(x.broj_pakovanja)?'Преузето':x.viber_status==='sent'?'Послато':'У припреми')+'</span></div><div class="ndp3-grid"><span><b>'+qty(x.naruceno_pakovanja,d)+'</b>Наручено</span><span><b>'+qty(x.potvrdjeno_pakovanja,d)+'</b>Потврђено</span><span><b>'+qty(x.preuzeto_pakovanja,d)+'</b>Преузето</span></div><div class="ndp3-record-inputs"><label>Потврђено паковања<input type="number" min="0" max="'+f(x.naruceno_pakovanja)+'" step="1" data-field="potvrdjeno_pakovanja" data-id="'+x.id+'" value="'+f(x.potvrdjeno_pakovanja)+'"></label><label>Стварно преузето<input type="number" min="0" max="'+f(x.potvrdjeno_pakovanja)+'" step="1" data-field="preuzeto_pakovanja" data-id="'+x.id+'" value="'+f(x.preuzeto_pakovanja)+'"></label></div><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="save-field" data-id="'+x.id+'" '+(!writable||s.busy?'disabled':'')+'>Сачувај теренски унос</button></div></div>';
+   const d=demand(x.product_id,x.variant_id),p=prod(x.product_id),v=variant(x.variant_id),stage=getProcurementStage(x);
+   const prepared=s.preparedSentIds.has(String(x.id)),canConfirm=canConfirmProcurement(x),canCollect=canCollectProcurement(x);
+   return '<div class="ndp3-item"><div class="ndp3-row"><div><div class="ndp3-item-title">'+e(p?.name)+' · '+e(v?.name||v?.size_label)+'</div><div class="ndp3-meta">Активирано '+qty(x.broj_pakovanja,d)+'</div></div><span class="ndp3-chip '+(stage==='collected'?'green':stage==='confirmed'?'green':stage==='sent'?'blue':'amber')+'">'+e(getProcurementStageLabel(stage))+'</span></div>'
+   +'<div class="ndp3-grid"><span><b>'+qty(x.broj_pakovanja,d)+'</b>Додељено</span><span><b>'+qty(x.naruceno_pakovanja,d)+'</b>Послато</span><span><b>'+qty(x.potvrdjeno_pakovanja,d)+'</b>Потврђено</span><span><b>'+qty(x.preuzeto_pakovanja,d)+'</b>Преузето</span></div>'
+   +(stage==='assigned'?'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="mark-sent" data-id="'+x.id+'" '+(!prepared||!writable||s.busy?'disabled':'')+'>Потврди да је Viber захтев стварно послат</button></div><p>'+(prepared?'Viber је отворен. Након стварног слања потврди овде.':'Прво припреми и отвори Viber захтев из корпе.')+'</p>':'')
+   +'<div class="ndp3-record-inputs"><label>Потврђено паковања<input type="number" min="0" max="'+f(x.naruceno_pakovanja)+'" step="1" data-field="potvrdjeno_pakovanja" data-id="'+x.id+'" value="'+f(x.potvrdjeno_pakovanja)+'" '+(!canConfirm||!writable?'disabled':'')+'></label><label>Стварно преузето<input type="number" min="0" max="'+f(x.potvrdjeno_pakovanja)+'" step="1" data-field="preuzeto_pakovanja" data-id="'+x.id+'" value="'+f(x.preuzeto_pakovanja)+'" '+(!canCollect||!writable?'disabled':'')+'></label></div>'
+   +'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="save-field" data-id="'+x.id+'" '+(!writable||s.busy||(!canConfirm&&!canCollect)?'disabled':'')+'>Сачувај следећу фазу</button></div></div>';
   }).join(''):'<div class="ndp3-empty">За ово газдинство још нема активираних ставки.</div>';
   host.innerHTML='<header class="ndp3-head"><div><div class="ndp3-kicker">ОПЕРАТИВНА ТАБЛА · ТУРА #'+e(tourId)+'</div><h1>Набавка</h1><p>'+e(s.tour?.naziv||'Тура')+' · '+(selected?'Газдинство: '+e(ff?.name):'Збирни преглед целе туре')+'</p></div><button class="ndp3-btn" data-action="back">← Назад</button></header>'+
   '<section class="ndp3-panel"><div class="ndp3-toolbar"><label>Изабери газдинство<select class="ndp3-select" data-farm><option value="">Сва газдинства · збирни преглед туре</option>'+s.farms.map(x=>'<option value="'+e(x.id)+'" '+(String(x.id)===String(s.farmId)?'selected':'')+'>'+e(x.name)+'</option>').join('')+'</select></label><div class="ndp3-status"><span class="ndp3-chip">'+(selected?'ОПЕРАТИВНИ РЕЖИМ':'ЗБИРНИ РЕЖИМ')+'</span><span class="ndp3-chip">'+s.demands.filter(x=>x.valid).length+' ставки потреба</span></div></div></section>'+
@@ -96,57 +102,50 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   '</section></aside></div><div class="ndp3-foot">Подаци се читају и уписују у постојеће Supabase табеле. Назив производа долази преко product_id → products.name. Количине се рачунају из package_count × package_size.</div>';
   s.analyticsHandle?.destroy();const analyticsRoot=host.querySelector('[data-tour-analytics-root]');if(analyticsRoot)s.analyticsHandle=mountTourAnalyticsPanel({root:analyticsRoot,client,tourId,intervalMs:30000});
  }
- async function saveCart({markSent=false}={}){
-  if(s.busy||!s.cart.length||!s.farmId)return;if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
+ async function saveCart(){
+  if(s.busy||!s.cart.length||!s.farmId)return false;
+  if(s.tour?.status!=='processing'){setNote('Тура није отворена за измене.',true);return false;}
   s.busy=true;render();let wrote=false;
   try{
    for(const item of s.cart){
     const d=demand(item.productId,item.variantId),o=offer(item.productId,item.variantId),old=allocation(item.productId,item.variantId,s.farmId);
     if(!d?.valid||!o)throw Error('Понуда или подаци о паковању нису важећи. Освежи податке.');
-    const count=n(old?.broj_pakovanja)+item.count,others=allocated(item.productId,item.variantId)-n(old?.broj_pakovanja);
-    if(count+others>d.packages)throw Error('Захтев прелази укупну потребу туре.');
-    if(old){
-     const q=await client.from('tura_nabavka_dodele').update({broj_pakovanja:count,nabavna_cena:n(o.purchase_price),...(markSent?{naruceno:true,naruceno_pakovanja:count,viber_status:'sent',viber_poslato_at:new Date().toISOString()}:{}) ,updated_at:new Date().toISOString()}).eq('id',old.id).select('id,broj_pakovanja').maybeSingle();
-     if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==count)throw Error('База није потврдила измену.');
-    }else{
-     const q=await client.from('tura_nabavka_dodele').insert({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:item.count,nabavna_cena:n(o.purchase_price),naruceno:markSent,naruceno_pakovanja:markSent?item.count:0,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:markSent?'sent':'not_sent',...(markSent?{viber_poslato_at:new Date().toISOString()}:{})}).select('id,broj_pakovanja').single();
-     if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==item.count)throw Error('База није потврдила нови захтев.');
-    }
+    if(old&&getProcurementStage(old)!=='assigned')throw Error('Већ послата или потврђена додела не може се мењати кроз нову корпу.');
+    const requested=n(old?.broj_pakovanja)+item.count,already=allocated(item.productId,item.variantId)-n(old?.broj_pakovanja);
+    const check=validateAllocationCount({requested,alreadyAllocated:already,demand:d.packages});if(!check.valid)throw Error(check.error);
+    if(old){const q=await client.from('tura_nabavka_dodele').update({broj_pakovanja:requested,nabavna_cena:n(o.purchase_price),updated_at:new Date().toISOString()}).eq('id',old.id).select('id,broj_pakovanja').maybeSingle();if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==requested)throw Error('База није потврдила измену доделе.');}
+    else{const q=await client.from('tura_nabavka_dodele').insert({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,naruceno_pakovanja:0,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent'}).select('id,broj_pakovanja').single();if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==requested)throw Error('База није потврдила нову доделу.');}
     wrote=true;
    }
-   s.cart=[];await load();s.tab='basket';setNote('Захтев је активиран и сачуван у бази.');
-  }catch(err){if(wrote){try{await load();}catch(_){}}setNote('Захтев није у потпуности сачуван: '+(err.message||String(err)),true);}
+   s.cart=[];await load();s.tab='field';setNote('Додела је сачувана. Следећи корак је припрема и стварно слање Viber захтева.');return true;
+  }catch(err){if(wrote){try{await load();}catch(_){}}setNote('Додела није у потпуности сачувана: '+(err.message||String(err)),true);return false;}
   finally{s.busy=false;render();}
+ }
+ async function markSent(id){
+  if(s.busy)return;const row=s.allocations.find(x=>String(x.id)===String(id));if(!row)return;
+  if(!canMarkProcurementSent(row)||!s.preparedSentIds.has(String(id)))return setNote('Прво припреми и отвори Viber захтев.',true);
+  if(!window.confirm('Потврђујеш да је порука заиста послата овом газдинству?'))return;
+  s.busy=true;render();
+  try{const sentAt=new Date().toISOString();const q=await client.from('tura_nabavka_dodele').update({naruceno:true,naruceno_pakovanja:n(row.broj_pakovanja),viber_status:'sent',viber_poslato_at:sentAt,updated_at:sentAt}).eq('id',row.id).eq('viber_status','not_sent').select('id,naruceno_pakovanja,viber_status').maybeSingle();if(q.error)throw Error(q.error.message);if(!q.data||q.data.viber_status!=='sent'||n(q.data.naruceno_pakovanja)!==n(row.broj_pakovanja))throw Error('База није потврдила прелаз у фазу Послато.');s.preparedSentIds.delete(String(id));await load();setNote('Слање је евидентирано. Сада је доступан унос потврде произвођача.');}
+  catch(err){setNote('Слање није евидентирано: '+(err.message||String(err)),true);}finally{s.busy=false;render();}
  }
  async function saveField(id){
   if(s.busy)return;const row=s.allocations.find(x=>String(x.id)===String(id));if(!row)return;
   const fields=[...host.querySelectorAll('[data-id="'+id+'"][data-field]')],values=Object.fromEntries(fields.map(x=>[x.dataset.field,Number(x.value)]));
-  const confirmed=values.potvrdjeno_pakovanja,collected=values.preuzeto_pakovanja;
-  if(![confirmed,collected].every(x=>Number.isInteger(x)&&x>=0)||confirmed>n(row.naruceno_pakovanja)||collected>confirmed)return setNote('Услов мора бити: преузето ≤ потврђено ≤ наручено. Унеси целе ненегативне бројеве паковања.',true);
+  const confirmed=values.potvrdjeno_pakovanja,collected=values.preuzeto_pakovanja,check=validateProcurementCounts(row,{confirmed,collected});
+  if(!check.valid)return setNote(check.error,true);
   const siblings=allocationsFor(row.product_id,row.variant_id).filter(x=>String(x.id)!==String(id)),d=demand(row.product_id,row.variant_id);
   if(siblings.reduce((a,x)=>a+n(x.preuzeto_pakovanja),0)+collected>d.packages)return setNote('Укупно преузето премашује потребу туре.',true);
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
-  s.busy=true;render();
-  try{
-   const patch={potvrdjeno_pakovanja:confirmed,preuzeto_pakovanja:collected,updated_at:new Date().toISOString()};
-   if(confirmed!==n(row.potvrdjeno_pakovanja))patch.potvrdjeno_at=confirmed?new Date().toISOString():null;
-   const q=await client.from('tura_nabavka_dodele').update(patch).eq('id',row.id).select('id,potvrdjeno_pakovanja,preuzeto_pakovanja').maybeSingle();
-   if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.potvrdjeno_pakovanja)!==confirmed||n(q.data.preuzeto_pakovanja)!==collected)throw Error('База није потврдила теренски унос.');
-   await load();setNote('Теренски протокол је сачуван.');
-  }catch(err){setNote('Унос није сачуван: '+(err.message||String(err)),true);}
-  finally{s.busy=false;render();}
+  s.busy=true;render();try{const patch={potvrdjeno_pakovanja:confirmed,preuzeto_pakovanja:collected,updated_at:new Date().toISOString()};if(confirmed!==n(row.potvrdjeno_pakovanja))patch.potvrdjeno_at=confirmed?new Date().toISOString():null;const q=await client.from('tura_nabavka_dodele').update(patch).eq('id',row.id).select('id,potvrdjeno_pakovanja,preuzeto_pakovanja').maybeSingle();if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.potvrdjeno_pakovanja)!==confirmed||n(q.data.preuzeto_pakovanja)!==collected)throw Error('База није потврдила теренски унос.');await load();setNote('Следећа фаза је сачувана у бази.');}
+  catch(err){setNote('Унос није сачуван: '+(err.message||String(err)),true);}finally{s.busy=false;render();}
  }
  async function generateViber(){
-  if(!s.farmId||!s.cart.length)return;
-  try{
-   const hasPhone=!!String(farm(s.farmId)?.phone||'').trim();
-   await saveCart({markSent:hasPhone});
-   if(s.cart.length)return;
-   const text=message(),phone=String(farm(s.farmId)?.phone||'').replace(/[^\d+]/g,'');
-   if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
-   if(phone)location.href='viber://chat?number='+encodeURIComponent(phone);
-   setNote(phone?'Захтев је активиран. Порука је копирана и Viber је отворен за ручно слање.':'Захтев је активиран и порука копирана. Газдинство нема број телефона.',false);
-  }catch(err){setNote('Viber порука није припремљена: '+(err.message||String(err)),true);}
+  if(!s.farmId||!s.cart.length||s.busy)return;const farmId=s.farmId,cartSnapshot=s.cart.map(x=>({...x})),ff=farm(farmId);
+  const text='Поштовани'+(ff?.name?' '+ff.name:'')+',\n\nМолимо вас да потврдите захтев за туру #'+tourId+':\n'+cartSnapshot.map(x=>{const d=demand(x.productId,x.variantId);return '• '+(prod(x.productId)?.name||'Производ')+' — '+(variant(x.variantId)?.name||variant(x.variantId)?.size_label||'Варијанта')+': '+f(x.count)+' паковања ('+qty(x.count,d)+')';}).join('\n')+'\n\nМолимо потврдите количине које можете да припремите. Хвала!';
+  const saved=await saveCart();if(!saved)return;
+  try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);const phone=String(ff?.phone||'').replace(/[^\d+]/g,'');const ids=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&cartSnapshot.some(c=>key(c.productId,c.variantId)===key(x.product_id,x.variant_id))).map(x=>String(x.id));ids.forEach(id=>s.preparedSentIds.add(id));if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);s.tab='field';setNote(phone?'Додела је сачувана, порука је копирана и Viber је отворен. Након стварног слања потврди га у теренском протоколу.':'Додела је сачувана и порука копирана. Нема телефона за отварање Viber-а; статус слања није промењен.',false);}
+  catch(err){setNote('Додела је сачувана, али припрема поруке није успела: '+(err.message||String(err)),true);}
  }
  host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmId=ev.target.value;s.cart=[];s.tab='basket';render();}});
  host.addEventListener('click',async ev=>{
@@ -166,6 +165,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(a==='cart-step'){const x=s.cart[Number(b.dataset.i)];if(!x)return;const d=demand(x.productId,x.variantId),limit=Math.max(0,d.packages-allocated(x.productId,x.variantId));x.count=Math.max(0,Math.min(limit,x.count+Number(b.dataset.delta)));s.cart=s.cart.filter(y=>y.count>0);render();return;}
   if(a==='remove'){s.cart.splice(Number(b.dataset.i),1);render();return;}
   if(a==='save-field')return saveField(b.dataset.id);
+  if(a==='mark-sent')return markSent(b.dataset.id);
   if(a==='generate')return generateViber();
  });
  try{await load();render();}catch(err){host.innerHTML='<div class="ndp3-empty"><b>Набавка није учитана</b><p>'+e(err.message||String(err))+'</p><button class="ndp3-btn" data-action="back">Назад</button></div>';}
