@@ -1,13 +1,13 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.2.0
+ * Version: 3.2.1
  * Updated: 2026-11-18
  * Description: Two-level procurement workspace with embedded reusable tour analytics, reconciliation matrix, exception review, farm-first execution, basket and field protocol.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
 import { buildProcurementDemands } from './procurement/procurement-calculations.js';
-import { mountTourAnalyticsPanel } from './tour-analytics-engine.js';
+import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
