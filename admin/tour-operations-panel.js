@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.0.4
+ * Version: 1.0.5
  * Updated: 2026-11-19
  * Description: Adds grouped point/customer order view and retains the order-detail Bottom Sheet.
  */
@@ -85,7 +85,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div></div><button type="button" data-back>← Назад</button></header><nav class="nd-ops-tabs" aria-label="Секције туре">'+tabs.map(([id,label])=>'<button type="button" data-tab="'+id+'" aria-selected="'+(activeTab===id)+'">'+label+'</button>').join('')+'</nav><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     shell.querySelector('[data-back]').addEventListener('click',onBack);
     if(activeTab==='orders'){
-      import('./orders/tour-orders-grouped-view.js?v=1.0.1').then(mod=>{
+      import('./orders/tour-orders-grouped-view.js?v=1.0.2').then(mod=>{
         if(disposed || activeTab!=='orders') return;
         const target=shell.querySelector('[data-grouped-orders-root]');
         if(!target) return;
