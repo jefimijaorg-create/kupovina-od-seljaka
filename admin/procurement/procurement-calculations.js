@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT CALCULATIONS
- * Version: 1.2.0
+ * Version: 1.3.0
  * Updated: 2026-11-18
- * Description: Builds per-packaging totals from requested, confirmed and collected stages; legacy allocation counts remain technical-only.
+ * Description: Builds per-packaging totals and preserves source order quantities for each aggregated product/packaging demand.
  * Scope: Existing ADMIN Workspace only.
  */
 const toNumber = (value) => { const number = Number(value); return Number.isFinite(number) ? number : 0; };
@@ -19,7 +19,7 @@ export function buildProcurementDemands({ items = [], products = [], variants = 
       demandMap.set(key, {
         productId: row.product_id, variantId: row.variant_id, packages: 0,
         packageSize: null, packageUnit: null, totalQuantity: 0,
-        valid: true, sourceRows: 0, invalidRows: 0
+        valid: true, sourceRows: 0, invalidRows: 0, sourceOrders: []
       });
     }
 
@@ -53,6 +53,7 @@ export function buildProcurementDemands({ items = [], products = [], variants = 
 
     demand.packages += count;
     demand.totalQuantity += count * size;
+    demand.sourceOrders.push({ orderId: row.porudzbina_id ?? null, itemId: row.id ?? null, packageCount: count });
   }
 
   return [...demandMap.values()].sort((a, b) => {
