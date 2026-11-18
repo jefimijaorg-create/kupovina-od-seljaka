@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.3.0
+ * Version: 1.4.0
  * Updated: 2026-11-18
  * Description: Adds a tour-wide producer request basket and grouped, isolated Viber specifications.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
@@ -91,12 +91,20 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   }
   function messageForFarm(farmId) {
     const farm = farmFor(farmId);
-    const rows = state.allocations.filter((row) => String(row.gazdinstvo_id) === String(farmId) && num(row.broj_pakovanja) > 0);
+    const rows = state.allocations.filter((row) =>
+      String(row.gazdinstvo_id) === String(farmId) && num(row.broj_pakovanja) > 0);
     const lines = rows.map((row) => {
       const product = productFor(row.product_id);
       const variant = variantFor(row.variant_id);
+      const demand = demandFor(row.product_id, row.variant_id);
+      const count = num(row.broj_pakovanja);
+      const packageSize = num(demand?.packageSize);
+      const packageUnit = demand?.packageUnit || variant?.package_unit || '';
+      const quantity = packageSize > 0
+        ? fmt(count) + ' пак. × ' + fmt(packageSize) + ' ' + packageUnit + ' = ' + fmt(count * packageSize) + ' ' + packageUnit
+        : fmt(count) + ' паковања';
       return '- ' + (product?.name || 'Назив производа није доступан') + ' — ' +
-        (variant?.name || variant?.size_label || 'Варијанта') + ': ' + fmt(row.broj_pakovanja) + ' паковања';
+        (variant?.name || variant?.size_label || 'Варијанта') + ': ' + quantity;
     });
     return 'Поштовани' + (farm?.name ? ' ' + farm.name : '') + ',\n\n' +
       'Молимо вас да потврдите доступност следећих производа за туру #' + tourId + ':\n' +
