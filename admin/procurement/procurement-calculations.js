@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT CALCULATIONS
- * Version: 1.1.0
+ * Version: 1.2.0
  * Updated: 2026-11-18
- * Description: Validates package consistency and builds auditable per-packaging procurement stage totals; no UI, database access, or side effects.
+ * Description: Builds per-packaging totals from requested, confirmed and collected stages; legacy allocation counts remain technical-only.
  * Scope: Existing ADMIN Workspace only.
  */
 const toNumber = (value) => { const number = Number(value); return Number.isFinite(number) ? number : 0; };
@@ -86,7 +86,7 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
         productId: demand.productId, packageSize: size, packageUnit: unit,
         neededPackages: 0, totalQuantity: 0, assignedPackages: 0, orderedPackages: 0,
         sentPackages: 0, confirmedPackages: 0, collectedPackages: 0,
-        remainingPackages: 0, overAllocatedPackages: 0,
+        remainingPackages: 0, overRequestedPackages: 0,
         statusMismatchRows: 0, variants: []
       });
     }
@@ -104,8 +104,8 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
       const hasSentStatus = row.viber_status === 'sent' || row.viber_status === 'replied';
       return hasSentStatus ? toNumber(row.naruceno_pakovanja) !== toNumber(row.broj_pakovanja) : toNumber(row.naruceno_pakovanja) > 0;
     }).length;
-    const remaining = Math.max(0, demand.packages - assigned);
-    const overAllocated = Math.max(0, assigned - demand.packages);
+    const remaining = Math.max(0, demand.packages - ordered);
+    const overRequested = Math.max(0, ordered - demand.packages);
 
     const group = groups.get(groupKey);
     group.neededPackages += demand.packages;
@@ -116,7 +116,7 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
     group.confirmedPackages += confirmed;
     group.collectedPackages += collected;
     group.remainingPackages += remaining;
-    group.overAllocatedPackages += overAllocated;
+    group.overRequestedPackages += overRequested;
     group.statusMismatchRows += statusMismatchRows;
     group.variants.push({
       productId: demand.productId, variantId: demand.variantId,
@@ -124,7 +124,7 @@ export function buildProcurementPackagingSummary({ demands = [], allocations = [
       totalQuantity: demand.packages * size, assignedPackages: assigned, orderedPackages: ordered,
       sentPackages: sent,
       confirmedPackages: confirmed, collectedPackages: collected,
-      remainingPackages: remaining, overAllocatedPackages: overAllocated,
+      remainingPackages: remaining, overRequestedPackages: overRequested,
       statusMismatchRows
     });
   }
@@ -145,6 +145,6 @@ export function sumAllocatedPackages({ allocations = [], productId, variantId, e
 
 export function calculateRemainingPackages({ demand, allocations = [], excludingFarmId = null } = {}) {
   if (!demand) return 0;
-  const allocated = sumAllocatedPackages({ allocations, productId: demand.productId, variantId: demand.variantId, excludingFarmId });
-  return Math.max(0, demand.packages - allocated);
+  const requested = allocations.filter((row) => String(row.product_id) === String(demand.productId) && String(row.variant_id) === String(demand.variantId) && (excludingFarmId === null || String(row.gazdinstvo_id) !== String(excludingFarmId))).reduce((sum, row) => sum + toNumber(row.naruceno_pakovanja), 0);
+  return Math.max(0, demand.packages - requested);
 }
