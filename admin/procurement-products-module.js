@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.6.2
+ * Version: 3.6.3
  * Updated: 2026-11-18
- * Description: Prefills the remaining request quantity, separates the draft stepper from the cart, and enables adding the selected quantity without a zero-remaining lock.
+ * Description: Updates existing procurement rows by primary key to avoid legacy INSERT-trigger conflicts; new rows use INSERT with compensating rollback for grouped failures.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
@@ -45,7 +45,7 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.6.0';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.6.3';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],draftCounts:{},tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
@@ -146,13 +146,46 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
     if(requested<n(old?.potvrdjeno_pakovanja)||requested<n(old?.preuzeto_pakovanja))throw Error('Нови захтев не може бити мањи од већ потврђене или преузете количине.');
     payloads.push({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:new Date().toISOString()});
    }
-   const q=await client.from('tura_nabavka_dodele').upsert(payloads,{onConflict:'tura_id,variant_id,gazdinstvo_id'}).select('id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja');
-   if(q.error)throw Error(q.error.message);
-   if(!Array.isArray(q.data)||q.data.length!==payloads.length)throw Error('База није потврдила све ставке групног захтева.');
-   for(const item of s.cart){
-    const row=q.data.find(x=>String(x.variant_id)===String(item.variantId)&&String(x.gazdinstvo_id)===String(s.farmId));
-    const old=allocation(item.productId,item.variantId,s.farmId),expected=n(old?.naruceno_pakovanja)+n(item.count);
-    if(!row||n(row.broj_pakovanja)!==expected||n(row.naruceno_pakovanja)!==expected)throw Error('База није потврдила истовремени упис захтеване количине и техничког поља.');
+   // Existing allocation rows must be UPDATED by primary key. PostgREST UPSERT
+   // executes the INSERT trigger before conflict resolution and rejects legacy rows.
+   const appliedUpdates=[],insertedIds=[],savedRows=[];
+   try{
+    for(const payload of payloads){
+     const old=allocation(payload.product_id,payload.variant_id,s.farmId);
+     if(old){
+      const patch={broj_pakovanja:payload.broj_pakovanja,naruceno_pakovanja:payload.naruceno_pakovanja,nabavna_cena:payload.nabavna_cena,naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:payload.updated_at};
+      const q=await client.from('tura_nabavka_dodele').update(patch).eq('id',old.id).select('id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').maybeSingle();
+      if(q.error)throw Error(q.error.message);
+      if(!q.data)throw Error('Постојећа евиденција није ажурирана. Провери ADMIN дозволе и освежи податке.');
+      appliedUpdates.push({old});
+      savedRows.push(q.data);
+     }else{
+      const q=await client.from('tura_nabavka_dodele').insert(payload).select('id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').single();
+      if(q.error)throw Error(q.error.message);
+      if(!q.data)throw Error('База није потврдила упис нове ставке.');
+      insertedIds.push(q.data.id);
+      savedRows.push(q.data);
+     }
+    }
+    if(savedRows.length!==payloads.length)throw Error('База није потврдила све ставке групног захтева.');
+    for(const payload of payloads){
+     const row=savedRows.find(x=>String(x.variant_id)===String(payload.variant_id)&&String(x.gazdinstvo_id)===String(s.farmId));
+     if(!row||n(row.broj_pakovanja)!==n(payload.broj_pakovanja)||n(row.naruceno_pakovanja)!==n(payload.naruceno_pakovanja))throw Error('База није потврдила истовремени упис захтеване количине и техничког поља.');
+    }
+   }catch(writeError){
+    const rollbackErrors=[];
+    for(const id of insertedIds){
+     const r=await client.from('tura_nabavka_dodele').delete().eq('id',id);
+     if(r.error)rollbackErrors.push(r.error.message);
+    }
+    for(const applied of [...appliedUpdates].reverse()){
+     const old=applied.old;
+     const restore={broj_pakovanja:old.broj_pakovanja,naruceno_pakovanja:old.naruceno_pakovanja,nabavna_cena:old.nabavna_cena,naruceno:old.naruceno,potvrdjeno_pakovanja:old.potvrdjeno_pakovanja,preuzeto_pakovanja:old.preuzeto_pakovanja,viber_status:old.viber_status,updated_at:old.updated_at};
+     const r=await client.from('tura_nabavka_dodele').update(restore).eq('id',old.id);
+     if(r.error)rollbackErrors.push(r.error.message);
+    }
+    if(rollbackErrors.length)throw Error((writeError.message||String(writeError))+' Аутоматско враћање није у потпуности успело: '+rollbackErrors.join('; '));
+    throw writeError;
    }
    s.cart=[];await load();s.tab='field';setNote('Захтев је евидентиран у бази. Viber порука је спремна за копирање и слање.');return true;
   }catch(err){setNote('Захтев није сачуван: '+(err.message||String(err)),true);return false;}
