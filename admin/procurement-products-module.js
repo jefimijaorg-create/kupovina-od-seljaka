@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.0.1
+ * Version: 3.0.2
  * Updated: 2026-11-18
  * Description: Two-level procurement workspace: tour-wide demand overview and farm-first execution with basket and field protocol tabs.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
@@ -151,11 +151,12 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(a==='back')return onBack?.();
   if(a==='step'||a==='add'){
    const p=b.dataset.p,v=b.dataset.v,d=demand(p,v);let item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
-   if(!item){item={productId:p,variantId:v,count:0};s.cart.push(item);}
-   const next=item.count+(a==='add'?1:Number(b.dataset.delta));
+   const next=(item?.count||0)+(a==='add'?1:Number(b.dataset.delta));
    const already=allocated(p,v),limit=Math.max(0,d.packages-already);
-   if(next<0)item.count=0;else if(next>limit)return setNote('Не можеш тражити више од преостале потребе ('+qty(limit,d)+').',true);else item.count=next;
-   s.cart=s.cart.filter(x=>x.count>0);render();return;
+   if(next>limit)return setNote('Не можеш тражити више од преостале потребе ('+qty(limit,d)+').',true);
+   if(next<=0){s.cart=s.cart.filter(x=>key(x.productId,x.variantId)!==key(p,v));}
+   else if(item)item.count=next;else s.cart.push({productId:p,variantId:v,count:next});
+   render();return;
   }
   if(a==='cart-step'){const x=s.cart[Number(b.dataset.i)];if(!x)return;const d=demand(x.productId,x.variantId),limit=Math.max(0,d.packages-allocated(x.productId,x.variantId));x.count=Math.max(0,Math.min(limit,x.count+Number(b.dataset.delta)));s.cart=s.cart.filter(y=>y.count>0);render();return;}
   if(a==='remove'){s.cart.splice(Number(b.dataset.i),1);render();return;}
