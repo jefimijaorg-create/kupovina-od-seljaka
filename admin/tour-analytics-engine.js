@@ -15,36 +15,50 @@ const fmt=v=>num(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
 
 export function buildTourAnalytics({tour,items=[],allocations=[],products=[],variants=[],farms=[],orders=[]}){
  const P=new Map(products.map(x=>[str(x.id),x])),V=new Map(variants.map(x=>[str(x.id),x])),F=new Map(farms.map(x=>[str(x.id),x])),O=new Map(orders.map(x=>[str(x.id),x]));
- const plans=new Map(),matrix=new Map(),exceptions={unassigned:[],unconfirmed:[],physical:[]};
+ const groups=new Map(),matrix=new Map(),exceptions={unassigned:[],unconfirmed:[],physical:[]};
  for(const item of items){
-  const fid=farmOf(item),p=P.get(str(item.product_id)),v=V.get(str(item.variant_id));
+  const fid=farmOf(item),p=P.get(str(item.product_id)),v=V.get(str(item.variant_id)),k=str(item.product_id)+'::'+str(item.variant_id);
   const row={source:'order_item',itemId:item.id,orderId:item.porudzbina_id,productId:item.product_id,variantId:item.variant_id,productName:p?.name||'Непознат производ',variantName:v?.name||v?.size_label||item.variant_name||'Основна варијанта',farmId:fid,farmName:F.get(str(fid))?.name||(fid==null?'Без додељеног газдинства':'Непознато газдинство'),packages:num(item.package_count),packageSize:item.package_size==null?null:num(item.package_size),packageUnit:item.package_unit||item.quantity_unit||item.jedinica||null,orderStatus:O.get(str(item.porudzbina_id))?.status||null,itemStatus:item.status_stavke||item.status||null};
-  if(fid==null)exceptions.unassigned.push({...row,reason:'Ставка плана нема додељено газдинство.'});
-  const k=key(item.product_id,item.variant_id,fid),old=plans.get(k)||{...row,packages:0};old.packages+=row.packages;plans.set(k,old);
+  const g=groups.get(k)||{productId:item.product_id,variantId:item.variant_id,productName:row.productName,variantName:row.variantName,packageSize:row.packageSize,packageUnit:row.packageUnit,total:0,unassigned:0,assigned:new Map(),allocations:[]};
+  g.total+=row.packages;
+  if(fid==null)g.unassigned+=row.packages;
+  else g.assigned.set(str(fid),(g.assigned.get(str(fid))||0)+row.packages);
+  groups.set(k,g);
  }
  for(const a of allocations){
-  const fid=a.gazdinstvo_id,p=P.get(str(a.product_id)),v=V.get(str(a.variant_id)),source=items.find(x=>str(x.product_id)===str(a.product_id)&&str(x.variant_id)===str(a.variant_id)&&str(farmOf(x))===str(fid));
-  const row={source:'allocation',allocationId:a.id,productId:a.product_id,variantId:a.variant_id,farmId:fid,productName:p?.name||'Непознат производ',variantName:v?.name||v?.size_label||'Основна варијанта',farmName:F.get(str(fid))?.name||'Непознато газдинство',plannedPackages:plans.get(key(a.product_id,a.variant_id,fid))?.packages||0,activatedPackages:num(a.naruceno_pakovanja),assignedPackages:num(a.broj_pakovanja),confirmedPackages:num(a.potvrdjeno_pakovanja),collectedPackages:num(a.preuzeto_pakovanja),viberStatus:a.viber_status,packageSize:source?.package_size==null?null:num(source.package_size),packageUnit:source?.package_unit||source?.quantity_unit||source?.jedinica||null};
-  const k=key(a.product_id,a.variant_id,fid);
-  matrix.set(k,row);
+  const k=str(a.product_id)+'::'+str(a.variant_id),g=groups.get(k);
+  const p=P.get(str(a.product_id)),v=V.get(str(a.variant_id)),fid=a.gazdinstvo_id;
+  const assignedPlan=g?.assigned.get(str(fid))||0;
+  const allocationCapacity=num(a.broj_pakovanja);
+  const extraCapacity=Math.max(0,allocationCapacity-assignedPlan);
+  const fromUnassigned=g?Math.min(g.unassigned,extraCapacity):0;
+  if(g)g.unassigned-=fromUnassigned;
+  const source=items.find(x=>str(x.product_id)===str(a.product_id)&&str(x.variant_id)===str(a.variant_id));
+  const row={source:'allocation',allocationId:a.id,productId:a.product_id,variantId:a.variant_id,farmId:fid,productName:p?.name||'Непознат производ',variantName:v?.name||v?.size_label||'Основна варијанта',farmName:F.get(str(fid))?.name||'Непознато газдинство',plannedPackages:assignedPlan+fromUnassigned,activatedPackages:num(a.naruceno_pakovanja),assignedPackages:allocationCapacity,confirmedPackages:num(a.potvrdjeno_pakovanja),collectedPackages:num(a.preuzeto_pakovanja),viberStatus:a.viber_status,packageSize:source?.package_size==null?(g?.packageSize??null):num(source.package_size),packageUnit:source?.package_unit||source?.quantity_unit||source?.jedinica||g?.packageUnit||null};
+  matrix.set(key(a.product_id,a.variant_id,fid),row);
   if(row.activatedPackages>row.confirmedPackages||(row.activatedPackages>0&&row.viberStatus!=='replied'))exceptions.unconfirmed.push({...row,gapPackages:Math.max(0,row.activatedPackages-row.confirmedPackages),reason:row.viberStatus==='replied'?'Потврђена количина је мања од наручене.':'Нема евидентираног Viber одговора произвођача.'});
  }
- for(const [k,p] of plans){
-  const row=matrix.get(k);
-  if(row)row.plannedPackages=p.packages;
-  else matrix.set(k,{source:'plan',productId:p.productId,variantId:p.variantId,farmId:p.farmId,productName:p.productName,variantName:p.variantName,farmName:p.farmName,plannedPackages:p.packages,activatedPackages:0,confirmedPackages:0,collectedPackages:0,packageSize:p.packageSize,packageUnit:p.packageUnit});
+ for(const [k,g] of groups){
+  for(const [fid,packages] of g.assigned){
+   const mk=key(g.productId,g.variantId,fid);
+   if(!matrix.has(mk))matrix.set(mk,{source:'plan',productId:g.productId,variantId:g.variantId,farmId:fid,productName:g.productName,variantName:g.variantName,farmName:F.get(fid)?.name||'Непознато газдинство',plannedPackages:packages,activatedPackages:0,confirmedPackages:0,collectedPackages:0,packageSize:g.packageSize,packageUnit:g.packageUnit});
+  }
+  if(g.unassigned>0){
+   const row={source:'unassigned_plan',productId:g.productId,variantId:g.variantId,farmId:null,productName:g.productName,variantName:g.variantName,farmName:'Без додељеног газдинства',plannedPackages:g.unassigned,activatedPackages:0,confirmedPackages:0,collectedPackages:0,packageSize:g.packageSize,packageUnit:g.packageUnit};
+   matrix.set(key(g.productId,g.variantId,null),row);
+   exceptions.unassigned.push({...row,packages:g.unassigned,reason:'Део планске количине још нема додељено газдинство.'});
+  }
  }
  const rows=[...matrix.values()].map(r=>({...r,statePackages:r.plannedPackages-r.collectedPackages,state:r.plannedPackages>r.collectedPackages?'deficit':r.plannedPackages<r.collectedPackages?'surplus':'balanced'}));
  for(const row of rows){
   if(row.collectedPackages!==row.activatedPackages||row.plannedPackages!==row.collectedPackages){
-   exceptions.physical.push({...row,gapPackages:row.activatedPackages-row.collectedPackages,reason:row.collectedPackages<row.activatedPackages?'Физички није преузета цела планирана/наручена количина.':'Преузета количина је већа од наручене.'});
+   exceptions.physical.push({...row,gapPackages:row.activatedPackages-row.collectedPackages,reason:row.collectedPackages<row.plannedPackages?'Физички није преузета цела планска количина.':'Преузета количина је већа од плана.'});
   }
  }
  const actionItems=rows.filter(r=>r.state!=='balanced').map(r=>({...r,id:key(r.productId,r.variantId,r.farmId),type:r.state,suggestedActions:r.state==='deficit'?['reassign','cancel','book_difference']:['reassign']}));
  const totals=rows.reduce((t,r)=>{t.planned+=r.plannedPackages;t.activated+=r.activatedPackages;t.confirmed+=r.confirmedPackages;t.collected+=r.collectedPackages;t.toResolve+=r.statePackages;return t;},{planned:0,activated:0,confirmed:0,collected:0,toResolve:0});
  return {tour,tourId:tour?.id,generatedAt:new Date().toISOString(),totals,rows,exceptions,actionItems,counts:{unassigned:exceptions.unassigned.length,unconfirmed:exceptions.unconfirmed.length,physical:exceptions.physical.length,managerActions:actionItems.length}};
 }
-
 export async function loadTourAnalytics({client,tourId}){
  if(!client?.from||!tourId)throw new Error('Недостаје Supabase клијент или ID туре.');
  const [tr,ir,ar]=await Promise.all([
