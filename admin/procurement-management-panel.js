@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.4.0
+ * Version: 1.5.0
  * Updated: 2026-11-18
- * Description: Adds a tour-wide producer request basket and grouped, isolated Viber specifications.
+ * Description: Shows required, activated, ordered, and remaining procurement quantities with per-farm breakdown.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 import { renderProcurementRequestBasket } from './procurement-request-basket.js';
@@ -210,20 +210,36 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
         '<header class="nd-proc-product-heading"><strong>' + esc(productName) + '</strong>' +
         '<small>' + fmt(demands.length) + (demands.length === 1 ? ' варијанта' : ' варијанте') + '</small></header>';
       html += demands.map((demand) => {
-        const totalAssigned = assigned(demand.productId, demand.variantId);
-        const totalConfirmed = allocationsFor(demand.productId, demand.variantId)
-          .reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
-        const left = remaining(demand.productId, demand.variantId);
+        const variantRows = allocationsFor(demand.productId, demand.variantId);
+        const totalActivated = variantRows.reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
+        const totalOrdered = variantRows.reduce((sum, row) => sum + num(row.naruceno_pakovanja), 0);
+        const remainingToOrder = Math.max(0, demand.packages - totalOrdered);
+        const farmBreakdown = variantRows
+          .filter((row) => num(row.broj_pakovanja) > 0 || num(row.naruceno_pakovanja) > 0)
+          .map((row) => {
+            const farm = farmFor(row.gazdinstvo_id);
+            const activated = num(row.broj_pakovanja);
+            const ordered = num(row.naruceno_pakovanja);
+            return '<div class="nd-proc-track-row"><div class="nd-proc-track-title"><strong>' +
+              esc(farm?.name || 'Газдинство #' + row.gazdinstvo_id) + '</strong></div>' +
+              '<div class="nd-proc-track-meta"><span>Активирано: <b>' + fmt(activated) + '</b> пак.</span>' +
+              '<span>Наручено: <b>' + fmt(ordered) + '</b> пак.</span>' +
+              '<span>Преостало код газдинства: <b>' + fmt(Math.max(0, activated - ordered)) + '</b> пак.</span></div></div>';
+          }).join('');
         const suppliers = offersFor(demand.productId, demand.variantId)
           .map((offer) => farmFor(offer.gazdinstvo_id)?.name).filter(Boolean);
         return '<section class="nd-proc-variant-block">' +
           '<div class="nd-proc-card-head"><div><strong>' + esc(formatVariant(demand)) + '</strong></div>' +
-          '<span class="nd-proc-pill ' + (left === 0 ? 'is-done' : 'is-open') + '">' +
-          (left === 0 ? 'Распоређено' : 'Преостало ' + fmt(left)) + '</span></div>' +
-          '<div class="nd-proc-metrics"><span><b>' + fmt(demand.packages) + '</b><small>Потребно паковања</small></span>' +
-          '<span><b>' + fmt(totalAssigned) + '</b><small>Распоређено</small></span><span><b>' + fmt(left) + '</b><small>Преостало</small></span>' +
-          '<span><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></span></div>' +
+          '<span class="nd-proc-pill ' + (remainingToOrder === 0 ? 'is-done' : 'is-open') + '">' +
+          (remainingToOrder === 0 ? 'Све наручено' : 'За наручивање ' + fmt(remainingToOrder)) + '</span></div>' +
+          '<div class="nd-proc-metrics"><span><b>' + fmt(demand.packages) + '</b><small>Потребно</small></span>' +
+          '<span><b>' + fmt(totalActivated) + '</b><small>Активирано</small></span>' +
+          '<span><b>' + fmt(totalOrdered) + '</b><small>Наручено</small></span>' +
+          '<span><b>' + fmt(remainingToOrder) + '</b><small>Преостало</small></span></div>' +
           '<div class="nd-proc-subline">Укупна количина: ' + fmt(demand.totalQuantity) + ' ' + esc(demand.packageUnit || '') + '</div>' +
+          '<div class="nd-proc-farm-lines"><small>Евиденција по газдинствима</small>' +
+          (farmBreakdown || '<div class="nd-proc-empty">Још није активирано ниједно газдинство за ову варијанту.</div>') +
+          '</div>' +
           (demand.valid ? '' : '<div class="nd-proc-warning">Недостаје исправан package_count, package_size или package_unit. Расподела за ову варијанту је блокирана.</div>') +
           '<div class="nd-proc-suppliers"><small>Активне понуде за ову варијанту</small>' +
           (suppliers.length ? suppliers.map((name) => '<span>' + esc(name) + '</span>').join('') : '<em>Нема активних понуда.</em>') +
