@@ -131,8 +131,9 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  async function saveCart(){
   if(s.busy||!s.cart.length||!s.farmId)return false;
   if(s.tour?.status!=='processing'){setNote('Тура није отворена за измене.',true);return false;}
-  s.busy=true;render();let wrote=false;
+  s.busy=true;render();
   try{
+   const payloads=[];
    for(const item of s.cart){
     const d=demand(item.productId,item.variantId),o=offer(item.productId,item.variantId),old=allocation(item.productId,item.variantId,s.farmId);
     if(!d?.valid||!o)throw Error('Понуда или подаци о паковању нису важећи. Освежи податке.');
@@ -142,14 +143,18 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
     const check=validateAllocationCount({requested,alreadyAllocated:alreadyAllocatedElsewhere,demand:d.packages});
     if(!check.valid)throw Error(check.error+' Технички расположиво по постојећем ограничењу базе: '+Math.max(0,d.packages-alreadyAllocatedElsewhere)+' паковања.');
     if(requested<n(old?.potvrdjeno_pakovanja)||requested<n(old?.preuzeto_pakovanja))throw Error('Нови захтев не може бити мањи од већ потврђене или преузете количине.');
-    const payload={tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:new Date().toISOString()};
-    const q=await client.from('tura_nabavka_dodele').upsert(payload,{onConflict:'tura_id,variant_id,gazdinstvo_id'}).select('id,broj_pakovanja,naruceno_pakovanja').single();
-    if(q.error)throw Error(q.error.message);
-    if(!q.data||n(q.data.broj_pakovanja)!==requested||n(q.data.naruceno_pakovanja)!==requested)throw Error('База није потврдила истовремени упис захтеване количине и техничког поља.');
-    wrote=true;
+    payloads.push({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:new Date().toISOString()});
+   }
+   const q=await client.from('tura_nabavka_dodele').upsert(payloads,{onConflict:'tura_id,variant_id,gazdinstvo_id'}).select('id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja');
+   if(q.error)throw Error(q.error.message);
+   if(!Array.isArray(q.data)||q.data.length!==payloads.length)throw Error('База није потврдила све ставке групног захтева.');
+   for(const item of s.cart){
+    const row=q.data.find(x=>String(x.variant_id)===String(item.variantId)&&String(x.gazdinstvo_id)===String(s.farmId));
+    const old=allocation(item.productId,item.variantId,s.farmId),expected=n(old?.naruceno_pakovanja)+n(item.count);
+    if(!row||n(row.broj_pakovanja)!==expected||n(row.naruceno_pakovanja)!==expected)throw Error('База није потврдила истовремени упис захтеване количине и техничког поља.');
    }
    s.cart=[];await load();s.tab='field';setNote('Захтев је евидентиран у бази. Viber порука је спремна за копирање и слање.');return true;
-  }catch(err){if(wrote){try{await load();}catch(_){}}setNote('Захтев није у потпуности сачуван: '+(err.message||String(err)),true);return false;}
+  }catch(err){setNote('Захтев није сачуван: '+(err.message||String(err)),true);return false;}
   finally{s.busy=false;render();}
  }
  async function markSent(id){
