@@ -7,6 +7,7 @@
  */
 import { loadProcurementData } from './data/admin-repository.js';
 import { buildProcurementDemands } from './procurement/procurement-calculations.js';
+import { mountTourAnalyticsPanel } from './tour-analytics-engine.js';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
@@ -29,7 +30,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.0.0';document.head.appendChild(style);
- const s={disposed:false,busy:false,tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],tab:'basket',notice:'',error:false};
+ const s={disposed:false,busy:false,analyticsHandle:null,tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -93,6 +94,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   '<aside class="ndp3-side"><section class="ndp3-panel"><div class="ndp3-tabs"><button class="ndp3-tab" data-tab="basket" aria-selected="'+(s.tab==='basket')+'">Корпа захтева ('+s.cart.length+')</button><button class="ndp3-tab" data-tab="field" aria-selected="'+(s.tab==='field')+'">Теренски протокол</button></div>'+
   (s.tab==='basket'?'<h2>Корпа · '+(ff?.name?e(ff.name):'изабери газдинство')+'</h2>'+(selected?cartHtml:'<div class="ndp3-empty">Изабери газдинство да би додавао производе у његову корпу.</div>')+'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="generate" '+(!selected||!s.cart.length||!writable||s.busy?'disabled':'')+'>'+(s.busy?'Чувам…':'Генериши Viber поруку и активирај захтев')+'</button></div><p>Кликом се захтев чува као наручен, припрема Viber порука и отвара ручно слање. Статус „Послато“ бележи се само ако газдинство има број телефона.</p>':'<h2>Теренско преузимање · '+e(ff?.name||'Изабери газдинство')+'</h2>'+(selected?protocol:'<div class="ndp3-empty">Изабери газдинство да видиш његов теренски протокол.</div>'))+
   '</section></aside></div><div class="ndp3-foot">Подаци се читају и уписују у постојеће Supabase табеле. Назив производа долази преко product_id → products.name. Количине се рачунају из package_count × package_size.</div>';
+  s.analyticsHandle?.destroy();const analyticsRoot=host.querySelector('[data-tour-analytics-root]');if(analyticsRoot)s.analyticsHandle=mountTourAnalyticsPanel({root:analyticsRoot,client,tourId,intervalMs:30000});
  }
  async function saveCart({markSent=false}={}){
   if(s.busy||!s.cart.length||!s.farmId)return;if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
@@ -167,5 +169,5 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(a==='generate')return generateViber();
  });
  try{await load();render();}catch(err){host.innerHTML='<div class="ndp3-empty"><b>Набавка није учитана</b><p>'+e(err.message||String(err))+'</p><button class="ndp3-btn" data-action="back">Назад</button></div>';}
- return{destroy(){s.disposed=true;style.remove();root.replaceChildren();}};
+ return{destroy(){s.disposed=true;s.analyticsHandle?.destroy();style.remove();root.replaceChildren();}};
 }
