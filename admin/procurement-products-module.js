@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.8.1
+ * Version: 3.8.2
  * Updated: 2026-11-18
- * Description: Adds bounded initial loading, explicit failure diagnostics and retry without leaving the existing ADMIN SPA.
+ * Description: Starts the loading watchdog before invoking Supabase reads so synchronous client setup cannot prevent timeout registration.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.2';
@@ -46,7 +46,7 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.8.1';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.8.2';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],draftCounts:{},tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
@@ -272,8 +272,8 @@ host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmI
   let timeoutId;
   try{
    await Promise.race([
-    load(),
-    new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Учитавање из базе није завршено у року од 20 секунди. Провери везу и покушај поново.')),20000);})
+    new Promise((_,reject)=>{timeoutId=window.setTimeout(()=>reject(new Error('Учитавање из базе није завршено у року од 15 секунди. Захтев није завршен. Покушај поново.')),15000);}),
+    Promise.resolve().then(load)
    ]);
    clearTimeout(timeoutId);
    if(attempt!==loadAttempt||s.disposed)return;
