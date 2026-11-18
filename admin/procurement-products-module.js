@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.1.0
+ * Version: 3.1.1
  * Updated: 2026-11-18
  * Description: Two-level procurement workspace: tour-wide demand overview and farm-first execution with basket and field protocol tabs.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
@@ -52,10 +52,10 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   return [...map].map(([u,v])=>f(v)+' '+u).join(' · ')||'0';
  }
  const totalNeeded=()=>unitTotals(d=>d.packages);
- const totalActivated=()=>unitTotals(d=>Math.max(0,allocated(d.productId,d.variantId)-ordered(d.productId,d.variantId)));
+ const totalActivated=()=>unitTotals(d=>Math.max(0,allocated(d.productId,d.variantId)-ordered(d.productId,d.variantId))+pending(d.productId,d.variantId));
  const totalOrdered=()=>unitTotals(d=>ordered(d.productId,d.variantId));
  const totalCollected=()=>unitTotals(d=>allocationsFor(d.productId,d.variantId).reduce((a,x)=>a+n(x.preuzeto_pakovanja),0));
- const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId)));
+ const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId)-pending(d.productId,d.variantId)));
  function message(){
   const ff=farm(s.farmId),rows=rowsForFarm().filter(x=>n(x.broj_pakovanja)>0);
   return 'Поштовани'+(ff?.name?' '+ff.name:'')+',\n\nМолимо вас да потврдите захтев за туру #'+tourId+':\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Варијанта')+': '+f(x.broj_pakovanja)+' паковања ('+qty(x.broj_pakovanja,d)+')';}).join('\n')+'\n\nМолимо потврдите количине које можете да припремите. Хвала!';
@@ -77,7 +77,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   const farmCatalog=s.demands.filter(d=>d.valid&&offer(d.productId,d.variantId)).map(d=>{
    const p=prod(d.productId),v=variant(d.variantId),al=allocation(d.productId,d.variantId,s.farmId),pending=s.cart.find(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId));
    const count=pending?.count||0,remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)-count);
-   return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+e(v?.name||v?.size_label||'Варијанта')+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip">'+qty(d.packages,d)+'</span></div><p>Потребно '+qty(d.packages,d)+' · Активирано '+qty(Math.max(0,allocated(d.productId,d.variantId)-ordered(d.productId,d.variantId)),d)+' · Наручено '+qty(ordered(d.productId,d.variantId),d)+' · У корпи '+qty(count,d)+' · Преостало '+qty(remaining,d)+'</p><div class="ndp3-row"><span class="ndp3-meta">Количина за захтев</span><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="step" data-delta="-1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Умањи">−</button><output>'+f(count)+'</output><button class="ndp3-btn plus" data-action="step" data-delta="1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Увећај">+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="add" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||remaining<=0?'disabled':'')+'>Додај у корпу</button></div></article>';
+   return '<article class="ndp3-product"><div class="ndp3-row"><div><strong>'+e(p?.name||'Производ')+'</strong><small>'+e(v?.name||v?.size_label||'Варијанта')+' · '+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</small></div><span class="ndp3-chip">'+qty(d.packages,d)+'</span></div><p>Потребно '+qty(d.packages,d)+' · Активирано '+qty(Math.max(0,allocated(d.productId,d.variantId)-ordered(d.productId,d.variantId)),d)+' · Наручено '+qty(ordered(d.productId,d.variantId),d)+' · У корпи '+qty(count,d)+' · Преостало '+qty(remaining,d)+'</p><div class="ndp3-row"><span class="ndp3-meta">Количина за захтев</span><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="step" data-delta="-1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Умањи">−</button><output>'+f(count)+'</output><button class="ndp3-btn plus" data-action="step" data-delta="1" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" aria-label="Увећај" '+(remaining<=0?'disabled':'')+'>+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="add" data-p="'+e(d.productId)+'" data-v="'+e(d.variantId)+'" '+(!writable||remaining<=0?'disabled':'')+'>Додај у корпу</button></div></article>';
   }).join('')||'<div class="ndp3-empty">Нема активних понуда овог газдинства за потребе туре.</div>';
   const cartHtml=s.cart.length?s.cart.map((x,i)=>{const d=demand(x.productId,x.variantId);return '<div class="ndp3-item"><div class="ndp3-row"><div><div class="ndp3-item-title">'+e(prod(x.productId)?.name)+' · '+e(variant(x.variantId)?.name||variant(x.variantId)?.size_label)+'</div><div class="ndp3-meta">'+f(x.count)+' паковања · '+qty(x.count,d)+'</div></div><div class="ndp3-stepper"><button class="ndp3-btn minus" data-action="cart-step" data-i="'+i+'" data-delta="-1">−</button><output>'+f(x.count)+'</output><button class="ndp3-btn plus" data-action="cart-step" data-i="'+i+'" data-delta="1">+</button></div></div><div class="ndp3-actions"><button class="ndp3-btn" data-action="remove" data-i="'+i+'">Уклони</button></div></div>';}).join(''):'<div class="ndp3-empty">Корпа је празна. Изабери производ и додај количину.</div>';
   const protocol=farmRows.length?farmRows.map(x=>{
