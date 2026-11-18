@@ -38,6 +38,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const allocationsFor=(p,v)=>s.allocations.filter(x=>key(x.product_id,x.variant_id)===key(p,v));
  const allocated=(p,v)=>allocationsFor(p,v).reduce((a,x)=>a+n(x.broj_pakovanja),0);
  const ordered=(p,v)=>allocationsFor(p,v).reduce((a,x)=>a+n(x.naruceno_pakovanja),0);
+ const pending=(p,v)=>s.cart.filter(x=>key(x.productId,x.variantId)===key(p,v)).reduce((a,x)=>a+n(x.count),0);
  const qty=(packages,d)=>d?f(packages*n(d.packageSize))+' '+e(d.packageUnit):f(packages)+' пак.';
  const rowsForFarm=()=>s.allocations.filter(x=>String(x.gazdinstvo_id)===String(s.farmId));
  const setNote=(v,err=false)=>{s.notice=v;s.error=err;render();};
