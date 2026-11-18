@@ -6,6 +6,7 @@
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
 import { renderProcurementRequestBasket } from './procurement-request-basket.js';
+import { loadProcurementData } from './data/admin-repository.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const num = (value) => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
@@ -114,29 +115,17 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   async function load() {
     const token = ++state.token;
     state.notice = '';
-    const tourResult = await client.from('ture').select('id,naziv,status,datum').eq('id', tourId).maybeSingle();
-    if (tourResult.error) throw new Error('Тура: ' + tourResult.error.message);
-    if (!tourResult.data) throw new Error('Тура није пронађена или немате дозволу за читање.');
-    state.tour = tourResult.data;
-
-    const itemResult = await client.from('stavke_porudzbine')
-      .select('id,product_id,variant_id,package_count,package_size,package_unit')
-      .eq('tura_id', tourId);
-    state.items = unwrap(itemResult, 'Ставке поруџбина');
-
-    state.invalidSourceRows = state.items.filter((row) => !row.product_id || !row.variant_id).length;
-    const productIds = uniq(state.items.map((row) => row.product_id));
-    const variantIds = uniq(state.items.map((row) => row.variant_id));
-    const [productsResult, variantsResult, allocationsResult] = await Promise.all([
-      productIds.length ? client.from('products').select('id,name').in('id', productIds) : Promise.resolve({ data: [], error: null }),
-      variantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,is_active').in('id', variantIds) : Promise.resolve({ data: [], error: null }),
-      client.from('tura_nabavka_dodele')
-        .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,naruceno,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status,viber_poslato_at,potvrdjeno_at,updated_at')
-        .eq('tura_id', tourId).order('id', { ascending: true })
-    ]);
-    state.products = unwrap(productsResult, 'Производи');
-    state.variants = unwrap(variantsResult, 'Варијанте');
-    state.allocations = unwrap(allocationsResult, 'Набавне расподеле');
+    const data = await loadProcurementData({ client, tourId });
+    Object.assign(state, {
+      tour: data.tour,
+      items: data.items,
+      products: data.products,
+      variants: data.variants,
+      allocations: data.allocations,
+      offers: data.offers,
+      farms: data.farms,
+      invalidSourceRows: data.invalidSourceRows
+    });
 
     const demandMap = new Map();
     for (const row of state.items) {
@@ -169,20 +158,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       return an.localeCompare(bn, 'sr') || formatVariant(a).localeCompare(formatVariant(b), 'sr');
     });
 
-    const offerProductIds = uniq(state.demands.map((demand) => demand.productId));
-    const offerResult = offerProductIds.length
-      ? await client.from('product_offers').select('id,gazdinstvo_id,product_id,variant_id,purchase_price,is_active')
-        .in('product_id', offerProductIds).eq('is_active', true)
-      : { data: [], error: null };
-    state.offers = unwrap(offerResult, 'Активне понуде');
-    const relevantOffers = state.offers.filter((offer) =>
-      state.demands.some((demand) => String(demand.productId) === String(offer.product_id) &&
-        String(demand.variantId) === String(offer.variant_id)));
-    const farmIds = uniq([...relevantOffers.map((offer) => offer.gazdinstvo_id), ...state.allocations.map((row) => row.gazdinstvo_id)]);
-    const farmResult = farmIds.length
-      ? await client.from('gazdinstva').select('id,name,phone').in('id', farmIds).order('name', { ascending: true })
-      : { data: [], error: null };
-    state.farms = unwrap(farmResult, 'Газдинства');
+    const relevantOffers = data.relevantOffers;
 
     if (token !== state.token || state.disposed) return;
     const offeredFarmIds = uniq(relevantOffers.map((offer) => offer.gazdinstvo_id));
