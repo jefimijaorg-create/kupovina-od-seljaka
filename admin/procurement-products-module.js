@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.6.0
+ * Version: 3.6.1
  * Updated: 2026-11-18
- * Description: Shows only requested, confirmed and collected quantities; uses guarded technical allocation mirroring and unique-key upsert.
+ * Description: Shows only the three business quantities; keeps legacy allocation checks internal and saves grouped requests atomically by the existing unique key.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js';
@@ -141,7 +141,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
     const requested=n(old?.naruceno_pakovanja)+n(item.count);
     const alreadyAllocatedElsewhere=Math.max(0,allocated(item.productId,item.variantId)-n(old?.broj_pakovanja));
     const check=validateAllocationCount({requested,alreadyAllocated:alreadyAllocatedElsewhere,demand:d.packages});
-    if(!check.valid)throw Error(check.error+' Технички расположиво по постојећем ограничењу базе: '+Math.max(0,d.packages-alreadyAllocatedElsewhere)+' паковања.');
+    if(!check.valid)throw Error('Захтев није могуће сачувати због постојеће евиденције ове варијанте. Претходне набавне евиденције морају бити усаглашене пре новог захтева.');
     if(requested<n(old?.potvrdjeno_pakovanja)||requested<n(old?.preuzeto_pakovanja))throw Error('Нови захтев не може бити мањи од већ потврђене или преузете количине.');
     payloads.push({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:new Date().toISOString()});
    }
