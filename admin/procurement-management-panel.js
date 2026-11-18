@@ -186,35 +186,50 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '');
     const groups = new Map();
     for (const demand of state.demands) {
-      const packageKey = String(demand.packageSize ?? '') + ' ' + String(demand.packageUnit ?? '');
-      if (!groups.has(packageKey)) groups.set(packageKey, []);
-      groups.get(packageKey).push(demand);
+      const product = productFor(demand.productId);
+      const packageKey = String(demand.productId) + '|' + String(demand.packageSize ?? '') + '|' + String(demand.packageUnit ?? '');
+      if (!groups.has(packageKey)) groups.set(packageKey, { productName: product?.name || 'Производ није доступан', packageSize: demand.packageSize, packageUnit: demand.packageUnit, demands: [] });
+      groups.get(packageKey).demands.push(demand);
     }
-    let html = '<div class="nd-proc-table-intro"><strong>Преглед потреба по амбалажи</strong><span>Свака количина је исказана у паковањима. Изабери газдинства у последњој колони за расподелу и праћење.</span></div>';
+    let html = '<div class="nd-proc-table-intro"><strong>Преглед набавке по производу и амбалажи</strong><span>Количине су исказане у паковањима. „Послато“ се рачуна тек када је Viber слање ручно потврђено за газдинство.</span></div>';
     if (state.invalidSourceRows) html += '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>';
-    for (const [packageKey, demands] of groups) {
-      const rows = demands.map((demand) => {
-        const product = productFor(demand.productId);
+    for (const group of groups.values()) {
+      const totals = group.demands.reduce((acc, demand) => {
+        const rows = allocationsFor(demand.productId, demand.variantId);
+        acc.needed += demand.packages;
+        acc.assigned += rows.reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
+        acc.sent += rows.filter((row) => row.viber_status === 'sent' || row.viber_status === 'replied')
+          .reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
+        acc.confirmed += rows.reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
+        acc.collected += rows.reduce((sum, row) => sum + num(row.preuzeto_pakovanja), 0);
+        return acc;
+      }, { needed: 0, assigned: 0, sent: 0, confirmed: 0, collected: 0 });
+      const unassigned = Math.max(0, totals.needed - totals.assigned);
+      const rows = group.demands.map((demand) => {
         const allocationRows = allocationsFor(demand.productId, demand.variantId);
         const totalAssigned = allocationRows.reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
-        const totalOrdered = allocationRows.reduce((sum, row) => sum + num(row.naruceno_pakovanja), 0);
+        const totalSent = allocationRows.filter((row) => row.viber_status === 'sent' || row.viber_status === 'replied')
+          .reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
         const totalConfirmed = allocationRows.reduce((sum, row) => sum + num(row.potvrdjeno_pakovanja), 0);
         const totalCollected = allocationRows.reduce((sum, row) => sum + num(row.preuzeto_pakovanja), 0);
-        const stages = [
-          ['Додељено', totalAssigned],
-          ['Наручено', totalOrdered],
-          ['Потврђено', totalConfirmed],
-          ['Преузето', totalCollected]
-        ];
+        const totalUnassigned = Math.max(0, demand.packages - totalAssigned);
         return '<tr>' +
-          '<td><strong>' + esc(product?.name || 'Производ није доступан') + '</strong><small>' + esc(formatVariant(demand)) + '</small></td>' +
+          '<td><strong>' + esc(formatVariant(demand)) + '</strong><small>' + esc(demand.packageSize) + ' ' + esc(demand.packageUnit || '') + '</small></td>' +
           '<td class="nd-proc-number">' + fmt(demand.packages) + '</td>' +
-          stages.map(([label, value]) => '<td class="nd-proc-stage"><b>' + fmt(value) + '</b><small>' + label + '</small></td>').join('') +
+          '<td class="nd-proc-stage"><b>' + fmt(totalAssigned) + '</b><small>Додељено</small></td>' +
+          '<td class="nd-proc-stage"><b>' + fmt(totalUnassigned) + '</b><small>Нераспоређено</small></td>' +
+          '<td class="nd-proc-stage"><b>' + fmt(totalSent) + '</b><small>Послато</small></td>' +
+          '<td class="nd-proc-stage"><b>' + fmt(totalConfirmed) + '</b><small>Потврђено</small></td>' +
+          '<td class="nd-proc-stage"><b>' + fmt(totalCollected) + '</b><small>Преузето</small></td>' +
           '<td><button type="button" class="nd-proc-row-action" data-open-product="' + esc(demand.productId) + '" data-open-variant="' + esc(demand.variantId) + '">Газдинства <span aria-hidden="true">→</span></button></td>' +
           '</tr>';
       }).join('');
-      html += '<section class="nd-proc-package-group"><header><strong>Амбалажа: ' + esc(packageKey.trim() || 'Није наведена') + '</strong><small>' + fmt(demands.length) + (demands.length === 1 ? ' ставка' : ' ставки') + '</small></header>' +
-        '<div class="nd-proc-table-wrap"><table class="nd-proc-table"><thead><tr><th>Производ / варијанта</th><th>Потребно</th><th>Додељено</th><th>Наручено</th><th>Потврђено</th><th>Преузето</th><th>Управљање</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>';
+      const packageLabel = group.packageSize === null || group.packageSize === undefined || group.packageSize === ''
+        ? 'Амбалажа није наведена' : 'Амбалажа ' + String(group.packageSize) + ' ' + String(group.packageUnit || '');
+      html += '<section class="nd-proc-package-group"><header><div><strong>' + esc(group.productName) + ' · ' + esc(packageLabel) + '</strong><small>' +
+        fmt(group.demands.length) + (group.demands.length === 1 ? ' варијанта' : ' варијанте') + '</small></div>' +
+        '<div class="nd-proc-package-totals"><span>Потребно <b>' + fmt(totals.needed) + '</b></span><span>Додељено <b>' + fmt(totals.assigned) + '</b></span><span>Нераспоређено <b>' + fmt(unassigned) + '</b></span></div></header>' +
+        '<div class="nd-proc-table-wrap"><table class="nd-proc-table"><thead><tr><th>Варијанта</th><th>Потребно</th><th>Додељено</th><th>Нераспоређено</th><th>Послато</th><th>Потврђено</th><th>Преузето</th><th>Детаљи</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>';
     }
     return html;
   }
@@ -264,6 +279,24 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     return html;
   }
 
+  function renderVariantFarmBreakdown() {
+    const rows = allocationsFor(state.selectedProductId, state.selectedVariantId)
+      .slice().sort((a, b) => String(farmFor(a.gazdinstvo_id)?.name || '').localeCompare(String(farmFor(b.gazdinstvo_id)?.name || ''), 'sr'));
+    if (!rows.length) return '<section class="nd-proc-variant-farms"><header><strong>Праћење по газдинствима</strong></header><div class="nd-proc-empty">За ову варијанту још није додељено ниједно паковање.</div></section>';
+    const body = rows.map((row) => {
+      const farm = farmFor(row.gazdinstvo_id);
+      const sent = row.viber_status === 'sent' || row.viber_status === 'replied' ? num(row.broj_pakovanja) : 0;
+      const draft = state.trackingDraft[row.id] || {};
+      return '<article class="nd-proc-variant-farm"><header><strong>' + esc(farm?.name || 'Газдинство #' + row.gazdinstvo_id) + '</strong><span class="nd-proc-pill ' + (sent > 0 ? 'is-done' : 'is-open') + '">' + (sent > 0 ? 'Захтев послат' : 'Чека слање') + '</span></header>' +
+        '<div class="nd-proc-variant-stages"><span><b>' + fmt(row.broj_pakovanja) + '</b><small>Додељено</small></span><span><b>' + fmt(sent) + '</b><small>Послато</small></span><span><b>' + fmt(row.potvrdjeno_pakovanja) + '</b><small>Потврђено</small></span><span><b>' + fmt(row.preuzeto_pakovanja) + '</b><small>Преузето</small></span></div>' +
+        '<div class="nd-proc-track-grid">' + trackingInput(row, draft, 'naruceno_pakovanja', 'Наручено од газдинства') +
+        trackingInput(row, draft, 'potvrdjeno_pakovanja', 'Потврђено') + trackingInput(row, draft, 'preuzeto_pakovanja', 'Преузето') + '</div>' +
+        '<small class="nd-proc-track-hint">„Наручено од газдинства“ је постојећа међуевиденција коју систем користи за контролу да потврђена количина не буде већа од наручене.</small>' +
+        '<button type="button" class="nd-proc-secondary" data-action="save-tracking" data-row-id="' + esc(row.id) + '" ' + (state.busy ? 'disabled' : '') + '>Сачувај евиденцију</button></article>';
+    }).join('');
+    return '<section class="nd-proc-variant-farms"><header><strong>Праћење по газдинствима</strong><small>Само овај производ и ова амбалажа</small></header>' + body + '</section>';
+  }
+
   function renderProductAllocationModal() {
     const product = productFor(state.selectedProductId);
     if (!product) return '';
@@ -280,7 +313,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       '<div class="nd-proc-modal-summary"><span><b>' + fmt(needed) + '</b><small>Потребно паковања</small></span>' +
       '<span><b>' + fmt(allocated) + '</b><small>Распоређено</small></span>' +
       '<span><b>' + fmt(left) + '</b><small>Преостало</small></span></div>' +
-      '<div class="nd-proc-modal-body">' + renderAllocation(state.selectedProductId) + '</div>' +
+      '<div class="nd-proc-modal-body">' + (state.selectedVariantId !== null ? renderVariantFarmBreakdown() : '') + renderAllocation(state.selectedProductId) + '</div>' +
       '</section></div>';
   }
 
