@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   NARUČI DOMAĆE — ADMIN WORKSPACE
-  Version: 1.2.8
+  Version: 1.2.9
   Updated: 2026-11-18
-  Description: Loads the modular ES6 ADMIN runtime before authenticating and mounting Workspace modules.
+  Description: Displays the active ADMIN Workspace release version in the top brand header.
   Scope: Existing authenticated ADMIN workspace; procurement writes are protected by RLS and a database trigger.
 -->
 <html lang="sr">
@@ -22,7 +22,7 @@
 <body class="nd-workspace">
 <header class="nd-topbar">
   <button class="nd-icon-btn" id="menuBtn" type="button" aria-label="Otvori navigaciju" aria-expanded="false">☰</button>
-  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>NARUČI DOMAĆE</strong><small>ADMIN WORKSPACE</small></span></div>
+  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>NARUČI DOMAĆE</strong><small>ADMIN WORKSPACE</small><span id="buildVersion" style="display:block;margin-top:4px;color:#FDBA74;font-size:10px;font-weight:800;line-height:1.25;letter-spacing:.08em">VERZIJA 1.2.9 · ADMIN WORKSPACE</span></span></div>
   <span class="nd-status" id="activeTourStatus">TURA NIJE IZABRANA</span>
   <button class="nd-icon-btn nd-procurement-entry" id="procurementBtn" type="button" hidden>Набавка</button>
   <button class="nd-icon-btn" id="searchBtn" type="button" aria-label="Pretraga">⌕</button>
