@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT REQUEST BASKET
- * Version: 1.0.0
+ * Version: 1.0.1
  * Updated: 2026-11-18
  * Description: Builds the tour-wide producer master list and isolated per-farm Viber specifications.
  * Scope: Read-only presentation over existing procurement allocations; no database schema changes.
@@ -81,7 +81,7 @@ export function renderProcurementRequestBasket({
       ' · Одговор: ' + esc(fmtDateTime(latestReply)) + '</span></div>' +
       '<div class="nd-proc-message"><label>Збирна Viber порука — само за ово газдинство</label>' +
       '<textarea readonly rows="6">' + esc(message) + '</textarea><div class="nd-proc-actions">' +
-      '<button type="button" class="nd-proc-secondary" data-action="copy-message" data-farm-id="' + esc(farmId) + '" ' + (busy ? 'disabled' : '') + '>Копирај поруку</button>' +
+      '<button type="button" class="nd-proc-secondary" data-action="copy-message" data-farm-id="' + esc(farmId) + '" ' + (busy ? 'disabled' : '') + '>Копирај Viber поруку</button>' +
       (phone ? '<button type="button" class="nd-proc-secondary" data-action="open-viber" data-farm-id="' + esc(farmId) + '" ' + (busy ? 'disabled' : '') + '>Отвори Viber</button>' : '') +
       '<button type="button" class="nd-proc-secondary" data-action="mark-sent" data-farm-id="' + esc(farmId) + '" ' + (busy ? 'disabled' : '') + '>Потврди слање</button>' +
       '<button type="button" class="nd-proc-secondary" data-action="mark-replied" data-farm-id="' + esc(farmId) + '" ' + (busy ? 'disabled' : '') + '>Евидентирај одговор</button></div>' +
