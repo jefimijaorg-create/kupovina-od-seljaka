@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.0.0
+ * Version: 3.0.1
  * Updated: 2026-11-18
  * Description: Two-level procurement workspace: tour-wide demand overview and farm-first execution with basket and field protocol tabs.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
@@ -88,10 +88,10 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   (s.notice?'<div class="ndp3-note '+(s.error?'error':'')+'" role="status">'+e(s.notice)+'</div>':'')+(!writable?'<div class="ndp3-note">Тура није у статусу за измене. Приказ је само за читање.</div>':'')+
   '<div class="ndp3-work"><main class="ndp3-panel"><h2>'+(selected?'Каталог изабраног газдинства':'Потребе целе туре')+'</h2><p>'+(selected?'Приказани су само производи које ово газдинство има у активној понуди.':'Производи су груписани по категорији и варијанти амбалаже, без избора добављача.')+'</p>'+(selected?farmCatalog:aggregateHtml)+'</main>'+
   '<aside class="ndp3-side"><section class="ndp3-panel"><div class="ndp3-tabs"><button class="ndp3-tab" data-tab="basket" aria-selected="'+(s.tab==='basket')+'">Корпа захтева ('+s.cart.length+')</button><button class="ndp3-tab" data-tab="field" aria-selected="'+(s.tab==='field')+'">Теренски протокол</button></div>'+
-  (s.tab==='basket'?'<h2>Корпа · '+(ff?.name?e(ff.name):'изабери газдинство')+'</h2>'+(selected?cartHtml:'<div class="ndp3-empty">Изабери газдинство да би додавао производе у његову корпу.</div>')+'<div class="ndp3-actions"><button class="ndp3-btn" data-action="generate" '+(!selected||!s.cart.length||!writable||s.busy?'disabled':'')+'>Генериши Viber поруку</button><button class="ndp3-btn primary" data-action="save-cart" '+(!selected||!s.cart.length||!writable||s.busy?'disabled':'')+'>'+(s.busy?'Чувам…':'Активирај захтеве')+'</button></div><p>Активирање уписује захтев у постојећу евиденцију туре. Генерисање поруке отвара ручно слање у Viber-у.</p>':'<h2>Теренско преузимање · '+e(ff?.name||'Изабери газдинство')+'</h2>'+(selected?protocol:'<div class="ndp3-empty">Изабери газдинство да видиш његов теренски протокол.</div>'))+
+  (s.tab==='basket'?'<h2>Корпа · '+(ff?.name?e(ff.name):'изабери газдинство')+'</h2>'+(selected?cartHtml:'<div class="ndp3-empty">Изабери газдинство да би додавао производе у његову корпу.</div>')+'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="generate" '+(!selected||!s.cart.length||!writable||s.busy?'disabled':'')+'>'+(s.busy?'Чувам…':'Генериши Viber поруку и активирај захтев')+'</button></div><p>Кликом се захтев чува као наручен, припрема Viber порука и отвара ручно слање. Статус „Послато“ бележи се само ако газдинство има број телефона.</p>':'<h2>Теренско преузимање · '+e(ff?.name||'Изабери газдинство')+'</h2>'+(selected?protocol:'<div class="ndp3-empty">Изабери газдинство да видиш његов теренски протокол.</div>'))+
   '</section></aside></div><div class="ndp3-foot">Подаци се читају и уписују у постојеће Supabase табеле. Назив производа долази преко product_id → products.name. Количине се рачунају из package_count × package_size.</div>';
  }
- async function saveCart(){
+ async function saveCart({markSent=false}={}){
   if(s.busy||!s.cart.length||!s.farmId)return;if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
   s.busy=true;render();let wrote=false;
   try{
@@ -101,10 +101,10 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
     const count=n(old?.broj_pakovanja)+item.count,others=allocated(item.productId,item.variantId)-n(old?.broj_pakovanja);
     if(count+others>d.packages)throw Error('Захтев прелази укупну потребу туре.');
     if(old){
-     const q=await client.from('tura_nabavka_dodele').update({broj_pakovanja:count,nabavna_cena:n(o.purchase_price),updated_at:new Date().toISOString()}).eq('id',old.id).select('id,broj_pakovanja').maybeSingle();
+     const q=await client.from('tura_nabavka_dodele').update({broj_pakovanja:count,nabavna_cena:n(o.purchase_price),...(markSent?{naruceno:true,naruceno_pakovanja:count,viber_status:'sent',viber_poslato_at:new Date().toISOString()}:{}) ,updated_at:new Date().toISOString()}).eq('id',old.id).select('id,broj_pakovanja').maybeSingle();
      if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==count)throw Error('База није потврдила измену.');
     }else{
-     const q=await client.from('tura_nabavka_dodele').insert({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:item.count,nabavna_cena:n(o.purchase_price),naruceno:false,naruceno_pakovanja:0,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent'}).select('id,broj_pakovanja').single();
+     const q=await client.from('tura_nabavka_dodele').insert({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(s.farmId),broj_pakovanja:item.count,nabavna_cena:n(o.purchase_price),naruceno:markSent,naruceno_pakovanja:markSent?item.count:0,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:markSent?'sent':'not_sent',...(markSent?{viber_poslato_at:new Date().toISOString()}:{})}).select('id,broj_pakovanja').single();
      if(q.error)throw Error(q.error.message);if(!q.data||n(q.data.broj_pakovanja)!==item.count)throw Error('База није потврдила нови захтев.');
     }
     wrote=true;
@@ -134,7 +134,8 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  async function generateViber(){
   if(!s.farmId||!s.cart.length)return;
   try{
-   await saveCart();
+   const hasPhone=!!String(farm(s.farmId)?.phone||'').trim();
+   await saveCart({markSent:hasPhone});
    if(s.cart.length)return;
    const text=message(),phone=String(farm(s.farmId)?.phone||'').replace(/[^\d+]/g,'');
    if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
@@ -158,7 +159,6 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   }
   if(a==='cart-step'){const x=s.cart[Number(b.dataset.i)];if(!x)return;const d=demand(x.productId,x.variantId),limit=Math.max(0,d.packages-allocated(x.productId,x.variantId));x.count=Math.max(0,Math.min(limit,x.count+Number(b.dataset.delta)));s.cart=s.cart.filter(y=>y.count>0);render();return;}
   if(a==='remove'){s.cart.splice(Number(b.dataset.i),1);render();return;}
-  if(a==='save-cart')return saveCart();
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='generate')return generateViber();
  });
