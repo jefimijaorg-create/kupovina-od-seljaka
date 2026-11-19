@@ -1,14 +1,14 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.6.8
+ * Version: 4.6.9
  * Updated: 2026-11-19
- * Description: Filters whole-tour procurement products by selected farms' active offers and validates eligible farms in the allocation cart.
+ * Description: Adds per-farm Viber preparation with a visible copyable message fallback while preserving confirmed-send tracking.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.6';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.8.4';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.8.5';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.4';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
 import { saveProcurementAllocationCart, updateUnsentProcurementAllocation } from './procurement/procurement-allocation-actions.js?v=1.1.0';
@@ -162,7 +162,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.8';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationPackages:0,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationPackages:0,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false,preparedMessage:'',preparedMessageFarmName:''};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -210,17 +210,18 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  async function prepareFarmRequest(farmId){
   const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   if(!rows.length)return setNote('Ово газдинство нема требовање које чека слање.',true);
-  const ff=farm(farmId);
-  const phone=String(ff?.phone||'').trim();
+  const ff=farm(farmId),phone=String(ff?.phone||'').trim();
   const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
   const schedule=(s.tourPoints||[]).map(point=>(point.vreme?point.vreme+' — ':'')+point.name).join('\n');
-  const text='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(x.naruceno_pakovanja)+' паковања ('+qty(x.naruceno_pakovanja,d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
+  const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(x.naruceno_pakovanja)+' паковања ('+qty(x.naruceno_pakovanja,d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
+  const viberPhone=phone.replace(/[^\d+]/g,'');
+  if(!viberPhone){s.preparedMessage=message;s.preparedMessageFarmName=ff?.name||('Газдинство #'+farmId);return setNote('За ово газдинство није уписан телефон. Порука је отворена испод и може да се копира.');}
   try{
-   if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
-   const viberPhone=phone.replace(/[^\d+]/g,'');
-   if(viberPhone)window.location.href='viber://chat?number='+encodeURIComponent(viberPhone);
-   setNote(viberPhone?'Требовање је копирано и Viber разговор је отворен. Након стварног слања потврди слање.':'Порука је припремљена. За газдинство није наведен телефон; копирај поруку и пошаљи је ручно.');
-  }catch(error){setNote('Припрема поруке није успела: '+(error.message||String(error)),true);}
+   if(!navigator.clipboard?.writeText)throw new Error('Копирање није доступно.');
+   await navigator.clipboard.writeText(message);
+   window.location.href='viber://chat?number='+encodeURIComponent(viberPhone);
+   setNote('Порука је копирана. Отворен је Viber разговор; провери текст и пошаљи га ручно. Статус још није промењен.');
+  }catch(error){s.preparedMessage=message;s.preparedMessageFarmName=ff?.name||('Газдинство #'+farmId);setNote('Аутоматско копирање није успело. Порука је отворена испод за ручно копирање.');}
  }
  async function markFarmSent(farmId){
   if(s.busy)return;
@@ -335,7 +336,13 @@ host.addEventListener('change',ev=>{
    }finally{s.busy=false;render();}
    return;
   }
-  if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
+  if(a==='close-prepared-message'){s.preparedMessage='';s.preparedMessageFarmName='';render();return;}
+   if(a==='copy-prepared-message'){
+    const field=host.querySelector('[data-prepared-message]');if(!s.preparedMessage||!field)return;
+    try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(s.preparedMessage);else{field.focus();field.select();if(!document.execCommand('copy'))throw new Error('Копирање није подржано.');}setNote('Порука за '+s.preparedMessageFarmName+' је копирана. Статус слања није промењен.');}
+    catch(error){setNote('Копирање није успело. Означи текст у пољу и копирај га ручно.',true);}return;
+   }
+   if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
