@@ -55,7 +55,7 @@ const CSS=`
 .ndp3 .ndp3-stage-values>span{display:flex;flex-direction:column;gap:4px;min-width:0;padding:10px;border:1px solid #2b405d;border-radius:11px;background:#0a172a;color:#9eafc4;font-size:10px}
 .ndp3 .ndp3-stage-values>span>b{font-size:17px;line-height:1.15;color:#fff;font-weight:900;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .ndp3 .ndp3-stage-values>span>small{font-size:10px;color:#a9b8ca;line-height:1.3}
-.ndp3 .ndp3-stage-values>span>label{font-size:10px;color:#9eafc4;font-weight:750}
+.ndp3 .ndp3-stage-values>span>.ndp3-value-label{font-size:10px;color:#9eafc4;font-weight:750}
 .ndp3 .ndp3-stage-line-title{font-size:14px;font-weight:850;line-height:1.35;overflow-wrap:anywhere}
 .ndp3 .ndp3-stage-line-meta{line-height:1.45;overflow-wrap:anywhere}
 .ndp3 .ndp3-stage-input input,.ndp3 [data-transfer-count],.ndp3 [data-allocation-qty]{font-size:18px;font-weight:850;font-variant-numeric:tabular-nums;text-align:center}
