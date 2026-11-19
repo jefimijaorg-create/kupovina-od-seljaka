@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.6.4
+ * Version: 1.7.0
  * Updated: 2026-11-19
- * Description: Removes the final stale request counter reference that blocked procurement rendering.
+ * Description: Completes request-stage farm grouping and counts actual unsent procurement allocation rows.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -11,7 +11,7 @@ export function renderProcurementStageView(ctx){
   if(s.disposed)return;
   const writable=s.tour?.status==='processing';
   const requestRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
-  const requestDemandCount=s.demands.filter(x=>x.valid).length;
+  const requestDemandCount=requestRows.length;
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
   const rows=s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
@@ -107,8 +107,21 @@ export function renderProcurementStageView(ctx){
     }).join('')+(remainingAll>0?'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Расподели преостало по газдинствима</button></div>':'')+'</article>';
    }).join('')+'</section>';
   })();
+  const requestFarmsHtml=(()=>{
+   const groups=new Map();
+   for(const row of requestRows){const id=String(row.gazdinstvo_id);if(!groups.has(id))groups.set(id,[]);groups.get(id).push(row);}
+   if(!groups.size)return '<div class="ndp3-stage-empty">Нема захтева који чекају слање газдинствима.</div>';
+   return '<div class="ndp3-request-intro">Захтеви су груписани по газдинству. За свако газдинство можеш да припремиш заједничку поруку и евидентираш слање тек након што је стварно послата.</div>'+[...groups.entries()].map(([farmId,farmRows])=>{
+    const ff=farm(farmId);
+    const body=farmRows.map(row=>{
+     const d=demand(row.product_id,row.variant_id),p=prod(row.product_id),v=variant(row.variant_id),count=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja);
+     return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(p?.name||'Производ')+' · '+e(v?.name||v?.size_label||'Амбалажа')+'</div><div class="ndp3-stage-line-meta">Захтевано: <strong>'+f(count)+' паковања</strong> · Чека потврду: <strong>'+f(Math.max(0,count-confirmed))+' паковања</strong></div><div class="ndp3-stage-line-meta">'+e(amountLabel(count,d))+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div></article>';
+    }).join('');
+    return '<section class="ndp3-stage-group"><header><strong>'+e(ff?.name||'Газдинство #'+farmId)+'</strong><span class="ndp3-chip amber">'+farmRows.length+' захтева</span></header>'+body+'<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(farmId)+'" '+(!writable||s.busy?'disabled':'')+'>Припреми Viber поруку</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(farmId)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди да је захтев послат</button></div></section>';
+   }).join('');
+  })();
   const contentRows=groupedRows();
-  const phaseContent=s.stage==='history'?historyHtml():s.stage==='request'?requestProductsHtml:
+  const phaseContent=s.stage==='history'?historyHtml():s.stage==='request'?(s.view==='farms'?requestFarmsHtml:requestProductsHtml):
    (contentRows||'<div class="ndp3-stage-empty">'+(s.stage==='confirm'?'Нема послатих захтева који чекају потврду.':'Нема потврђених количина које чекају преузимање.')+'</div>');
   const invalidDemandCount=s.demands.filter(x=>!x.valid).length;
   const invalidSourceCount=s.items.filter(x=>!x.product_id||!x.variant_id).length;
