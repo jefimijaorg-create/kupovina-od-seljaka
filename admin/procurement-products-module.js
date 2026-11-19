@@ -209,7 +209,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  }
  async function prepareFarmRequest(farmId){
   const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
-  if(!rows.length)return setNote('Ово газдинство нема захтев који чека слање.',true);
+  if(!rows.length)return setNote('Ово газдинство нема требовање које чека слање.',true);
   const ff=farm(farmId);
   const phone=String(ff?.phone||'').trim();
   const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
@@ -217,8 +217,8 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   const text='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(x.naruceno_pakovanja)+' паковања ('+qty(x.naruceno_pakovanja,d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
   try{
    if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
-   const phone=String(ff?.phone||'').replace(/[^\d+]/g,'');
-   if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);
+   const viberPhone=phone.replace(/[^\d+]/g,'');
+   if(viberPhone)window.location.href='viber://chat?number='+encodeURIComponent(viberPhone);
    setNote(viberPhone?'Требовање је копирано и Viber разговор је отворен. Након стварног слања потврди слање.':'Порука је припремљена. За газдинство није наведен телефон; копирај поруку и пошаљи је ручно.');
   }catch(error){setNote('Припрема поруке није успела: '+(error.message||String(error)),true);}
  }
@@ -227,7 +227,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
   const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   if(!rows.length)return setNote('Нема ставки које чекају слање за ово газдинство.',true);
-  if(!window.confirm('Потврђујеш да је заиста послат заједнички захтев газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return;
+  if(!window.confirm('Потврђујеш да је заиста послато заједничко требовање газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return;
   s.busy=true;render();
   try{
    await markProcurementSent({client,rowIds:rows.map(x=>x.id)});
@@ -240,7 +240,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   const row=s.allocations.find(x=>String(x.id)===String(id));if(!row)return;
   if(!canMarkProcurementSent(row))return setNote('Ова ставка није у фази чекања на слање.',true);
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
-  if(!window.confirm('Потврђујеш да је захтев за ову ставку заиста послат газдинству?'))return;
+  if(!window.confirm('Потврђујеш да је требовање за ову ставку заиста послато газдинству?'))return;
   s.busy=true;render();
   try{
    await markProcurementSent({client,rowIds:[row.id]});
