@@ -1,8 +1,8 @@
 /*
  * NARUČI ДОМАЋЕ — PROCUREMENT WORKFLOW ACTIONS
- * Version: 1.0.0
+ * Version: 1.1.0
  * Updated: 2026-11-19
- * Description: Centralizes authenticated procurement writes and immutable audit-history reads.
+ * Description: Adds the atomic unconfirmed-quantity transfer RPC and read-back verification.
  * Scope: Existing ADMIN Workspace, existing Supabase schema/RLS/triggers only.
  */
 const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
