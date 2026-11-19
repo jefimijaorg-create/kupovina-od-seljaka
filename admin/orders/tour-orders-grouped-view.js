@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.0.3
+ * Version: 1.0.4
  * Updated: 2026-11-19
- * Description: Compact buyer/order cards; removes redundant order CTA and status badges; adds an admin point-assignment quick action.
+ * Description: Displays verified package and line prices plus buyer payable totals; retains compact cards and point quick actions.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
 export function mountTourOrdersGroupedView({ root, client, orders, items, customers, points, products, canManage, onOpenOrder, onRefresh }) {
@@ -12,6 +12,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = value => Number.isFinite(Number(value)) ? Number(value).toLocaleString('sr-RS', { maximumFractionDigits: 3 }) : '—';
+  const money = value => Number.isFinite(Number(value)) ? Number(value).toLocaleString('sr-RS', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' дин.' : 'Цена није унета';
   const orderMap = new Map(orders.map(row => [String(row.id), row]));
   const customerMap = new Map((customers || []).map(row => [String(row.id), row]));
   const pointMap = new Map((points || []).map(row => [String(row.id), row]));
@@ -49,7 +50,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     .nd-go-quick-point{min-height:34px;padding:6px 10px;border:1px solid #475569;border-radius:9px;background:#26364e;color:#f8fafc;font-size:11px;font-weight:800;white-space:nowrap}.nd-go-quick-point:disabled{opacity:.55}
     .nd-go-lines{display:grid;gap:6px}
     .nd-go-line{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#cbd5e1;border-top:1px solid rgba(51,65,85,.65);padding-top:6px}
-    .nd-go-line strong{color:#f8fafc;text-align:right;font-weight:800}
+    .nd-go-line strong{color:#f8fafc;text-align:right;font-weight:800}.nd-go-price{display:block;color:#fdba74;font-size:11px;font-weight:800;margin-top:3px}.nd-go-buyer-total{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;border-radius:11px;background:rgba(234,88,12,.12);border:1px solid rgba(249,115,22,.28);color:#fed7aa;font-size:12px;font-weight:900}.nd-go-buyer-total strong{color:#fff;font-size:15px}
     .nd-go-order-meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;color:#94a3b8;font-size:11px}
     .nd-go-pill{border:0;border-radius:0;padding:0;color:#94a3b8}
     .nd-go-assign{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -85,7 +86,12 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
       const qty = line.package_count !== null && line.package_count !== undefined && line.package_size !== null && line.package_size !== undefined && Number.isFinite(count) && Number.isFinite(size) && line.package_unit
         ? fmt(count) + ' пак. × ' + fmt(size) + ' = ' + fmt(count * size) + ' ' + esc(line.package_unit)
         : 'Амбалажа није потпуна';
-      return '<div class="nd-go-line"><span>' + esc(name) + '</span><strong>' + qty + '</strong></div>';
+      const unitPrice = line.unit_price == null ? null : Number(line.unit_price);
+      const lineTotal = line.cena_stavke == null ? null : Number(line.cena_stavke);
+      const priceHtml = unitPrice !== null && Number.isFinite(unitPrice) && lineTotal !== null && Number.isFinite(lineTotal)
+        ? '<small class="nd-go-price">' + money(unitPrice) + ' / паковању · за ставку: ' + money(lineTotal) + '</small>'
+        : '<small class="nd-go-price">Цена није евидентирана</small>';
+      return '<div class="nd-go-line"><span>' + esc(name) + '<br><small>' + qty + '</small>' + priceHtml + '</span></div>';
     }).join('') : '<div class="nd-go-empty">Нема ставки у корпи.</div>';
     return '<article class="nd-go-order-card" data-order-card="' + esc(order.id) + '">' +
       '<div class="nd-go-order"><button type="button" class="nd-go-drag" data-drag-order="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + ' aria-label="Превуци поруџбину #' + esc(order.id) + '" title="Превуци поруџбину">⠿</button>' +
@@ -108,7 +114,9 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     const buyerHtml = [...buyers.entries()].map(([buyerId, buyerOrders]) => {
       const buyer = customerMap.get(buyerId) || {};
       const phone = buyerOrders[0]?.telefon || buyer.telefon || 'Телефон није наведен';
-      return '<section class="nd-go-buyer"><header class="nd-go-buyer-head"><div><div class="nd-go-customer-name">' + esc(String(buyer.ime_prezime || ('Купац · ' + buyerId)).replace(/\?/g, '').replace(/\s+/g, ' ').trim()) + '</div><span class="nd-go-phone">☎ ' + esc(phone) + '</span></div><span class="nd-go-count">' + buyerOrders.length + ' поруџбина</span></header>' + buyerOrders.map(orderCard).join('') + '</section>';
+      const totalKnown = buyerOrders.every(order => order.ukupna_cena != null && Number.isFinite(Number(order.ukupna_cena)));
+      const buyerTotal = buyerOrders.reduce((sum, order) => sum + (Number(order.ukupna_cena) || 0), 0);
+      return '<section class="nd-go-buyer"><header class="nd-go-buyer-head"><div><div class="nd-go-customer-name">' + esc(String(buyer.ime_prezime || ('Купац · ' + buyerId)).replace(/\?/g, '').replace(/\s+/g, ' ').trim()) + '</div><span class="nd-go-phone">☎ ' + esc(phone) + '</span></div><span class="nd-go-count">' + buyerOrders.length + ' поруџбина</span></header>' + buyerOrders.map(orderCard).join('') + '<div class="nd-go-buyer-total"><span>УКУПНО ЗА НАПЛАТУ</span><strong>' + (totalKnown ? money(buyerTotal) : 'Није доступно') + '</strong></div></section>';
     }).join('');
     return '<section class="nd-go-point ' + (unassigned ? 'nd-go-unassigned' : '') + '" data-drop-point="' + (unassigned ? '' : esc(pointId)) + '">' +
       '<header class="nd-go-point-head"><h3>' + esc(label) + '</h3><span class="nd-go-count">' + rows.length + ' поруџбина</span></header>' +
