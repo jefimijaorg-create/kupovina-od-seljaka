@@ -1,14 +1,14 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.3.0
+ * Version: 4.4.0
  * Updated: 2026-11-19
- * Description: Adds product-first request cards and product-scoped farm allocation using existing Supabase data.
+ * Description: Fixes mobile procurement phase navigation styling and request-stage product grouping.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.5.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.6.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
@@ -90,11 +90,30 @@ const CSS=`
 .ndp3-request-product-action{margin-top:10px}
 .ndp3-request-product-action .ndp3-btn{width:100%;min-height:49px}
 @media(min-width:760px){.ndp3-request-products{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Mobile phase navigation — existing ADMIN palette */
+.ndp3 .ndp3-phase-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%;margin:12px 0;overflow:visible}
+.ndp3 .ndp3-phase-tab{appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:58px;padding:8px 3px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text);font:700 12px/1.2 inherit;text-align:center;white-space:normal;overflow-wrap:anywhere}
+.ndp3 .ndp3-phase-tab small{display:block;font-size:9px;line-height:1.2;font-weight:650;color:var(--muted)}
+.ndp3 .ndp3-phase-tab[aria-selected="true"]{border-color:var(--gold);background:rgba(190,125,69,.16);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(190,125,69,.2)}
+.ndp3 .ndp3-phase-tab[aria-selected="true"] small{color:var(--gold)}
+.ndp3 .ndp3-view-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 14px}
+.ndp3 .ndp3-view-switch button{min-height:42px;min-width:0;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font:700 12px/1.25 inherit;white-space:normal}
+.ndp3 .ndp3-view-switch button[aria-pressed="true"]{border-color:var(--gold);background:rgba(190,125,69,.13);color:var(--gold)}
+.ndp3 .ndp3-stage-group{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.ndp3 .ndp3-stage-group>header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ndp3 .ndp3-stage-group>header strong{font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+.ndp3 .ndp3-stage-line{padding:10px 0;border-top:1px solid var(--line)}
+.ndp3 .ndp3-stage-line:first-child{border-top:0}
+.ndp3 .ndp3-stage-line-title{font-size:13px;font-weight:850;line-height:1.35}
+.ndp3 .ndp3-stage-line-meta{font-size:11px;line-height:1.45;color:var(--muted)}
+.ndp3 .ndp3-stage-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ndp3 .ndp3-stage-actions .ndp3-btn{flex:1 1 145px;min-height:46px}
+@media(max-width:380px){.ndp3 .ndp3-phase-tabs{gap:4px}.ndp3 .ndp3-phase-tab{font-size:11px;min-height:56px;padding:7px 2px}.ndp3 .ndp3-phase-tab small{font-size:8px}}
 `;
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.3.0';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.4.0';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
