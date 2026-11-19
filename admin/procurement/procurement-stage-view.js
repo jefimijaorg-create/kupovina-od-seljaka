@@ -1,12 +1,12 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.0.1
+ * Version: 1.1.0
  * Updated: 2026-11-19
- * Description: Executes and returns the stage renderer so the ADMIN module displays loaded procurement data. No database access or writes.
+ * Description: Adds the multi-farm allocation sheet while preserving existing confirmation and pickup flows.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
- const {s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,mountAnalyticsPanel}=ctx;
+ const {s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,buildAllocationSheetHtml,mountAnalyticsPanel}=ctx;
  function render(){
   if(s.disposed)return;
   const writable=s.tour?.status==='processing';
@@ -75,7 +75,7 @@ export function renderProcurementStageView(ctx){
    '<section class="ndp3-kpis"><div class="ndp3-kpi"><b>'+totalNeeded()+'</b><span>УКУПНО ПОТРЕБНО</span></div>'+(s.demands.some(d=>ordered(d.productId,d.variantId)>0)?'<div class="ndp3-kpi"><b>'+totalOrdered()+'</b><span>ЗАХТЕВАНО</span></div>':'')+'<div class="ndp3-kpi"><b>'+totalRemaining()+'</b><span>МОЖЕ ЈОШ ДА СЕ ЗАХТЕВА</span></div>'+(s.demands.some(d=>allocationsFor(d.productId,d.variantId).some(x=>n(x.preuzeto_pakovanja)>0))?'<div class="ndp3-kpi"><b>'+totalCollected()+'</b><span>ПРЕУЗЕТО</span></div>':'')+'</section>'+
    (s.notice?'<div class="ndp3-note '+(s.error?'error':'')+'" role="status">'+e(s.notice)+'</div>':'')+(!writable?'<div class="ndp3-note">Тура није у статусу processing. Приказ је само за читање.</div>':'')+demandWarning+
    '<section class="ndp3-panel"><div class="ndp3-row"><h2>'+stageTitle+'</h2><span class="ndp3-chip">'+(s.view==='products'?'Груписано по производима':'Груписано по газдинствима')+'</span></div>'+phaseContent+'</section>'+
-   '<div class="ndp3-modal" '+(s.requestOpen?'':'hidden')+'><section class="ndp3-modal-dialog" role="dialog" aria-modal="true" aria-label="Подеси захтев"><header class="ndp3-modal-head"><div><div class="ndp3-kicker">ГРУПНИ ЗАХТЕВ · ТУРА #'+e(tourId)+'</div><h2>Подеси захтев</h2></div><button class="ndp3-btn" data-action="close-request">Затвори</button></header><label>Прво изабери газдинство<select class="ndp3-select" data-farm><option value="">Изабери газдинство</option>'+s.farms.filter(ff=>s.offers.some(o=>String(o.gazdinstvo_id)===String(ff.id)&&o.is_active===true)).map(x=>'<option value="'+e(x.id)+'" '+(String(x.id)===String(s.farmId)?'selected':'')+'>'+e(x.name)+'</option>').join('')+'</select></label>'+(s.farmId?'<div class="ndp3-note">Приказујемо само производе и паковања које '+e(farm(s.farmId)?.name||'изабрано газдинство')+' стварно нуди.</div>'+farmCatalog:'<div class="ndp3-empty">Изабери газдинство. Систем ће затим филтрирати његову активну понуду.</div>')+'<section class="ndp3-panel"><h2>Заједнички захтев · '+e(farm(s.farmId)?.name||'изабери газдинство')+'</h2>'+(s.farmId?cartHtml:'<div class="ndp3-empty">Прво изабери газдинство.</div>')+'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="generate" '+(!s.farmId||!s.cart.length||!writable||s.busy?'disabled':'')+'>'+(s.busy?'Чувам…':'Сачувај захтев и припреми Viber поруку')+'</button></div></section></section></div>'+
+   '<div class="ndp3-modal" '+(s.requestOpen?'':'hidden')+'><section class="ndp3-modal-dialog" role="dialog" aria-modal="true" aria-label="Подеси захтев"><header class="ndp3-modal-head"><div><div class="ndp3-kicker">ГРУПНИ ЗАХТЕВ · ТУРА #'+e(tourId)+'</div><h2>Подеси захтев за више газдинстава</h2></div><button class="ndp3-btn" data-action="close-request">Затвори</button></header>'+buildAllocationSheetHtml()+'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="save-multi-allocation" '+(!writable||s.busy?'disabled':'')+'>'+(s.busy?'Чувам…':'Сачувај расподелу и припреми поруке')+'</button></div></section></div>'+
    '<div class="ndp3-foot">Подаци се читају и уписују у постојеће Supabase табеле. Назив производа долази преко product_id → products.name. Количине се рачунају из package_count × package_size.</div>';
   mountAnalyticsPanel?.();
  }
