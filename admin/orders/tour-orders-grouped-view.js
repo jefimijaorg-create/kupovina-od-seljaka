@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.0.2
+ * Version: 1.0.3
  * Updated: 2026-11-19
- * Description: Groups tour orders by distribution point and buyer; supports touch/desktop drag assignment.
+ * Description: Compact buyer/order cards; removes redundant order CTA and status badges; adds an admin point-assignment quick action.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
 export function mountTourOrdersGroupedView({ root, client, orders, items, customers, points, products, canManage, onOpenOrder, onRefresh }) {
@@ -25,6 +25,13 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
 
   const style = document.createElement('style');
   style.textContent = `
+    .nd-go-point-sheet{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px}
+    .nd-go-point-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(3px)}
+    .nd-go-point-dialog{position:relative;width:min(100%,420px);padding:20px;border:1px solid #475569;border-radius:18px;background:#111c32;box-shadow:0 24px 70px rgba(0,0,0,.4);display:grid;gap:12px;color:#f8fafc}
+    .nd-go-point-dialog h3{margin:0;font-size:17px}.nd-go-point-dialog p{margin:0;color:#94a3b8;font-size:12px}.nd-go-point-dialog label{font-size:12px;font-weight:800;color:#cbd5e1}
+    .nd-go-point-dialog select{width:100%;min-height:46px;padding:10px;border-radius:10px;background:#0b1222;color:#f8fafc;border:1px solid #475569}
+    .nd-go-point-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}.nd-go-point-actions button{min-height:42px;padding:9px 13px;border-radius:10px;background:#26364e;color:#f8fafc;font-weight:800}.nd-go-point-actions [data-save-point]{background:#ea580c;color:white}.nd-go-point-actions button:disabled{opacity:.55}
+
     .nd-grouped-orders{display:grid;gap:16px}
     .nd-go-intro{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:4px 2px}
     .nd-go-intro h2{margin:0;font-size:19px;font-weight:900;color:#f8fafc}
@@ -35,16 +42,16 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     .nd-go-count{font-size:11px;font-weight:900;color:#fdba74;background:rgba(234,88,12,.14);border:1px solid rgba(249,115,22,.3);padding:5px 9px;border-radius:999px;white-space:nowrap}
     .nd-go-drop{padding:12px;display:grid;gap:10px;min-height:52px;transition:background .15s,border-color .15s}
     .nd-go-drop.nd-go-over{background:rgba(234,88,12,.10);outline:2px dashed #f97316;outline-offset:-5px}
-    .nd-go-customer{border:1px solid #334155;border-radius:14px;background:#0f1a2e;padding:13px;display:grid;gap:9px}.nd-go-buyer{border:1px solid #334155;border-radius:15px;background:#0f1a2e;padding:12px;display:grid;gap:9px}.nd-go-buyer-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.nd-go-order-card{border:1px solid #293a55;border-radius:12px;background:#111c32;padding:11px;display:grid;gap:8px}
+    .nd-go-customer{border:1px solid #334155;border-radius:14px;background:#0f1a2e;padding:13px;display:grid;gap:9px}.nd-go-buyer{border:1px solid #334155;border-radius:15px;background:#0f1a2e;padding:12px;display:grid;gap:9px}.nd-go-buyer-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.nd-go-order-card{border:1px solid #293a55;border-radius:12px;background:#111c32;padding:11px;display:grid;gap:8px}
     .nd-go-customer-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .nd-go-customer-name{font-weight:900;color:#f8fafc;font-size:14px}
     .nd-go-phone{display:block;color:#cbd5e1;font-size:12px;margin-top:4px}
-    .nd-go-order-open{min-height:40px;padding:8px 11px;border-radius:11px;background:#26364e;color:#f8fafc;font-size:12px;font-weight:800;white-space:nowrap}
+    .nd-go-quick-point{min-height:34px;padding:6px 10px;border:1px solid #475569;border-radius:9px;background:#26364e;color:#f8fafc;font-size:11px;font-weight:800;white-space:nowrap}.nd-go-quick-point:disabled{opacity:.55}
     .nd-go-lines{display:grid;gap:6px}
     .nd-go-line{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#cbd5e1;border-top:1px solid rgba(51,65,85,.65);padding-top:6px}
     .nd-go-line strong{color:#f8fafc;text-align:right;font-weight:800}
     .nd-go-order-meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;color:#94a3b8;font-size:11px}
-    .nd-go-pill{border:1px solid #475569;border-radius:999px;padding:3px 8px}
+    .nd-go-pill{border:0;border-radius:0;padding:0;color:#94a3b8}
     .nd-go-assign{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .nd-go-assign label{font-size:11px;color:#94a3b8;font-weight:800}
     .nd-go-assign select{min-height:40px;max-width:100%;padding:7px 10px;border-radius:10px;background:#0b1222;color:#f8fafc;border:1px solid #475569}
@@ -57,7 +64,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     .nd-go-error{background:rgba(220,38,38,.13);border-color:rgba(248,113,113,.4);color:#fecaca}
     .nd-go-unassigned .nd-go-point-head{background:rgba(120,53,15,.25)}
     .nd-go-unassigned .nd-go-count{color:#fcd34d;background:rgba(217,119,6,.14);border-color:rgba(245,158,11,.35)}
-    @media(max-width:600px){.nd-go-customer-top{flex-wrap:wrap}.nd-go-order-open{width:100%}.nd-go-assign{width:100%}.nd-go-assign select{flex:1;min-width:150px}}
+    @media(max-width:600px){.nd-go-customer-top{flex-wrap:wrap}}
   `;
   document.head.append(style);
 
@@ -70,9 +77,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
   let draggingId = null;
 
   const orderCard = order => {
-    const buyer = customerMap.get(String(order.kupac_id)) || {};
     const lines = linesByOrder.get(String(order.id)) || [];
-    const phone = order.telefon || buyer.telefon || 'Телефон није наведен';
     const lineHtml = lines.length ? lines.map(line => {
       const product = line.product_id ? productMap.get(String(line.product_id)) : null;
       const name = product?.name || (line.product_id ? 'Производ није пронађен у каталогу' : 'Неповезана ставка');
@@ -82,15 +87,12 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
         : 'Амбалажа није потпуна';
       return '<div class="nd-go-line"><span>' + esc(name) + '</span><strong>' + qty + '</strong></div>';
     }).join('') : '<div class="nd-go-empty">Нема ставки у корпи.</div>';
-    const pointOptions = '<option value="">Без пункта</option>' + (points || []).map(point =>
-      '<option value="' + esc(point.id) + '"' + (String(order.punkt_id || '') === String(point.id) ? ' selected' : '') + '>' + esc(point.name || ('Пункт ' + point.id)) + '</option>'
-    ).join('');
     return '<article class="nd-go-order-card" data-order-card="' + esc(order.id) + '">' +
       '<div class="nd-go-order"><button type="button" class="nd-go-drag" data-drag-order="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + ' aria-label="Превуци поруџбину #' + esc(order.id) + '" title="Превуци поруџбину">⠿</button>' +
-      '<div style="min-width:0;flex:1"><div class="nd-go-customer-top"><div class="nd-go-order-meta"><strong>Поруџбина #' + esc(order.id) + '</strong><span class="nd-go-pill">Статус: ' + esc(order.procurement_status || order.status || '—') + '</span><span class="nd-go-pill">' + lines.length + ' ставки</span></div>' +
-      '<button type="button" class="nd-go-order-open" data-open-order="' + esc(order.id) + '">Отвори поруџбину</button></div>' +
+      '<div style="min-width:0;flex:1"><div class="nd-go-customer-top"><div class="nd-go-order-meta"><span>Поруџбина #' + esc(order.id) + '</span></div>' +
+      (canManage ? '<button type="button" class="nd-go-quick-point" data-quick-point="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + '>Промени пункт</button>' : '') + '</div>' +
       '<div class="nd-go-lines">' + lineHtml + '</div>' +
-      (canManage ? '<div class="nd-go-assign"><label for="nd-go-point-' + esc(order.id) + '">Додели пункт:</label><select id="nd-go-point-' + esc(order.id) + '" data-assign-order="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + '>' + pointOptions + '</select></div>' : '') +
+      '<div class="nd-go-order-meta">' + lines.length + ' ' + (lines.length === 1 ? 'производ' : 'производа') + '</div>' +
       '</div></div></article>';
   };
 
@@ -106,7 +108,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     const buyerHtml = [...buyers.entries()].map(([buyerId, buyerOrders]) => {
       const buyer = customerMap.get(buyerId) || {};
       const phone = buyerOrders[0]?.telefon || buyer.telefon || 'Телефон није наведен';
-      return '<section class="nd-go-buyer"><header class="nd-go-buyer-head"><div><div class="nd-go-customer-name">' + esc(buyer.ime_prezime || ('Купац · ' + buyerId)) + '</div><span class="nd-go-phone">☎ ' + esc(phone) + '</span></div><span class="nd-go-count">' + buyerOrders.length + ' поруџбина</span></header>' + buyerOrders.map(orderCard).join('') + '</section>';
+      return '<section class="nd-go-buyer"><header class="nd-go-buyer-head"><div><div class="nd-go-customer-name">' + esc(String(buyer.ime_prezime || ('Купац · ' + buyerId)).replace(/\?/g, '').replace(/\s+/g, ' ').trim()) + '</div><span class="nd-go-phone">☎ ' + esc(phone) + '</span></div><span class="nd-go-count">' + buyerOrders.length + ' поруџбина</span></header>' + buyerOrders.map(orderCard).join('') + '</section>';
     }).join('');
     return '<section class="nd-go-point ' + (unassigned ? 'nd-go-unassigned' : '') + '" data-drop-point="' + (unassigned ? '' : esc(pointId)) + '">' +
       '<header class="nd-go-point-head"><h3>' + esc(label) + '</h3><span class="nd-go-count">' + rows.length + ' поруџбина</span></header>' +
@@ -129,8 +131,8 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
       (feedback ? '<div class="nd-go-feedback ' + (feedbackError ? 'nd-go-error' : '') + '" role="status">' + esc(feedback) + '</div>' : '') +
       orderedPointIds.map(id => group(id, assigned.get(id))).join('') +
       group('', unassigned, true);
-    rootNode.querySelectorAll('[data-open-order]').forEach(button => button.addEventListener('click', () => onOpenOrder?.(button.dataset.openOrder)));
-    rootNode.querySelectorAll('[data-assign-order]').forEach(select => select.addEventListener('change', () => assignOrder(select.dataset.assignOrder, select.value)));
+    rootNode.querySelectorAll('[data-quick-point]').forEach(button => button.addEventListener('click', () => openPointQuickAction(button.dataset.quickPoint)));
+
     rootNode.querySelectorAll('[data-drag-order]').forEach(handle => {
       handle.addEventListener('pointerdown', event => {
         if (!canManage || busyOrderId !== null) return;
@@ -152,6 +154,24 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
       zone.addEventListener('pointerleave', () => zone.classList.remove('nd-go-over'));
     });
     document.addEventListener('pointerup', finishDrag, { once: true });
+  }
+
+  function openPointQuickAction(orderId) {
+    if (!canManage || busyOrderId !== null || !orderMap.has(String(orderId))) return;
+    const order = orderMap.get(String(orderId));
+    const options = '<option value="">Без пункта</option>' + (points || []).map(point => '<option value="' + esc(point.id) + '"' + (String(order.punkt_id || '') === String(point.id) ? ' selected' : '') + '>' + esc(point.name || ('Пункт ' + point.id)) + '</option>').join('');
+    const layer = document.createElement('div');
+    layer.className = 'nd-go-point-sheet';
+    layer.innerHTML = '<div class="nd-go-point-backdrop" data-close-point></div><section class="nd-go-point-dialog" role="dialog" aria-modal="true" aria-labelledby="nd-go-point-title"><h3 id="nd-go-point-title">Додела пункта</h3><p>Поруџбина #' + esc(order.id) + '</p><label for="nd-go-point-choice">Изабери пункт</label><select id="nd-go-point-choice">' + options + '</select><div class="nd-go-point-actions"><button type="button" data-close-point>Откажи</button><button type="button" data-save-point>Сачувај пункт</button></div></section>';
+    rootNode.append(layer);
+    layer.querySelectorAll('[data-close-point]').forEach(button => button.addEventListener('click', () => layer.remove()));
+    layer.querySelector('[data-save-point]').addEventListener('click', async () => {
+      const save = layer.querySelector('[data-save-point]');
+      save.disabled = true; save.textContent = 'Чувам…';
+      await assignOrder(orderId, layer.querySelector('#nd-go-point-choice').value);
+      layer.remove();
+    });
+    layer.querySelector('#nd-go-point-choice').focus();
   }
 
   function finishDrag(event) {
