@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.0.1';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.1.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.0.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
@@ -17,6 +17,8 @@ const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const key=(p,v)=>String(p)+'::'+String(v);
 const CSS=`
+.ndp3-farm-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;margin:12px 0}.ndp3-farm-check{display:flex!important;grid-template-columns:none!important;align-items:center;gap:9px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#09172a}.ndp3-farm-check input{width:20px;height:20px;min-height:20px;accent-color:#36a878}.ndp3-allocation-field{display:grid!important;grid-template-columns:minmax(0,1fr) 100px;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line)}.ndp3-allocation-field input{min-height:42px;text-align:right}.ndp3-allocation-total{margin-top:8px;padding:9px;background:#18334a;border-radius:9px;font-size:11px;color:#cbd6e5}.ndp3-allocation-product{padding:12px;border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#0d1b30}
+
 .ndp3-farm-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;margin:12px 0}.ndp3-farm-check{display:flex!important;grid-template-columns:none!important;align-items:center;gap:9px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#09172a}.ndp3-farm-check input{width:20px;height:20px;min-height:20px;accent-color:#36a878}.ndp3-allocation-field{display:grid!important;grid-template-columns:minmax(0,1fr) 100px;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line)}.ndp3-allocation-field input{min-height:42px;text-align:right}.ndp3-allocation-total{margin-top:8px;padding:9px;background:#18334a;border-radius:9px;font-size:11px;color:#cbd6e5}.ndp3-allocation-product{padding:12px;border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#0d1b30}
 
 .ndp3{--bg:#091426;--panel:#111f34;--line:#293c57;--muted:#9aabc1;--gold:#ffc18d;background:var(--bg);color:#eef3fa;border:1px solid var(--line);border-radius:20px;padding:12px;min-height:75vh;font-family:inherit}
@@ -55,13 +57,13 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
  const allocation=(p,v,fid)=>s.allocations.find(x=>key(x.product_id,x.variant_id)===key(p,v)&&String(x.gazdinstvo_id)===String(fid));
- const offer=(p,v,fid=s.farmId)=>s.offers.find(x=>key(x.product_id,x.variant_id)===key(p,v)&&String(x.gazdinstvo_id)===String(fid)&&x.is_active===true);
+ const offer=(p,v,fid)=>s.offers.find(x=>key(x.product_id,x.variant_id)===key(p,v)&&String(x.gazdinstvo_id)===String(fid)&&x.is_active===true);
  const allocationsFor=(p,v)=>s.allocations.filter(x=>key(x.product_id,x.variant_id)===key(p,v));
  const allocated=(p,v)=>allocationsFor(p,v).reduce((a,x)=>a+n(x.broj_pakovanja),0);
  const ordered=(p,v)=>allocationsFor(p,v).reduce((a,x)=>a+n(x.naruceno_pakovanja),0);
  const pending=(p,v)=>s.cart.filter(x=>key(x.productId,x.variantId)===key(p,v)).reduce((a,x)=>a+n(x.count),0);
  const qty=(packages,d)=>d?f(packages*n(d.packageSize))+' '+e(d.packageUnit):f(packages)+' пак.';
- const rowsForFarm=()=>s.allocations.filter(x=>String(x.gazdinstvo_id)===String(payload.gazdinstvo_id));
+ const rowsForFarm=fid=>s.allocations.filter(x=>String(x.gazdinstvo_id)===String(fid));
  const setNote=(v,err=false)=>{s.notice=v;s.error=err;render();};
  async function load(onProgress){
   const d=await loadProcurementData({client,tourId,onProgress});
@@ -77,10 +79,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const totalOrdered=()=>unitTotals(d=>ordered(d.productId,d.variantId));
  const totalCollected=()=>unitTotals(d=>allocationsFor(d.productId,d.variantId).reduce((a,x)=>a+n(x.preuzeto_pakovanja),0));
  const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-ordered(d.productId,d.variantId)));
- function message(){
-  const ff=farm(s.farmId),rows=rowsForFarm().filter(x=>n(x.naruceno_pakovanja)>0);
-  return 'Поштовани'+(ff?.name?' '+ff.name:'')+',\n\nМолимо вас да потврдите захтев за туру #'+tourId+':\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Варијанта')+': '+f(x.naruceno_pakovanja)+' паковања ('+qty(x.naruceno_pakovanja,d)+')';}).join('\n')+'\n\nМолимо потврдите количине које можете да припремите. Хвала!';
- }
+
  function render(){
   renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f}),mountAnalyticsPanel:()=>{
    s.analyticsHandle?.destroy();
@@ -93,60 +92,50 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(s.tour?.status!=='processing'){setNote('Тура није отворена за измене.',true);return false;}
   s.busy=true;render();
   try{
-   const payloads=[];
+   const payloads=[],newByVariant=new Map();
    for(const item of s.cart){
     const d=demand(item.productId,item.variantId),o=offer(item.productId,item.variantId,item.farmId),old=allocation(item.productId,item.variantId,item.farmId);
     if(!d?.valid||!o)throw Error('Понуда или подаци о паковању нису важећи. Освежи податке.');
     if(old&&(old.viber_status==='sent'||old.viber_status==='replied'||n(old.potvrdjeno_pakovanja)>0||n(old.preuzeto_pakovanja)>0))throw Error('Ова ставка је већ послата или је у каснијој фази и не може се поново захтевати.');
     const requested=n(old?.naruceno_pakovanja)+n(item.count);
-    const alreadyAllocatedElsewhere=Math.max(0,allocated(item.productId,item.variantId)-n(old?.broj_pakovanja));
-    const check=validateAllocationCount({requested,alreadyAllocated:alreadyAllocatedElsewhere,demand:d.packages});
-    if(!check.valid)throw Error('Захтев није могуће сачувати због постојеће евиденције ове варијанте. Претходне набавне евиденције морају бити усаглашене пре новог захтева.');
-    if(requested<n(old?.potvrdjeno_pakovanja)||requested<n(old?.preuzeto_pakovanja))throw Error('Нови захтев не може бити мањи од већ потврђене или преузете количине.');
+    const kx=key(item.productId,item.variantId);
+    if(!newByVariant.has(kx))newByVariant.set(kx,{demand:d.packages,added:0,replace:0,productId:item.productId,variantId:item.variantId});
+    const group=newByVariant.get(kx);group.added+=n(item.count);group.replace+=n(old?.broj_pakovanja);
     payloads.push({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(item.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:new Date().toISOString()});
    }
-   // Existing allocation rows must be UPDATED by primary key. PostgREST UPSERT
-   // executes the INSERT trigger before conflict resolution and rejects legacy rows.
+   for(const group of newByVariant.values()){
+    const already=Math.max(0,allocated(group.productId,group.variantId)-group.replace);
+    const check=validateAllocationCount({requested:group.added,alreadyAllocated:already,demand:group.demand});
+    if(!check.valid)throw Error('Збир расподеле премашује преосталу потребу за једном од амбалажа. Освежи податке и провери расподелу.');
+   }
    const appliedUpdates=[],insertedIds=[],savedRows=[];
    try{
     for(const payload of payloads){
-     const old=allocation(payload.product_id,payload.variant_id,s.farmId);
+     const old=allocation(payload.product_id,payload.variant_id,payload.gazdinstvo_id);
      if(old){
       const patch={broj_pakovanja:payload.broj_pakovanja,naruceno_pakovanja:payload.naruceno_pakovanja,nabavna_cena:payload.nabavna_cena,naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:payload.updated_at};
-      const q=await client.from('tura_nabavka_dodele').update(patch).eq('id',old.id).select('id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').maybeSingle();
-      if(q.error)throw Error(q.error.message);
-      if(!q.data)throw Error('Постојећа евиденција није ажурирана. Провери ADMIN дозволе и освежи податке.');
-      appliedUpdates.push({old});
-      savedRows.push(q.data);
+      const q=await client.from('tura_nabavka_dodele').update(patch).eq('id',old.id).select('id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').maybeSingle();
+      if(q.error)throw Error(q.error.message);if(!q.data)throw Error('Постојећа евиденција није ажурирана.');
+      appliedUpdates.push({old});savedRows.push(q.data);
      }else{
-      const q=await client.from('tura_nabavka_dodele').insert(payload).select('id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').single();
-      if(q.error)throw Error(q.error.message);
-      if(!q.data)throw Error('База није потврдила упис нове ставке.');
-      insertedIds.push(q.data.id);
-      savedRows.push(q.data);
+      const q=await client.from('tura_nabavka_dodele').insert(payload).select('id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').single();
+      if(q.error)throw Error(q.error.message);if(!q.data)throw Error('База није потврдила упис нове ставке.');
+      insertedIds.push(q.data.id);savedRows.push(q.data);
      }
     }
     if(savedRows.length!==payloads.length)throw Error('База није потврдила све ставке групног захтева.');
     for(const payload of payloads){
-     const row=savedRows.find(x=>String(x.variant_id)===String(payload.variant_id)&&String(x.gazdinstvo_id)===String(s.farmId));
-     if(!row||n(row.broj_pakovanja)!==n(payload.broj_pakovanja)||n(row.naruceno_pakovanja)!==n(payload.naruceno_pakovanja))throw Error('База није потврдила истовремени упис захтеване количине и техничког поља.');
+     const row=savedRows.find(x=>String(x.product_id)===String(payload.product_id)&&String(x.variant_id)===String(payload.variant_id)&&String(x.gazdinstvo_id)===String(payload.gazdinstvo_id));
+     if(!row||n(row.broj_pakovanja)!==n(payload.broj_pakovanja)||n(row.naruceno_pakovanja)!==n(payload.naruceno_pakovanja))throw Error('База није потврдила упис расподеле за свако газдинство.');
     }
    }catch(writeError){
     const rollbackErrors=[];
-    for(const id of insertedIds){
-     const r=await client.from('tura_nabavka_dodele').delete().eq('id',id);
-     if(r.error)rollbackErrors.push(r.error.message);
-    }
-    for(const applied of [...appliedUpdates].reverse()){
-     const old=applied.old;
-     const restore={broj_pakovanja:old.broj_pakovanja,naruceno_pakovanja:old.naruceno_pakovanja,nabavna_cena:old.nabavna_cena,naruceno:old.naruceno,potvrdjeno_pakovanja:old.potvrdjeno_pakovanja,preuzeto_pakovanja:old.preuzeto_pakovanja,viber_status:old.viber_status,updated_at:old.updated_at};
-     const r=await client.from('tura_nabavka_dodele').update(restore).eq('id',old.id);
-     if(r.error)rollbackErrors.push(r.error.message);
-    }
+    for(const id of insertedIds){const r=await client.from('tura_nabavka_dodele').delete().eq('id',id);if(r.error)rollbackErrors.push(r.error.message);}
+    for(const applied of [...appliedUpdates].reverse()){const old=applied.old,restore={broj_pakovanja:old.broj_pakovanja,naruceno_pakovanja:old.naruceno_pakovanja,nabavna_cena:old.nabavna_cena,naruceno:old.naruceno,potvrdjeno_pakovanja:old.potvrdjeno_pakovanja,preuzeto_pakovanja:old.preuzeto_pakovanja,viber_status:old.viber_status,updated_at:old.updated_at};const r=await client.from('tura_nabavka_dodele').update(restore).eq('id',old.id);if(r.error)rollbackErrors.push(r.error.message);}
     if(rollbackErrors.length)throw Error((writeError.message||String(writeError))+' Аутоматско враћање није у потпуности успело: '+rollbackErrors.join('; '));
     throw writeError;
    }
-   s.cart=[];s.allocationDraft={selectedFarmIds:[],quantities:{}};await load();s.stage='request';setNote('Захтев је евидентиран као припремљен. Статус слања се мења тек након стварног слања Viber поруке.');return true;
+   await load();s.stage='request';return true;
   }catch(err){setNote('Захтев није сачуван: '+(err.message||String(err)),true);return false;}
   finally{s.busy=false;render();}
  }
@@ -277,7 +266,7 @@ host.addEventListener('change',ev=>{
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
   if(a==='generate')return generateViber();
-  if(a==='save-multi-allocation'){const cart=buildAllocationCart({s});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid)){const q=s.allocationDraft.quantities[key(d.productId,d.variantId)]||{},sum=Object.values(q).reduce((a,v)=>a+Math.max(0,Math.floor(Number(v)||0)),0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;return generateViber();}
+  if(a==='save-multi-allocation'){const cart=buildAllocationCart({s});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid)){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;return generateViber();}
  });
   let loadAttempt=0;
  async function initialize(){
