@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.3.0
+ * Version: 1.4.0
  * Updated: 2026-11-19
- * Description: Aligns procurement fields and product cards to the approved mobile reference while preserving the existing ADMIN palette.
+ * Description: Applies the approved light procurement visual theme and reference field hierarchy through CSS only.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -1042,4 +1042,163 @@ body.nd-workspace:has(.nd-tour-bottom-nav:not([hidden])){padding-bottom:calc(94p
 @media(max-width:360px){
  .nd-workspace .ndp3 .ndp3-request-package-row{grid-template-columns:minmax(0,1fr) 68px;gap:5px}
  .nd-workspace .ndp3 .ndp3-request-product-action .ndp3-btn{font-size:12px;padding:9px 11px}
+}
+
+
+/* 24. Procurement light-reference redesign — v1.4.0
+   Scoped to the procurement module only. No HTML or JavaScript behavior changes. */
+.nd-workspace .ndp3{
+  --bg:#f3f6f3!important;
+  --panel:#ffffff!important;
+  --line:#dfe7e1!important;
+  --muted:#78847d!important;
+  --gold:#216343!important;
+  background:#f3f6f3!important;
+  color:#1e2d25!important;
+  border:1px solid #e0e8e2!important;
+  border-radius:20px!important;
+  box-shadow:0 2px 12px rgba(24,55,37,.045)!important;
+}
+.nd-workspace .ndp3 h1,
+.nd-workspace .ndp3 h2,
+.nd-workspace .ndp3 h3,
+.nd-workspace .ndp3 strong,
+.nd-workspace .ndp3 b{color:#1e2d25}
+.nd-workspace .ndp3 p,
+.nd-workspace .ndp3 small,
+.nd-workspace .ndp3 .ndp3-muted{color:#78847d}
+.nd-workspace .ndp3 .ndp3-kicker{color:#276747}
+.nd-workspace .ndp3 .ndp3-phase-tabs{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;
+  padding:5px;margin:14px 0;border:1px solid #e0e8e2;border-radius:16px;
+  background:#e8eee9;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab{
+  min-width:0;min-height:56px;padding:9px 5px;border:1px solid transparent;
+  border-radius:12px;background:transparent;color:#68756d;
+  font:inherit;font-size:12px;font-weight:850;line-height:1.2;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab small{color:#87928a;font-size:9px}
+.nd-workspace .ndp3 .ndp3-phase-tab[aria-selected="true"]{
+  background:#fff;border-color:#e4ebe5;color:#205b3d;
+  box-shadow:0 2px 7px rgba(31,69,46,.08);
+}
+.nd-workspace .ndp3 .ndp3-phase-tab[aria-selected="true"] small{color:#39734f}
+.nd-workspace .ndp3 .ndp3-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:13px 0 16px}
+.nd-workspace .ndp3 .ndp3-kpi{
+  min-width:0;min-height:78px;padding:12px 13px;border:1px solid #e1e9e3;
+  border-radius:15px;background:#fff;box-shadow:0 1px 4px rgba(25,55,37,.035);
+}
+.nd-workspace .ndp3 .ndp3-kpi b{color:#1f3026;font-size:clamp(18px,4vw,23px)}
+.nd-workspace .ndp3 .ndp3-kpi span{color:#7b877f;font-size:11px}
+.nd-workspace .ndp3 .ndp3-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:12px 0}
+.nd-workspace .ndp3 .ndp3-select,
+.nd-workspace .ndp3 input,
+.nd-workspace .ndp3 textarea,
+.nd-workspace .ndp3 .ndp3-toolbar input,
+.nd-workspace .ndp3 .ndp3-toolbar select{
+  width:100%;min-width:0;min-height:49px;padding:11px 13px;
+  border:1px solid #dce6df;border-radius:13px;background:#fff;
+  color:#26372d;font:inherit;box-shadow:0 1px 3px rgba(22,55,35,.025);
+}
+.nd-workspace .ndp3 input::placeholder,
+.nd-workspace .ndp3 textarea::placeholder{color:#929d95;opacity:1}
+.nd-workspace .ndp3 .ndp3-request-intro{
+  margin:10px 0 16px;padding:12px 14px;border:1px solid #e7eee8;
+  border-radius:13px;background:#f7f9f7;color:#78847d;line-height:1.5;
+}
+.nd-workspace .ndp3 .ndp3-request-products{gap:11px}
+.nd-workspace .ndp3 .ndp3-request-product-card{
+  min-width:0;padding:14px;border:1px solid #e1e9e3;border-radius:17px;
+  background:#fff;box-shadow:0 3px 12px rgba(26,57,38,.045);
+}
+.nd-workspace .ndp3 .ndp3-request-product-head{
+  align-items:center;gap:10px;margin:0 0 8px;padding:0 0 9px;
+  border-bottom:1px solid #edf1ee;
+}
+.nd-workspace .ndp3 .ndp3-request-product-head>div{min-width:0}
+.nd-workspace .ndp3 .ndp3-request-product-head strong{color:#203128;font-size:16px;line-height:1.35}
+.nd-workspace .ndp3 .ndp3-request-product-total{color:#7d8981;font-size:12px;line-height:1.4}
+.nd-workspace .ndp3 .ndp3-chip{
+  border:0;border-radius:999px;background:#edf4ef;color:#39704f;
+  font-size:10px;font-weight:850;
+}
+.nd-workspace .ndp3 .ndp3-chip.green{background:#eaf4ed;color:#286444}
+.nd-workspace .ndp3 .ndp3-chip.blue{background:#edf3f6;color:#456778}
+.nd-workspace .ndp3 .ndp3-chip.amber{background:#f8f1e5;color:#89652e}
+.nd-workspace .ndp3 .ndp3-chip.red{background:#f8eceb;color:#984d49}
+.nd-workspace .ndp3 .ndp3-request-package-row{
+  grid-template-columns:minmax(0,1fr) minmax(76px,auto);gap:10px;
+  align-items:center;padding:11px 0;border-top:1px solid #edf1ee;
+}
+.nd-workspace .ndp3 .ndp3-request-package-row>div:first-child{min-width:0}
+.nd-workspace .ndp3 .ndp3-request-package-row b{color:#25362c;font-size:14px;line-height:1.35}
+.nd-workspace .ndp3 .ndp3-request-package-row small{color:#7b877f;font-size:11px;line-height:1.4}
+.nd-workspace .ndp3 .ndp3-request-package-count{
+  min-width:78px;padding:7px 4px;border:0;background:transparent;
+  color:#25362c;font-size:16px;font-weight:900;text-align:right;
+}
+.nd-workspace .ndp3 .ndp3-request-package-count small{display:block;color:#7b877f;font-size:10px}
+.nd-workspace .ndp3 .ndp3-request-product-action{
+  display:flex;justify-content:flex-end;gap:8px;margin-top:13px;
+}
+.nd-workspace .ndp3 .ndp3-btn{
+  min-height:45px;padding:10px 14px;border:1px solid #236744;border-radius:12px;
+  background:#236744;color:#fff;font-weight:850;box-shadow:none;
+}
+.nd-workspace .ndp3 .ndp3-btn:hover{background:#1b5738}
+.nd-workspace .ndp3 .ndp3-btn:disabled{background:#dce7df;border-color:#dce7df;color:#849188}
+.nd-workspace .ndp3 .ndp3-btn.secondary,
+.nd-workspace .ndp3 .ndp3-btn.ghost{
+  border-color:#dce6df;background:#f7f9f7;color:#365442;
+}
+.nd-workspace .ndp3 .ndp3-panel,
+.nd-workspace .ndp3 .ndp3-stage-group,
+.nd-workspace .ndp3 .ndp3-allocation-product{
+  border:1px solid #e1e9e3;border-radius:15px;background:#fff;color:#26372d;
+  box-shadow:0 2px 8px rgba(26,57,38,.035);
+}
+.nd-workspace .ndp3 .ndp3-stage-group{padding:13px}
+.nd-workspace .ndp3 .ndp3-stage-group>header{
+  align-items:center;gap:10px;margin:0 0 9px;padding-bottom:9px;
+  border-bottom:1px solid #edf1ee;
+}
+.nd-workspace .ndp3 .ndp3-stage-package{
+  margin:9px 0;padding:10px;border:1px solid #e8eee9;border-radius:12px;
+  background:#f8faf8;
+}
+.nd-workspace .ndp3 .ndp3-stage-line{padding:11px 0;border-color:#edf1ee}
+.nd-workspace .ndp3 .ndp3-stage-line-title{color:#26372d;font-size:13px}
+.nd-workspace .ndp3 .ndp3-stage-line-meta{color:#78847d;font-size:11px}
+.nd-workspace .ndp3 .ndp3-stage-values{gap:7px}
+.nd-workspace .ndp3 .ndp3-stage-values>span{
+  padding:9px;border:1px solid #e4ebe5;border-radius:11px;background:#f8faf8;color:#35483b;
+}
+.nd-workspace .ndp3 .ndp3-request-allocation{
+  border:1px solid #e2eae4;border-radius:12px;background:#f8faf8;
+}
+.nd-workspace .ndp3 .ndp3-request-allocation strong{color:#26372d}
+.nd-workspace .ndp3 .ndp3-request-allocation small{color:#78847d}
+.nd-workspace .ndp3 .ndp3-empty{color:#78847d}
+.nd-workspace .ndp3 button:focus-visible,
+.nd-workspace .ndp3 input:focus-visible,
+.nd-workspace .ndp3 select:focus-visible,
+.nd-workspace .ndp3 textarea:focus-visible{
+  outline:3px solid rgba(42,112,72,.2);outline-offset:2px;
+}
+@media(max-width:520px){
+  .nd-workspace .ndp3{padding:11px;border-radius:16px}
+  .nd-workspace .ndp3 .ndp3-phase-tabs{gap:3px;padding:4px}
+  .nd-workspace .ndp3 .ndp3-phase-tab{min-height:55px;padding:8px 3px;font-size:10px}
+  .nd-workspace .ndp3 .ndp3-phase-tab small{font-size:8px}
+  .nd-workspace .ndp3 .ndp3-kpi{min-height:72px;padding:10px}
+  .nd-workspace .ndp3 .ndp3-request-product-card{padding:12px}
+  .nd-workspace .ndp3 .ndp3-request-product-head{align-items:center}
+  .nd-workspace .ndp3 .ndp3-request-package-row{grid-template-columns:minmax(0,1fr) 74px;gap:7px;padding:11px 0}
+  .nd-workspace .ndp3 .ndp3-request-package-count{min-width:0;font-size:15px}
+  .nd-workspace .ndp3 .ndp3-request-product-action .ndp3-btn{width:auto;min-width:190px;max-width:100%}
+}
+@media(max-width:360px){
+  .nd-workspace .ndp3 .ndp3-request-package-row{grid-template-columns:minmax(0,1fr) 66px;gap:5px}
+  .nd-workspace .ndp3 .ndp3-request-product-action .ndp3-btn{min-width:0;font-size:12px;padding:9px 11px}
 }
