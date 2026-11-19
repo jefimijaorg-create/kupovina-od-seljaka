@@ -1,8 +1,8 @@
 /*
  * NARUČI ДОМАЋЕ — PROCUREMENT WORKFLOW ACTIONS
- * Version: 1.0.0
+ * Version: 1.1.0
  * Updated: 2026-11-19
- * Description: Centralizes authenticated procurement writes and immutable audit-history reads.
+ * Description: Adds the atomic unconfirmed-quantity transfer RPC and read-back verification.
  * Scope: Existing ADMIN Workspace, existing Supabase schema/RLS/triggers only.
  */
 const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
@@ -32,6 +32,51 @@ export async function markProcurementSent({ client, rowIds, sentAt = new Date().
     throw new Error('База није потврдила слање за све изабране ставке.');
   }
   return result.data;
+}
+
+export async function transferUnconfirmedProcurement({ client, sourceRow, targetFarmId, packages }) {
+  if (!client || !sourceRow?.id) throw new TypeError('Недостаје изворна расподела или Supabase клијент.');
+  const count = Number(packages);
+  const available = Math.max(0, number(sourceRow.naruceno_pakovanja) - number(sourceRow.potvrdjeno_pakovanja));
+  if (!Number.isInteger(count) || count <= 0) throw new Error('Количина преноса мора бити позитиван цео број паковања.');
+  if (!Number.isInteger(Number(targetFarmId)) || Number(targetFarmId) <= 0) throw new Error('Изабери циљно газдинство.');
+  if (String(targetFarmId) === String(sourceRow.gazdinstvo_id)) throw new Error('Изворно и циљно газдинство морају бити различити.');
+  if (count > available) throw new Error('Пренос премашује преосталу непотврђену количину.');
+
+  const rpc = await client.rpc('transfer_tura_nabavka_unconfirmed', {
+    p_source_allocation_id: Number(sourceRow.id),
+    p_target_gazdinstvo_id: Number(targetFarmId),
+    p_package_count: count
+  });
+  if (rpc.error) throw new Error(rpc.error.message);
+  const result = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+  if (!result || number(result.transferred_packages) !== count || !result.target_allocation_id) {
+    throw new Error('База није вратила потврду атомског преноса.');
+  }
+
+  const targetRead = await client.from('tura_nabavka_dodele')
+    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status')
+    .eq('id', result.target_allocation_id)
+    .maybeSingle();
+  if (targetRead.error) throw new Error('Пренос је извршен, али провера циљне расподеле није успела: ' + targetRead.error.message);
+  if (!targetRead.data || targetRead.data.viber_status !== 'not_sent') {
+    throw new Error('Пренос је извршен, али база није потврдила нови статус циљног захтева.');
+  }
+
+  const sourceRead = await client.from('tura_nabavka_dodele')
+    .select('id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,viber_status')
+    .eq('id', sourceRow.id)
+    .maybeSingle();
+  if (sourceRead.error) throw new Error('Пренос је извршен, али провера изворне расподеле није успела: ' + sourceRead.error.message);
+  if (result.source_deleted) {
+    if (sourceRead.data) throw new Error('База није потврдила уклањање празне изворне расподеле.');
+  } else if (!sourceRead.data ||
+      number(sourceRead.data.broj_pakovanja) !== number(sourceRow.broj_pakovanja) - count ||
+      number(sourceRead.data.naruceno_pakovanja) !== number(sourceRow.naruceno_pakovanja) - count) {
+    throw new Error('База није потврдила умањење изворне расподеле.');
+  }
+
+  return { ...result, target: targetRead.data, source: sourceRead.data };
 }
 
 export async function saveProcurementTracking({ client, row, confirmed, collected }) {
