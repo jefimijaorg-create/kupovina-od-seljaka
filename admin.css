@@ -1,7 +1,7 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.7.4
- * Updated: 2026-11-19
+ * Version: 1.8.1
+ * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
@@ -1978,3 +1978,28 @@ body.nd-workspace{
  .nd-workspace .nd-tour-bottom-nav button{min-height:60px;font-size:10px!important}
 }
 @media(prefers-reduced-motion:reduce){.nd-workspace *{transition:none!important;animation:none!important}}
+
+
+/* ==================================================
+ * ADMIN WORKSPACE — ПОРУЏБИНЕ ПО ПУНКТОВИМА
+ * Уједначавање заглавља пункта и купца са светлом палетом.
+ * ================================================== */
+.nd-workspace .nd-grouped-orders .nd-go-point-head{
+  background:#FFFFFF!important;
+  border-bottom:1px solid #DCE4DC!important;
+  color:#344238!important;
+}
+.nd-workspace .nd-grouped-orders .nd-go-point-head h3{
+  color:#344238!important;
+}
+.nd-workspace .nd-grouped-orders .nd-go-buyer-head{
+  background:#FFFFFF!important;
+  border:1px solid #DCE4DC!important;
+  color:#344238!important;
+}
+.nd-workspace .nd-grouped-orders .nd-go-customer-name{
+  color:#344238!important;
+}
+.nd-workspace .nd-grouped-orders .nd-go-phone{
+  color:#536458!important;
+}
