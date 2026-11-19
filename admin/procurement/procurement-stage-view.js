@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.9.1
+ * Version: 1.9.2
  * Updated: 2026-11-19
- * Description: Hides zero-quantity farm allocation rows after partial supplier confirmation.
+ * Description: Adds farm-first expandable pickup view; preserves pickup quantities and actions.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -15,6 +15,7 @@ export function renderProcurementStageView(ctx){
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
   const rows=s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
+  const groupByFarms=s.stage==='collect'||s.view==='farms';
   const transferCandidates=row=>{const ids=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))];return ids.map(id=>farm(id)).filter(Boolean);};
   const sourceSummary=d=>{const totals=new Map();(d?.sourceOrders||[]).forEach(x=>{const id=x.orderId===null||x.orderId===undefined?'без броја':String(x.orderId);totals.set(id,(totals.get(id)||0)+n(x.packageCount));});return [...totals].map(([id,count])=>(id==='без броја'?'Изворна ставка':'Поруџбина #'+id)+' · '+f(count)+' пак.').join(' · ')||'Извор поруџбине није доступан';};
   const historyHtml=()=>{
@@ -52,24 +53,24 @@ export function renderProcurementStageView(ctx){
    }else{
     controls='<div class="ndp3-stage-input"><label>Стварно преузето (паковања)<input type="number" inputmode="numeric" pattern="[0-9]*" min="'+f(collected)+'" max="'+f(confirmed)+'" step="1" data-field="preuzeto_pakovanja" data-id="'+e(row.id)+'" value="'+f(collected)+'" '+(!writable||s.busy||!canCollectProcurement(row)?'disabled':'')+'></label><div><div class="ndp3-stage-line-meta">Преостало за преузимање: <strong>'+f(Math.max(0,confirmed-collected))+' паковања</strong></div><div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="save-field" data-id="'+e(row.id)+'" '+(!writable||s.busy||!canCollectProcurement(row)?'disabled':'')+'>Евидентирај преузимање</button></div></div></div>';
    }
-   const lineTitle=s.view==='farms'?(p?.name||'Производ')+' · '+(v?.name||v?.size_label||'Паковање'):(ff?.name||'Газдинство није пронађено');
+   const lineTitle=groupByFarms?(p?.name||'Производ')+' · '+(v?.name||v?.size_label||'Паковање'):(ff?.name||'Газдинство није пронађено');
    return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(lineTitle)+'</div><div class="ndp3-stage-line-meta">'+e(ff?.name||'Газдинство није пронађено')+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div><div class="ndp3-stage-line-meta">Извор: '+e(sourceSummary(d))+'</div><div class="ndp3-stage-values">'+values+'</div>'+controls+'</article>';
   };
   const groupedRows=()=>{
    const groups=new Map();
    for(const row of rows){
-    const groupKey=s.view==='farms'?String(row.gazdinstvo_id):String(row.product_id);
+    const groupKey=groupByFarms?String(row.gazdinstvo_id):String(row.product_id);
     if(!groups.has(groupKey))groups.set(groupKey,[]);
     groups.get(groupKey).push(row);
    }
    return [...groups.entries()].map(([groupKey,groupRows])=>{
-    const first=groupRows[0],title=s.view==='farms'?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ');
+    const first=groupRows[0],title=groupByFarms?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ');
     let actions='';
     if(s.stage==='request'&&s.view==='farms'){
      actions='<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Отвори Viber и копирај требовање</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање требовања</button></div>';
     }
     let body='';
-    if(s.view==='farms'){
+    if(groupByFarms){
      body=groupRows.map(lineHtml).join('');
     }else{
      const packages=new Map();
@@ -83,7 +84,11 @@ export function renderProcurementStageView(ctx){
       return '<section class="ndp3-stage-package"><header><strong>'+e(label)+'</strong><span class="ndp3-chip">'+packageRows.length+' газдинстава</span></header>'+packageRows.map(lineHtml).join('')+'</section>';
      }).join('');
     }
-    return '<section class="ndp3-stage-group"><header><strong>'+e(title)+'</strong><span class="ndp3-chip">'+(s.view==='farms'?groupRows.length+' ставки':new Set(groupRows.map(x=>String(x.variant_id))).size+' амбалаже')+'</span></header>'+body+actions+'</section>';
+    if(s.stage==='collect'&&groupByFarms){
+     const pending=groupRows.reduce((sum,row)=>sum+Math.max(0,n(row.potvrdjeno_pakovanja)-n(row.preuzeto_pakovanja)),0);
+     return '<details class="ndp3-stage-group ndp3-collect-farm"><summary><span class="ndp3-collect-farm-title">'+e(title)+'</span><span class="ndp3-chip">'+groupRows.length+' ставки</span><span class="ndp3-collect-farm-pending">'+f(pending)+' паковања за преузимање</span></summary><div class="ndp3-collect-farm-body">'+body+'</div></details>';
+    }
+    return '<section class="ndp3-stage-group"><header><strong>'+e(title)+'</strong><span class="ndp3-chip">'+(groupByFarms?groupRows.length+' ставки':new Set(groupRows.map(x=>String(x.variant_id))).size+' амбалаже')+'</span></header>'+body+actions+'</section>';
    }).join('');
   };
   const requestProductsHtml=(()=>{
@@ -147,11 +152,11 @@ export function renderProcurementStageView(ctx){
   const demandWarning=(invalidDemandCount||invalidSourceCount||missingVariantCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација и '+invalidSourceCount+' ставки без производа нису укључене у збирове. '+missingVariantCount+' производа имају поруџбину, али им недостаје повезана амбалажа; приказани су, али расподела је блокирана.</div>':'';
   host.innerHTML='<header class="ndp3-head"><div><div class="ndp3-kicker">ОПЕРАТИВНА ТАБЛА · ТУРА #'+e(tourId)+'</div><h1>Набавка</h1><p>'+e(s.tour?.naziv||'Тура')+' · Сви производи и паковања из базе</p></div><button class="ndp3-btn" data-action="back">← Назад</button></header>'+
    '<nav class="ndp3-phase-tabs" aria-label="Фазе набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'" >Требовање<small>'+(requestDemandCount)+' ставки</small></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'">Потврда<small>'+confirmRows.length+' ставки</small></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'">Преузимање<small>'+collectRows.length+' ставки</small></button><button class="ndp3-phase-tab" data-stage="history" aria-selected="'+(s.stage==='history')+'">Историја<small>'+history.length+'</small></button></nav>'+
-   '<div class="ndp3-view-switch"><button type="button" data-view="products" aria-pressed="'+(s.view==='products')+'">По производима</button><button type="button" data-view="farms" aria-pressed="'+(s.view==='farms')+'">По газдинствима</button></div>'+
+   (s.stage==='collect'?'':'<div class="ndp3-view-switch"><button type="button" data-view="products" aria-pressed="'+(s.view==='products')+'">По производима</button><button type="button" data-view="farms" aria-pressed="'+(s.view==='farms')+'">По газдинствима</button></div>')+
    
    '<section class="ndp3-kpis"><div class="ndp3-kpi"><b>'+totalNeeded()+'</b><span>УКУПНО ПОТРЕБНО</span></div>'+(s.demands.some(d=>ordered(d.productId,d.variantId)>0)?'<div class="ndp3-kpi"><b>'+totalOrdered()+'</b><span>ЗАХТЕВАНО</span></div>':'')+'<div class="ndp3-kpi"><b>'+totalRemaining()+'</b><span>МОЖЕ ЈОШ ДА СЕ ЗАХТЕВА</span></div>'+(s.demands.some(d=>allocationsFor(d.productId,d.variantId).some(x=>n(x.preuzeto_pakovanja)>0))?'<div class="ndp3-kpi"><b>'+totalCollected()+'</b><span>ПРЕУЗЕТО</span></div>':'')+'</section>'+
    (s.notice?'<div class="ndp3-note '+(s.error?'error':'')+'" role="status">'+e(s.notice)+'</div>':'')+(!writable?'<div class="ndp3-note">Тура није у статусу processing. Приказ је само за читање.</div>':'')+demandWarning+
-   '<section class="ndp3-panel"><div class="ndp3-row"><h2>'+stageTitle+'</h2><span class="ndp3-chip">'+(s.stage==='history'?'Непроменљива евиденција':s.view==='products'?'Груписано по производима':'Груписано по газдинствима')+'</span></div>'+phaseContent+'</section>'+
+   '<section class="ndp3-panel"><div class="ndp3-row"><h2>'+stageTitle+'</h2><span class="ndp3-chip">'+(s.stage==='history'?'Непроменљива евиденција':s.stage==='collect'?'Отвори газдинство за детаље':s.view==='products'?'Груписано по производима':'Груписано по газдинствима')+'</span></div>'+phaseContent+'</section>'+
    '<div class="ndp3-modal" '+(s.requestOpen?'':'hidden')+'><section class="ndp3-modal-dialog" role="dialog" aria-modal="true" aria-label="Подеси требовање"><header class="ndp3-modal-head"><div><div class="ndp3-kicker">ТРЕБОВАЊЕ · ТУРА #'+e(tourId)+'</div><h2>Требовање: '+e(s.requestProductId?prod(s.requestProductId)?.name||'Изабрани производ':'Цела тура')+'</h2></div><button class="ndp3-btn" data-action="close-request">Затвори</button></header>'+buildAllocationSheetHtml()+'<div class="ndp3-actions"><button class="ndp3-btn primary" data-action="save-multi-allocation" '+(!writable||s.busy?'disabled':'')+'>'+(s.busy?'Чувам…':'Сачувај расподелу и припреми поруке')+'</button></div></section></div>'+
    (editAllocationRow?'<div class="ndp3-modal"><section class="ndp3-modal-dialog" role="dialog" aria-modal="true" aria-label="Расподела по купцима"><header class="ndp3-modal-head"><div><div class="ndp3-kicker">РАСПОДЕЛА ПО КУПЦИМА · ТУРА #'+e(tourId)+'</div><h2>Колико додељујеш газдинству?</h2></div><button class="ndp3-btn" data-action="close-allocation-edit">Затвори</button></header><div class="ndp3-note"><b>'+e(farm(editAllocationRow.gazdinstvo_id)?.name||'Газдинство')+'</b><br>'+e(prod(editAllocationRow.product_id)?.name||'Производ')+' · '+e(variant(editAllocationRow.variant_id)?.name||variant(editAllocationRow.variant_id)?.size_label||'Амбалажа')+'<br>Укупна додела се аутоматски сабира из количина купаца.</div><div class="ndp3-customer-allocation-editor">'+editCustomerRows.map(item=>{const ordered=Math.max(0,n(item.package_count)),assigned=Math.max(0,n(editAllocationDraft[String(item.id)])),d=demand(item.product_id,item.variant_id);return '<article class="ndp3-customer-allocation-row"><div class="ndp3-customer-allocation-copy"><strong>'+e(item.customer_name||'Купац није повезан')+'</strong><small>Поруџбина #'+e(item.porudzbina_id||'—')+' · Наручено: '+f(ordered)+' паковања</small><small>Додељено: '+f(assigned)+' паковања · '+e(qty(assigned,d))+'</small></div><div class="ndp3-customer-allocation-controls"><button type="button" data-action="customer-allocation-step" data-item-id="'+e(item.id)+'" data-delta="-1" '+(!writable||s.busy||assigned<=0?'disabled':'')+' aria-label="Смањи количину">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="'+f(ordered)+'" step="1" data-customer-allocation-count data-item-id="'+e(item.id)+'" value="'+f(assigned)+'" '+(!writable||s.busy?'disabled':'')+'><button type="button" data-action="customer-allocation-step" data-item-id="'+e(item.id)+'" data-delta="1" '+(!writable||s.busy||assigned>=ordered?'disabled':'')+' aria-label="Повећај количину">+</button></div></article>';}).join('')+'</div><div class="ndp3-customer-allocation-total"><span>Укупно додељено газдинству</span><b>'+f(editCustomerTotal)+' паковања</b></div><div class="ndp3-note">„Наручено“ код купца остаје непромењено. Мењаш само „Додељено“. Збир не може премашити наруџбине купаца нити количину већ додељену другим газдинствима.</div><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="save-allocation-edit" '+(!writable||s.busy||!editCustomerRows.length||editCustomerTotal<1?'disabled':'')+'>'+(s.busy?'Чувам…':'Сачувај расподелу')+'</button><button class="ndp3-btn" data-action="close-allocation-edit">Откажи</button></div></section></div>':'')+
    (s.transferOpen?(()=>{const source=s.allocations.find(x=>String(x.id)===String(s.transferDraft?.sourceId));const candidates=source?transferCandidates(source):[];const available=source?Math.max(0,n(source.naruceno_pakovanja)-n(source.potvrdjeno_pakovanja)):0;const count=Number(s.transferDraft?.packages)||0;return '<div class="ndp3-modal"><section class="ndp3-modal-dialog" role="dialog" aria-modal="true" aria-label="Пренос непотврђене количине"><header class="ndp3-modal-head"><div><div class="ndp3-kicker">ПРЕРАСПОДЕЛА · ТУРА #'+e(tourId)+'</div><h2>Пренеси непотврђену количину</h2></div><button class="ndp3-btn" data-action="close-transfer">Затвори</button></header>'+(source?'<div class="ndp3-note">Изворно газдинство: <b>'+e(farm(source.gazdinstvo_id)?.name||'Газдинство')+'</b><br>Производ: <b>'+e(prod(source.product_id)?.name||'Производ')+'</b> · '+e(variant(source.variant_id)?.name||variant(source.variant_id)?.size_label||'Паковање')+'<br>Потврђено и задржано: <b>'+f(source.potvrdjeno_pakovanja)+' пак.</b><br>На располагању за пренос: <b>'+f(available)+' пак.</b></div><label>Циљно газдинство<select class="ndp3-select" data-transfer-target>'+candidates.map(ff=>'<option value="'+e(ff.id)+'" '+(String(ff.id)===String(s.transferDraft?.targetFarmId)?'selected':'')+'>'+e(ff.name)+'</option>').join('')+'</select></label><label class="ndp3-mt-10">Количина за пренос (паковања)<input type="number" inputmode="numeric" pattern="[0-9]*" data-transfer-count min="1" max="'+f(available)+'" step="1" value="'+e(count||Math.min(available,1))+'"></label><div class="ndp3-note">Пренос се извршава атомски. Потврђена и преузета количина остаје код изворног газдинства. Циљни захтев се враћа на „није послато“. Изворни захтев се враћа на тај статус само ако му је остала непотврђена количина. Viber поруке се не шаљу аутоматски.</div><div class="ndp3-actions"><button class="ndp3-btn primary" data-action="confirm-transfer" '+(!writable||s.busy||!candidates.length||!Number.isInteger(count)||count<1||count>available?'disabled':'')+'>'+(s.busy?'Преносим…':'Потврди пренос')+'</button><button class="ndp3-btn" data-action="close-transfer">Откажи</button></div>':'<div class="ndp3-stage-empty">Изворна расподела више није доступна.</div>')+'</section></div>';})():'')+
