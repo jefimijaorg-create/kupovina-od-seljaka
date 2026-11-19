@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.6.1
+ * Version: 4.6.2
  * Updated: 2026-11-19
  * Description: Improves product allocation sheet readability, contrast, spacing and mobile layout; preserves allocation and Supabase workflows.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -140,7 +140,7 @@ const CSS=`
 .ndp3 .ndp3-modal-dialog .ndp3-allocation-product{padding:14px!important;margin:12px 0!important;border:1px solid #536b86!important;border-radius:15px!important;background:#13263d!important;color:#f8fafc!important;overflow:hidden}
 .ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-row{align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-row>strong{flex:1 1 180px;color:#fff;font-size:16px;line-height:1.4;overflow-wrap:anywhere}
-.ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-chip{display:inline-flex;align-items:center;gap:5px;flex:0 1 auto;max-width:100%;white-space:normal;padding:7px 10px;background:#214b3c;color:#d9ffeb;font-size:12px;line-height:1.3}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-chip{display:inline-flex;align-items:center;gap:7px;flex:0 1 auto;max-width:100%;white-space:normal;padding:7px 10px;background:#214b3c;color:#d9ffeb;font-size:12px;line-height:1.3}
 .ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-chip b{display:inline;color:#fff;font-size:14px}
 .ndp3 .ndp3-modal-dialog .ndp3-allocation-quantity{color:#e2eaf4;font-size:13px;line-height:1.5}
 .ndp3 .ndp3-modal-dialog .ndp3-allocation-quantity strong{color:#fff;font-size:18px}
@@ -157,7 +157,7 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.1';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.2';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationPackages:0,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
