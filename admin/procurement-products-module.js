@@ -1,15 +1,15 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.2.1
+ * Version: 4.3.0
  * Updated: 2026-11-19
- * Description: Refines mobile-first procurement typography, controls, numeric entry and compact packaging rows.
+ * Description: Adds product-first request cards and product-scoped farm allocation using existing Supabase data.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.4.1';
-import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.1.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.5.0';
+import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
@@ -74,12 +74,28 @@ const CSS=`
 .ndp3 .ndp3-allocation-quantity small{display:block;margin-top:4px;color:#a9b8ca;font-size:10px}
 @media(min-width:760px){.ndp3 .ndp3-package-totals{grid-template-columns:repeat(3,minmax(90px,1fr))}}
 
+/* Product-first request cards — retain existing ADMIN palette */
+.ndp3-request-intro{padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--muted);font-size:12px;line-height:1.5;margin:8px 0 13px}
+.ndp3-request-products{display:grid;gap:10px}
+.ndp3-request-product-card{padding:13px;border:1px solid var(--line);border-radius:15px;background:var(--panel);min-width:0}
+.ndp3-request-product-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.ndp3-request-product-head strong{font-size:15px;line-height:1.35}
+.ndp3-request-product-total{font-size:11px;color:var(--muted);margin-top:3px}
+.ndp3-request-package-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line);min-width:0}
+.ndp3-request-package-row>div:first-child{min-width:0}
+.ndp3-request-package-row b{font-size:13px;line-height:1.3}
+.ndp3-request-package-row small{display:block;color:var(--muted);font-size:10px;line-height:1.4;margin-top:3px}
+.ndp3-request-package-count{text-align:right;white-space:nowrap;font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold)}
+.ndp3-request-package-count small{font-size:10px;font-weight:650;color:var(--muted)}
+.ndp3-request-product-action{margin-top:10px}
+.ndp3-request-product-action .ndp3-btn{width:100%;min-height:49px}
+@media(min-width:760px){.ndp3-request-products{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.2.1';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.3.0';document.head.appendChild(style);
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -108,7 +124,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-ordered(d.productId,d.variantId)));
 
  function render(){
-  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f}),mountAnalyticsPanel:()=>{
+  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f,productId:s.requestProductId}),mountAnalyticsPanel:()=>{
    s.analyticsHandle?.destroy();
    const analyticsRoot=host.querySelector('[data-tour-analytics-root]');
    if(analyticsRoot)s.analyticsHandle=mountTourAnalyticsPanel({root:analyticsRoot,client,tourId,intervalMs:30000});
@@ -240,7 +256,7 @@ host.addEventListener('change',ev=>{
   if(ev.target.matches('[data-allocation-farm]')){
    const id=ev.target.value,ids=s.allocationDraft.selectedFarmIds.filter(x=>String(x)!==String(id));
    if(ev.target.checked)ids.push(id);s.allocationDraft.selectedFarmIds=ids;
-   for(const d of s.demands.filter(x=>x.valid)){const eligible=ids.filter(id=>s.offers.some(o=>String(o.gazdinstvo_id)===String(id)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId)&&o.is_active===true)&&!s.allocations.some(a=>String(a.gazdinstvo_id)===String(id)&&String(a.product_id)===String(d.productId)&&String(a.variant_id)===String(d.variantId)&&n(a.naruceno_pakovanja)>0));const kx=key(d.productId,d.variantId),remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId));s.allocationDraft.quantities[kx]=distributeRemaining({total:remaining,eligibleFarmIds:eligible,quantities:s.allocationDraft.quantities[kx]||{},editedFarmId:null});}
+   for(const d of s.demands.filter(x=>x.valid&&(s.requestProductId===null||String(x.productId)===String(s.requestProductId)))){const eligible=ids.filter(id=>s.offers.some(o=>String(o.gazdinstvo_id)===String(id)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId)&&o.is_active===true)&&!s.allocations.some(a=>String(a.gazdinstvo_id)===String(id)&&String(a.product_id)===String(d.productId)&&String(a.variant_id)===String(d.variantId)&&n(a.naruceno_pakovanja)>0));const kx=key(d.productId,d.variantId),remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId));s.allocationDraft.quantities[kx]=distributeRemaining({total:remaining,eligibleFarmIds:eligible,quantities:s.allocationDraft.quantities[kx]||{},editedFarmId:null});}
    render();return;
   }
   if(ev.target.matches('[data-allocation-qty]')){
@@ -256,8 +272,8 @@ host.addEventListener('change',ev=>{
   const a=b.dataset.action;
   if(a==='retry-load'){initialize();return;}
   if(a==='back')return onBack?.();
-  if(a==='open-request'){s.requestOpen=true;s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
-  if(a==='close-request'){s.requestOpen=false;render();return;}
+  if(a==='open-request'){s.requestProductId=b.dataset.productId||null;s.requestOpen=true;s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
+  if(a==='close-request'){s.requestOpen=false;s.requestProductId=null;render();return;}
   if(a==='open-transfer'){
    const row=s.allocations.find(x=>String(x.id)===String(b.dataset.id));if(!row)return;
    const candidates=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))].filter(id=>farm(id));
@@ -291,7 +307,7 @@ host.addEventListener('change',ev=>{
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
-  if(a==='save-multi-allocation'){const cart=buildAllocationCart({s});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid)){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;return generateViber();}
+  if(a==='save-multi-allocation'){const cart=buildAllocationCart({s,productId:s.requestProductId});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid&&(s.requestProductId===null||String(x.productId)===String(s.requestProductId)))){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;s.requestProductId=null;return generateViber();}
  });
   let loadAttempt=0;
  async function initialize(){
