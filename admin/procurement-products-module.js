@@ -52,7 +52,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.9.0';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],draftCounts:{},tab:'basket',notice:'',error:false};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -63,7 +63,6 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const ordered=(p,v)=>allocationsFor(p,v).reduce((a,x)=>a+n(x.naruceno_pakovanja),0);
  const pending=(p,v)=>s.cart.filter(x=>key(x.productId,x.variantId)===key(p,v)).reduce((a,x)=>a+n(x.count),0);
  const qty=(packages,d)=>d?f(packages*n(d.packageSize))+' '+e(d.packageUnit):f(packages)+' пак.';
- const rowsForFarm=fid=>s.allocations.filter(x=>String(x.gazdinstvo_id)===String(fid));
  const setNote=(v,err=false)=>{s.notice=v;s.error=err;render();};
  async function load(onProgress){
   const d=await loadProcurementData({client,tourId,onProgress});
@@ -240,32 +239,8 @@ host.addEventListener('change',ev=>{
   if(a==='close-request'){s.requestOpen=false;render();return;}
   if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
-  if(a==='fill-all'){
-   const p=b.dataset.p,v=b.dataset.v,d=demand(p,v);if(!d?.valid)return setNote('Подаци о производу и амбалажи нису важећи.',true);
-   const item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
-   const requested=ordered(p,v),limit=Math.max(0,d.packages-requested-(item?.count||0));
-   if(limit<=0)return setNote('Нема више слободне количине за припрему захтева.',true);
-   s.draftCounts[key(p,v)]=limit;render();return;
-  }
-  if(a==='step'){
-   const p=b.dataset.p,v=b.dataset.v,d=demand(p,v),item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
-   const draftKey=key(p,v),limit=Math.max(0,d.packages-ordered(p,v)-(item?.count||0));
-   const current=Object.prototype.hasOwnProperty.call(s.draftCounts,draftKey)?s.draftCounts[draftKey]:limit;
-   s.draftCounts[draftKey]=Math.max(0,Math.min(limit,current+Number(b.dataset.delta)));render();return;
-  }
-  if(a==='add'){
-   const p=b.dataset.p,v=b.dataset.v,d=demand(p,v),item=s.cart.find(x=>key(x.productId,x.variantId)===key(p,v));
-   const draftKey=key(p,v),limit=Math.max(0,d.packages-ordered(p,v)-(item?.count||0));
-   const count=Object.prototype.hasOwnProperty.call(s.draftCounts,draftKey)?s.draftCounts[draftKey]:limit;
-   if(!Number.isInteger(count)||count<=0||count>limit)return setNote('Изабери количину у оквиру преостале потребе ('+qty(limit,d)+').',true);
-   if(item)item.count+=count;else s.cart.push({productId:p,variantId:v,count});
-   s.draftCounts[draftKey]=0;render();return;
-  }
-  if(a==='cart-step'){const x=s.cart[Number(b.dataset.i)];if(!x)return;const d=demand(x.productId,x.variantId),limit=Math.max(0,d.packages-ordered(x.productId,x.variantId));x.count=Math.max(0,Math.min(limit,x.count+Number(b.dataset.delta)));s.cart=s.cart.filter(y=>y.count>0);render();return;}
-  if(a==='remove'){s.cart.splice(Number(b.dataset.i),1);render();return;}
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
-  if(a==='generate')return generateViber();
   if(a==='save-multi-allocation'){const cart=buildAllocationCart({s});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid)){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;return generateViber();}
  });
   let loadAttempt=0;
