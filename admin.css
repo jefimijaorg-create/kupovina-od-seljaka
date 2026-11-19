@@ -2045,3 +2045,47 @@ body.nd-workspace{
   .ndp3 .ndp3-stage-actions{display:grid;grid-template-columns:minmax(0,1fr);width:100%}
   .ndp3 .ndp3-stage-actions .ndp3-btn{width:100%;min-width:0;min-height:52px;flex:none;white-space:normal}
 }
+
+
+/* МОДУЛ НАБАВКА — ПРЕУЗИМАЊЕ ПО ГАЗДИНСТВИМА */
+.ndp3 .ndp3-collect-farm{
+  display:block;
+  width:100%;
+  box-sizing:border-box;
+  padding:0;
+  overflow:hidden;
+  background:#FFFFFF;
+  border:1px solid #DCE4DC;
+  border-radius:14px;
+}
+.ndp3 .ndp3-collect-farm>summary{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  box-sizing:border-box;
+  padding:15px;
+  cursor:pointer;
+  list-style:none;
+  background:#FFFFFF;
+  color:#344238;
+}
+.ndp3 .ndp3-collect-farm>summary::-webkit-details-marker{display:none}
+.ndp3 .ndp3-collect-farm>summary:after{
+  content:"Отвори газдинство ＋";
+  grid-column:1/-1;
+  color:#285B3C;
+  font-size:13px;
+  font-weight:800;
+}
+.ndp3 .ndp3-collect-farm[open]>summary:after{content:"Затвори газдинство −"}
+.ndp3 .ndp3-collect-farm-title{font-size:16px;font-weight:850;overflow-wrap:anywhere}
+.ndp3 .ndp3-collect-farm-pending{grid-column:1/-1;color:#344238;font-size:13px;font-weight:750}
+.ndp3 .ndp3-collect-farm-body{padding:0 14px 14px}
+.ndp3 .ndp3-collect-farm-body .ndp3-stage-line{width:100%;box-sizing:border-box}
+@media(max-width:520px){
+ .ndp3 .ndp3-collect-farm>summary{padding:14px}
+ .ndp3 .ndp3-collect-farm-title{font-size:15px}
+ .ndp3 .ndp3-collect-farm-body{padding:0 10px 10px}
+}
