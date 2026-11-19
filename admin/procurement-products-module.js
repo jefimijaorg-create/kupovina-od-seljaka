@@ -134,7 +134,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
     if(rollbackErrors.length)throw Error((writeError.message||String(writeError))+' Аутоматско враћање није у потпуности успело: '+rollbackErrors.join('; '));
     throw writeError;
    }
-   await load();s.stage='request';return true;
+   s.cart=[];s.allocationDraft={selectedFarmIds:[],quantities:{}};await load();s.stage='request';return true;
   }catch(err){setNote('Захтев није сачуван: '+(err.message||String(err)),true);return false;}
   finally{s.busy=false;render();}
  }
@@ -218,7 +218,8 @@ async function saveField(id){
  }
 host.addEventListener('change',ev=>{
   if(ev.target.matches('[data-allocation-farm]')){
-   const ids=[...host.querySelectorAll('[data-allocation-farm]:checked')].map(x=>x.value);s.allocationDraft.selectedFarmIds=ids;
+   const id=ev.target.value,ids=s.allocationDraft.selectedFarmIds.filter(x=>String(x)!==String(id));
+   if(ev.target.checked)ids.push(id);s.allocationDraft.selectedFarmIds=ids;
    for(const d of s.demands.filter(x=>x.valid)){const eligible=ids.filter(id=>s.offers.some(o=>String(o.gazdinstvo_id)===String(id)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId)&&o.is_active===true)&&!s.allocations.some(a=>String(a.gazdinstvo_id)===String(id)&&String(a.product_id)===String(d.productId)&&String(a.variant_id)===String(d.variantId)&&n(a.naruceno_pakovanja)>0));const kx=key(d.productId,d.variantId),remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId));s.allocationDraft.quantities[kx]=distributeRemaining({total:remaining,eligibleFarmIds:eligible,quantities:s.allocationDraft.quantities[kx]||{},editedFarmId:null});}
    render();return;
   }
