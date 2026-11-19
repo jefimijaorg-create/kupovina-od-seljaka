@@ -48,6 +48,32 @@ const CSS=`
 .ndp3-allocation-recap span{padding:8px;border-radius:9px;background:#09172a;color:var(--muted);font-size:9px}
 .ndp3-allocation-recap b{display:block;color:#fff;font-size:14px;font-variant-numeric:tabular-nums}
 @media(min-width:760px){.ndp3-package-totals{grid-template-columns:repeat(3,minmax(90px,1fr))}.ndp3-package-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}}
+
+.ndp3{overflow-x:hidden;max-width:100%;min-width:0}.ndp3 *{min-width:0}
+.ndp3 .ndp3-stage-line,.ndp3 .ndp3-stage-group,.ndp3 .ndp3-product,.ndp3 .ndp3-package-group{overflow:hidden}
+.ndp3 .ndp3-stage-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}
+.ndp3 .ndp3-stage-values>span{display:flex;flex-direction:column;gap:4px;min-width:0;padding:10px;border:1px solid #2b405d;border-radius:11px;background:#0a172a;color:#9eafc4;font-size:10px}
+.ndp3 .ndp3-stage-values>span>b{font-size:17px;line-height:1.15;color:#fff;font-weight:900;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ndp3 .ndp3-stage-values>span>small{font-size:10px;color:#a9b8ca;line-height:1.3}
+.ndp3 .ndp3-stage-values>span>label{font-size:10px;color:#9eafc4;font-weight:750}
+.ndp3 .ndp3-stage-line-title{font-size:14px;font-weight:850;line-height:1.35;overflow-wrap:anywhere}
+.ndp3 .ndp3-stage-line-meta{line-height:1.45;overflow-wrap:anywhere}
+.ndp3 .ndp3-stage-input input,.ndp3 [data-transfer-count],.ndp3 [data-allocation-qty]{font-size:18px;font-weight:850;font-variant-numeric:tabular-nums;text-align:center}
+.ndp3 .ndp3-stage-input{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:end}
+.ndp3 .ndp3-stage-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ndp3 .ndp3-stage-actions .ndp3-btn{flex:1 1 145px;min-height:48px}
+.ndp3 .ndp3-modal-dialog{padding:16px;padding-bottom:calc(18px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+.ndp3 .ndp3-modal-head{padding:10px 0 14px}.ndp3 .ndp3-modal-head h2{font-size:19px;line-height:1.25}
+.ndp3 .ndp3-modal-dialog label{margin-top:12px;font-size:12px}
+.ndp3 .ndp3-modal-dialog input,.ndp3 .ndp3-modal-dialog select{min-height:52px;font-size:17px}
+.ndp3 .ndp3-modal-dialog .ndp3-actions{position:sticky;bottom:-16px;padding:12px 0 calc(8px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,25,45,.88),#0b192d 25%);z-index:3}
+.ndp3 .ndp3-modal-dialog .ndp3-actions .primary{min-height:54px;font-size:14px}
+.ndp3 .ndp3-package-totals,.ndp3 .ndp3-package-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ndp3 .ndp3-package-totals b,.ndp3 .ndp3-package-metrics b{font-size:16px}
+.ndp3 .ndp3-allocation-quantity strong{display:block;color:#fff;font-size:16px;font-variant-numeric:tabular-nums}
+.ndp3 .ndp3-allocation-quantity small{display:block;margin-top:4px;color:#a9b8ca;font-size:10px}
+@media(min-width:760px){.ndp3 .ndp3-package-totals{grid-template-columns:repeat(3,minmax(90px,1fr))}}
+
 `;
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
