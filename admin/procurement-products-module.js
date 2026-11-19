@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.7.0
+ * Version: 4.8.0
  * Updated: 2026-11-19
- * Description: Displays customer names and per-customer package quantities within each farm allocation, using existing order-to-farm records.
+ * Description: Applies the approved light visual frame to procurement header, phase navigation, view switch, summary metrics and main panel; preserves existing procurement behavior.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.7';
@@ -158,6 +158,44 @@ const CSS=`
 .ndp3 .ndp3-modal-dialog .ndp3-allocation-unassigned{display:block;padding-left:9px;border-left:2px solid #f0b56d}
 .ndp3 .ndp3-modal-dialog .ndp3-note{color:#fff;background:#29445f;line-height:1.5}
 @media(max-width:420px){.ndp3 .ndp3-modal-dialog .ndp3-allocation-product{padding:11px!important}.ndp3 .ndp3-modal-dialog .ndp3-allocation-total{grid-template-columns:1fr}.ndp3 .ndp3-modal-dialog .ndp3-allocation-field{grid-template-columns:minmax(0,1fr) 88px!important}}
+
+/* Step 1 — approved light visual frame; scoped to the procurement module only */
+.ndp3{
+ --bg:#edf3ed;
+ --panel:#ffffff;
+ --line:#d5e1d5;
+ --muted:#68796b;
+ --gold:#28623e;
+ background:var(--bg);
+ color:#26382b;
+ border-color:var(--line);
+ box-shadow:0 8px 26px rgba(37,67,43,.07);
+}
+.ndp3 .ndp3-head{align-items:center;padding:3px 2px 10px}
+.ndp3 .ndp3-head h1{color:#23372a;font-size:clamp(24px,3vw,30px);font-weight:900;letter-spacing:-.025em}
+.ndp3 .ndp3-head p{color:#68796b;font-size:12px;line-height:1.5}
+.ndp3 .ndp3-kicker{color:#52745a}
+.ndp3 .ndp3-head>.ndp3-btn{background:#fff;color:#315a3b;border-color:#cbd9cb;box-shadow:0 2px 7px rgba(37,67,43,.06)}
+.ndp3 .ndp3-phase-tabs{background:#e3ece3;border-color:#d1dfd1;box-shadow:inset 0 1px 2px rgba(37,67,43,.04)}
+.ndp3 .ndp3-phase-tab{color:#5f7061}
+.ndp3 .ndp3-phase-tab small{color:#7b897c}
+.ndp3 .ndp3-phase-tab[aria-selected="true"]{background:#fff;border-color:#b8cdb9;color:#245b36;box-shadow:0 2px 8px rgba(37,67,43,.08)}
+.ndp3 .ndp3-phase-tab[aria-selected="true"] small{color:#52745a}
+.ndp3 .ndp3-view-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}
+.ndp3 .ndp3-view-switch button{min-width:0;min-height:46px;padding:9px 12px;border:1px solid #d2dfd2;border-radius:12px;background:#fff;color:#526653;font:inherit;font-size:12px;font-weight:850;cursor:pointer}
+.ndp3 .ndp3-view-switch button[aria-pressed="true"]{background:#28623e;border-color:#28623e;color:#fff;box-shadow:0 3px 9px rgba(40,98,62,.16)}
+.ndp3 .ndp3-kpi{background:#fff;border-color:#d5e1d5;box-shadow:0 3px 12px rgba(37,67,43,.045)}
+.ndp3 .ndp3-kpi b{color:#28623e}
+.ndp3 .ndp3-kpi span{color:#718074;letter-spacing:.035em;font-weight:750}
+.ndp3 .ndp3-panel{background:#fff;border-color:#d5e1d5;box-shadow:0 4px 16px rgba(37,67,43,.045)}
+.ndp3 .ndp3-panel h2{color:#26382b}
+.ndp3 .ndp3-panel>.ndp3-row>.ndp3-chip{background:#e8f0e8;color:#426448;border:1px solid #d5e2d5}
+@media(max-width:520px){
+ .ndp3 .ndp3-head{align-items:flex-start}
+ .ndp3 .ndp3-head>.ndp3-btn{min-height:42px;padding:8px 10px}
+ .ndp3 .ndp3-view-switch button{min-height:48px;padding:8px 5px;font-size:11px}
+}
+
 `;
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
