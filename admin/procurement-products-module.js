@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.7.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.8.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
 import { saveProcurementAllocationCart, updateUnsentProcurementAllocation } from './procurement/procurement-allocation-actions.js?v=1.1.0';
@@ -194,7 +194,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  async function markFarmSent(farmId){
   if(s.busy)return;
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
-  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>0);
+  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   if(!rows.length)return setNote('Нема ставки које чекају слање за ово газдинство.',true);
   if(!window.confirm('Потврђујеш да је заиста послат заједнички захтев газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return;
   s.busy=true;render();
