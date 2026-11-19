@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.9.0
+ * Version: 1.9.1
  * Updated: 2026-11-19
  * Description: Hides zero-quantity farm allocation rows after partial supplier confirmation.
  * Scope: Existing ADMIN Workspace only.
@@ -39,9 +39,10 @@ export function renderProcurementStageView(ctx){
   const lineHtml=row=>{
    const d=demand(row.product_id,row.variant_id),p=prod(row.product_id),v=variant(row.variant_id),ff=farm(row.gazdinstvo_id);
    const requested=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja),collected=n(row.preuzeto_pakovanja);
-   let values='<span><b>'+packageLabel(requested)+'</b><small>'+e(amountLabel(requested,d))+'</small><small class="ndp3-value-label">Захтевано</small></span>';
-   if(confirmed>0)values+='<span><b>'+packageLabel(confirmed)+'</b><small>'+e(amountLabel(confirmed,d))+'</small><small class="ndp3-value-label">Потврђено</small></span>';
-   if(collected>0)values+='<span><b>'+packageLabel(collected)+'</b><small>'+e(amountLabel(collected,d))+'</small><small class="ndp3-value-label">Преузето</small></span>';
+   const pendingConfirm=Math.max(0,requested-confirmed),pendingCollect=Math.max(0,confirmed-collected);
+   const visiblePending=s.stage==='confirm'?pendingConfirm:s.stage==='collect'?pendingCollect:requested;
+   const visibleLabel=s.stage==='confirm'?'ЧЕКА ПОТВРДУ':s.stage==='collect'?'ЧЕКА ПРЕУЗИМАЊЕ':'ЗАХТЕВАНО';
+   let values='<span><b>'+packageLabel(visiblePending)+'</b><small>'+e(amountLabel(visiblePending,d))+'</small><small class="ndp3-value-label">'+visibleLabel+'</small></span>';
    let controls='';
    if(s.stage==='request'){
     controls='<div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање требовања</button></div>';
