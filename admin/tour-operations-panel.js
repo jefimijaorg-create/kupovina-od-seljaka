@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.0.7
+ * Version: 1.0.8
  * Updated: 2026-11-19
- * Description: Supports persistent tour sections and loads compact grouped-order cards with administrator point quick actions.
+ * Description: Displays order prices and adds an RLS-protected open-to-processing tour transition.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined))];
@@ -19,7 +19,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const role = core.getState().role;
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
-  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null;
+  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.1').then(mod => mod.createProcurementOrderSheet({
     client,
@@ -36,7 +36,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if (result.error) throw result.error;
     if (!result.data) throw new Error('Изабрана тура није пронађена или немате дозволу за читање.');
     state.tour = result.data;
-    const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,status_izdavanja,package_count,package_size,package_unit,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
+    const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,status_izdavanja,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
     const orderIds = uniq(state.items.map(x=>x.porudzbina_id));
     const productIds = uniq(state.items.map(x=>x.product_id));
@@ -82,8 +82,21 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
     if(activeTab==='delivery') body=state.tourStops.length?state.tourStops.map(stop=>{const p=pointMap.get(stop.punkt_id);const orders=state.orders.filter(o=>o.punkt_id===stop.punkt_id);return '<article class="nd-ops-card"><strong>'+esc(stop.redosled)+'. '+esc(p?.name||'Пункт није доступан')+'</strong><div>'+esc(p?.city||'')+' · '+esc(p?.address||'')+'</div><small>'+esc(stop.vreme||p?.vreme||'Време није наведено')+' · '+orders.length+' поруџбина · '+(stop.aktivan?'Активан':'Неактиван')+'</small></article>'}).join(''):'<div class="nd-ops-empty">За ову туру нису дефинисани пунктови.</div>';
     if(groupedOrdersView){groupedOrdersView.destroy();groupedOrdersView=null;}
-    shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div></div><button type="button" data-back>← Назад</button></header><nav class="nd-ops-tabs" aria-label="Секције туре">'+tabs.map(([id,label])=>'<button type="button" data-tab="'+id+'" aria-selected="'+(activeTab===id)+'">'+label+'</button>').join('')+'</nav><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
+    shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div><button type="button" data-back>← Назад</button></header><nav class="nd-ops-tabs" aria-label="Секције туре">'+tabs.map(([id,label])=>'<button type="button" data-tab="'+id+'" aria-selected="'+(activeTab===id)+'">'+label+'</button>').join('')+'</nav><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     shell.querySelector('[data-back]').addEventListener('click',onBack);
+    shell.querySelector('[data-tour-processing]')?.addEventListener('click', async event => {
+      const button = event.currentTarget;
+      if (statusBusy || state.tour.status !== 'open' || !['admin','super_admin'].includes(role)) return;
+      statusBusy = true; button.disabled = true; button.textContent = 'Пребацујем…';
+      try {
+        const {data,error} = await client.from('ture').update({status:'processing'}).eq('id',tourId).eq('status','open').select('id,status').maybeSingle();
+        if (error) throw error;
+        if (!data || data.status !== 'processing') throw new Error('База није потврдила промену статуса. Освежи туру и провери тренутно стање.');
+        state.tour.status = data.status;
+        statusBusy = false;
+        await load();
+      } catch (error) { statusBusy = false; showError(error); }
+    });
     if(activeTab==='orders'){
       import('./orders/tour-orders-grouped-view.js?v=1.0.3').then(mod=>{
         if(disposed || activeTab!=='orders') return;
