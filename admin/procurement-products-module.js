@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.6.2
+ * Version: 4.6.3
  * Updated: 2026-11-19
- * Description: Improves product allocation sheet readability, contrast, spacing and mobile layout; preserves allocation and Supabase workflows.
+ * Description: Fixes low-contrast product title and remaining-quantity text in procurement request cards; preserves layout and workflows.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
@@ -80,6 +80,10 @@ const CSS=`
 .ndp3-request-product-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
 .ndp3-request-product-head strong{font-size:15px;line-height:1.35}
 .ndp3-request-product-total{font-size:11px;color:var(--muted);margin-top:3px}
+/* Product name band: readable contrast on the dark header background */
+.ndp3 .ndp3-request-product-head strong{display:block;color:#fff!important;font-size:16px;font-weight:900;line-height:1.4;text-shadow:none}
+.ndp3 .ndp3-request-product-head .ndp3-request-product-total{color:#d6e1ee!important;font-size:13px;line-height:1.5}
+
 .ndp3-request-package-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line);min-width:0}
 .ndp3-request-package-row>div:first-child{min-width:0}
 .ndp3-request-package-row b{font-size:13px;line-height:1.3}
@@ -157,7 +161,7 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.2';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.3';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationPackages:0,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
