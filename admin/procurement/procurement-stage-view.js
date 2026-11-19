@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.5.0
+ * Version: 1.6.0
  * Updated: 2026-11-19
- * Description: Groups unassigned procurement demand by product and opens farm allocation for all its packaging variants.
+ * Description: Groups assigned and unassigned request-stage packaging by product with compact mobile phase navigation.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -54,12 +54,12 @@ export function renderProcurementStageView(ctx){
   const groupedRows=()=>{
    const groups=new Map();
    for(const row of rows){
-    const groupKey=s.view==='farms'?String(row.gazdinstvo_id):key(row.product_id,row.variant_id);
+    const groupKey=s.view==='farms'?String(row.gazdinstvo_id):(s.stage==='request'?'product:'+String(row.product_id):key(row.product_id,row.variant_id));
     if(!groups.has(groupKey))groups.set(groupKey,[]);
     groups.get(groupKey).push(row);
    }
    return [...groups.entries()].map(([groupKey,groupRows])=>{
-    const first=groupRows[0],title=s.view==='farms'?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ')+' · '+(variant(first.variant_id)?.name||variant(first.variant_id)?.size_label||'Паковање');
+    const first=groupRows[0],title=s.view==='farms'?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ')+(s.stage==='request'?'':' · '+(variant(first.variant_id)?.name||variant(first.variant_id)?.size_label||'Паковање'));
     let actions='';
     if(s.stage==='request'&&s.view==='farms'){
      actions='<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Припреми Viber поруку</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди да је захтев послат</button></div>';
