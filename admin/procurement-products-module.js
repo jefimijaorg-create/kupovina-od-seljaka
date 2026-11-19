@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.8.2
+ * Version: 3.8.3
  * Updated: 2026-11-18
- * Description: Starts the loading watchdog before invoking Supabase reads so synchronous client setup cannot prevent timeout registration.
+ * Description: Exposes the exact repository loading stage in the ADMIN panel to isolate stalled data reads.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.2';
@@ -46,7 +46,7 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.8.2';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.8.3';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],farmId:'',cart:[],draftCounts:{},tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
@@ -60,8 +60,8 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const qty=(packages,d)=>d?f(packages*n(d.packageSize))+' '+e(d.packageUnit):f(packages)+' пак.';
  const rowsForFarm=()=>s.allocations.filter(x=>String(x.gazdinstvo_id)===String(s.farmId));
  const setNote=(v,err=false)=>{s.notice=v;s.error=err;render();};
- async function load(){
-  const d=await loadProcurementData({client,tourId});
+ async function load(onProgress){
+  const d=await loadProcurementData({client,tourId,onProgress});
   Object.assign(s,{tour:d.tour,items:d.items,products:d.products,variants:d.variants,farms:d.farms,offers:d.relevantOffers,allocations:d.allocations});
   s.demands=buildProcurementDemands({items:s.items,products:s.products,variants:s.variants});
  }
@@ -268,12 +268,12 @@ host.addEventListener('change',ev=>{if(ev.target.matches('[data-farm]')){s.farmI
  async function initialize(){
   const attempt=++loadAttempt;
   if(s.disposed)return;
-  host.innerHTML='<div class="ndp3-empty"><b>Учитавам потребе туре…</b><p>Проверавам туру и стварне податке у бази.</p></div>';
+  host.innerHTML='<div class="ndp3-empty"><b>Учитавам потребе туре…</b><p>Проверавам туру и стварне податке у бази.</p><p data-load-stage>Припрема захтева…</p></div>';
   let timeoutId;
   try{
    await Promise.race([
     new Promise((_,reject)=>{timeoutId=window.setTimeout(()=>reject(new Error('Учитавање из базе није завршено у року од 15 секунди. Захтев није завршен. Покушај поново.')),15000);}),
-    Promise.resolve().then(load)
+    Promise.resolve().then(()=>load(stage=>{const p=host.querySelector('[data-load-stage]');if(p)p.textContent=stage;}))
    ]);
    clearTimeout(timeoutId);
    if(attempt!==loadAttempt||s.disposed)return;
