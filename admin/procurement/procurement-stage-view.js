@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.5.0
+ * Version: 1.6.0
  * Updated: 2026-11-19
- * Description: Groups unassigned procurement demand by product and opens farm allocation for all its packaging variants.
+ * Description: Presents every demanded product as one complete card with all packaging variants, existing farm allocations and remaining demand.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -67,17 +67,32 @@ export function renderProcurementStageView(ctx){
     return '<section class="ndp3-stage-group"><header><strong>'+e(title)+'</strong><span class="ndp3-chip">'+groupRows.length+' ставки</span></header>'+groupRows.map(lineHtml).join('')+actions+'</section>';
    }).join('');
   };
-  const unassignedGroups=new Map();
-  for(const d of unassigned){const id=String(d.productId);if(!unassignedGroups.has(id))unassignedGroups.set(id,[]);unassignedGroups.get(id).push(d);}
-  const unassignedHtml=unassignedGroups.size?'<div class="ndp3-request-intro">У фази „Захтев“ прво изабери производ. Затим означи једно или више газдинстава која имају активну понуду и распореди сваку амбалажу. Газдинство се не додељује унапред.</div><section class="ndp3-request-products">'+[...unassignedGroups.entries()].map(([productId,items])=>{
-   const p=prod(productId),remainingPackages=items.reduce((sum,d)=>sum+Math.max(0,d.packages-allocated(d.productId,d.variantId)),0);
-   return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+f(remainingPackages)+' паковања преостало за расподелу</div></div><span class="ndp3-chip amber">За расподелу</span></header>'+items.map(d=>{
-    const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId);
-    return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||'Амбалажа')+'</b><small>Потребно: '+packageLabel(d.packages)+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Извор: '+e(sourceSummary(d))+'</small></div><div class="ndp3-request-package-count">'+f(remaining)+' <small>паковања</small><small>'+e(amountLabel(remaining,d))+'</small></div></div>';
-   }).join('')+'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Расподели газдинствима</button></div></article>';
-  }).join('')+'</section>':'';
+  const requestProductsHtml=(()=>{
+   const groups=new Map();
+   for(const d of s.demands.filter(x=>x.valid)){
+    const id=String(d.productId);
+    if(!groups.has(id))groups.set(id,[]);
+    groups.get(id).push(d);
+   }
+   if(!groups.size)return '<div class="ndp3-stage-empty">Нема производа са исправним подацима о амбалажи за ову туру.</div>';
+   return '<div class="ndp3-request-intro">Сваки производ је приказан као једна целина. Испод су све амбалаже, постојеће доделе газдинствима и количине које још треба распоредити.</div><section class="ndp3-request-products">'+[...groups.entries()].map(([productId,items])=>{
+    const p=prod(productId);
+    const remainingAll=items.reduce((sum,d)=>sum+Math.max(0,d.packages-allocated(d.productId,d.variantId)),0);
+    const allAssigned=items.every(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId))===0);
+    return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+(allAssigned?'Све потребне количине су распоређене':f(remainingAll)+' паковања преостало за расподелу')+'</div></div><span class="ndp3-chip '+(allAssigned?'green':'amber')+'">'+(allAssigned?'Распоређено':'У току')+'</span></header>'+items.map(d=>{
+     const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId),assigned=allocationsFor(d.productId,d.variantId);
+     const assignmentHtml=assigned.length?'<div class="ndp3-request-allocation-list">'+assigned.map(row=>{
+      const ff=farm(row.gazdinstvo_id),requested=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja),collected=n(row.preuzeto_pakovanja),sent=row.viber_status==='sent';
+      const state=collected>=confirmed&&confirmed>0?'Преузето':confirmed>0?'Делимично потврђено':sent?'Чека потврду':'Чека слање';
+      const canSend=row.viber_status==='not_sent'&&requested>confirmed;
+      return '<div class="ndp3-request-allocation"><div><strong>'+e(ff?.name||'Газдинство #'+row.gazdinstvo_id)+' · '+f(requested)+' пак.</strong><small>'+e(state)+' · Потврђено '+f(confirmed)+' · Преузето '+f(collected)+'</small></div>'+(canSend?'<button class="ndp3-btn" type="button" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање</button>':'')+'</div>';
+     }).join('')+'</div>':'<div class="ndp3-request-product-total">Још нема додела газдинствима.</div>';
+     return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||'Амбалажа')+'</b><small>Потребно: '+packageLabel(d.packages)+' · Распоређено: '+packageLabel(allocated(d.productId,d.variantId))+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно потребно: '+e(amountLabel(d.packages,d))+' · Извор: '+e(sourceSummary(d))+'</small>'+assignmentHtml+'</div><div class="ndp3-request-package-count">'+f(remaining)+' <small>преостало</small></div></div>';
+    }).join('')+(remainingAll>0?'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Расподели преостало по газдинствима</button></div>':'')+'</article>';
+   }).join('')+'</section>';
+  })();
   const contentRows=groupedRows();
-  const phaseContent=s.stage==='history'?historyHtml():s.stage==='request'?(unassignedHtml+contentRows||'<div class="ndp3-stage-empty">Све потребне количине су додељене или већ имају захтев. Нема ставки које чекају захтев.</div>'):
+  const phaseContent=s.stage==='history'?historyHtml():s.stage==='request'?requestProductsHtml:
    (contentRows||'<div class="ndp3-stage-empty">'+(s.stage==='confirm'?'Нема послатих захтева који чекају потврду.':'Нема потврђених количина које чекају преузимање.')+'</div>');
   const invalidDemandCount=s.demands.filter(x=>!x.valid).length;
   const invalidSourceCount=s.items.filter(x=>!x.product_id||!x.variant_id).length;
