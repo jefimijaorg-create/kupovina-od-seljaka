@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — ADMIN DATA REPOSITORY
- * Version: 1.0.3
+ * Version: 1.0.4
  * Updated: 2026-11-18
- * Description: Adds precise read-stage diagnostics to identify stalled procurement data queries; performs no writes.
+ * Description: Loads the existing tour pickup-point schedule for accurate farm procurement messages; performs no writes.
  * Scope: ADMIN Workspace only.
  */
 
@@ -29,7 +29,26 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
   if (!tourResult.data) throw new Error('Тура није пронађена или немате дозволу за читање.');
   const tour = tourResult.data;
 
-  onProgress('2/6 · Читам ставке поруџбина…');
+  onProgress('2/7 · Читам распоред пунктова и времена туре…');
+  const tourPointResult = await client.from('tura_punktovi')
+    .select('punkt_id,vreme,redosled,aktivan')
+    .eq('tura_id', tourId)
+    .eq('aktivan', true)
+    .order('redosled', { ascending: true });
+  const tourPointLinks = unwrap(tourPointResult, 'Распоред пунктова туре');
+  const pointIds = uniq(tourPointLinks.map(row => row.punkt_id));
+  const pointsResult = pointIds.length
+    ? await client.from('punktovi').select('id,name').in('id', pointIds)
+    : { data: [], error: null };
+  const points = unwrap(pointsResult, 'Називи пунктова');
+  const pointById = new Map(points.map(point => [String(point.id), point]));
+  const tourPoints = tourPointLinks.map(row => ({
+    punkt_id: row.punkt_id,
+    name: pointById.get(String(row.punkt_id))?.name || ('Пункт #' + row.punkt_id),
+    vreme: row.vreme || ''
+  }));
+
+  onProgress('3/7 · Читам ставке поруџбина…');
   const itemResult = await client.from('stavke_porudzbine')
     .select('id,porudzbina_id,product_id,variant_id,package_count,package_size,package_unit')
     .eq('tura_id', tourId);
@@ -38,7 +57,7 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
   const productIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.product_id));
   const variantIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.variant_id));
 
-  onProgress('3/6 · Читам производе, амбалажу и постојеће расподеле…');
+  onProgress('4/7 · Читам производе, амбалажу и постојеће расподеле…');
   const [productsResult, variantsResult, allocationsResult] = await Promise.all([
     productIds.length
       ? client.from('products').select('id,name,category').in('id', productIds)
@@ -59,7 +78,7 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
   const demandPairs = new Set(items
     .filter((row) => row.product_id && row.variant_id)
     .map((row) => String(row.product_id) + '::' + String(row.variant_id)));
-  onProgress('4/6 · Проверавам активне понуде газдинстава…');
+  onProgress('5/7 · Проверавам активне понуде газдинстава…');
   const offerResult = productIds.length
     ? await client.from('product_offers')
       .select('id,gazdinstvo_id,product_id,variant_id,purchase_price,is_active')
@@ -74,7 +93,7 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
     ...relevantOffers.map((offer) => offer.gazdinstvo_id),
     ...allocations.map((row) => row.gazdinstvo_id)
   ]);
-  onProgress('5/6 · Учитавају се подаци газдинстава…');
+  onProgress('6/7 · Учитавају се подаци газдинстава…');
   const farmResult = farmIds.length
     ? await client.from('gazdinstva')
       .select('id,name,phone')
@@ -83,9 +102,10 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
     : { data: [], error: null };
   const farms = unwrap(farmResult, 'Газдинства');
 
-  onProgress('6/6 · Завршавам обраду података…');
+  onProgress('7/7 · Завршавам обраду података…');
   return {
     tour,
+    tourPoints,
     items,
     invalidSourceRows,
     products,
