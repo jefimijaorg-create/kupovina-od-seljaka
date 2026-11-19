@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.6.0
+ * Version: 4.6.1
  * Updated: 2026-11-19
- * Description: Delegates allocation persistence to a dedicated action module and adds editable controls for existing unsent farm allocations in the request phase.
+ * Description: Improves product allocation sheet readability, contrast, spacing and mobile layout; preserves allocation and Supabase workflows.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
@@ -129,11 +129,35 @@ const CSS=`
 
 .ndp3-stage-package{margin:8px 0;padding:9px;border:1px solid #293c57;border-radius:11px;background:#0d1b30}.ndp3-stage-package>header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px}.ndp3-stage-package>header strong{font-size:12px;color:#ffc18d}.ndp3-stage-package .ndp3-stage-line{padding:10px 0}
 @media(min-width:760px){.ndp3-request-products{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Allocation sheet readability: scoped to the product allocation modal */
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-sheet{color:#f1f5fb;font-size:14px;line-height:1.55}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-sheet>p{color:#d5e0ed;font-size:13px;line-height:1.6;margin:5px 0 15px}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-sheet h3{color:#fff;font-size:17px;line-height:1.35;margin:18px 0 10px}
+.ndp3 .ndp3-modal-dialog .ndp3-farm-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:9px;margin:12px 0 18px}
+.ndp3 .ndp3-modal-dialog .ndp3-farm-check{display:flex!important;align-items:center;gap:12px;min-height:62px;padding:12px 14px!important;border:1px solid #60758f!important;border-radius:13px!important;background:#14263d!important;color:#f8fafc!important;font-size:14px;font-weight:800;line-height:1.35}
+.ndp3 .ndp3-modal-dialog .ndp3-farm-check input{flex:0 0 22px;width:22px;height:22px;min-height:22px;margin:0;accent-color:#36b37e}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-product{padding:14px!important;margin:12px 0!important;border:1px solid #536b86!important;border-radius:15px!important;background:#13263d!important;color:#f8fafc!important;overflow:hidden}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-row{align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-row>strong{flex:1 1 180px;color:#fff;font-size:16px;line-height:1.4;overflow-wrap:anywhere}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-chip{display:inline-flex;align-items:center;gap:5px;flex:0 1 auto;max-width:100%;white-space:normal;padding:7px 10px;background:#214b3c;color:#d9ffeb;font-size:12px;line-height:1.3}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-chip b{display:inline;color:#fff;font-size:14px}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-quantity{color:#e2eaf4;font-size:13px;line-height:1.5}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-quantity strong{color:#fff;font-size:18px}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-quantity small{color:#c3d1e2;font-size:12px;line-height:1.5}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-field{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(84px,112px)!important;gap:12px!important;align-items:center;padding:11px 0!important;border-top:1px solid #405773!important;color:#f1f5fb!important;font-size:13px!important}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-field span{color:#f1f5fb!important;overflow-wrap:anywhere}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-field input{width:100%;min-width:0;min-height:50px;text-align:center;background:#081426;color:#fff;border:1px solid #8195ad;border-radius:11px;font-size:18px;font-weight:900}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-total{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px;padding:12px!important;border:1px solid #3c5873;border-radius:11px;background:#1a3851!important;color:#e5edf7!important;font-size:12px;line-height:1.45}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-total b{display:block;margin-top:4px;color:#fff;font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-unassigned{display:block;padding-left:9px;border-left:2px solid #f0b56d}
+.ndp3 .ndp3-modal-dialog .ndp3-note{color:#fff;background:#29445f;line-height:1.5}
+@media(max-width:420px){.ndp3 .ndp3-modal-dialog .ndp3-allocation-product{padding:11px!important}.ndp3 .ndp3-modal-dialog .ndp3-allocation-total{grid-template-columns:1fr}.ndp3 .ndp3-modal-dialog .ndp3-allocation-field{grid-template-columns:minmax(0,1fr) 88px!important}}
 `;
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.0';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.1';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationPackages:0,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
