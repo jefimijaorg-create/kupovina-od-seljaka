@@ -227,10 +227,10 @@ body.nd-workspace{margin:0!important;padding:0 0 max(20px,env(safe-area-inset-bo
  .nd-workspace .nd-layout{display:block;min-height:calc(100dvh - 64px)}
  .nd-workspace .nd-sidebar{display:none}
  .nd-workspace .nd-main{padding:8px 12px 30px}
- .nd-workspace .nd-page-head{min-height:0;display:block;margin-bottom:15px;padding:21px 19px;border-radius:19px}
- .nd-workspace .nd-page-head h1{font-size:28px!important}
- .nd-workspace .nd-page-head p{font-size:13px}
- .nd-workspace .nd-page-head .nd-status{margin-top:13px}
+ .nd-workspace .nd-page-head{min-height:0;display:block;margin:0 0 10px;padding:15px 17px;border-radius:17px}
+ .nd-workspace .nd-page-head h1{font-size:25px!important;margin:5px 0 4px}
+ .nd-workspace .nd-page-head p{font-size:12px}
+ .nd-workspace .nd-page-head .nd-status{margin-top:8px;min-height:30px;padding:5px 9px;font-size:9px}
  .nd-workspace .nd-tour-grid{grid-template-columns:1fr;gap:12px}
  .nd-workspace .nd-panel{padding:16px;border-radius:17px!important}
  .nd-workspace .nd-tour-item{min-height:72px;padding:12px}
