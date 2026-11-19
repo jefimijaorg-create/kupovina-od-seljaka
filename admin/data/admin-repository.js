@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — ADMIN DATA REPOSITORY
- * Version: 1.0.6
+ * Version: 1.0.7
  * Updated: 2026-11-19
- * Description: Loads tour-ordered product and variant records only, preserving incomplete variant rows for visible procurement diagnostics; performs no writes.
+ * Description: Loads tour order items with customer identities and per-farm item allocations for customer-level procurement display; performs no writes.
  * Scope: ADMIN Workspace only.
  */
 
@@ -52,7 +52,42 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
   const itemResult = await client.from('stavke_porudzbine')
     .select('id,porudzbina_id,product_id,variant_id,package_count,package_size,package_unit')
     .eq('tura_id', tourId);
-  const items = unwrap(itemResult, 'Ставке поруџбина');
+  let items = unwrap(itemResult, 'Ставке поруџбина');
+  const itemIds = uniq(items.map((row) => row.id));
+  const orderIds = uniq(items.map((row) => row.porudzbina_id));
+  onProgress('4/7 · Повезујем купце и расподелу по газдинствима…');
+  const [ordersResult, farmAllocationsResult] = await Promise.all([
+    orderIds.length ? client.from('porudzbine').select('id,kupac_id').in('id', orderIds) : { data: [], error: null },
+    itemIds.length ? client.from('tura_stavke_raspodela')
+      .select('stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja')
+      .in('stavka_porudzbine_id', itemIds) : { data: [], error: null }
+  ]);
+  const orders = unwrap(ordersResult, 'Веза поруџбина и купаца');
+  const farmAllocations = unwrap(farmAllocationsResult, 'Расподела ставки по газдинствима');
+  const customerIds = uniq(orders.map((row) => row.kupac_id));
+  const customersResult = customerIds.length
+    ? await client.from('kupci').select('id,ime_prezime').in('id', customerIds)
+    : { data: [], error: null };
+  const customers = unwrap(customersResult, 'Називи купаца');
+  const orderById = new Map(orders.map((row) => [String(row.id), row]));
+  const customerById = new Map(customers.map((row) => [String(row.id), row]));
+  const farmAllocationsByItem = new Map();
+  for (const allocation of farmAllocations) {
+    const itemId = String(allocation.stavka_porudzbine_id);
+    if (!farmAllocationsByItem.has(itemId)) farmAllocationsByItem.set(itemId, []);
+    farmAllocationsByItem.get(itemId).push(allocation);
+  }
+  items = items.map((row) => {
+    const order = orderById.get(String(row.porudzbina_id));
+    const customer = order?.kupac_id === null || order?.kupac_id === undefined
+      ? null : customerById.get(String(order.kupac_id));
+    return {
+      ...row,
+      customer_id: order?.kupac_id ?? null,
+      customer_name: customer?.ime_prezime || null,
+      farm_allocations: farmAllocationsByItem.get(String(row.id)) || []
+    };
+  });
   const invalidSourceRows = items.filter((row) => !row.product_id).length;
   const productIds = uniq(items.filter((row) => row.product_id).map((row) => row.product_id));
   const variantIds = uniq(items.filter((row) => row.variant_id).map((row) => row.variant_id));
@@ -94,7 +129,8 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
 
   const farmIds = uniq([
     ...relevantOffers.map((offer) => offer.gazdinstvo_id),
-    ...allocations.map((row) => row.gazdinstvo_id)
+    ...allocations.map((row) => row.gazdinstvo_id),
+    ...farmAllocations.map((row) => row.gazdinstvo_id)
   ]);
   onProgress('6/7 · Учитавају се подаци газдинстава…');
   const farmResult = farmIds.length
