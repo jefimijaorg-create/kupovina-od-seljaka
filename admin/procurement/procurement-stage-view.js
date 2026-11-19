@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.6.0
+ * Version: 1.6.1
  * Updated: 2026-11-19
- * Description: Presents every demanded product as one complete card with all packaging variants, existing farm allocations and remaining demand.
+ * Description: Groups confirmation and pickup by product, then packaging and farm; request cards retain all variants and existing allocations.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -14,7 +14,7 @@ export function renderProcurementStageView(ctx){
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
   const unassigned=s.demands.filter(d=>d.valid&&Math.max(0,d.packages-allocated(d.productId,d.variantId))>0);
-  const rows=s.stage==='request'?requestRows:s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
+  const rows=s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
   const transferCandidates=row=>{const ids=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))];return ids.map(id=>farm(id)).filter(Boolean);};
   const sourceSummary=d=>{const totals=new Map();(d?.sourceOrders||[]).forEach(x=>{const id=x.orderId===null||x.orderId===undefined?'без броја':String(x.orderId);totals.set(id,(totals.get(id)||0)+n(x.packageCount));});return [...totals].map(([id,count])=>(id==='без броја'?'Изворна ставка':'Поруџбина #'+id)+' · '+f(count)+' пак.').join(' · ')||'Извор поруџбине није доступан';};
   const historyHtml=()=>{
@@ -54,17 +54,32 @@ export function renderProcurementStageView(ctx){
   const groupedRows=()=>{
    const groups=new Map();
    for(const row of rows){
-    const groupKey=s.view==='farms'?String(row.gazdinstvo_id):key(row.product_id,row.variant_id);
+    const groupKey=s.view==='farms'?String(row.gazdinstvo_id):String(row.product_id);
     if(!groups.has(groupKey))groups.set(groupKey,[]);
     groups.get(groupKey).push(row);
    }
    return [...groups.entries()].map(([groupKey,groupRows])=>{
-    const first=groupRows[0],title=s.view==='farms'?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ')+' · '+(variant(first.variant_id)?.name||variant(first.variant_id)?.size_label||'Паковање');
+    const first=groupRows[0],title=s.view==='farms'?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ');
     let actions='';
     if(s.stage==='request'&&s.view==='farms'){
      actions='<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Припреми Viber поруку</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди да је захтев послат</button></div>';
     }
-    return '<section class="ndp3-stage-group"><header><strong>'+e(title)+'</strong><span class="ndp3-chip">'+groupRows.length+' ставки</span></header>'+groupRows.map(lineHtml).join('')+actions+'</section>';
+    let body='';
+    if(s.view==='farms'){
+     body=groupRows.map(lineHtml).join('');
+    }else{
+     const packages=new Map();
+     for(const row of groupRows){
+      const id=String(row.variant_id);
+      if(!packages.has(id))packages.set(id,[]);
+      packages.get(id).push(row);
+     }
+     body=[...packages.entries()].map(([variantId,packageRows])=>{
+      const v=variant(variantId),label=v?.name||v?.size_label||'Амбалажа';
+      return '<section class="ndp3-stage-package"><header><strong>'+e(label)+'</strong><span class="ndp3-chip">'+packageRows.length+' газдинстава</span></header>'+packageRows.map(lineHtml).join('')+'</section>';
+     }).join('');
+    }
+    return '<section class="ndp3-stage-group"><header><strong>'+e(title)+'</strong><span class="ndp3-chip">'+(s.view==='farms'?groupRows.length+' ставки':new Set(groupRows.map(x=>String(x.variant_id))).size+' амбалаже')+'</span></header>'+body+actions+'</section>';
    }).join('');
   };
   const requestProductsHtml=(()=>{
