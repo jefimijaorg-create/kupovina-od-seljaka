@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 3.9.0
+ * Version: 4.0.0
  * Updated: 2026-11-19
- * Description: Adds multi-farm request allocation with automatic remaining-quantity distribution in a dedicated ES6 module.
+ * Description: Adds workflow action service and audit-history integration for the procurement redesign.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
@@ -10,6 +10,7 @@ import { buildProcurementDemands, buildProcurementPackagingSummary } from './pro
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
 import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.1.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.0.0';
+import { loadProcurementHistory, markProcurementSent, saveProcurementTracking } from './procurement/procurement-workflow-actions.js?v=1.0.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -51,8 +52,8 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='3.9.0';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],cart:[],tab:'basket',notice:'',error:false};
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.0.0';document.head.appendChild(style);
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -68,6 +69,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   const d=await loadProcurementData({client,tourId,onProgress});
   Object.assign(s,{tour:d.tour,items:d.items,products:d.products,variants:d.variants,farms:d.farms,offers:d.relevantOffers,allocations:d.allocations});
   s.demands=buildProcurementDemands({items:s.items,products:s.products,variants:s.variants});
+  s.history=await loadProcurementHistory({client,tourId,limit:300});
  }
  function unitTotals(selector){
   const map=new Map();
@@ -80,7 +82,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-ordered(d.productId,d.variantId)));
 
  function render(){
-  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f}),mountAnalyticsPanel:()=>{
+  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f}),mountAnalyticsPanel:()=>{
    s.analyticsHandle?.destroy();
    const analyticsRoot=host.querySelector('[data-tour-analytics-root]');
    if(analyticsRoot)s.analyticsHandle=mountTourAnalyticsPanel({root:analyticsRoot,client,tourId,intervalMs:30000});
@@ -174,11 +176,8 @@ async function prepareFarmRequest(farmId){
   if(!window.confirm('Потврђујеш да је захтев за ову ставку заиста послат газдинству?'))return;
   s.busy=true;render();
   try{
-   const sentAt=new Date().toISOString();
-   const q=await client.from('tura_nabavka_dodele').update({naruceno:true,viber_status:'sent',viber_poslato_at:sentAt,updated_at:sentAt}).eq('id',row.id).eq('viber_status','not_sent').select('id,naruceno_pakovanja,viber_status').maybeSingle();
-   if(q.error)throw Error(q.error.message);
-   if(!q.data||q.data.viber_status!=='sent'||n(q.data.naruceno_pakovanja)!==n(row.naruceno_pakovanja))throw Error('База није потврдила прелаз у фазу чекања потврде.');
-   s.preparedSentIds.delete(String(id));await load();s.stage='confirm';setNote('Слање је евидентирано. Ставка сада чека потврду газдинства.');
+   await markProcurementSent({client,rowIds:[row.id]});
+   s.preparedSentIds.delete(String(id));await load();s.stage='confirm';setNote('Слање је евидентирано и поново прочитано из базе.');
   }catch(err){setNote('Слање није евидентирано: '+(err.message||String(err)),true);}
   finally{s.busy=false;render();}
  }
@@ -198,11 +197,7 @@ async function saveField(id){
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
   s.busy=true;render();
   try{
-   const patch={potvrdjeno_pakovanja:confirmed,preuzeto_pakovanja:collected,updated_at:new Date().toISOString()};
-   if(confirmed!==n(row.potvrdjeno_pakovanja))patch.potvrdjeno_at=confirmed?new Date().toISOString():null;
-   const q=await client.from('tura_nabavka_dodele').update(patch).eq('id',row.id).select('id,potvrdjeno_pakovanja,preuzeto_pakovanja').maybeSingle();
-   if(q.error)throw Error(q.error.message);
-   if(!q.data||n(q.data.potvrdjeno_pakovanja)!==confirmed||n(q.data.preuzeto_pakovanja)!==collected)throw Error('База није потврдила упис количина.');
+   const saved=await saveProcurementTracking({client,row,confirmed,collected});
    await load();s.stage=confirmed>collected?'collect':'confirm';
    setNote('Количина је сачувана и поново прочитана из базе. Историја измене је евидентирана.');
   }catch(err){setNote('Унос није сачуван: '+(err.message||String(err)),true);}
