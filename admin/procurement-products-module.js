@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.4.5
+ * Version: 4.5.0
  * Updated: 2026-11-19
- * Description: Rebuilds procurement request cards as complete product-and-packaging groups and consolidates responsive phase styling.
+ * Description: Delegates allocation persistence to a dedicated action module and retains the existing procurement workflow.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
@@ -11,6 +11,7 @@ import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
 import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.6.4';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
+import { saveProcurementAllocationCart } from './procurement/procurement-allocation-actions.js?v=1.0.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -132,7 +133,7 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.4.5';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.5.0';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
@@ -173,54 +174,12 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   if(s.tour?.status!=='processing'){setNote('Тура није отворена за измене.',true);return false;}
   s.busy=true;render();
   try{
-   const payloads=[],newByVariant=new Map();
-   for(const item of s.cart){
-    const d=demand(item.productId,item.variantId),o=offer(item.productId,item.variantId,item.farmId),old=allocation(item.productId,item.variantId,item.farmId);
-    if(!d?.valid||!o)throw Error('Понуда или подаци о паковању нису важећи. Освежи податке.');
-    if(old&&(old.viber_status==='sent'||old.viber_status==='replied'||n(old.potvrdjeno_pakovanja)>0||n(old.preuzeto_pakovanja)>0))throw Error('Ова ставка је већ послата или је у каснијој фази и не може се поново захтевати.');
-    const requested=n(old?.naruceno_pakovanja)+n(item.count);
-    const kx=key(item.productId,item.variantId);
-    if(!newByVariant.has(kx))newByVariant.set(kx,{demand:d.packages,added:0,replace:0,productId:item.productId,variantId:item.variantId});
-    const group=newByVariant.get(kx);group.added+=n(item.count);group.replace+=n(old?.broj_pakovanja);
-    payloads.push({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(item.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(o.purchase_price),naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:new Date().toISOString()});
-   }
-   for(const group of newByVariant.values()){
-    const already=Math.max(0,allocated(group.productId,group.variantId)-group.replace);
-    const check=validateAllocationCount({requested:group.added,alreadyAllocated:already,demand:group.demand});
-    if(!check.valid)throw Error('Збир расподеле премашује преосталу потребу за једном од амбалажа. Освежи податке и провери расподелу.');
-   }
-   const appliedUpdates=[],insertedIds=[],savedRows=[];
-   try{
-    for(const payload of payloads){
-     const old=allocation(payload.product_id,payload.variant_id,payload.gazdinstvo_id);
-     if(old){
-      const patch={broj_pakovanja:payload.broj_pakovanja,naruceno_pakovanja:payload.naruceno_pakovanja,nabavna_cena:payload.nabavna_cena,naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:payload.updated_at};
-      const q=await client.from('tura_nabavka_dodele').update(patch).eq('id',old.id).select('id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').maybeSingle();
-      if(q.error)throw Error(q.error.message);if(!q.data)throw Error('Постојећа евиденција није ажурирана.');
-      appliedUpdates.push({old});savedRows.push(q.data);
-     }else{
-      const q=await client.from('tura_nabavka_dodele').insert(payload).select('id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').single();
-      if(q.error)throw Error(q.error.message);if(!q.data)throw Error('База није потврдила упис нове ставке.');
-      insertedIds.push(q.data.id);savedRows.push(q.data);
-     }
-    }
-    if(savedRows.length!==payloads.length)throw Error('База није потврдила све ставке групног захтева.');
-    for(const payload of payloads){
-     const row=savedRows.find(x=>String(x.product_id)===String(payload.product_id)&&String(x.variant_id)===String(payload.variant_id)&&String(x.gazdinstvo_id)===String(payload.gazdinstvo_id));
-     if(!row||n(row.broj_pakovanja)!==n(payload.broj_pakovanja)||n(row.naruceno_pakovanja)!==n(payload.naruceno_pakovanja))throw Error('База није потврдила упис расподеле за свако газдинство.');
-    }
-   }catch(writeError){
-    const rollbackErrors=[];
-    for(const id of insertedIds){const r=await client.from('tura_nabavka_dodele').delete().eq('id',id);if(r.error)rollbackErrors.push(r.error.message);}
-    for(const applied of [...appliedUpdates].reverse()){const old=applied.old,restore={broj_pakovanja:old.broj_pakovanja,naruceno_pakovanja:old.naruceno_pakovanja,nabavna_cena:old.nabavna_cena,naruceno:old.naruceno,potvrdjeno_pakovanja:old.potvrdjeno_pakovanja,preuzeto_pakovanja:old.preuzeto_pakovanja,viber_status:old.viber_status,updated_at:old.updated_at};const r=await client.from('tura_nabavka_dodele').update(restore).eq('id',old.id);if(r.error)rollbackErrors.push(r.error.message);}
-    if(rollbackErrors.length)throw Error((writeError.message||String(writeError))+' Аутоматско враћање није у потпуности успело: '+rollbackErrors.join('; '));
-    throw writeError;
-   }
+   await saveProcurementAllocationCart({client,tourId,cart:s.cart,demands:s.demands,offers:s.offers,allocations:s.allocations,validateAllocationCount});
    s.cart=[];s.allocationDraft={selectedFarmIds:[],quantities:{}};await load();s.stage='request';return true;
   }catch(err){setNote('Захтев није сачуван: '+(err.message||String(err)),true);return false;}
   finally{s.busy=false;render();}
  }
-async function prepareFarmRequest(farmId){
+ async function prepareFarmRequest(farmId){
   const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   if(!rows.length)return setNote('Ово газдинство нема захтев који чека слање.',true);
   const ff=farm(farmId);
