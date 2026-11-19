@@ -344,3 +344,111 @@ body.nd-workspace{margin:0!important;padding:0 0 max(12px,env(safe-area-inset-bo
  .nd-workspace .ndp3-phase-tab{font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){.nd-workspace *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* 3.1 — MOBILE TOUR SCREEN CORRECTIONS
+   The grouped-orders module injects legacy dark CSS at runtime. These scoped,
+   higher-specificity rules intentionally win without touching its JS behavior. */
+@media(max-width:767px){
+ .nd-workspace .nd-tour-ops>.nd-ops-tabs{display:none!important}
+ .nd-workspace .nd-tour-ops>.nd-ops-head{
+   display:flex!important;align-items:center;justify-content:space-between;gap:8px;
+   min-height:0!important;height:auto!important;padding:8px 10px!important;margin:0 0 7px!important;
+   border-radius:10px!important
+ }
+ .nd-workspace .nd-tour-ops>.nd-ops-head>div{
+   display:flex!important;align-items:center;gap:6px 8px;flex-wrap:wrap;min-width:0;flex:1
+ }
+ .nd-workspace .nd-tour-ops>.nd-ops-head>div>small{font-size:8px!important;line-height:1.1;white-space:nowrap}
+ .nd-workspace .nd-tour-ops>.nd-ops-head>div>h1{margin:0!important;font-size:15px!important;line-height:1.15!important;white-space:nowrap}
+ .nd-workspace .nd-tour-ops>.nd-ops-head>div>p{margin:0!important;font-size:9px!important;line-height:1.15;white-space:nowrap}
+ .nd-workspace .nd-tour-ops>.nd-ops-head .nd-ops-stats{display:flex!important;gap:3px!important;margin:0!important}
+ .nd-workspace .nd-tour-ops>.nd-ops-head .nd-ops-stats span{padding:3px 5px!important;font-size:8px!important;line-height:1.1}
+ .nd-workspace .nd-tour-ops>.nd-ops-head>button{min-height:34px!important;padding:5px 7px!important;font-size:9px!important;white-space:nowrap}
+ .nd-workspace .nd-tour-ops>.nd-ops-content{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:7px!important;width:100%!important;min-width:0}
+ .nd-workspace .nd-tour-ops>.nd-ops-content>*{grid-column:1/-1!important;min-width:0!important;width:100%!important;max-width:none!important}
+ .nd-workspace .nd-tour-ops .nd-grouped-orders{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;width:100%!important;min-width:0!important}
+ .nd-workspace .nd-tour-ops .nd-go-intro{display:flex!important;align-items:center;justify-content:space-between;gap:7px;padding:2px 1px!important}
+ .nd-workspace .nd-tour-ops .nd-go-intro h2{color:#20352a!important;font-size:15px!important;line-height:1.2}
+ .nd-workspace .nd-tour-ops .nd-go-intro p{color:#68786d!important;font-size:10px!important}
+ .nd-workspace .nd-tour-ops .nd-go-point{
+   display:block!important;width:100%!important;max-width:none!important;min-width:0!important;
+   border:1px solid #d9e3d9!important;border-radius:11px!important;background:#fff!important;
+   color:#20352a!important;overflow:hidden;box-shadow:0 2px 8px rgba(31,59,40,.05)!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-point-head{
+   display:flex!important;align-items:center;justify-content:space-between;gap:8px;
+   padding:9px 11px!important;background:#edf4ed!important;border-bottom:1px solid #d9e3d9!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-point-head h3{margin:0!important;color:#20352a!important;font-size:14px!important;font-weight:900!important}
+ .nd-workspace .nd-tour-ops .nd-go-count{
+   display:inline-flex!important;align-items:center;min-height:24px;padding:4px 7px!important;
+   border:1px solid #d4e3d5!important;border-radius:7px!important;background:#e5efe6!important;
+   color:#286344!important;font-size:9px!important;font-weight:900!important;white-space:nowrap
+ }
+ .nd-workspace .nd-tour-ops .nd-go-drop{display:grid!important;gap:7px!important;min-height:0!important;padding:8px!important;background:#fff!important}
+ .nd-workspace .nd-tour-ops .nd-go-buyer,
+ .nd-workspace .nd-tour-ops .nd-go-customer{
+   display:grid!important;gap:7px!important;width:100%!important;min-width:0!important;
+   padding:9px!important;border:1px solid #e0e8e0!important;border-radius:9px!important;
+   background:#f8faf7!important;color:#20352a!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-buyer-head,
+ .nd-workspace .nd-tour-ops .nd-go-customer-top{display:flex!important;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap}
+ .nd-workspace .nd-tour-ops .nd-go-customer-name{color:#20352a!important;font-size:13px!important;font-weight:900!important}
+ .nd-workspace .nd-tour-ops .nd-go-phone{color:#617266!important;font-size:10px!important}
+ .nd-workspace .nd-tour-ops .nd-go-order-card{
+   display:grid!important;width:100%!important;min-width:0!important;max-width:none!important;
+   padding:8px!important;border:1px solid #e1e8e1!important;border-radius:8px!important;
+   background:#fff!important;color:#20352a!important;box-shadow:none!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-order{display:flex!important;align-items:flex-start;gap:7px}
+ .nd-workspace .nd-tour-ops .nd-go-order>div{min-width:0!important;flex:1!important}
+ .nd-workspace .nd-tour-ops .nd-go-order-meta{color:#68786d!important;font-size:10px!important}
+ .nd-workspace .nd-tour-ops .nd-go-lines{display:grid!important;gap:4px!important}
+ .nd-workspace .nd-tour-ops .nd-go-line{display:flex!important;justify-content:space-between;gap:8px;padding-top:5px!important;border-top:1px solid #edf1ed!important;color:#43564a!important;font-size:11px!important}
+ .nd-workspace .nd-tour-ops .nd-go-line strong{color:#20352a!important}
+ .nd-workspace .nd-tour-ops .nd-go-price{color:#8a5a1d!important;font-size:10px!important}
+ .nd-workspace .nd-tour-ops .nd-go-buyer-total{
+   display:flex!important;align-items:center;justify-content:space-between;gap:8px;
+   padding:8px 9px!important;border:1px solid #dce8dc!important;border-radius:8px!important;
+   background:#edf5ed!important;color:#315b40!important;font-size:10px!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-buyer-total strong{color:#194b32!important;font-size:13px!important}
+ .nd-workspace .nd-tour-ops .nd-go-quick-point{
+   min-height:38px!important;padding:6px 8px!important;border:1px solid #cbdccb!important;
+   border-radius:8px!important;background:#f0f6f0!important;color:#286344!important;
+   font-size:10px!important;font-weight:850!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-drag{
+   width:34px!important;height:34px!important;flex:0 0 34px!important;
+   border:1px solid #d8e3d8!important;border-radius:8px!important;background:#edf4ed!important;color:#286344!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-empty{padding:9px!important;color:#68786d!important;font-size:11px!important}
+ .nd-workspace .nd-tour-ops .nd-go-feedback{padding:9px!important;border-radius:8px!important;background:#edf7ef!important;border:1px solid #cfe4d2!important;color:#285b3c!important;font-size:11px!important}
+ .nd-workspace .nd-tour-ops .nd-go-error{background:#fff0ed!important;border-color:#f0d4cf!important;color:#8e3c34!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-sheet{padding:8px!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-backdrop{background:rgba(20,42,28,.48)!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-dialog{
+   width:min(100%,440px)!important;padding:16px!important;border:1px solid #d9e3d9!important;
+   border-radius:15px!important;background:#fff!important;color:#20352a!important;
+   box-shadow:0 18px 48px rgba(18,43,26,.2)!important
+ }
+ .nd-workspace .nd-tour-ops .nd-go-point-dialog h3{color:#20352a!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-dialog p,
+ .nd-workspace .nd-tour-ops .nd-go-point-dialog label{color:#617266!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-dialog select{background:#fff!important;color:#20352a!important;border:1px solid #cbd8cc!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-actions button{min-height:44px;background:#f1f6f1!important;border:1px solid #d5e1d5!important;color:#315b40!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-actions [data-save-point]{background:#286344!important;border-color:#286344!important;color:#fff!important}
+}
+@media(min-width:768px){
+ .nd-workspace .nd-tour-ops .nd-grouped-orders{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+ .nd-workspace .nd-tour-ops .nd-go-point{width:100%!important;max-width:none!important;background:#fff!important;color:#20352a!important;border-color:#d9e3d9!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-head{background:#edf4ed!important;border-color:#d9e3d9!important}
+ .nd-workspace .nd-tour-ops .nd-go-point-head h3{color:#20352a!important}
+ .nd-workspace .nd-tour-ops .nd-go-buyer,.nd-workspace .nd-tour-ops .nd-go-order-card{background:#f8faf7!important;color:#20352a!important;border-color:#e0e8e0!important}
+ .nd-workspace .nd-tour-ops .nd-go-customer-name,.nd-workspace .nd-tour-ops .nd-go-line strong{color:#20352a!important}
+ .nd-workspace .nd-tour-ops .nd-go-phone,.nd-workspace .nd-tour-ops .nd-go-order-meta,.nd-workspace .nd-tour-ops .nd-go-line{color:#617266!important}
+ .nd-workspace .nd-tour-ops .nd-go-buyer-total{background:#edf5ed!important;border-color:#dce8dc!important;color:#315b40!important}
+ .nd-workspace .nd-tour-ops .nd-go-buyer-total strong{color:#194b32!important}
+}
