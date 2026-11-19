@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.1.0
+ * Version: 1.2.0
  * Updated: 2026-11-19
- * Description: Adds responsive order-detail action styling to ADMIN Workspace tour operations.
+ * Description: Refines procurement phase tabs, alignment, product/farm cards and packaging rows using the existing ADMIN palette.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -897,3 +897,115 @@ body.nd-workspace:has(.nd-tour-bottom-nav:not([hidden])){padding-bottom:calc(94p
 #tourOperationsRoot,.ndp3{min-width:0;max-width:100%;overflow-x:hidden}
 @media(min-width:900px){.nd-tour-bottom-nav{width:min(760px,calc(100% - 48px));bottom:20px;padding:8px}.nd-tour-bottom-nav button{min-height:54px;flex-direction:row;gap:10px;font-size:12px}.nd-tour-bottom-nav button svg{width:20px;height:20px}}
 @media(max-width:360px){.nd-tour-bottom-nav{gap:3px;padding-left:5px;padding-right:5px}.nd-tour-bottom-nav button,.nd-tour-bottom-nav button b{font-size:10px}}
+
+
+/* 22. Procurement visual alignment — v1.2.0
+   CSS-only presentation layer. Keeps existing ADMIN dark/navy and orange palette.
+   No component structure, events, data flow or business logic is changed. */
+.nd-workspace .ndp3 .ndp3-phase-tabs{
+  display:flex;align-items:stretch;gap:6px;margin:14px 0;padding:5px;
+  border:1px solid #334155;border-radius:14px;background:#0b1222;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab{
+  flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:0;min-height:56px;padding:9px 6px;border:1px solid transparent;
+  border-radius:10px;background:transparent;color:#a7b4c7;
+  font-size:12px;font-weight:900;line-height:1.2;text-align:center;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab small{
+  margin-top:5px;color:#94a3b8;font-size:9px;font-weight:700;line-height:1.25;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab[aria-selected="true"]{
+  border-color:#9a4b20;background:rgba(234,88,12,.16);color:#fdba74;
+  box-shadow:inset 0 0 0 1px rgba(253,186,116,.08);
+}
+.nd-workspace .ndp3 .ndp3-phase-tab[aria-selected="true"] small{color:#fdba74}
+.nd-workspace .ndp3 .ndp3-kpis{gap:8px;margin:12px 0 16px}
+.nd-workspace .ndp3 .ndp3-kpi{
+  display:flex;flex-direction:column;justify-content:center;gap:4px;
+  min-height:76px;padding:12px 13px;border-radius:13px;
+}
+.nd-workspace .ndp3 .ndp3-kpi b{font-size:clamp(17px,3.5vw,22px);line-height:1.15}
+.nd-workspace .ndp3 .ndp3-kpi span{font-size:10px;line-height:1.35;letter-spacing:.025em}
+.nd-workspace .ndp3 .ndp3-view-switch{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 12px;
+}
+.nd-workspace .ndp3 .ndp3-view-switch button{
+  min-width:0;min-height:44px;padding:9px 12px;border:1px solid #334155;
+  border-radius:11px;background:#17243b;color:#cbd5e1;font:inherit;
+  font-size:12px;font-weight:850;
+}
+.nd-workspace .ndp3 .ndp3-view-switch button[aria-pressed="true"]{
+  border-color:#9a4b20;background:rgba(234,88,12,.16);color:#fdba74;
+}
+.nd-workspace .ndp3 .ndp3-request-products{gap:11px}
+.nd-workspace .ndp3 .ndp3-request-product-card{
+  display:flex;flex-direction:column;gap:0;min-width:0;margin:0;padding:14px;
+  border-radius:15px;background:#111f34;
+  box-shadow:0 3px 12px rgba(0,0,0,.12);
+}
+.nd-workspace .ndp3 .ndp3-request-product-head{
+  align-items:center;gap:12px;margin:0;padding:0 0 11px;
+  border-bottom:1px solid #293c57;
+}
+.nd-workspace .ndp3 .ndp3-request-product-head>div{min-width:0}
+.nd-workspace .ndp3 .ndp3-request-product-head strong{display:block;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.nd-workspace .ndp3 .ndp3-request-product-total{font-size:11px;line-height:1.4}
+.nd-workspace .ndp3 .ndp3-request-package-row{
+  grid-template-columns:minmax(0,1fr) minmax(76px,auto);gap:10px;
+  align-items:center;padding:11px 0;border-top:1px solid #293c57;
+}
+.nd-workspace .ndp3 .ndp3-request-package-row>div:first-child{min-width:0}
+.nd-workspace .ndp3 .ndp3-request-package-row b{display:block;font-size:13px;line-height:1.35}
+.nd-workspace .ndp3 .ndp3-request-package-row small{font-size:10px;line-height:1.45}
+.nd-workspace .ndp3 .ndp3-request-package-count{
+  min-width:76px;padding:7px 9px;border:1px solid #334155;border-radius:10px;
+  background:#0c1629;color:#fdba74;font-size:15px;line-height:1.2;text-align:center;
+}
+.nd-workspace .ndp3 .ndp3-request-package-count small{display:block;margin-top:3px;color:#a7b4c7;font-size:9px}
+.nd-workspace .ndp3 .ndp3-request-allocation-list{gap:7px;margin:9px 0 2px}
+.nd-workspace .ndp3 .ndp3-request-allocation{
+  grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;padding:10px;
+  border:1px solid #334155;border-radius:11px;background:#0c1629;
+}
+.nd-workspace .ndp3 .ndp3-request-allocation>div{min-width:0}
+.nd-workspace .ndp3 .ndp3-request-allocation strong{font-size:11px;line-height:1.4}
+.nd-workspace .ndp3 .ndp3-request-allocation small{font-size:10px;line-height:1.4}
+.nd-workspace .ndp3 .ndp3-request-product-action{margin-top:11px}
+.nd-workspace .ndp3 .ndp3-request-product-action .ndp3-btn{min-height:48px;border-radius:11px}
+.nd-workspace .ndp3 .ndp3-stage-group{
+  margin:11px 0;padding:13px;border-radius:14px;background:#111f34;
+}
+.nd-workspace .ndp3 .ndp3-stage-group>header{
+  align-items:center;gap:10px;margin:0 0 9px;padding-bottom:9px;
+  border-bottom:1px solid #293c57;
+}
+.nd-workspace .ndp3 .ndp3-stage-group>header strong{font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+.nd-workspace .ndp3 .ndp3-stage-package{
+  margin:9px 0;padding:10px;border-radius:11px;background:#0c192d;
+}
+.nd-workspace .ndp3 .ndp3-stage-package>header{align-items:center;margin-bottom:7px}
+.nd-workspace .ndp3 .ndp3-stage-line{padding:11px 0}
+.nd-workspace .ndp3 .ndp3-stage-line-title{font-size:13px;line-height:1.4}
+.nd-workspace .ndp3 .ndp3-stage-line-meta{font-size:10px;line-height:1.5}
+.nd-workspace .ndp3 .ndp3-stage-values{gap:7px;margin:9px 0}
+.nd-workspace .ndp3 .ndp3-stage-values>span{padding:9px;border-radius:10px}
+@media(max-width:520px){
+  .nd-workspace .ndp3 .ndp3-phase-tabs{gap:3px;padding:4px}
+  .nd-workspace .ndp3 .ndp3-phase-tab{min-height:58px;padding:8px 3px;font-size:10px}
+  .nd-workspace .ndp3 .ndp3-phase-tab small{font-size:8px}
+  .nd-workspace .ndp3 .ndp3-kpi{min-height:70px;padding:10px}
+  .nd-workspace .ndp3 .ndp3-request-product-card{padding:12px}
+  .nd-workspace .ndp3 .ndp3-request-product-head{align-items:flex-start}
+  .nd-workspace .ndp3 .ndp3-request-package-row{grid-template-columns:minmax(0,1fr) 68px;gap:6px;padding:10px 0}
+  .nd-workspace .ndp3 .ndp3-request-package-count{min-width:0;padding:7px 4px;font-size:14px}
+  .nd-workspace .ndp3 .ndp3-request-allocation{grid-template-columns:minmax(0,1fr);gap:7px}
+  .nd-workspace .ndp3 .ndp3-request-allocation .ndp3-btn{width:100%}
+  .nd-workspace .ndp3 .ndp3-stage-group{padding:11px}
+}
+@media(max-width:360px){
+  .nd-workspace .ndp3 .ndp3-phase-tabs{gap:2px;padding:3px}
+  .nd-workspace .ndp3 .ndp3-phase-tab{padding:7px 2px;font-size:9px}
+  .nd-workspace .ndp3 .ndp3-phase-tab small{font-size:7px}
+  .nd-workspace .ndp3 .ndp3-request-package-row{grid-template-columns:minmax(0,1fr) 62px}
+}
