@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — ADMIN DATA REPOSITORY
- * Version: 1.0.5
+ * Version: 1.0.6
  * Updated: 2026-11-19
- * Description: Loads the full product catalogue and variants for procurement while preserving tour demand and active-offer filtering; performs no writes.
+ * Description: Loads tour-ordered product and variant records only, preserving incomplete variant rows for visible procurement diagnostics; performs no writes.
  * Scope: ADMIN Workspace only.
  */
 
@@ -53,19 +53,21 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
     .select('id,porudzbina_id,product_id,variant_id,package_count,package_size,package_unit')
     .eq('tura_id', tourId);
   const items = unwrap(itemResult, 'Ставке поруџбина');
-  const invalidSourceRows = items.filter((row) => !row.product_id || !row.variant_id).length;
-  const productIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.product_id));
-  const variantIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.variant_id));
+  const invalidSourceRows = items.filter((row) => !row.product_id).length;
+  const productIds = uniq(items.filter((row) => row.product_id).map((row) => row.product_id));
+  const variantIds = uniq(items.filter((row) => row.variant_id).map((row) => row.variant_id));
 
-  onProgress('4/7 · Читам цео каталог производа, амбалажу и постојеће расподеле…');
+  onProgress('4/7 · Читам производе и амбалажу из поруџбина ове туре…');
   const [productsResult, variantsResult, allocationsResult] = await Promise.all([
-    client.from('products')
+    productIds.length ? client.from('products')
       .select('id,name,category,is_active,has_variants')
-      .order('name', { ascending: true }),
-    client.from('product_variants')
+      .in('id', productIds)
+      .order('name', { ascending: true }) : { data: [], error: null },
+    variantIds.length ? client.from('product_variants')
       .select('id,product_id,name,size_label,unit,package_value,package_unit,is_active,sort_order')
+      .in('id', variantIds)
       .order('sort_order', { ascending: true })
-      .order('name', { ascending: true }),
+      .order('name', { ascending: true }) : { data: [], error: null },
     client.from('tura_nabavka_dodele')
       .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,naruceno,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status,viber_poslato_at,potvrdjeno_at,updated_at')
       .eq('tura_id', tourId)
