@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.8.1
+ * Version: 1.8.2
  * Updated: 2026-11-19
- * Description: Renames the first procurement phase to Trebovanje and updates matching stage labels; preserves existing allocation workflow.
+ * Description: Shows every catalogue product in Trebovanje, separately identifying products without tour orders and inactive products; preserves allocation workflow.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -90,8 +90,8 @@ export function renderProcurementStageView(ctx){
     if(!groups.has(id))groups.set(id,[]);
     groups.get(id).push(d);
    }
-   if(!groups.size)return '<div class="ndp3-stage-empty">Нема производа са исправним подацима о амбалажи за ову туру.</div>';
-   return '<div class="ndp3-request-intro">Сваки производ је приказан као једна целина. Испод су све амбалаже, постојеће доделе газдинствима и количине које још треба распоредити.</div><section class="ndp3-request-products">'+[...groups.entries()].map(([productId,items])=>{
+   const demandedProductsHtml=groups.size
+    ? '<div class="ndp3-request-intro">Сваки производ са поруџбинама приказан је као једна целина. Испод су све амбалаже, постојеће доделе газдинствима и количине које још треба распоредити.</div><section class="ndp3-request-products">'+[...groups.entries()].map(([productId,items])=>{
     const p=prod(productId);
     const remainingAll=items.reduce((sum,d)=>sum+Math.max(0,d.packages-allocated(d.productId,d.variantId)),0);
     const allAssigned=items.every(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId))===0);
@@ -105,7 +105,28 @@ export function renderProcurementStageView(ctx){
      }).join('')+'</div>':'<div class="ndp3-request-product-total">Још нема додела газдинствима.</div>';
      return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||'Амбалажа')+'</b><small>Потребно: '+packageLabel(d.packages)+' · Распоређено: '+packageLabel(allocated(d.productId,d.variantId))+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно потребно: '+e(amountLabel(d.packages,d))+' · Извор: '+e(sourceSummary(d))+'</small>'+assignmentHtml+'</div><div class="ndp3-request-package-count">'+f(remaining)+' <small>преостало</small></div></div>';
     }).join('')+(remainingAll>0?'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Требуј преостало по газдинствима</button></div>':'')+'</article>';
-   }).join('')+'</section>';
+   }).join('')+'</section>'
+    : '<div class="ndp3-stage-empty">На овој тури нема производа са исправним подацима о амбалажи.</div>';
+   const sourceProductIds=new Set(s.items.filter(row=>row.product_id).map(row=>String(row.product_id)));
+   const catalogOnlyProducts=s.products
+    .filter(product=>!sourceProductIds.has(String(product.id)))
+    .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'sr'));
+   const catalogHtml=catalogOnlyProducts.length
+    ? '<div class="ndp3-request-intro">Комплетан каталог производа је испод. Производи без поруџбина на овој тури приказани су информативно и не могу се требовати док не постоји стварна потреба из поруџбина.</div><section class="ndp3-request-products"><header class="ndp3-row"><h3>Остали производи из каталога</h3><span class="ndp3-chip">'+catalogOnlyProducts.length+' производа</span></header>'+catalogOnlyProducts.map(product=>{
+     const productVariants=s.variants
+      .filter(item=>String(item.product_id)===String(product.id))
+      .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
+     const variantLabels=productVariants.length
+      ? productVariants.map(item=>{
+         const label=item.name||item.size_label||([item.package_value,item.package_unit||item.unit].filter(Boolean).join(' '))||'Амбалажа';
+         return e(label)+(item.is_active===false?' (неактивна)':'');
+        }).join(' · ')
+      : 'Амбалажа није дефинисана';
+     const active=product.is_active!==false;
+     return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(product.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+e(product.category||'Без категорије')+'</div></div><span class="ndp3-chip '+(active?'green':'red')+'">'+(active?'Активан':'Неактиван')+'</span></header><div class="ndp3-request-product-total">Амбалажа: '+e(variantLabels)+'</div><div class="ndp3-request-product-total">'+(active?'Нема поруџбина за ову туру.':'Неактиван производ — није део требовања.')+'</div></article>';
+    }).join('')+'</section>'
+    : '';
+   return demandedProductsHtml+catalogHtml;
   })();
   const requestFarmsHtml=(()=>{
    const groups=new Map();
