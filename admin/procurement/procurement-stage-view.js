@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.8.9
+ * Version: 1.9.0
  * Updated: 2026-11-19
- * Description: Shows per-farm customer names and their allocated package quantities in the procurement request view.
+ * Description: Hides zero-quantity farm allocation rows after partial supplier confirmation.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -99,7 +99,7 @@ export function renderProcurementStageView(ctx){
     const allAssigned=items.every(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId))===0);
     const allocationReady=items.every(d=>d.allocatable===true);
     return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+(allAssigned?'Све потребне количине су распоређене':f(remainingAll)+' паковања преостало за расподелу')+'</div></div><span class="ndp3-chip '+(allAssigned?'green':'amber')+'">'+(allAssigned?'Распоређено':'У току')+'</span></header>'+items.map(d=>{
-     const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId),assigned=allocationsFor(d.productId,d.variantId);
+     const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId),assigned=allocationsFor(d.productId,d.variantId).filter(row=>n(row.broj_pakovanja)>0);
      const assignmentHtml=assigned.length?'<div class="ndp3-request-allocation-list">'+assigned.map(row=>{
       const ff=farm(row.gazdinstvo_id),requested=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja),collected=n(row.preuzeto_pakovanja),sent=row.viber_status==='sent';
       const state=collected>=confirmed&&confirmed>0?'Преузето':confirmed>0?'Делимично потврђено':sent?'Чека потврду':'Чека слање';
