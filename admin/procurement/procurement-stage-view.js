@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.6.2
+ * Version: 1.6.3
  * Updated: 2026-11-19
- * Description: Groups all procurement phases by product, packaging and farm with concise mobile-first hierarchy.
+ * Description: Fixes request phase navigation count to use valid demand packaging rows without stale references.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -11,6 +11,7 @@ export function renderProcurementStageView(ctx){
   if(s.disposed)return;
   const writable=s.tour?.status==='processing';
   const requestRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
+  const requestDemandCount=s.demands.filter(x=>x.valid).length;
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
   const rows=s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
