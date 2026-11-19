@@ -28,10 +28,10 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
   style.textContent = `
     .nd-go-point-sheet{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px}
     .nd-go-point-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(3px)}
-    .nd-go-point-dialog{position:relative;width:min(100%,420px);padding:20px;border:1px solid #475569;border-radius:18px;background:#111c32;box-shadow:0 24px 70px rgba(0,0,0,.4);display:grid;gap:12px;color:#f8fafc}
-    .nd-go-point-dialog h3{margin:0;font-size:17px}.nd-go-point-dialog p{margin:0;color:#94a3b8;font-size:12px}.nd-go-point-dialog label{font-size:12px;font-weight:800;color:#cbd5e1}
-    .nd-go-point-dialog select{width:100%;min-height:46px;padding:10px;border-radius:10px;background:#0b1222;color:#f8fafc;border:1px solid #475569}
-    .nd-go-point-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}.nd-go-point-actions button{min-height:42px;padding:9px 13px;border-radius:10px;background:#26364e;color:#f8fafc;font-weight:800}.nd-go-point-actions [data-save-point]{background:#ea580c;color:white}.nd-go-point-actions button:disabled{opacity:.55}
+    .nd-go-point-dialog{position:relative;width:min(100%,420px);padding:20px;border:1px solid #d9e3d9;border-radius:16px;background:#fff;box-shadow:0 18px 48px rgba(18,43,26,.2);display:grid;gap:12px;color:#20352a}
+    .nd-go-point-dialog h3{margin:0;font-size:17px;color:#20352a}.nd-go-point-dialog p{margin:0;color:#68786d;font-size:12px}.nd-go-point-dialog label{font-size:12px;font-weight:800;color:#43564a}
+    .nd-go-point-dialog select{width:100%;min-height:46px;padding:10px;border-radius:10px;background:#fff;color:#20352a;border:1px solid #cbd8cc}
+    .nd-go-point-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}.nd-go-point-actions button{min-height:42px;padding:9px 13px;border-radius:10px;background:#f1f6f1;border:1px solid #d5e1d5;color:#315b40;font-weight:800}.nd-go-point-actions [data-save-point]{background:#286344;border-color:#286344;color:white}.nd-go-point-actions button:disabled{opacity:.55}
 
     .nd-grouped-orders{display:grid;gap:16px}
     .nd-go-intro{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:4px 2px}
@@ -55,14 +55,14 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     .nd-go-pill{border:0;border-radius:0;padding:0;color:#94a3b8}
     .nd-go-assign{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .nd-go-assign label{font-size:11px;color:#94a3b8;font-weight:800}
-    .nd-go-assign select{min-height:40px;max-width:100%;padding:7px 10px;border-radius:10px;background:#0b1222;color:#f8fafc;border:1px solid #475569}
+    .nd-go-assign select{min-height:40px;max-width:100%;padding:7px 10px;border-radius:10px;background:#fff;color:#20352a;border:1px solid #cbd8cc}
     .nd-go-drag{width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:#edf4ed;color:#286344;font-size:19px;touch-action:none;cursor:grab}
     .nd-go-drag:active{cursor:grabbing}
     .nd-go-order{display:flex;gap:10px;align-items:flex-start}
     .nd-go-order-card.nd-go-dragging{opacity:.42;transform:scale(.985)}
     .nd-go-empty{padding:12px;text-align:center;color:#68786d;font-size:13px}
     .nd-go-feedback{padding:11px 13px;border-radius:10px;background:#edf7ef;border:1px solid #cfe4d2;color:#285b3c;font-size:12px}
-    .nd-go-error{background:rgba(220,38,38,.13);border-color:rgba(248,113,113,.4);color:#fecaca}
+    .nd-go-error{background:#fff0ed;border-color:#f0d4cf;color:#8e3c34}
     .nd-go-unassigned .nd-go-point-head{background:#fff5e8}
     .nd-go-unassigned .nd-go-count{color:#8a5a1d;background:#fff0d9;border-color:#f0d9b5}
     @media(max-width:600px){.nd-go-customer-top{flex-wrap:wrap}}
