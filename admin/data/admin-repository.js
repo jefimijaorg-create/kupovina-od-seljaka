@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — ADMIN DATA REPOSITORY
- * Version: 1.0.7
+ * Version: 1.0.8
  * Updated: 2026-11-19
  * Description: Loads tour order items with customer identities and per-farm item allocations for customer-level procurement display; performs no writes.
  * Scope: ADMIN Workspace only.
@@ -59,7 +59,7 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
   const [ordersResult, farmAllocationsResult] = await Promise.all([
     orderIds.length ? client.from('porudzbine').select('id,kupac_id').in('id', orderIds) : { data: [], error: null },
     itemIds.length ? client.from('tura_stavke_raspodela')
-      .select('stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja')
+      .select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja,created_at,updated_at')
       .in('stavka_porudzbine_id', itemIds) : { data: [], error: null }
   ]);
   const orders = unwrap(ordersResult, 'Веза поруџбина и купаца');
