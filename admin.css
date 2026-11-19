@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.7.1
+ * Version: 1.7.2
  * Updated: 2026-11-19
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -1711,3 +1711,18 @@ body.nd-workspace{
 .ndp3 .ndp3-customer-order-qty>span{font-size:13px;font-weight:800;color:#344238;white-space:nowrap}
 .ndp3 .ndp3-customer-orders-empty{font-size:13px;font-weight:700;line-height:1.5}
 @media(max-width:420px){.ndp3 .ndp3-customer-orders{padding:10px}.ndp3 .ndp3-customer-order{gap:7px}.ndp3 .ndp3-customer-order-name>strong{font-size:14px}.ndp3 .ndp3-customer-order-qty>b{font-size:14px}.ndp3 .ndp3-customer-order-qty>span{font-size:12px}}
+
+
+/* МОДУЛ НАБАВКА - РАСПОДЕЛА КОЛИЧИНА ПО КУПЦИМА */
+.ndp3 .ndp3-customer-allocation-editor{display:grid;gap:9px;margin:14px 0}
+.ndp3 .ndp3-customer-allocation-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #DCE4DC;border-radius:12px;background:#FFFFFF;min-width:0}
+.ndp3 .ndp3-customer-allocation-copy{display:grid;gap:4px;min-width:0}
+.ndp3 .ndp3-customer-allocation-copy>strong{font-size:14px;line-height:1.3;color:#344238;overflow-wrap:anywhere}
+.ndp3 .ndp3-customer-allocation-copy>small{font-size:12px;color:#344238;line-height:1.35}
+.ndp3 .ndp3-customer-allocation-controls{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.ndp3 .ndp3-customer-allocation-controls>button{width:36px;height:40px;border:1px solid #285B3C;border-radius:9px;background:#FFFFFF;color:#285B3C;font-size:22px;font-weight:900;line-height:1}
+.ndp3 .ndp3-customer-allocation-controls>button:disabled{opacity:.4}
+.ndp3 .ndp3-customer-allocation-controls>input{width:54px;min-width:0;height:40px;padding:4px;border:1px solid #AAB8AC;border-radius:9px;background:#FFFFFF;color:#344238;text-align:center;font-size:16px;font-weight:850}
+.ndp3 .ndp3-customer-allocation-total{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0;padding:13px;border-radius:11px;background:#F3F5F2;color:#344238;font-size:13px;font-weight:800}
+.ndp3 .ndp3-customer-allocation-total>b{color:#285B3C;font-size:17px;white-space:nowrap}
+@media(max-width:420px){.ndp3 .ndp3-customer-allocation-row{gap:7px;padding:9px}.ndp3 .ndp3-customer-allocation-controls{gap:4px}.ndp3 .ndp3-customer-allocation-controls>button{width:32px;height:38px}.ndp3 .ndp3-customer-allocation-controls>input{width:44px;height:38px}.ndp3 .ndp3-customer-allocation-copy>strong{font-size:13px}}
