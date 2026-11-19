@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.5.0
+ * Version: 1.6.0
  * Updated: 2026-11-19
- * Description: Unifies the ADMIN workspace components with the approved light visual system; preserves existing structure and behavior.
+ * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -1363,4 +1363,97 @@ body.nd-workspace{
   .nd-workspace .nd-brand-copy strong{font-size:11px}
   .nd-workspace .nd-icon-btn{width:40px;height:40px;flex-basis:40px}
   .nd-workspace .nd-tour-bottom-nav button{font-size:9px}
+}
+
+
+/* 26. ADMIN shared component refinement — v1.6.0
+   Reuses the approved light tokens. Scoped to existing Admin Workspace components.
+   No DOM hooks, navigation, JavaScript behavior, data flow or business rules changed. */
+.nd-workspace{
+  --nd-btn-primary:var(--nd-green);
+  --nd-btn-primary-hover:var(--nd-green-dark);
+  --nd-btn-secondary-bg:var(--nd-surface-soft);
+  --nd-btn-secondary-border:var(--nd-line);
+  --nd-card-border:var(--nd-line);
+  --nd-card-shadow:var(--nd-shadow);
+}
+.nd-workspace .nd-icon-btn{
+  min-width:42px;min-height:42px;
+  border-color:var(--nd-btn-secondary-border)!important;
+  background:var(--nd-surface)!important;color:var(--nd-ink)!important;
+  transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.nd-workspace .nd-icon-btn:hover{
+  background:var(--nd-green-soft)!important;border-color:#C9DCCB!important;
+}
+.nd-workspace .nd-nav button{
+  min-height:42px;transition:background-color .16s ease,color .16s ease,border-color .16s ease;
+}
+.nd-workspace .nd-ops-tabs button{
+  min-height:44px;border-color:var(--nd-btn-secondary-border)!important;
+  background:var(--nd-btn-secondary-bg)!important;color:var(--nd-muted)!important;
+}
+.nd-workspace .nd-ops-tabs button[aria-selected=true],
+.nd-workspace .nd-ops-tabs button.active{
+  background:var(--nd-btn-primary)!important;border-color:var(--nd-btn-primary)!important;color:#fff!important;
+}
+.nd-workspace .ndp3 .ndp3-btn{
+  min-height:44px;border:1px solid var(--nd-btn-primary)!important;
+  border-radius:12px;background:var(--nd-btn-primary)!important;color:#fff!important;
+  font-weight:750;box-shadow:0 2px 5px rgba(40,91,60,.12);
+  transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.nd-workspace .ndp3 .ndp3-btn:hover{
+  background:var(--nd-btn-primary-hover)!important;border-color:var(--nd-btn-primary-hover)!important;
+}
+.nd-workspace .ndp3 .ndp3-btn.secondary,
+.nd-workspace .ndp3 .ndp3-btn.ghost{
+  background:var(--nd-btn-secondary-bg)!important;
+  border-color:var(--nd-btn-secondary-border)!important;color:var(--nd-green)!important;
+  box-shadow:none;
+}
+.nd-workspace .ndp3 .ndp3-btn.secondary:hover,
+.nd-workspace .ndp3 .ndp3-btn.ghost:hover{
+  background:var(--nd-green-soft)!important;border-color:#C9DCCB!important;
+}
+.nd-workspace .nd-panel,
+.nd-workspace .nd-ops-head,
+.nd-workspace .nd-ops-card{
+  border-color:var(--nd-card-border)!important;
+  box-shadow:var(--nd-card-shadow)!important;
+}
+.nd-workspace .nd-panel,
+.nd-workspace .nd-ops-head,
+.nd-workspace .nd-ops-card,
+.nd-workspace .ndp3 .ndp3-panel,
+.nd-workspace .ndp3 .ndp3-stage-group,
+.nd-workspace .ndp3 .ndp3-allocation-product{
+  color:var(--nd-ink);
+}
+.nd-workspace .nd-status{
+  min-height:26px;padding:5px 10px;
+  border-color:var(--nd-line)!important;border-radius:999px;
+  background:var(--nd-surface-soft)!important;color:var(--nd-muted)!important;
+}
+.nd-workspace .nd-status.ok{
+  background:var(--nd-green-soft)!important;border-color:#D7E6D9!important;color:var(--nd-green)!important;
+}
+.nd-workspace .nd-status.ok:before{background:var(--nd-green)!important}
+.nd-workspace .nd-status.warning{
+  background:var(--nd-amber-soft)!important;border-color:#F0DDB8!important;color:var(--nd-amber)!important;
+}
+.nd-workspace .nd-status.warning:before{background:var(--nd-amber)!important}
+.nd-workspace .nd-status.error,
+.nd-workspace .nd-status.danger{
+  background:var(--nd-red-soft)!important;border-color:#F1D0CB!important;color:var(--nd-red)!important;
+}
+.nd-workspace .nd-status.error:before,
+.nd-workspace .nd-status.danger:before{background:var(--nd-red)!important}
+.nd-workspace .nd-status.info{
+  background:var(--nd-blue-soft)!important;border-color:#D4E2ED!important;color:var(--nd-blue)!important;
+}
+.nd-workspace .nd-status.info:before{background:var(--nd-blue)!important}
+@media(max-width:767px){
+  .nd-workspace .nd-icon-btn{min-width:42px;min-height:42px}
+  .nd-workspace .ndp3 .ndp3-btn{min-height:46px}
 }
