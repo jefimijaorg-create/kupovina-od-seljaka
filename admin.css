@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.7.0
+ * Version: 1.7.1
  * Updated: 2026-11-19
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -1693,3 +1693,21 @@ body.nd-workspace{
     @media(min-width:768px){.nd-order-sheet{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(880px,calc(100% - 32px));max-height:88dvh;border-radius:22px}.nd-order-grid{grid-template-columns:1fr 1fr}.nd-order-line{grid-template-columns:minmax(0,1fr) minmax(190px,.55fr);align-items:center}.nd-order-content{padding:20px 24px}.nd-order-head{padding:22px 24px 16px}}
 .nd-order-mt-6{margin-top:6px}.nd-order-mt-8{margin-top:8px}.nd-order-mt-9{margin-top:9px}.nd-order-mt-12{margin-top:12px}.nd-order-mt-14{margin-top:14px}.nd-order-title-reset{margin:0}
 .nd-order-sheet{background:#FFFFFF!important;color:#344238!important;border-color:#DCE4DC!important}.nd-order-head,.nd-order-foot{border-color:#DCE4DC!important;background:#FFFFFF!important}.nd-order-card{background:#FFFFFF!important;border-color:#DCE4DC!important}.nd-order-card h3,.nd-order-head h2{color:#344238!important}.nd-order-head p,.nd-order-field,.nd-order-line-meta,.nd-order-muted{color:#344238!important}.nd-order-field select,.nd-order-field input,.nd-order-line-controls input{background:#FFFFFF!important;color:#344238!important;border-color:#DCE4DC!important}.nd-order-secondary{background:#F3F5F2!important;color:#285B3C!important;border:1px solid #DCE4DC!important}.nd-order-primary{background:#285B3C!important;color:#FFFFFF!important}.nd-order-warning{background:#F3F5F2!important;border-color:#E8A04A!important;color:#344238!important}.nd-order-error{background:#F3F5F2!important;border-color:#DCE4DC!important;color:#344238!important}.nd-order-success{background:#F3F5F2!important;border-color:#DCE4DC!important;color:#285B3C!important}
+
+/* МОДУЛ НАБАВКА — КУПЦИ И КОЛИЧИНЕ ПО АМБАЛАЖИ */
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-product .ndp3-row>strong{font-size:18px;line-height:1.35;color:#344238}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-quantity strong{font-size:22px;font-weight:950}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-quantity small{font-size:14px;font-weight:650}
+.ndp3 .ndp3-modal-dialog .ndp3-allocation-total b{font-size:19px}
+.ndp3 .ndp3-customer-orders{margin:14px 0;padding:13px;border:1px solid #DCE4DC;border-radius:14px;background:#F3F5F2;color:#344238}
+.ndp3 .ndp3-customer-orders-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;font-size:14px;font-weight:900}
+.ndp3 .ndp3-customer-orders-head>b{color:#285B3C;font-size:16px;white-space:nowrap}
+.ndp3 .ndp3-customer-order{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-top:1px solid #DCE4DC;min-width:0}
+.ndp3 .ndp3-customer-order-name{display:grid;gap:3px;min-width:0}
+.ndp3 .ndp3-customer-order-name>strong{font-size:16px;line-height:1.3;font-weight:900;overflow-wrap:anywhere;color:#344238}
+.ndp3 .ndp3-customer-order-name>small{font-size:11px;color:#344238}
+.ndp3 .ndp3-customer-order-qty{display:grid;gap:3px;text-align:right;flex:0 0 auto}
+.ndp3 .ndp3-customer-order-qty>b{font-size:16px;font-weight:950;color:#285B3C;white-space:nowrap}
+.ndp3 .ndp3-customer-order-qty>span{font-size:13px;font-weight:800;color:#344238;white-space:nowrap}
+.ndp3 .ndp3-customer-orders-empty{font-size:13px;font-weight:700;line-height:1.5}
+@media(max-width:420px){.ndp3 .ndp3-customer-orders{padding:10px}.ndp3 .ndp3-customer-order{gap:7px}.ndp3 .ndp3-customer-order-name>strong{font-size:14px}.ndp3 .ndp3-customer-order-qty>b{font-size:14px}.ndp3 .ndp3-customer-order-qty>span{font-size:12px}}
