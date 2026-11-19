@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.0.5
+ * Version: 1.0.6
  * Updated: 2026-11-19
- * Description: Adds grouped point/customer order view and retains the order-detail Bottom Sheet.
+ * Description: Supports externally controlled Orders, Products and Delivery sections for the persistent tour navigation.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined))];
@@ -13,13 +13,13 @@ const fmtQty = (count, size, unit) => {
 };
 const fail = (result, label) => { if (result.error) throw new Error(label + ': ' + result.error.message); return result.data || []; };
 
-export async function mountTourOperations({ root, core, tourId, onBack, onOpenProcurement }) {
+export async function mountTourOperations({ root, core, tourId, onBack, onOpenProcurement, initialTab='orders' }) {
   if (!root || !core || core.authenticated !== true || !core.client || !tourId) throw new Error('Недостаје потврђено ADMIN језгро или ID туре.');
   const client = core.client;
   const role = core.getState().role;
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
-  let activeTab = 'orders', disposed = false, loadToken = 0, groupedOrdersView = null;
+  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.1').then(mod => mod.createProcurementOrderSheet({
     client,

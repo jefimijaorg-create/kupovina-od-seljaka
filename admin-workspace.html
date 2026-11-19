@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   NARUČI DOMAĆE — ADMIN WORKSPACE
-  Version: 1.11.0
+  Version: 1.12.0
   Updated: 2026-11-19
-  Description: Adds atomic transfer of unconfirmed procurement quantities between eligible farms.
+  Description: Adds persistent four-section bottom navigation within the selected tour.
   Scope: Existing authenticated ADMIN workspace; procurement writes are protected by RLS and a database trigger.
 -->
 <html lang="sr">
@@ -16,14 +16,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin.css?v=1.0.7">
+<link rel="stylesheet" href="/admin.css?v=1.0.8">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/admin/admin.js?v=1.1.0"></script>
 </head>
 <body class="nd-workspace">
 <header class="nd-topbar">
   <button class="nd-icon-btn" id="menuBtn" type="button" aria-label="Otvori navigaciju" aria-expanded="false">☰</button>
-  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>NARUČI DOMAĆE</strong><small>ADMIN WORKSPACE</small><span id="buildVersion" style="display:block;margin-top:4px;color:#FDBA74;font-size:10px;font-weight:800;line-height:1.25;letter-spacing:.08em">VERZIJA 1.11.0 · ADMIN WORKSPACE</span></span></div>
+  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>NARUČI DOMAĆE</strong><small>ADMIN WORKSPACE</small><span id="buildVersion" style="display:block;margin-top:4px;color:#FDBA74;font-size:10px;font-weight:800;line-height:1.25;letter-spacing:.08em">VERZIJA 1.12.0 · ADMIN WORKSPACE</span></span></div>
   <span class="nd-status" id="activeTourStatus">TURA NIJE IZABRANA</span>
   <button class="nd-icon-btn nd-procurement-entry" id="procurementBtn" type="button" hidden>Набавка</button>
   <button class="nd-icon-btn" id="searchBtn" type="button" aria-label="Pretraga">⌕</button>
@@ -55,6 +55,7 @@
     <section id="tourOperationsRoot" class="nd-tour-operations-root" hidden aria-live="polite"></section>
   </main>
 </div>
+<nav id="tourBottomNav" class="nd-tour-bottom-nav" aria-label="Navigacija unutar aktivne ture" hidden><button type="button" data-tour-section="orders"><span aria-hidden="true">▤</span><b>Поруџбине</b></button><button type="button" data-tour-section="products"><span aria-hidden="true">▦</span><b>Производи</b></button><button type="button" data-tour-section="procurement"><span aria-hidden="true">▣</span><b>Набавка</b></button><button type="button" data-tour-section="delivery"><span aria-hidden="true">⇢</span><b>Достава</b></button></nav>
 <div class="nd-overlay" id="drawerOverlay" aria-hidden="true">
   <aside class="nd-drawer" role="dialog" aria-modal="true" aria-label="Glavna navigacija">
     <div class="nd-drawer-head"><strong>ADMIN MENI</strong><button class="nd-icon-btn" id="closeDrawer" type="button" aria-label="Zatvori meni">×</button></div>
@@ -77,11 +78,12 @@ const WORKSPACE_PATH=BASE_PATH+'admin-workspace.html';
 const LOGIN=BASE_PATH+'admin2.html?next='+encodeURIComponent(WORKSPACE_PATH+location.search);
 const NAV=[['⌂','Dashboard'],['▤','Ture'],['▦','Proizvodi'],['♧','Proizvođači'],['▣','Porudžbine'],['⌖','Punktovi'],['⇢','Dostava'],['♙','Kupci'],['▥','Izveštaji']];
 const $=id=>document.getElementById(id);
-let client=null, currentUser=null, currentRole=null, tours=[], busy=false, tourPanel=null, activeTourId=null;
-function dashboardVisible(show){$('dashboardTours').hidden=!show;$('tourOperationsRoot').hidden=show;$('dashboardTours').previousElementSibling.hidden=!show;$('procurementBtn').hidden=show||!['admin','super_admin'].includes(currentRole);if(show){$('activeTourStatus').textContent='TURA NIJE IZABRANA';activeTourId=null;localStorage.removeItem('naruci-domace-admin-tour-id');if(tourPanel){tourPanel.destroy();tourPanel=null}}}
-async function mountTourOperationsView(tourId){const root=$('tourOperationsRoot');root.hidden=false;root.innerHTML='<div class="nd-loading">Otvaram operativni prikaz ture…</div>';try{const mod=await import('/admin/tour-operations-panel.js?v=1.0.5');if(activeTourId!==String(tourId))return;const core=window.NDAdmin.getContext();tourPanel=await mod.mountTourOperations({root,core,tourId,onBack:()=>dashboardVisible(true),onOpenProcurement:productId=>openProcurementPanel(productId)});}catch(error){root.textContent='Operativni prikaz nije dostupan: '+(error.message||String(error));}}
-async function openTour(tour){if(!tour||!tour.id)return;activeTourId=String(tour.id);localStorage.setItem('naruci-domace-admin-tour-id',activeTourId);$('activeTourStatus').textContent='TURA #'+activeTourId;dashboardVisible(false);$('procurementBtn').hidden=!['admin','super_admin'].includes(currentRole);if(tourPanel){tourPanel.destroy();tourPanel=null}await mountTourOperationsView(activeTourId);}
-async function openProcurementPanel(initialProductId=null){if(!activeTourId||!['admin','super_admin'].includes(currentRole))return;if(tourPanel){tourPanel.destroy();tourPanel=null}const root=$('tourOperationsRoot');root.hidden=false;root.innerHTML='<div class="nd-loading">Otvaram upravljanje nabavkom…</div>';try{const mod=await import('/admin/procurement-products-module.js?v=4.1.0');if(!activeTourId)return;const core=window.NDAdmin.getContext();const selectedTourId=activeTourId;tourPanel=await mod.mountProcurementProductsModule({root,core,tourId:selectedTourId,initialProductId,onBack:()=>{if(tourPanel){tourPanel.destroy();tourPanel=null;}mountTourOperationsView(selectedTourId)}});}catch(error){root.innerHTML='<div class="nd-proc-error"><strong>Дијагностика: модул набавке није покренут</strong><p></p></div>';root.querySelector('.nd-proc-error p').textContent=error.message||String(error);}}
+let client=null, currentUser=null, currentRole=null, tours=[], busy=false, tourPanel=null, activeTourId=null, activeTourSection='orders', returnTourSection='orders';
+function renderTourBottomNav(){const nav=$('tourBottomNav');if(!nav)return;nav.hidden=!activeTourId;nav.querySelectorAll('[data-tour-section]').forEach(button=>{const selected=button.dataset.tourSection===activeTourSection;button.setAttribute('aria-current',selected?'page':'false');button.classList.toggle('is-active',selected);});}
+function dashboardVisible(show){$('dashboardTours').hidden=!show;$('tourOperationsRoot').hidden=show;$('dashboardTours').previousElementSibling.hidden=!show;$('procurementBtn').hidden=show||!['admin','super_admin'].includes(currentRole);$('tourBottomNav').hidden=show;if(show){$('activeTourStatus').textContent='TURA NIJE IZABRANA';activeTourId=null;activeTourSection='orders';localStorage.removeItem('naruci-domace-admin-tour-id');if(tourPanel){tourPanel.destroy();tourPanel=null}}}
+async function mountTourOperationsView(tourId,initialTab='orders'){activeTourSection=initialTab;renderTourBottomNav();const root=$('tourOperationsRoot');root.hidden=false;root.innerHTML='<div class="nd-loading">Otvaram operativni prikaz ture…</div>';try{const mod=await import('/admin/tour-operations-panel.js?v=1.0.6');if(activeTourId!==String(tourId))return;const core=window.NDAdmin.getContext();tourPanel=await mod.mountTourOperations({root,core,tourId,initialTab,onBack:()=>dashboardVisible(true),onOpenProcurement:productId=>openProcurementPanel(productId)});}catch(error){root.textContent='Operativni prikaz nije доступан: '+(error.message||String(error));}}
+async function openTour(tour){if(!tour||!tour.id)return;activeTourId=String(tour.id);activeTourSection='orders';localStorage.setItem('naruci-domace-admin-tour-id',activeTourId);$('activeTourStatus').textContent='TURA #'+activeTourId;dashboardVisible(false);$('procurementBtn').hidden=!['admin','super_admin'].includes(currentRole);if(tourPanel){tourPanel.destroy();tourPanel=null}await mountTourOperationsView(activeTourId,'orders');}
+async function openProcurementPanel(initialProductId=null){if(!activeTourId||!['admin','super_admin'].includes(currentRole))return;if(activeTourSection!=='procurement')returnTourSection=activeTourSection;activeTourSection='procurement';renderTourBottomNav();if(tourPanel){tourPanel.destroy();tourPanel=null}const root=$('tourOperationsRoot');root.hidden=false;root.innerHTML='<div class="nd-loading">Otvaram upravljanje nabavkom…</div>';try{const mod=await import('/admin/procurement-products-module.js?v=4.1.0');if(!activeTourId)return;const core=window.NDAdmin.getContext();const selectedTourId=activeTourId;tourPanel=await mod.mountProcurementProductsModule({root,core,tourId:selectedTourId,initialProductId,onBack:()=>mountTourOperationsView(selectedTourId,returnTourSection)});}catch(error){root.innerHTML='<div class="nd-proc-error"><strong>Дијагностика: модул набавке није покренут</strong><p></p></div>';root.querySelector('.nd-proc-error p').textContent=error.message||String(error);}}
 function statusLabel(s){return s==='open'?'OTVORENA':s==='processing'?'U OBRADI':String(s||'BEZ STATUSA').toUpperCase()}
 function dateLabel(v){if(!v)return 'Datum nije naveden';const d=new Date(v+'T12:00:00');return Number.isNaN(d.getTime())?'Datum nije naveden':d.toLocaleDateString('sr-RS',{day:'2-digit',month:'short',year:'numeric'});}
 function renderNav(root){root.replaceChildren();NAV.forEach(([ico,label],i)=>{const b=document.createElement('button');b.type='button';b.innerHTML='<span aria-hidden="true">'+ico+'</span><span>'+label+'</span>';if(i===0)b.setAttribute('aria-current','page');b.addEventListener('click',()=>{if(i===0){closeDrawer();return}if(i===2){closeDrawer();if(!activeTourId){showDialog('Изабери туру','Прво отвори туру са контролне табле, па из менија Proizvodi отвори евиденцију набавке.');return}if(!['admin','super_admin'].includes(currentRole)){showDialog('Нема дозволе','Евиденцију набавке могу да отворе само администратори.');return}openProcurementPanel();return}showDialog(label,'Ovaj modul nije deo prve celine. Biće povezan tek kada njegova funkcionalnost bude zasebno analizirana i odobrena.');closeDrawer()});root.appendChild(b)})}
@@ -97,6 +99,7 @@ $('menuBtn').addEventListener('click',openDrawer);$('closeDrawer').addEventListe
 $('closeDialog').addEventListener('click',closeDialog);$('dialogOverlay').addEventListener('click',e=>{if(e.target===$('dialogOverlay'))closeDialog()});
 $('refreshBtn').addEventListener('click',loadTours);
 $('procurementBtn').addEventListener('click',openProcurementPanel);
+$('tourBottomNav').querySelectorAll('[data-tour-section]').forEach(button=>button.addEventListener('click',()=>{const section=button.dataset.tourSection;if(!activeTourId)return;if(section==='procurement'){openProcurementPanel();return;}if(!['orders','products','delivery'].includes(section))return;if(tourPanel){tourPanel.destroy();tourPanel=null;}mountTourOperationsView(activeTourId,section);}));
 $('searchBtn').addEventListener('click',()=>{const wrap=document.createElement('div');const input=document.createElement('input');input.className='nd-search';input.type='search';input.placeholder='Pretraga tura po nazivu ili broju…';input.setAttribute('aria-label','Pretraga tura');const results=document.createElement('div');results.className='nd-tour-list';results.style.marginTop='12px';function update(){const q=input.value.trim().toLocaleLowerCase('sr');results.replaceChildren();tours.filter(t=>(String(t.naziv||'').toLocaleLowerCase('sr').includes(q)||String(t.id).includes(q))).forEach(t=>{const p=document.createElement('p');p.className='nd-empty';p.textContent=(t.naziv||'Tura '+t.id)+' · '+statusLabel(t.status);results.appendChild(p)});if(!results.childNodes.length){const p=document.createElement('p');p.className='nd-empty';p.textContent='Nema rezultata u trenutno učitanim aktivnim turama.';results.appendChild(p)}}input.addEventListener('input',update);wrap.append(input,results);$('dialogTitle').textContent='Pretraga';$('dialogContent').replaceChildren(wrap);$('dialogOverlay').classList.add('open');$('dialogOverlay').setAttribute('aria-hidden','false');update();input.focus()});
 $('notificationsBtn').addEventListener('click',()=>showDialog('Obaveštenja','U ovoj fazi nije povezan izvor obaveštenja. Ne prikazujemo lažne ili probne notifikacije.'));
 $('userBtn').addEventListener('click',()=>showDialog('Korisnički nalog','Korisnik: '+(currentUser?.email||'nije potvrđen')+' · Uloga: '+(currentRole||'nepoznata')+'. Odjava se obavlja kroz postojeći ADMIN tok.'));
