@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT ALLOCATION ACTIONS
- * Version: 1.0.0
+ * Version: 1.1.0
  * Updated: 2026-11-19
- * Description: Validates and persists procurement allocation carts with read-back verification and best-effort rollback.
+ * Description: Validates and persists procurement allocation carts and safely edits unsent allocation quantities.
  * Scope: Existing ADMIN Workspace; existing Supabase tables and RLS only. No schema changes.
  */
 const n=value=>Number.isFinite(Number(value))?Number(value):0;
@@ -63,4 +63,20 @@ export async function saveProcurementAllocationCart({client,tourId,cart,demands,
   if(rollbackErrors.length)throw new Error((writeError.message||String(writeError))+' Аутоматско враћање није у потпуности успело: '+rollbackErrors.join('; '));
   throw writeError;
  }
+}
+
+export async function updateUnsentProcurementAllocation({client,row,packages,demand,offers,allocations}={}){
+ if(!client||!row||!demand?.valid)throw new Error('Недостају подаци за измену доделе.');
+ const count=Number(packages);
+ if(!Number.isInteger(count)||count<1)throw new Error('Количина мора бити позитиван цео број паковања.');
+ if(row.viber_status!=='not_sent'||n(row.potvrdjeno_pakovanja)>0||n(row.preuzeto_pakovanja)>0)throw new Error('Послату, потврђену или преузету доделу није могуће мењати у фази Захтев.');
+ const activeOffer=offers.some(o=>String(o.gazdinstvo_id)===String(row.gazdinstvo_id)&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&o.is_active===true);
+ if(!activeOffer)throw new Error('Газдинство нема активну понуду за ову амбалажу.');
+ const other=allocations.filter(x=>String(x.id)!==String(row.id)&&key(x.product_id,x.variant_id)===key(row.product_id,row.variant_id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
+ if(other+count>n(demand.packages))throw new Error('Количина премашује преосталу потребу. Максимум за ово газдинство је '+Math.max(0,n(demand.packages)-other)+' паковања.');
+ const result=await client.from('tura_nabavka_dodele').update({broj_pakovanja:count,naruceno_pakovanja:count,updated_at:new Date().toISOString()}).eq('id',row.id).eq('viber_status','not_sent').eq('potvrdjeno_pakovanja',0).eq('preuzeto_pakovanja',0).select('id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,viber_status,potvrdjeno_pakovanja,preuzeto_pakovanja').maybeSingle();
+ if(result.error)throw new Error(result.error.message);
+ if(!result.data)throw new Error('Додела није измењена. Можда је у међувремену послата или потврђена. Освежи податке.');
+ if(n(result.data.broj_pakovanja)!==count||n(result.data.naruceno_pakovanja)!==count)throw new Error('База није потврдила нову количину.');
+ return result.data;
 }

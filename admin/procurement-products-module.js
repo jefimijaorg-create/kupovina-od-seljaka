@@ -1,17 +1,17 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.5.0
+ * Version: 4.6.0
  * Updated: 2026-11-19
- * Description: Delegates allocation persistence to a dedicated action module and retains the existing procurement workflow.
+ * Description: Delegates allocation persistence to a dedicated action module and adds editable controls for existing unsent farm allocations in the request phase.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.7.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.8.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
-import { saveProcurementAllocationCart } from './procurement/procurement-allocation-actions.js?v=1.0.0';
+import { saveProcurementAllocationCart, updateUnsentProcurementAllocation } from './procurement/procurement-allocation-actions.js?v=1.1.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -133,8 +133,8 @@ const CSS=`
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.5.0';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.6.0';document.head.appendChild(style);
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationPackages:0,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -163,7 +163,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-ordered(d.productId,d.variantId)));
 
  function render(){
-  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f,productId:s.requestProductId}),mountAnalyticsPanel:()=>{
+  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,editAllocationRow:s.allocations.find(x=>String(x.id)===String(s.editAllocationId))||null,editAllocationPackages:s.editAllocationPackages,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f,productId:s.requestProductId}),mountAnalyticsPanel:()=>{
    s.analyticsHandle?.destroy();
    const analyticsRoot=host.querySelector('[data-tour-analytics-root]');
    if(analyticsRoot)s.analyticsHandle=mountTourAnalyticsPanel({root:analyticsRoot,client,tourId,intervalMs:30000});
@@ -194,7 +194,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  async function markFarmSent(farmId){
   if(s.busy)return;
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
-  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>0);
+  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   if(!rows.length)return setNote('Нема ставки које чекају слање за ово газдинство.',true);
   if(!window.confirm('Потврђујеш да је заиста послат заједнички захтев газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return;
   s.busy=true;render();
@@ -248,6 +248,7 @@ async function saveField(id){
   catch(err){setNote('Додела је сачувана, али припрема поруке није успела: '+(err.message||String(err)),true);}
  }
 host.addEventListener('change',ev=>{
+  if(ev.target.matches('[data-edit-allocation-packages]')){s.editAllocationPackages=ev.target.value;const save=host.querySelector('[data-action="save-allocation-edit"]');if(save)save.disabled=!Number.isInteger(Number(ev.target.value))||Number(ev.target.value)<1||s.busy;return;}
   if(ev.target.matches('[data-transfer-target]')){s.transferDraft.targetFarmId=ev.target.value;render();return;}
   if(ev.target.matches('[data-transfer-count]')){s.transferDraft.packages=Number(ev.target.value);render();return;}
   if(ev.target.matches('[data-allocation-farm]')){
@@ -271,6 +272,9 @@ host.addEventListener('change',ev=>{
   if(a==='back')return onBack?.();
   if(a==='open-request'){s.requestProductId=b.dataset.productId||null;s.requestOpen=true;s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
   if(a==='close-request'){s.requestOpen=false;s.requestProductId=null;render();return;}
+  if(a==='edit-allocation'){const row=s.allocations.find(x=>String(x.id)===String(b.dataset.id));if(!row)return;if(row.viber_status!=='not_sent'||n(row.potvrdjeno_pakovanja)>0||n(row.preuzeto_pakovanja)>0)return setNote('Ова додела више није у фази Захтев и не може се мењати овде.',true);s.editAllocationId=String(row.id);s.editAllocationPackages=String(row.naruceno_pakovanja);render();return;}
+  if(a==='close-allocation-edit'){s.editAllocationId=null;render();return;}
+  if(a==='save-allocation-edit'){if(s.busy)return;const row=s.allocations.find(x=>String(x.id)===String(s.editAllocationId));if(!row)return setNote('Додела више није доступна. Освежи податке.',true);const count=Number(s.editAllocationPackages);if(!Number.isInteger(count)||count<1)return setNote('Унеси позитиван цео број паковања.',true);s.busy=true;render();try{await updateUnsentProcurementAllocation({client,row,packages:count,demand:demand(row.product_id,row.variant_id),offers:s.offers,allocations:s.allocations});await load();s.editAllocationId=null;setNote('Количина доделе је успешно измењена и потврђена у бази.');}catch(err){setNote('Измена није сачувана: '+(err.message||String(err)),true);}finally{s.busy=false;render();}return;}
   if(a==='open-transfer'){
    const row=s.allocations.find(x=>String(x.id)===String(b.dataset.id));if(!row)return;
    const candidates=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))].filter(id=>farm(id));
