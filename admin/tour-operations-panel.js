@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.0.8
+ * Version: 1.0.9
  * Updated: 2026-11-19
  * Description: Displays order prices and adds an RLS-protected open-to-processing tour transition.
  */
@@ -21,7 +21,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
   let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
-  const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.1').then(mod => mod.createProcurementOrderSheet({
+  const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
     client,
     getState: () => ({ orders:state.orders, customers:state.customers, points:state.points, productCatalog:state.products }),
     refresh: () => load()
