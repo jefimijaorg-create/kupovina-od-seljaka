@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.1.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.2.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.0.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking } from './procurement/procurement-workflow-actions.js?v=1.0.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
@@ -160,10 +160,7 @@ async function prepareFarmRequest(farmId){
   if(!window.confirm('Потврђујеш да је заиста послат заједнички захтев газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return;
   s.busy=true;render();
   try{
-   const ids=rows.map(x=>x.id),sentAt=new Date().toISOString();
-   const q=await client.from('tura_nabavka_dodele').update({naruceno:true,viber_status:'sent',viber_poslato_at:sentAt,updated_at:sentAt}).in('id',ids).eq('viber_status','not_sent').select('id,viber_status');
-   if(q.error)throw Error(q.error.message);
-   if(!q.data||q.data.length!==ids.length||q.data.some(x=>x.viber_status!=='sent'))throw Error('База није потврдила слање за све ставке заједничког захтева.');
+   await markProcurementSent({client,rowIds:rows.map(x=>x.id)});
    await load();s.stage='confirm';setNote('Заједнички захтев је означен као стварно послат. Ставке сада чекају потврду газдинства.');
   }catch(error){try{await load();}catch(_){}setNote('Слање није у потпуности евидентирано: '+(error.message||String(error)),true);}
   finally{s.busy=false;render();}
