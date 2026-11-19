@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.0.5
+ * Version: 1.0.6
  * Updated: 2026-11-19
  * Description: Adds responsive order-detail action styling to ADMIN Workspace tour operations.
  * Public style.css is intentionally not included or modified.
@@ -878,3 +878,10 @@ body.closed-tours-open{overflow:hidden!important}
 .nd-workspace .nd-proc-allocation-recap small{display:block;margin-top:4px;color:#a7b4c7;font-size:10px;line-height:1.35}
 .nd-workspace .nd-proc-allocation-card .nd-proc-input-row{grid-template-columns:1fr minmax(100px,150px)}
 @media(max-width:390px){.nd-workspace .nd-proc-allocation-recap{gap:5px}.nd-workspace .nd-proc-allocation-recap span{padding:8px}.nd-workspace .nd-proc-allocation-recap b{font-size:16px}}
+
+/* Persistent mobile-first navigation inside the selected tour — v1.0.6 */
+.nd-tour-bottom-nav{position:fixed;z-index:55;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:8px max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:rgba(8,15,28,.96);border-top:1px solid rgba(148,163,184,.2);box-shadow:0 -10px 28px rgba(0,0,0,.28);backdrop-filter:blur(18px)}
+.nd-tour-bottom-nav[hidden]{display:none!important}.nd-tour-bottom-nav button{min-width:0;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid transparent;border-radius:12px;background:transparent;color:#94a3b8;font-size:10px;line-height:1.15;cursor:pointer}.nd-tour-bottom-nav button span{font-size:19px;line-height:1}.nd-tour-bottom-nav button b{font-weight:750;white-space:nowrap}.nd-tour-bottom-nav button.is-active{background:rgba(242,138,53,.15);border-color:rgba(242,138,53,.4);color:#ffc18d}.nd-tour-bottom-nav button:focus-visible{outline:3px solid rgba(249,115,22,.55);outline-offset:2px}
+body.nd-workspace:has(.nd-tour-bottom-nav:not([hidden])){padding-bottom:calc(82px + env(safe-area-inset-bottom))!important}
+@media(min-width:900px){.nd-tour-bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(900px,calc(100% - 48px));bottom:18px;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:7px;box-shadow:0 12px 34px rgba(0,0,0,.3)}.nd-tour-bottom-nav button{min-height:48px;flex-direction:row;gap:9px;font-size:12px}.nd-tour-bottom-nav button span{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.nd-tour-bottom-nav button{transition:none}}
