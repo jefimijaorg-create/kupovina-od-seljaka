@@ -1,8 +1,8 @@
 /*
  * NARUČI ДОМАЋЕ — PROCUREMENT WORKFLOW ACTIONS
- * Version: 1.1.0
+ * Version: 1.1.1
  * Updated: 2026-11-19
- * Description: Adds the atomic unconfirmed-quantity transfer RPC and read-back verification.
+ * Description: Returns unconfirmed supplier quantities to demand and verifies the history-backed update.
  * Scope: Existing ADMIN Workspace, existing Supabase schema/RLS/triggers only.
  */
 const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
@@ -85,25 +85,45 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
       !Number.isInteger(Number(collected)) || Number(collected) < 0) {
     throw new Error('Количине морају бити цели ненегативни бројеви паковања.');
   }
-  if (Number(confirmed) > number(row.naruceno_pakovanja)) throw new Error('Потврђена количина не може бити већа од послате.');
+  const fresh = await client.from('tura_nabavka_dodele')
+    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status')
+    .eq('id', row.id).maybeSingle();
+  if (fresh.error) throw new Error(fresh.error.message);
+  if (!fresh.data) throw new Error('Требовање више није доступно. Освежи приказ.');
+  const live = fresh.data;
+  const requested = number(live.naruceno_pakovanja);
+  if (Number(confirmed) > requested) throw new Error('Потврђена количина не може бити већа од послате.');
   if (Number(collected) > Number(confirmed)) throw new Error('Преузета количина не може бити већа од потврђене.');
+  if (Number(collected) < number(live.preuzeto_pakovanja)) throw new Error('Преузета количина не може бити накнадно умањена.');
+  if (live.viber_status !== 'sent' && live.viber_status !== 'replied') throw new Error('Потврда је дозвољена тек након слања захтева газдинству.');
+
   const now = new Date().toISOString();
   const patch = {
     potvrdjeno_pakovanja: Number(confirmed),
     preuzeto_pakovanja: Number(collected),
     updated_at: now
   };
-  if (Number(confirmed) !== number(row.potvrdjeno_pakovanja)) patch.potvrdjeno_at = Number(confirmed) ? now : null;
+  // Option 1: the quantity the farm cannot confirm returns to Требовање.
+  // The history trigger stores the complete before/after allocation snapshots.
+  if (Number(confirmed) < requested) {
+    patch.broj_pakovanja = Number(confirmed);
+    patch.naruceno_pakovanja = Number(confirmed);
+  }
+  if (Number(confirmed) !== number(live.potvrdjeno_pakovanja)) patch.potvrdjeno_at = Number(confirmed) ? now : null;
   const result = await client.from('tura_nabavka_dodele')
     .update(patch)
     .eq('id', row.id)
-    .select('id,potvrdjeno_pakovanja,preuzeto_pakovanja,potvrdjeno_at,updated_at')
+    .eq('naruceno_pakovanja', live.naruceno_pakovanja)
+    .eq('potvrdjeno_pakovanja', live.potvrdjeno_pakovanja)
+    .select('id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,potvrdjeno_at,updated_at')
     .maybeSingle();
   if (result.error) throw new Error(result.error.message);
   if (!result.data ||
       number(result.data.potvrdjeno_pakovanja) !== Number(confirmed) ||
-      number(result.data.preuzeto_pakovanja) !== Number(collected)) {
-    throw new Error('База није потврдила упис количина.');
+      number(result.data.preuzeto_pakovanja) !== Number(collected) ||
+      number(result.data.naruceno_pakovanja) !== Math.min(requested, Number(confirmed)) ||
+      number(result.data.broj_pakovanja) !== Math.min(number(live.broj_pakovanja), Number(confirmed))) {
+    throw new Error('База није потврдила упис потврде и враћање непотврђеног остатка у Требовање. Освежи приказ и провери историју.');
   }
   return result.data;
 }
