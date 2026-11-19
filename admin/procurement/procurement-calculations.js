@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT CALCULATIONS
- * Version: 1.3.0
+ * Version: 1.3.1
  * Updated: 2026-11-18
- * Description: Builds per-packaging totals and preserves source order quantities for each aggregated product/packaging demand.
+ * Description: Includes ordered products even when a packaging variant is not linked; blocks allocation until the missing variant is configured.
  * Scope: Existing ADMIN Workspace only.
  */
 const toNumber = (value) => { const number = Number(value); return Number.isFinite(number) ? number : 0; };
@@ -13,22 +13,25 @@ export function buildProcurementDemands({ items = [], products = [], variants = 
   const demandMap = new Map();
 
   for (const row of items) {
-    if (!row.product_id || !row.variant_id) continue;
-    const key = String(row.product_id) + '::' + String(row.variant_id);
+    if (!row.product_id) continue;
+    const variantKey = row.variant_id ? String(row.variant_id) : 'missing::' + String(row.package_size ?? '') + '::' + String(row.package_unit ?? '');
+    const key = String(row.product_id) + '::' + variantKey;
     if (!demandMap.has(key)) {
       demandMap.set(key, {
         productId: row.product_id, variantId: row.variant_id, packages: 0,
         packageSize: null, packageUnit: null, totalQuantity: 0,
-        valid: true, sourceRows: 0, invalidRows: 0, sourceOrders: []
+        valid: true, allocatable: !!row.variant_id, packagingLabel: '', sourceRows: 0, invalidRows: 0, sourceOrders: []
       });
     }
 
     const demand = demandMap.get(key);
     const product = productById.get(String(row.product_id));
     const variant = variantById.get(String(row.variant_id));
-    if (!product?.name || !variant || String(variant.product_id) !== String(row.product_id) || variant.is_active === false) {
+    if (!product?.name || (row.variant_id && (!variant || String(variant.product_id) !== String(row.product_id) || variant.is_active === false))) {
       demand.valid = false;
     }
+    if (!variant) demand.allocatable = false;
+    demand.packagingLabel = variant?.name || variant?.size_label || row.variant_name || demand.packagingLabel || (row.package_size && row.package_unit ? String(row.package_size) + ' ' + String(row.package_unit) : 'Амбалажа није повезана');
 
     const count = Number(row.package_count);
     const size = Number(row.package_size);
@@ -60,8 +63,8 @@ export function buildProcurementDemands({ items = [], products = [], variants = 
     const productA = productById.get(String(a.productId)), productB = productById.get(String(b.productId));
     const variantA = variantById.get(String(a.variantId)), variantB = variantById.get(String(b.variantId));
     const nameA = productA?.name || '', nameB = productB?.name || '';
-    const labelA = variantA?.name || variantA?.size_label || 'Варијанта није доступна';
-    const labelB = variantB?.name || variantB?.size_label || 'Варијанта није доступна';
+    const labelA = variantA?.name || variantA?.size_label || a.packagingLabel || 'Варијанта није доступна';
+    const labelB = variantB?.name || variantB?.size_label || b.packagingLabel || 'Варијанта није доступна';
     return nameA.localeCompare(nameB, 'sr') || labelA.localeCompare(labelB, 'sr');
   });
 }
