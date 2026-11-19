@@ -122,7 +122,7 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
       number(result.data.potvrdjeno_pakovanja) !== Number(confirmed) ||
       number(result.data.preuzeto_pakovanja) !== Number(collected) ||
       number(result.data.naruceno_pakovanja) !== Math.min(requested, Number(confirmed)) ||
-      number(result.data.broj_pakovanja) !== Math.min(number(live.broj_pakovanja), Number(confirmed))) {
+      number(result.data.broj_pakovanja) !== (Number(confirmed) < requested ? Number(confirmed) : number(live.broj_pakovanja))) {
     throw new Error('База није потврдила упис потврде и враћање непотврђеног остатка у Требовање. Освежи приказ и провери историју.');
   }
   return result.data;
