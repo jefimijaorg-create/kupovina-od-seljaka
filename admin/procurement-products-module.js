@@ -5,7 +5,7 @@
  * Description: Exposes the exact repository loading stage in the ADMIN panel to isolate stalled data reads.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
-import { loadProcurementData } from './data/admin-repository.js?v=1.0.2';
+import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
 import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.0.0';
