@@ -1,16 +1,16 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.0.0
+ * Version: 4.1.0
  * Updated: 2026-11-19
- * Description: Adds workflow action service and audit-history integration for the procurement redesign.
+ * Description: Adds atomic transfer of unconfirmed farm quantities to the procurement workflow.
  * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.2.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.3.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.0.0';
-import { loadProcurementHistory, markProcurementSent, saveProcurementTracking } from './procurement/procurement-workflow-actions.js?v=1.0.0';
+import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -53,7 +53,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.0.0';document.head.appendChild(style);
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -209,6 +209,8 @@ async function saveField(id){
   catch(err){setNote('Додела је сачувана, али припрема поруке није успела: '+(err.message||String(err)),true);}
  }
 host.addEventListener('change',ev=>{
+  if(ev.target.matches('[data-transfer-target]')){s.transferDraft.targetFarmId=ev.target.value;render();return;}
+  if(ev.target.matches('[data-transfer-count]')){s.transferDraft.packages=Number(ev.target.value);render();return;}
   if(ev.target.matches('[data-allocation-farm]')){
    const id=ev.target.value,ids=s.allocationDraft.selectedFarmIds.filter(x=>String(x)!==String(id));
    if(ev.target.checked)ids.push(id);s.allocationDraft.selectedFarmIds=ids;
@@ -230,6 +232,35 @@ host.addEventListener('change',ev=>{
   if(a==='back')return onBack?.();
   if(a==='open-request'){s.requestOpen=true;s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
   if(a==='close-request'){s.requestOpen=false;render();return;}
+  if(a==='open-transfer'){
+   const row=s.allocations.find(x=>String(x.id)===String(b.dataset.id));if(!row)return;
+   const candidates=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))].filter(id=>farm(id));
+   if(!candidates.length)return setNote('Нема другог газдинства са активном понудом за ову тачну варијанту.',true);
+   const available=Math.max(0,n(row.naruceno_pakovanja)-n(row.potvrdjeno_pakovanja));
+   if(!available)return setNote('Нема непотврђене количине за пренос.',true);
+   s.transferDraft={sourceId:String(row.id),targetFarmId:candidates[0],packages:available};s.transferOpen=true;render();return;
+  }
+  if(a==='close-transfer'){s.transferOpen=false;render();return;}
+  if(a==='confirm-transfer'){
+   if(s.busy)return;
+   const row=s.allocations.find(x=>String(x.id)===String(s.transferDraft?.sourceId));
+   const targetFarmId=s.transferDraft?.targetFarmId,count=Number(s.transferDraft?.packages);
+   const available=row?Math.max(0,n(row.naruceno_pakovanja)-n(row.potvrdjeno_pakovanja)):0;
+   if(!row)return setNote('Изворна расподела више није доступна. Освежи податке.',true);
+   if(!Number.isInteger(count)||count<1||count>available)return setNote('Унеси цео број паковања у оквиру непотврђене количине.',true);
+   if(!offer(row.product_id,row.variant_id,targetFarmId))return setNote('Циљно газдинство више нема активну понуду за ову варијанту.',true);
+   if(!window.confirm('Пренети '+count+' паковања са '+(farm(row.gazdinstvo_id)?.name||'изворног газдинства')+' на '+(farm(targetFarmId)?.name||'циљно газдинство')+'? Потврђена количина остаје код изворног газдинства.'))return;
+   s.busy=true;render();
+   try{
+    const result=await transferUnconfirmedProcurement({client,sourceRow:row,targetFarmId,packages:count});
+    await load();s.transferOpen=false;s.stage='confirm';
+    setNote('Пренос је потврђен у бази: '+f(result.transferred_packages)+' паковања је додато газдинству '+(farm(targetFarmId)?.name||('#'+targetFarmId))+'. Измењени захтеви су означени као неспремни за слање; Viber поруке нису аутоматски послате.');
+   }catch(error){
+    try{await load();}catch(_){}
+    setNote('Пренос није потврђен: '+(error.message||String(error))+' Освежи приказ пре новог покушаја.',true);
+   }finally{s.busy=false;render();}
+   return;
+  }
   if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
   if(a==='save-field')return saveField(b.dataset.id);
