@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.9.3
+ * Version: 4.9.4
  * Updated: 2026-11-19
  * Description: Applies the approved light visual frame to procurement header, phase navigation, view switch, summary metrics and main panel; preserves existing procurement behavior.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -9,9 +9,9 @@ import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
 import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.8.8';
-import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.5';
+import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.6';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
-import { saveProcurementAllocationCart, saveCustomerFarmAllocation } from './procurement/procurement-allocation-actions.js?v=1.1.1';
+import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities } from './procurement/procurement-allocation-actions.js?v=1.1.2';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -22,7 +22,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client;
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationDraft:{},transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false,preparedMessage:'',preparedMessageFarmName:''};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationDraft:{},orderDraft:{},transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false,preparedMessage:'',preparedMessageFarmName:''};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -51,7 +51,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-ordered(d.productId,d.variantId)));
 
  function render(){
-  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,editAllocationRow:s.allocations.find(x=>String(x.id)===String(s.editAllocationId))||null,editAllocationDraft:s.editAllocationDraft,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f,productId:s.requestProductId}),mountAnalyticsPanel:()=>{
+  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,editAllocationRow:s.allocations.find(x=>String(x.id)===String(s.editAllocationId))||null,editAllocationDraft:s.editAllocationDraft,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f,productId:s.requestProductId,orderDraft:s.orderDraft,writable:s.tour?.status==='processing',busy:s.busy}),mountAnalyticsPanel:()=>{
    s.analyticsHandle?.destroy();
    const analyticsRoot=host.querySelector('[data-tour-analytics-root]');
    if(analyticsRoot)s.analyticsHandle=mountTourAnalyticsPanel({root:analyticsRoot,client,tourId,intervalMs:30000});
@@ -140,6 +140,7 @@ async function saveField(id){
   catch(err){setNote('Додела је сачувана, али припрема поруке није успела: '+(err.message||String(err)),true);}
  }
 host.addEventListener('change',ev=>{
+  if(ev.target.matches('[data-customer-order-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(9999,Math.floor(Number(ev.target.value)||0)));s.orderDraft={...s.orderDraft,[String(item.id)]:value};render();return;}
   if(ev.target.matches('[data-customer-allocation-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(n(item.package_count),Math.floor(Number(ev.target.value)||0)));s.editAllocationDraft={...s.editAllocationDraft,[String(item.id)]:value};render();return;}
   if(ev.target.matches('[data-transfer-target]')){s.transferDraft.targetFarmId=ev.target.value;render();return;}
   if(ev.target.matches('[data-transfer-count]')){s.transferDraft.packages=Number(ev.target.value);render();return;}
@@ -162,8 +163,10 @@ host.addEventListener('change',ev=>{
   const a=b.dataset.action;
   if(a==='retry-load'){initialize();return;}
   if(a==='back')return onBack?.();
-  if(a==='open-request'){s.requestProductId=b.dataset.productId||null;s.requestOpen=true;s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
-  if(a==='close-request'){s.requestOpen=false;s.requestProductId=null;render();return;}
+  if(a==='open-request'){s.requestProductId=b.dataset.productId||null;s.requestOpen=true;s.orderDraft=Object.fromEntries(s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId)).map(item=>[String(item.id),n(item.package_count)]));s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
+  if(a==='close-request'){s.requestOpen=false;s.requestProductId=null;s.orderDraft={};render();return;}
+  if(a==='customer-order-step'){const item=s.items.find(x=>String(x.id)===String(b.dataset.itemId));if(!item)return;const current=n(s.orderDraft[String(item.id)]??item.package_count),next=Math.max(0,Math.min(9999,current+Number(b.dataset.delta||0)));s.orderDraft={...s.orderDraft,[String(item.id)]:next};render();return;}
+  if(a==='save-customer-orders'){if(s.busy)return;const rows=s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId));s.busy=true;render();try{const saved=await saveCustomerOrderQuantities({client,tourId,items:rows,draft:s.orderDraft});await load();s.orderDraft=Object.fromEntries(s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId)).map(item=>[String(item.id),n(item.package_count)]));setNote(saved.updated?'Измењено је '+f(saved.updated)+' поруџбина купаца. Укупна потреба је поново обрачуната; расподела газдинствима није аутоматски мењана.':'Нема нових измена поруџбина.');}catch(err){setNote('Поруџбине нису измењене: '+(err.message||String(err)),true);}finally{s.busy=false;render();}return;}
   if(a==='edit-allocation'){const row=s.allocations.find(x=>String(x.id)===String(b.dataset.id));if(!row)return;if(row.viber_status!=='not_sent'||n(row.potvrdjeno_pakovanja)>0||n(row.preuzeto_pakovanja)>0)return setNote('Ова додела више није у фази Захтев и не може се мењати овде.',true);const rows=s.items.filter(item=>key(item.product_id,item.variant_id)===key(row.product_id,row.variant_id)).sort((x,y)=>Number(x.id)-Number(y.id));const draft={};let used=0;for(const item of rows){const current=(item.farm_allocations||[]).filter(x=>String(x.gazdinstvo_id)===String(row.gazdinstvo_id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);if(current>0){draft[String(item.id)]=current;used+=current;}}let remaining=Math.max(0,n(row.broj_pakovanja)-used);for(const item of rows){if(Object.prototype.hasOwnProperty.call(draft,String(item.id)))continue;const count=Math.min(remaining,n(item.package_count));draft[String(item.id)]=count;remaining-=count;}s.editAllocationId=String(row.id);s.editAllocationDraft=draft;render();return;}
   if(a==='close-allocation-edit'){s.editAllocationId=null;s.editAllocationDraft={};render();return;}
   if(a==='customer-allocation-step'){const item=s.items.find(x=>String(x.id)===String(b.dataset.itemId));if(!item)return;const current=n(s.editAllocationDraft[String(item.id)]),next=Math.max(0,Math.min(n(item.package_count),current+Number(b.dataset.delta||0)));s.editAllocationDraft={...s.editAllocationDraft,[String(item.id)]:next};render();return;}
