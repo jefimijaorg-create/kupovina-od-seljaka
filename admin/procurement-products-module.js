@@ -3,7 +3,7 @@
  * Version: 4.1.0
  * Updated: 2026-11-19
  * Description: Adds atomic transfer of unconfirmed farm quantities to the procurement workflow.
- * Scope: Existing ADMIN Workspace, existing Supabase schema and RLS only. No legacy panel dependency and no schema changes.
+ * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
@@ -254,7 +254,7 @@ host.addEventListener('change',ev=>{
    try{
     const result=await transferUnconfirmedProcurement({client,sourceRow:row,targetFarmId,packages:count});
     await load();s.transferOpen=false;s.stage='confirm';
-    setNote('Пренос је потврђен у бази: '+f(result.transferred_packages)+' паковања је додато газдинству '+(farm(targetFarmId)?.name||('#'+targetFarmId))+'. Измењени захтеви су означени као неспремни за слање; Viber поруке нису аутоматски послате.');
+    setNote('Пренос је потврђен у бази: '+f(result.transferred_packages)+' паковања је додато газдинству '+(farm(targetFarmId)?.name||('#'+targetFarmId))+'. Циљни захтев и сваки преостали непотврђени захтев враћени су на статус „није послато“; Viber поруке нису аутоматски послате.');
    }catch(error){
     try{await load();}catch(_){}
     setNote('Пренос није потврђен: '+(error.message||String(error))+' Освежи приказ пре новог покушаја.',true);
