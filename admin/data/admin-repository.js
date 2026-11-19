@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — ADMIN DATA REPOSITORY
- * Version: 1.0.2
+ * Version: 1.0.3
  * Updated: 2026-11-18
- * Description: Reads procurement workspace data and source order IDs for procurement traceability; performs no writes and changes no schema or RLS.
+ * Description: Adds precise read-stage diagnostics to identify stalled procurement data queries; performs no writes.
  * Scope: ADMIN Workspace only.
  */
 
@@ -12,7 +12,7 @@ const unwrap = (result, label) => {
   return result.data || [];
 };
 
-export async function loadProcurementData({ client, tourId }) {
+export async function loadProcurementData({ client, tourId, onProgress = () => {} }) {
   if (!client || typeof client.from !== 'function') {
     throw new TypeError('Репозиторијум захтева постојећи аутентификовани Supabase клијент.');
   }
@@ -20,6 +20,7 @@ export async function loadProcurementData({ client, tourId }) {
     throw new TypeError('ID туре није наведен.');
   }
 
+  onProgress('1/6 · Читам податке туре…');
   const tourResult = await client.from('ture')
     .select('id,naziv,status,datum')
     .eq('id', tourId)
@@ -28,6 +29,7 @@ export async function loadProcurementData({ client, tourId }) {
   if (!tourResult.data) throw new Error('Тура није пронађена или немате дозволу за читање.');
   const tour = tourResult.data;
 
+  onProgress('2/6 · Читам ставке поруџбина…');
   const itemResult = await client.from('stavke_porudzbine')
     .select('id,porudzbina_id,product_id,variant_id,package_count,package_size,package_unit')
     .eq('tura_id', tourId);
@@ -36,6 +38,7 @@ export async function loadProcurementData({ client, tourId }) {
   const productIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.product_id));
   const variantIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.variant_id));
 
+  onProgress('3/6 · Читам производе, амбалажу и постојеће расподеле…');
   const [productsResult, variantsResult, allocationsResult] = await Promise.all([
     productIds.length
       ? client.from('products').select('id,name,category').in('id', productIds)
@@ -56,6 +59,7 @@ export async function loadProcurementData({ client, tourId }) {
   const demandPairs = new Set(items
     .filter((row) => row.product_id && row.variant_id)
     .map((row) => String(row.product_id) + '::' + String(row.variant_id)));
+  onProgress('4/6 · Проверавам активне понуде газдинстава…');
   const offerResult = productIds.length
     ? await client.from('product_offers')
       .select('id,gazdinstvo_id,product_id,variant_id,purchase_price,is_active')
@@ -70,6 +74,7 @@ export async function loadProcurementData({ client, tourId }) {
     ...relevantOffers.map((offer) => offer.gazdinstvo_id),
     ...allocations.map((row) => row.gazdinstvo_id)
   ]);
+  onProgress('5/6 · Учитавају се подаци газдинстава…');
   const farmResult = farmIds.length
     ? await client.from('gazdinstva')
       .select('id,name,phone')
@@ -78,6 +83,7 @@ export async function loadProcurementData({ client, tourId }) {
     : { data: [], error: null };
   const farms = unwrap(farmResult, 'Газдинства');
 
+  onProgress('6/6 · Завршавам обраду података…');
   return {
     tour,
     items,
