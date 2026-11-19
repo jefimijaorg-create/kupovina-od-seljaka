@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.0.0
- * Updated: 2026-11-18
- * Description: Renders the three procurement stages, product/farm grouping and the farm request overlay. No database access or writes.
+ * Version: 1.0.1
+ * Updated: 2026-11-19
+ * Description: Executes and returns the stage renderer so the ADMIN module displays loaded procurement data. No database access or writes.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -79,4 +79,6 @@ export function renderProcurementStageView(ctx){
    '<div class="ndp3-foot">Подаци се читају и уписују у постојеће Supabase табеле. Назив производа долази преко product_id → products.name. Количине се рачунају из package_count × package_size.</div>';
   mountAnalyticsPanel?.();
  }
- }
+ render();
+ return render;
+}
