@@ -1,4 +1,4 @@
-/* ADMIN PROCUREMENT ORDER SHEET · V1.0.1 · 2026-11-19
+/* ADMIN PROCUREMENT ORDER SHEET · V1.0.2 · 2026-11-19
  * Одговорност: детаљ поруџбине, статус набавке, додела пункта и количине паковања.
  * Користи постојећи аутентификовани Supabase клијент ADMIN Workspace-а и прослеђено стање.
  */
@@ -39,45 +39,7 @@ export function createProcurementOrderSheet({ client, getState, refresh }) {
     </section>`;
   document.body.append(root);
 
-  const style = document.createElement('style');
-  style.textContent = `
-    .nd-order-backdrop{position:fixed;inset:0;z-index:120;background:rgba(2,6,23,.72);backdrop-filter:blur(3px)}
-    .nd-order-sheet{position:fixed;z-index:121;left:0;right:0;bottom:0;margin:0 auto;width:100%;max-width:880px;max-height:92dvh;overflow:hidden;display:flex;flex-direction:column;background:#111c32;color:#f8fafc;border:1px solid #334155;border-radius:22px 22px 0 0;box-shadow:0 -18px 60px rgba(0,0,0,.4)}
-    .nd-order-backdrop[hidden],.nd-order-sheet[hidden]{display:none!important}
-    .nd-order-head{display:flex;justify-content:space-between;gap:16px;padding:20px 20px 14px;border-bottom:1px solid #334155}
-    .nd-order-kicker{font-size:10px;font-weight:900;letter-spacing:.14em;color:#fb923c}
-    .nd-order-head h2{font-size:24px;font-weight:900;margin:4px 0}
-    .nd-order-head p{font-size:13px;color:#a7b4c7;margin:0}
-    .nd-order-close{width:44px;height:44px;border-radius:14px;background:#26364e;color:#fff;font-size:28px;line-height:1}
-    .nd-order-content{overflow:auto;padding:16px 20px 22px;overscroll-behavior:contain}
-    .nd-order-foot{padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #334155;display:flex;justify-content:flex-end;background:#111c32}
-    .nd-order-secondary,.nd-order-primary{min-height:46px;padding:11px 16px;border-radius:13px;font-weight:800}
-    .nd-order-secondary{background:#26364e;color:#e2e8f0}
-    .nd-order-primary{background:#ea580c;color:white}
-    .nd-order-primary:disabled,.nd-order-secondary:disabled{opacity:.5}
-    .nd-order-grid{display:grid;grid-template-columns:1fr;gap:12px}
-    .nd-order-card{border:1px solid #334155;border-radius:16px;padding:15px;background:#17243b}
-    .nd-order-card h3{font-size:14px;font-weight:900;margin:0 0 12px;color:#e2e8f0}
-    .nd-order-field{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:800;color:#a7b4c7}
-    .nd-order-field select,.nd-order-field input{width:100%;min-height:48px;border-radius:12px;background:#0b1222;color:#f8fafc;border:1px solid #475569;padding:10px 12px}
-    .nd-order-actions{display:flex;justify-content:flex-end;margin-top:12px}
-    .nd-order-line{padding:13px 0;border-top:1px solid #334155;display:grid;grid-template-columns:1fr;gap:9px}
-    .nd-order-line:first-of-type{border-top:0}
-    .nd-order-line-title{font-weight:900;font-size:14px}
-    .nd-order-line-meta{font-size:12px;color:#a7b4c7;margin-top:4px}
-    .nd-order-line-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
-    .nd-order-line-controls input{width:100%;min-height:46px;border:1px solid #475569;border-radius:12px;padding:9px 12px;background:#0b1222;color:#fff}
-    .nd-order-line-total{font-size:13px;font-weight:900;text-align:right;white-space:nowrap}
-    .nd-order-muted{font-size:12px;color:#94a3b8}
-    .nd-order-warning{padding:11px 12px;border-radius:12px;background:rgba(217,119,6,.14);border:1px solid rgba(245,158,11,.35);color:#fcd34d;font-size:12px}
-    .nd-order-error{padding:11px 12px;border-radius:12px;background:rgba(220,38,38,.14);border:1px solid rgba(248,113,113,.35);color:#fecaca;font-size:13px}
-    .nd-order-success{padding:11px 12px;border-radius:12px;background:rgba(5,150,105,.14);border:1px solid rgba(16,185,129,.35);color:#a7f3d0;font-size:13px}
-    .nd-order-loading{padding:35px 10px;text-align:center;color:#cbd5e1}
-    .nd-order-summary{display:flex;justify-content:space-between;gap:12px;align-items:center}
-    .nd-order-summary strong{font-size:20px}
-    @media(min-width:768px){.nd-order-sheet{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(880px,calc(100% - 32px));max-height:88dvh;border-radius:22px}.nd-order-grid{grid-template-columns:1fr 1fr}.nd-order-line{grid-template-columns:minmax(0,1fr) minmax(190px,.55fr);align-items:center}.nd-order-content{padding:20px 24px}.nd-order-head{padding:22px 24px 16px}}
-  `;
-  document.head.append(style);
+
 
   const $ = selector => root.querySelector(selector);
   const getOrder = id => (getState().orders || []).find(row => String(row.id) === String(id));
@@ -124,7 +86,7 @@ export function createProcurementOrderSheet({ client, getState, refresh }) {
             <div class="nd-order-line-title">${esc(productName(line))}</div>
             <div class="nd-order-line-meta">${esc(packageText(line))}</div>
             ${!line.product_id || !(getState().productCatalog || []).some(p => String(p.id) === String(line.product_id))
-              ? '<div class="nd-order-warning" style="margin-top:8px">Ставка нема потврђену везу са каталогом. Назив није преузет из старог текстуалног поља.</div>' : ''}
+              ? '<div class="nd-order-warning nd-order-mt-8">Ставка нема потврђену везу са каталогом. Назив није преузет из старог текстуалног поља.</div>' : ''}
           </div>
           <div class="nd-order-line-controls">
             <label class="nd-order-field">Број паковања
@@ -148,22 +110,22 @@ export function createProcurementOrderSheet({ client, getState, refresh }) {
           <label class="nd-order-field">Фаза набавке
             <select data-field="procurement_status">${statusOptions}</select>
           </label>
-          <label class="nd-order-field" style="margin-top:12px">Пункт за целу поруџбину
+          <label class="nd-order-field nd-order-mt-12">Пункт за целу поруџбину
             <select data-field="punkt_id">${pointOptions}</select>
           </label>
-          <div class="nd-order-muted" style="margin-top:9px">Основни статус поруџбине: <strong>${esc(order.status || 'није наведен')}</strong></div>
+          <div class="nd-order-muted nd-order-mt-9">Основни статус поруџбине: <strong>${esc(order.status || 'није наведен')}</strong></div>
           <div class="nd-order-actions"><button type="button" class="nd-order-primary" data-action="save-order" ${state.saving ? 'disabled' : ''}>Сачувај статус и пункт</button></div>
         </section>
         <section class="nd-order-card">
           <h3>Подаци поруџбине</h3>
           <div class="nd-order-muted">Поруџбина #${esc(order.id)}</div>
-          <div class="nd-order-summary" style="margin-top:12px"><span>Укупан износ</span><strong>${money(number(order.ukupna_cena))}</strong></div>
-          <div class="nd-order-muted" style="margin-top:8px">Тренутни пункт: ${esc(point?.name || 'Није додељен')}</div>
-          ${order.adresa_dostave ? '<div class="nd-order-muted" style="margin-top:6px">Адреса: ' + esc(order.adresa_dostave) + '</div>' : ''}
+          <div class="nd-order-summary nd-order-mt-12"><span>Укупан износ</span><strong>${money(number(order.ukupna_cena))}</strong></div>
+          <div class="nd-order-muted nd-order-mt-8">Тренутни пункт: ${esc(point?.name || 'Није додељен')}</div>
+          ${order.adresa_dostave ? '<div class="nd-order-muted nd-order-mt-6">Адреса: ' + esc(order.adresa_dostave) + '</div>' : ''}
         </section>
       </div>
-      <section class="nd-order-card" style="margin-top:14px">
-        <div class="nd-order-summary"><h3 style="margin:0">Ставке поруџбине · ${state.lines.length}</h3><span class="nd-order-muted">Промена количине се чува по ставци</span></div>
+      <section class="nd-order-card nd-order-mt-14">
+        <div class="nd-order-summary"><h3 class="nd-order-title-reset">Ставке поруџбине · ${state.lines.length}</h3><span class="nd-order-muted">Промена количине се чува по ставци</span></div>
         ${lineHtml}
         ${state.lines.length ? '<div class="nd-order-actions"><button type="button" class="nd-order-primary" data-action="save-quantities" ' + (state.saving ? 'disabled' : '') + '>Сачувај количине</button></div>' : ''}
       </section>`;
@@ -313,7 +275,7 @@ export function createProcurementOrderSheet({ client, getState, refresh }) {
     destroy() {
       document.removeEventListener('keydown', onKeydown);
       root.remove();
-      style.remove();
+
     }
   };
 }
