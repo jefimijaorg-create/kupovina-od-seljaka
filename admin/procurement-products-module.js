@@ -1,14 +1,14 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.3.0
+ * Version: 4.4.3
  * Updated: 2026-11-19
- * Description: Adds product-first request cards and product-scoped farm allocation using existing Supabase data.
+ * Description: Rebuilds procurement request cards as complete product-and-packaging groups and consolidates responsive phase styling.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.5.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.6.2';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
@@ -18,8 +18,6 @@ const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const key=(p,v)=>String(p)+'::'+String(v);
 const CSS=`
-.ndp3-farm-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;margin:12px 0}.ndp3-farm-check{display:flex!important;grid-template-columns:none!important;align-items:center;gap:9px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#09172a}.ndp3-farm-check input{width:20px;height:20px;min-height:20px;accent-color:#36a878}.ndp3-allocation-field{display:grid!important;grid-template-columns:minmax(0,1fr) 100px;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line)}.ndp3-allocation-field input{min-height:42px;text-align:right}.ndp3-allocation-total{margin-top:8px;padding:9px;background:#18334a;border-radius:9px;font-size:11px;color:#cbd6e5}.ndp3-allocation-product{padding:12px;border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#0d1b30}
-
 .ndp3-farm-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;margin:12px 0}.ndp3-farm-check{display:flex!important;grid-template-columns:none!important;align-items:center;gap:9px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#09172a}.ndp3-farm-check input{width:20px;height:20px;min-height:20px;accent-color:#36a878}.ndp3-allocation-field{display:grid!important;grid-template-columns:minmax(0,1fr) 100px;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line)}.ndp3-allocation-field input{min-height:42px;text-align:right}.ndp3-allocation-total{margin-top:8px;padding:9px;background:#18334a;border-radius:9px;font-size:11px;color:#cbd6e5}.ndp3-allocation-product{padding:12px;border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#0d1b30}
 
 .ndp3{--bg:#091426;--panel:#111f34;--line:#293c57;--muted:#9aabc1;--gold:#ffc18d;background:var(--bg);color:#eef3fa;border:1px solid var(--line);border-radius:20px;padding:12px;min-height:75vh;font-family:inherit}
@@ -89,12 +87,52 @@ const CSS=`
 .ndp3-request-package-count small{font-size:10px;font-weight:650;color:var(--muted)}
 .ndp3-request-product-action{margin-top:10px}
 .ndp3-request-product-action .ndp3-btn{width:100%;min-height:49px}
+
+/* Unified phase navigation and complete product-first request cards */
+.ndp3-phase-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:14px 0;padding:5px;border:1px solid var(--line);border-radius:15px;background:#091426}
+.ndp3-phase-tab{min-width:0;min-height:58px;padding:8px 4px;border:1px solid transparent;border-radius:11px;background:transparent;color:#aebdd0;font:inherit;font-size:12px;font-weight:850;line-height:1.2;cursor:pointer}
+.ndp3-phase-tab small{display:block;margin-top:5px;color:#8799b0;font-size:9px;font-weight:650;white-space:normal}
+.ndp3-phase-tab[aria-selected="true"]{background:#253b58;border-color:#7590b3;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,193,141,.12)}
+.ndp3-phase-tab[aria-selected="true"] small{color:#ffc18d}
+.ndp3-request-product-card{box-shadow:0 8px 22px rgba(0,0,0,.12)}
+.ndp3-request-package-row{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.ndp3-request-package-count{min-width:76px}
+.ndp3-request-allocation-list{display:grid;gap:6px;margin:8px 0 2px}
+.ndp3-request-allocation{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px;border:1px solid #293c57;border-radius:10px;background:#091426}
+.ndp3-request-allocation strong{display:block;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+.ndp3-request-allocation small{display:block;margin-top:3px;color:#9aabc1;font-size:10px;line-height:1.35}
+.ndp3-request-allocation .ndp3-btn{min-height:40px;padding:7px 9px;font-size:10px}
+.ndp3-request-product-action{display:grid;gap:7px}
+.ndp3-request-product-action .ndp3-btn{width:100%;min-height:50px}
+.ndp3-stage-group{padding:12px;border:1px solid var(--line);border-radius:14px;background:#111f34;margin:10px 0}
+.ndp3-stage-group>header{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.ndp3-stage-line{padding:11px 0;border-top:1px solid var(--line)}
+.ndp3-stage-line:first-of-type{border-top:0}
+.ndp3-stage-line-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.ndp3-stage-values{margin:9px 0}
+.ndp3-stage-input{margin-top:10px}
+.ndp3-stage-input label{display:grid;gap:7px;color:#cbd6e5;font-size:11px;font-weight:800}
+.ndp3-stage-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.ndp3-stage-actions .ndp3-btn{flex:1 1 145px}
+.ndp3-stage-empty{padding:16px;border:1px dashed #405572;border-radius:12px;color:#a9b8ca;font-size:12px;line-height:1.5}
+@media(max-width:520px){
+ .ndp3-phase-tabs{gap:3px;padding:4px}
+ .ndp3-phase-tab{min-height:60px;padding:7px 2px;font-size:10px}
+ .ndp3-phase-tab small{font-size:8px}
+ .ndp3-request-product-head{align-items:flex-start}
+ .ndp3-request-package-row{gap:5px}
+ .ndp3-request-package-count{min-width:65px;font-size:14px}
+ .ndp3-request-allocation{grid-template-columns:minmax(0,1fr);gap:7px}
+ .ndp3-request-allocation .ndp3-btn{width:100%}
+}
+
+.ndp3-stage-package{margin:8px 0;padding:9px;border:1px solid #293c57;border-radius:11px;background:#0d1b30}.ndp3-stage-package>header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px}.ndp3-stage-package>header strong{font-size:12px;color:#ffc18d}.ndp3-stage-package .ndp3-stage-line{padding:10px 0}
 @media(min-width:760px){.ndp3-request-products{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;
 export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  if(!root||!core?.client||!tourId)throw new Error('Недостаје ADMIN контекст или ID туре.');
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
- const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.3.0';document.head.appendChild(style);
+ const client=core.client,style=document.createElement('style');style.textContent=CSS;style.dataset.ndProcurementProducts='4.4.3';document.head.appendChild(style);
  const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:'request',view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));

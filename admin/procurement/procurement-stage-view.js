@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.5.0
+ * Version: 1.6.2
  * Updated: 2026-11-19
- * Description: Groups unassigned procurement demand by product and opens farm allocation for all its packaging variants.
+ * Description: Groups all procurement phases by product, packaging and farm with concise mobile-first hierarchy.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -13,8 +13,7 @@ export function renderProcurementStageView(ctx){
   const requestRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
-  const unassigned=s.demands.filter(d=>d.valid&&Math.max(0,d.packages-allocated(d.productId,d.variantId))>0);
-  const rows=s.stage==='request'?requestRows:s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
+  const rows=s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
   const transferCandidates=row=>{const ids=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))];return ids.map(id=>farm(id)).filter(Boolean);};
   const sourceSummary=d=>{const totals=new Map();(d?.sourceOrders||[]).forEach(x=>{const id=x.orderId===null||x.orderId===undefined?'без броја':String(x.orderId);totals.set(id,(totals.get(id)||0)+n(x.packageCount));});return [...totals].map(([id,count])=>(id==='без броја'?'Изворна ставка':'Поруџбина #'+id)+' · '+f(count)+' пак.').join(' · ')||'Извор поруџбине није доступан';};
   const historyHtml=()=>{
@@ -49,35 +48,66 @@ export function renderProcurementStageView(ctx){
    }else{
     controls='<div class="ndp3-stage-input"><label>Стварно преузето (паковања)<input type="number" inputmode="numeric" pattern="[0-9]*" min="'+f(collected)+'" max="'+f(confirmed)+'" step="1" data-field="preuzeto_pakovanja" data-id="'+e(row.id)+'" value="'+f(collected)+'" '+(!writable||s.busy||!canCollectProcurement(row)?'disabled':'')+'></label><div><div class="ndp3-stage-line-meta">Преостало за преузимање: <strong>'+f(Math.max(0,confirmed-collected))+' паковања</strong></div><div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="save-field" data-id="'+e(row.id)+'" '+(!writable||s.busy||!canCollectProcurement(row)?'disabled':'')+'>Евидентирај преузимање</button></div></div></div>';
    }
-   return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(p?.name||'Производ')+' · '+e(v?.name||v?.size_label||'Паковање')+'</div><div class="ndp3-stage-line-meta">'+e(ff?.name||'Газдинство није пронађено')+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div><div class="ndp3-stage-line-meta">Извор: '+e(sourceSummary(d))+'</div><div class="ndp3-stage-values">'+values+'</div>'+controls+'</article>';
+   const lineTitle=s.view==='farms'?(p?.name||'Производ')+' · '+(v?.name||v?.size_label||'Паковање'):(ff?.name||'Газдинство није пронађено');
+   return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(lineTitle)+'</div><div class="ndp3-stage-line-meta">'+e(ff?.name||'Газдинство није пронађено')+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div><div class="ndp3-stage-line-meta">Извор: '+e(sourceSummary(d))+'</div><div class="ndp3-stage-values">'+values+'</div>'+controls+'</article>';
   };
   const groupedRows=()=>{
    const groups=new Map();
    for(const row of rows){
-    const groupKey=s.view==='farms'?String(row.gazdinstvo_id):key(row.product_id,row.variant_id);
+    const groupKey=s.view==='farms'?String(row.gazdinstvo_id):String(row.product_id);
     if(!groups.has(groupKey))groups.set(groupKey,[]);
     groups.get(groupKey).push(row);
    }
    return [...groups.entries()].map(([groupKey,groupRows])=>{
-    const first=groupRows[0],title=s.view==='farms'?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ')+' · '+(variant(first.variant_id)?.name||variant(first.variant_id)?.size_label||'Паковање');
+    const first=groupRows[0],title=s.view==='farms'?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ');
     let actions='';
     if(s.stage==='request'&&s.view==='farms'){
      actions='<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Припреми Viber поруку</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди да је захтев послат</button></div>';
     }
-    return '<section class="ndp3-stage-group"><header><strong>'+e(title)+'</strong><span class="ndp3-chip">'+groupRows.length+' ставки</span></header>'+groupRows.map(lineHtml).join('')+actions+'</section>';
+    let body='';
+    if(s.view==='farms'){
+     body=groupRows.map(lineHtml).join('');
+    }else{
+     const packages=new Map();
+     for(const row of groupRows){
+      const id=String(row.variant_id);
+      if(!packages.has(id))packages.set(id,[]);
+      packages.get(id).push(row);
+     }
+     body=[...packages.entries()].map(([variantId,packageRows])=>{
+      const v=variant(variantId),label=v?.name||v?.size_label||'Амбалажа';
+      return '<section class="ndp3-stage-package"><header><strong>'+e(label)+'</strong><span class="ndp3-chip">'+packageRows.length+' газдинстава</span></header>'+packageRows.map(lineHtml).join('')+'</section>';
+     }).join('');
+    }
+    return '<section class="ndp3-stage-group"><header><strong>'+e(title)+'</strong><span class="ndp3-chip">'+(s.view==='farms'?groupRows.length+' ставки':new Set(groupRows.map(x=>String(x.variant_id))).size+' амбалаже')+'</span></header>'+body+actions+'</section>';
    }).join('');
   };
-  const unassignedGroups=new Map();
-  for(const d of unassigned){const id=String(d.productId);if(!unassignedGroups.has(id))unassignedGroups.set(id,[]);unassignedGroups.get(id).push(d);}
-  const unassignedHtml=unassignedGroups.size?'<div class="ndp3-request-intro">У фази „Захтев“ прво изабери производ. Затим означи једно или више газдинстава која имају активну понуду и распореди сваку амбалажу. Газдинство се не додељује унапред.</div><section class="ndp3-request-products">'+[...unassignedGroups.entries()].map(([productId,items])=>{
-   const p=prod(productId),remainingPackages=items.reduce((sum,d)=>sum+Math.max(0,d.packages-allocated(d.productId,d.variantId)),0);
-   return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+f(remainingPackages)+' паковања преостало за расподелу</div></div><span class="ndp3-chip amber">За расподелу</span></header>'+items.map(d=>{
-    const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId);
-    return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||'Амбалажа')+'</b><small>Потребно: '+packageLabel(d.packages)+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Извор: '+e(sourceSummary(d))+'</small></div><div class="ndp3-request-package-count">'+f(remaining)+' <small>паковања</small><small>'+e(amountLabel(remaining,d))+'</small></div></div>';
-   }).join('')+'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Расподели газдинствима</button></div></article>';
-  }).join('')+'</section>':'';
+  const requestProductsHtml=(()=>{
+   const groups=new Map();
+   for(const d of s.demands.filter(x=>x.valid)){
+    const id=String(d.productId);
+    if(!groups.has(id))groups.set(id,[]);
+    groups.get(id).push(d);
+   }
+   if(!groups.size)return '<div class="ndp3-stage-empty">Нема производа са исправним подацима о амбалажи за ову туру.</div>';
+   return '<div class="ndp3-request-intro">Сваки производ је приказан као једна целина. Испод су све амбалаже, постојеће доделе газдинствима и количине које још треба распоредити.</div><section class="ndp3-request-products">'+[...groups.entries()].map(([productId,items])=>{
+    const p=prod(productId);
+    const remainingAll=items.reduce((sum,d)=>sum+Math.max(0,d.packages-allocated(d.productId,d.variantId)),0);
+    const allAssigned=items.every(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId))===0);
+    return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+(allAssigned?'Све потребне количине су распоређене':f(remainingAll)+' паковања преостало за расподелу')+'</div></div><span class="ndp3-chip '+(allAssigned?'green':'amber')+'">'+(allAssigned?'Распоређено':'У току')+'</span></header>'+items.map(d=>{
+     const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId),assigned=allocationsFor(d.productId,d.variantId);
+     const assignmentHtml=assigned.length?'<div class="ndp3-request-allocation-list">'+assigned.map(row=>{
+      const ff=farm(row.gazdinstvo_id),requested=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja),collected=n(row.preuzeto_pakovanja),sent=row.viber_status==='sent';
+      const state=collected>=confirmed&&confirmed>0?'Преузето':confirmed>0?'Делимично потврђено':sent?'Чека потврду':'Чека слање';
+      const canSend=row.viber_status==='not_sent'&&requested>confirmed;
+      return '<div class="ndp3-request-allocation"><div><strong>'+e(ff?.name||'Газдинство #'+row.gazdinstvo_id)+' · '+f(requested)+' пак.</strong><small>'+e(state)+' · Потврђено '+f(confirmed)+' · Преузето '+f(collected)+'</small></div>'+(canSend?'<button class="ndp3-btn" type="button" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање</button>':'')+'</div>';
+     }).join('')+'</div>':'<div class="ndp3-request-product-total">Још нема додела газдинствима.</div>';
+     return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||'Амбалажа')+'</b><small>Потребно: '+packageLabel(d.packages)+' · Распоређено: '+packageLabel(allocated(d.productId,d.variantId))+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно потребно: '+e(amountLabel(d.packages,d))+' · Извор: '+e(sourceSummary(d))+'</small>'+assignmentHtml+'</div><div class="ndp3-request-package-count">'+f(remaining)+' <small>преостало</small></div></div>';
+    }).join('')+(remainingAll>0?'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Расподели преостало по газдинствима</button></div>':'')+'</article>';
+   }).join('')+'</section>';
+  })();
   const contentRows=groupedRows();
-  const phaseContent=s.stage==='history'?historyHtml():s.stage==='request'?(unassignedHtml+contentRows||'<div class="ndp3-stage-empty">Све потребне количине су додељене или већ имају захтев. Нема ставки које чекају захтев.</div>'):
+  const phaseContent=s.stage==='history'?historyHtml():s.stage==='request'?requestProductsHtml:
    (contentRows||'<div class="ndp3-stage-empty">'+(s.stage==='confirm'?'Нема послатих захтева који чекају потврду.':'Нема потврђених количина које чекају преузимање.')+'</div>');
   const invalidDemandCount=s.demands.filter(x=>!x.valid).length;
   const invalidSourceCount=s.items.filter(x=>!x.product_id||!x.variant_id).length;
