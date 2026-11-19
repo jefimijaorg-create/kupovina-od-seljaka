@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — ADMIN DATA REPOSITORY
- * Version: 1.0.4
- * Updated: 2026-11-18
- * Description: Loads the existing tour pickup-point schedule for accurate farm procurement messages; performs no writes.
+ * Version: 1.0.5
+ * Updated: 2026-11-19
+ * Description: Loads the full product catalogue and variants for procurement while preserving tour demand and active-offer filtering; performs no writes.
  * Scope: ADMIN Workspace only.
  */
 
@@ -57,14 +57,15 @@ export async function loadProcurementData({ client, tourId, onProgress = () => {
   const productIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.product_id));
   const variantIds = uniq(items.filter((row) => row.product_id && row.variant_id).map((row) => row.variant_id));
 
-  onProgress('4/7 · Читам производе, амбалажу и постојеће расподеле…');
+  onProgress('4/7 · Читам цео каталог производа, амбалажу и постојеће расподеле…');
   const [productsResult, variantsResult, allocationsResult] = await Promise.all([
-    productIds.length
-      ? client.from('products').select('id,name,category').in('id', productIds)
-      : Promise.resolve({ data: [], error: null }),
-    variantIds.length
-      ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,is_active').in('id', variantIds)
-      : Promise.resolve({ data: [], error: null }),
+    client.from('products')
+      .select('id,name,category,is_active,has_variants')
+      .order('name', { ascending: true }),
+    client.from('product_variants')
+      .select('id,product_id,name,size_label,unit,package_value,package_unit,is_active,sort_order')
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true }),
     client.from('tura_nabavka_dodele')
       .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,naruceno,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status,viber_poslato_at,potvrdjeno_at,updated_at')
       .eq('tura_id', tourId)
