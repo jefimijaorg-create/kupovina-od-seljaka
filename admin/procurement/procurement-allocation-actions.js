@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT ALLOCATION ACTIONS
- * Version: 1.1.0
+ * Version: 1.1.1
  * Updated: 2026-11-19
  * Description: Validates and persists procurement allocation carts and safely edits unsent allocation quantities.
  * Scope: Existing ADMIN Workspace; existing Supabase tables and RLS only. No schema changes.
@@ -62,6 +62,76 @@ export async function saveProcurementAllocationCart({client,tourId,cart,demands,
   }
   if(rollbackErrors.length)throw new Error((writeError.message||String(writeError))+' Аутоматско враћање није у потпуности успело: '+rollbackErrors.join('; '));
   throw writeError;
+ }
+}
+
+
+export async function saveCustomerFarmAllocation({client,tourId,row,items,draft}={}) {
+ if(!client||!tourId||!row||!Array.isArray(items)||!items.length)throw new Error('Недостају подаци за расподелу по купцима.');
+ const tourResult=await client.from('ture').select('status').eq('id',tourId).maybeSingle();
+ if(tourResult.error)throw new Error(tourResult.error.message);
+ if(tourResult.data?.status!=='processing')throw new Error('Измене су дозвољене само на тури у статусу обраде.');
+ const currentResult=await client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status').eq('id',row.id).maybeSingle();
+ if(currentResult.error)throw new Error(currentResult.error.message);
+ const current=currentResult.data;
+ if(!current||String(current.tura_id)!==String(tourId)||current.viber_status!=='not_sent'||n(current.potvrdjeno_pakovanja)>0||n(current.preuzeto_pakovanja)>0)throw new Error('Ово требовање је већ послато или је прешло у каснију фазу. Освежи податке.');
+ const itemIds=items.map(item=>item.id);
+ const freshItemsResult=await client.from('stavke_porudzbine').select('id,package_count,product_id,variant_id,tura_id').in('id',itemIds).eq('tura_id',tourId);
+ if(freshItemsResult.error)throw new Error(freshItemsResult.error.message);
+ const freshItems=freshItemsResult.data||[];
+ if(freshItems.length!==itemIds.length||freshItems.some(item=>String(item.product_id)!==String(current.product_id)||String(item.variant_id)!==String(current.variant_id)))throw new Error('Ставке поруџбина више не одговарају изабраном производу и амбалажи.');
+ const allocationResult=await client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja,created_at,updated_at').in('stavka_porudzbine_id',itemIds);
+ if(allocationResult.error)throw new Error(allocationResult.error.message);
+ const existing=allocationResult.data||[];
+ const counts=new Map();let total=0;
+ for(const item of freshItems){
+  const count=Number(draft?.[String(item.id)]??0),ordered=n(item.package_count);
+  if(!Number.isInteger(count)||count<0||count>ordered)throw new Error('Количина за купца мора бити цео број од 0 до наручене количине.');
+  const other=existing.filter(x=>String(x.stavka_porudzbine_id)===String(item.id)&&String(x.gazdinstvo_id)!==String(current.gazdinstvo_id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
+  if(other+count>ordered)throw new Error('Додела за купца премашује наручену количину након других газдинстава.');
+  counts.set(String(item.id),count);total+=count;
+ }
+ if(total<1)throw new Error('Додели најмање једно паковање овом газдинству.');
+ const updated=[],inserted=[],deleted=[];let aggregateChanged=false;
+ try{
+  for(const item of freshItems){
+   const itemId=String(item.id),count=counts.get(itemId);
+   const targetRows=existing.filter(x=>String(x.stavka_porudzbine_id)===itemId&&String(x.gazdinstvo_id)===String(current.gazdinstvo_id));
+   if(count>0){
+    if(targetRows.length){
+     const [first,...duplicates]=targetRows;
+     const result=await client.from('tura_stavke_raspodela').update({broj_pakovanja:count,updated_at:new Date().toISOString()}).eq('id',first.id).select('id').maybeSingle();
+     if(result.error||!result.data)throw new Error(result.error?.message||'Расподела купца није ажурирана.');
+     updated.push(first);
+     for(const duplicate of duplicates){const removed=await client.from('tura_stavke_raspodela').delete().eq('id',duplicate.id);if(removed.error)throw new Error(removed.error.message);deleted.push(duplicate);}
+    }else{
+     const result=await client.from('tura_stavke_raspodela').insert({stavka_porudzbine_id:item.id,gazdinstvo_id:current.gazdinstvo_id,broj_pakovanja:count}).select('id').single();
+     if(result.error||!result.data)throw new Error(result.error?.message||'Нова расподела купца није сачувана.');
+     inserted.push(result.data.id);
+    }
+   }else{
+    for(const old of targetRows){const removed=await client.from('tura_stavke_raspodela').delete().eq('id',old.id);if(removed.error)throw new Error(removed.error.message);deleted.push(old);}
+   }
+  }
+  const aggregate=await client.from('tura_nabavka_dodele').update({broj_pakovanja:total,naruceno_pakovanja:total,updated_at:new Date().toISOString()}).eq('id',current.id).eq('viber_status','not_sent').eq('potvrdjeno_pakovanja',0).eq('preuzeto_pakovanja',0).select('id,broj_pakovanja,naruceno_pakovanja').maybeSingle();
+  if(aggregate.error||!aggregate.data)throw new Error(aggregate.error?.message||'Укупна додела газдинству није ажурирана.');
+  aggregateChanged=true;
+  const verifyRows=await client.from('tura_stavke_raspodela').select('stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',itemIds);
+  if(verifyRows.error)throw new Error(verifyRows.error.message);
+  for(const item of freshItems){
+   const actual=(verifyRows.data||[]).filter(x=>String(x.stavka_porudzbine_id)===String(item.id)&&String(x.gazdinstvo_id)===String(current.gazdinstvo_id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
+   if(actual!==counts.get(String(item.id)))throw new Error('База није потврдила расподелу за сваког купца.');
+  }
+  if(n(aggregate.data.broj_pakovanja)!==total||n(aggregate.data.naruceno_pakovanja)!==total)throw new Error('База није потврдила укупан збир доделе.');
+  return {total};
+ }catch(error){
+  const rollback=[];
+  if(aggregateChanged){const restore=await client.from('tura_nabavka_dodele').update({broj_pakovanja:current.broj_pakovanja,naruceno_pakovanja:current.naruceno_pakovanja}).eq('id',current.id);if(restore.error)rollback.push(restore.error.message);}
+  for(const id of inserted){const result=await client.from('tura_stavke_raspodela').delete().eq('id',id);if(result.error)rollback.push(result.error.message);}
+  for(const old of updated){const result=await client.from('tura_stavke_raspodela').update({broj_pakovanja:old.broj_pakovanja,updated_at:old.updated_at}).eq('id',old.id);if(result.error)rollback.push(result.error.message);}
+  for(const old of deleted){const result=await client.from('tura_stavke_raspodela').insert({stavka_porudzbine_id:old.stavka_porudzbine_id,gazdinstvo_id:old.gazdinstvo_id,broj_pakovanja:old.broj_pakovanja,created_at:old.created_at,updated_at:old.updated_at});if(result.error)rollback.push(result.error.message);}
+  if(rollback.length)throw new Error((error.message||String(error))+' Враћање претходног стања није у потпуности успело: '+rollback.join('; '));
+  throw error;
  }
 }
 
