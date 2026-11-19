@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.8.2
+ * Version: 1.8.3
  * Updated: 2026-11-19
- * Description: Shows every catalogue product in Trebovanje, separately identifying products without tour orders and inactive products; preserves allocation workflow.
+ * Description: Shows only products ordered on the selected tour, including rows with missing variant links; prevents invalid allocation.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -85,7 +85,7 @@ export function renderProcurementStageView(ctx){
   };
   const requestProductsHtml=(()=>{
    const groups=new Map();
-   for(const d of s.demands.filter(x=>x.valid)){
+   for(const d of s.demands.filter(x=>x.valid && x.productId)){
     const id=String(d.productId);
     if(!groups.has(id))groups.set(id,[]);
     groups.get(id).push(d);
@@ -95,6 +95,7 @@ export function renderProcurementStageView(ctx){
     const p=prod(productId);
     const remainingAll=items.reduce((sum,d)=>sum+Math.max(0,d.packages-allocated(d.productId,d.variantId)),0);
     const allAssigned=items.every(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId))===0);
+    const allocationReady=items.every(d=>d.allocatable===true);
     return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+(allAssigned?'Све потребне количине су распоређене':f(remainingAll)+' паковања преостало за расподелу')+'</div></div><span class="ndp3-chip '+(allAssigned?'green':'amber')+'">'+(allAssigned?'Распоређено':'У току')+'</span></header>'+items.map(d=>{
      const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId),assigned=allocationsFor(d.productId,d.variantId);
      const assignmentHtml=assigned.length?'<div class="ndp3-request-allocation-list">'+assigned.map(row=>{
@@ -103,30 +104,11 @@ export function renderProcurementStageView(ctx){
       const canSend=row.viber_status==='not_sent'&&requested>confirmed;
       return '<div class="ndp3-request-allocation"><div><strong>'+e(ff?.name||'Газдинство #'+row.gazdinstvo_id)+' · '+f(requested)+' пак.</strong><small>'+e(state)+' · Потврђено '+f(confirmed)+' · Преузето '+f(collected)+'</small></div>'+(row.viber_status==='not_sent'&&confirmed===0&&collected===0?'<button class="ndp3-btn" type="button" data-action="edit-allocation" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Уреди доделу</button>':'')+(canSend?'<button class="ndp3-btn" type="button" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање</button>':'')+'</div>';
      }).join('')+'</div>':'<div class="ndp3-request-product-total">Још нема додела газдинствима.</div>';
-     return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||'Амбалажа')+'</b><small>Потребно: '+packageLabel(d.packages)+' · Распоређено: '+packageLabel(allocated(d.productId,d.variantId))+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно потребно: '+e(amountLabel(d.packages,d))+' · Извор: '+e(sourceSummary(d))+'</small>'+assignmentHtml+'</div><div class="ndp3-request-package-count">'+f(remaining)+' <small>преостало</small></div></div>';
-    }).join('')+(remainingAll>0?'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Требуј преостало по газдинствима</button></div>':'')+'</article>';
+     return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||d.packagingLabel||'Амбалажа')+'</b>'+(!d.allocatable?'<small class="ndp3-note error">Амбалажа није повезана са варијантом производа. Количина је приказана, али расподела је блокирана док се веза не исправи.</small>':'')+'<small>Потребно: '+packageLabel(d.packages)+' · Распоређено: '+packageLabel(allocated(d.productId,d.variantId))+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно потребно: '+e(amountLabel(d.packages,d))+' · Извор: '+e(sourceSummary(d))+'</small>'+assignmentHtml+'</div><div class="ndp3-request-package-count">'+f(remaining)+' <small>преостало</small></div></div>';
+    }).join('')+(remainingAll>0&&allocationReady?'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Требуј преостало по газдинствима</button></div>':(!allocationReady?'<div class="ndp3-request-product-total">Расподела није доступна док се не повеже недостајућа амбалажа.</div>':''))+'</article>';
    }).join('')+'</section>'
     : '<div class="ndp3-stage-empty">На овој тури нема производа са исправним подацима о амбалажи.</div>';
-   const sourceProductIds=new Set(s.items.filter(row=>row.product_id).map(row=>String(row.product_id)));
-   const catalogOnlyProducts=s.products
-    .filter(product=>!sourceProductIds.has(String(product.id)))
-    .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'sr'));
-   const catalogHtml=catalogOnlyProducts.length
-    ? '<div class="ndp3-request-intro">Комплетан каталог производа је испод. Производи без поруџбина на овој тури приказани су информативно и не могу се требовати док не постоји стварна потреба из поруџбина.</div><section class="ndp3-request-products"><header class="ndp3-row"><h3>Остали производи из каталога</h3><span class="ndp3-chip">'+catalogOnlyProducts.length+' производа</span></header>'+catalogOnlyProducts.map(product=>{
-     const productVariants=s.variants
-      .filter(item=>String(item.product_id)===String(product.id))
-      .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
-     const variantLabels=productVariants.length
-      ? productVariants.map(item=>{
-         const label=item.name||item.size_label||([item.package_value,item.package_unit||item.unit].filter(Boolean).join(' '))||'Амбалажа';
-         return e(label)+(item.is_active===false?' (неактивна)':'');
-        }).join(' · ')
-      : 'Амбалажа није дефинисана';
-     const active=product.is_active!==false;
-     return '<article class="ndp3-request-product-card"><header class="ndp3-request-product-head"><div><strong>'+e(product.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+e(product.category||'Без категорије')+'</div></div><span class="ndp3-chip '+(active?'green':'red')+'">'+(active?'Активан':'Неактиван')+'</span></header><div class="ndp3-request-product-total">Амбалажа: '+e(variantLabels)+'</div><div class="ndp3-request-product-total">'+(active?'Нема поруџбина за ову туру.':'Неактиван производ — није део требовања.')+'</div></article>';
-    }).join('')+'</section>'
-    : '';
-   return demandedProductsHtml+catalogHtml;
+   return demandedProductsHtml;
   })();
   const requestFarmsHtml=(()=>{
    const groups=new Map();
@@ -145,8 +127,9 @@ export function renderProcurementStageView(ctx){
   const phaseContent=s.stage==='history'?historyHtml():s.stage==='request'?(s.view==='farms'?requestFarmsHtml:requestProductsHtml):
    (contentRows||'<div class="ndp3-stage-empty">'+(s.stage==='confirm'?'Нема послатих требовања која чекају потврду.':'Нема потврђених количина које чекају преузимање.')+'</div>');
   const invalidDemandCount=s.demands.filter(x=>!x.valid).length;
-  const invalidSourceCount=s.items.filter(x=>!x.product_id||!x.variant_id).length;
-  const demandWarning=(invalidDemandCount||invalidSourceCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација производа/варијанте и '+invalidSourceCount+' изворних ставки без производа или варијанте нису укључене у збирове.</div>':'';
+  const invalidSourceCount=s.items.filter(x=>!x.product_id).length;
+  const missingVariantCount=s.demands.filter(x=>x.valid&&!x.allocatable).length;
+  const demandWarning=(invalidDemandCount||invalidSourceCount||missingVariantCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација и '+invalidSourceCount+' ставки без производа нису укључене у збирове. '+missingVariantCount+' производа имају поруџбину, али им недостаје повезана амбалажа; приказани су, али расподела је блокирана.</div>':'';
   host.innerHTML='<style>.ndp3-history-list{display:grid;gap:9px}.ndp3-modal-dialog label{display:grid;gap:7px;color:#cbd6e5;font-size:12px;font-weight:800}.ndp3-modal-dialog .ndp3-select{min-height:48px}.ndp3-history-item{padding:12px;border:1px solid var(--line);border-radius:12px;background:#0b192d}.ndp3-history-item>header{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}.ndp3-history-item time{font-size:10px;color:var(--muted)}.ndp3-history-changes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px}.ndp3-history-changes span{padding:7px;border-radius:8px;background:#091426;min-width:0}.ndp3-history-changes small{display:block;color:var(--muted);font-size:9px}.ndp3-history-changes b{display:block;font-size:10px;overflow-wrap:anywhere}@media(max-width:420px){.ndp3-history-changes{grid-template-columns:1fr}}</style><header class="ndp3-head"><div><div class="ndp3-kicker">ОПЕРАТИВНА ТАБЛА · ТУРА #'+e(tourId)+'</div><h1>Набавка</h1><p>'+e(s.tour?.naziv||'Тура')+' · Сви производи и паковања из базе</p></div><button class="ndp3-btn" data-action="back">← Назад</button></header>'+
    '<nav class="ndp3-phase-tabs" aria-label="Фазе набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'" >Требовање<small>'+(requestDemandCount)+' ставки</small></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'">Потврда<small>'+confirmRows.length+' ставки</small></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'">Преузимање<small>'+collectRows.length+' ставки</small></button><button class="ndp3-phase-tab" data-stage="history" aria-selected="'+(s.stage==='history')+'">Историја<small>'+history.length+'</small></button></nav>'+
    '<div class="ndp3-view-switch"><button type="button" data-view="products" aria-pressed="'+(s.view==='products')+'">По производима</button><button type="button" data-view="farms" aria-pressed="'+(s.view==='farms')+'">По газдинствима</button></div>'+
