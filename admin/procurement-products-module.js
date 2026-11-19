@@ -1,14 +1,14 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.6.3
+ * Version: 4.6.4
  * Updated: 2026-11-19
- * Description: Fixes low-contrast product title and remaining-quantity text in procurement request cards; preserves layout and workflows.
+ * Description: Names the first procurement phase Trebovanje and prepares Viber messages with tour date, pickup schedule and farm phone.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
-import { loadProcurementData } from './data/admin-repository.js?v=1.0.3';
+import { loadProcurementData } from './data/admin-repository.js?v=1.0.4';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.0';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.8.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.8.1';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.2.0';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.0';
 import { saveProcurementAllocationCart, updateUnsentProcurementAllocation } from './procurement/procurement-allocation-actions.js?v=1.1.0';
@@ -176,7 +176,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const setNote=(v,err=false)=>{s.notice=v;s.error=err;render();};
  async function load(onProgress){
   const d=await loadProcurementData({client,tourId,onProgress});
-  Object.assign(s,{tour:d.tour,items:d.items,products:d.products,variants:d.variants,farms:d.farms,offers:d.relevantOffers,allocations:d.allocations});
+  Object.assign(s,{tour:d.tour,tourPoints:d.tourPoints||[],items:d.items,products:d.products,variants:d.variants,farms:d.farms,offers:d.relevantOffers,allocations:d.allocations});
   s.demands=buildProcurementDemands({items:s.items,products:s.products,variants:s.variants});
   s.history=await loadProcurementHistory({client,tourId,limit:300});
  }
@@ -211,12 +211,15 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
   const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   if(!rows.length)return setNote('Ово газдинство нема захтев који чека слање.',true);
   const ff=farm(farmId);
-  const text='Поштовани'+(ff?.name?' '+ff.name:'')+',\n\nМолимо вас да потврдите захтев за туру #'+tourId+':\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+': '+f(x.naruceno_pakovanja)+' паковања ('+qty(x.naruceno_pakovanja,d)+')';}).join('\n')+'\n\nМолимо потврдите количине које можете да припремите. Хвала!';
+  const phone=String(ff?.phone||'').trim();
+  const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
+  const schedule=(s.tourPoints||[]).map(point=>(point.vreme?point.vreme+' — ':'')+point.name).join('\n');
+  const text='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(x.naruceno_pakovanja)+' паковања ('+qty(x.naruceno_pakovanja,d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
   try{
    if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
    const phone=String(ff?.phone||'').replace(/[^\d+]/g,'');
    if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);
-   setNote(phone?'Порука је копирана и Viber разговор је отворен. Након стварног слања потврди слање.':'Порука је припремљена. За газдинство није наведен телефон; копирај поруку и пошаљи је ручно.');
+   setNote(viberPhone?'Требовање је копирано и Viber разговор је отворен. Након стварног слања потврди слање.':'Порука је припремљена. За газдинство није наведен телефон; копирај поруку и пошаљи је ручно.');
   }catch(error){setNote('Припрема поруке није успела: '+(error.message||String(error)),true);}
  }
  async function markFarmSent(farmId){
