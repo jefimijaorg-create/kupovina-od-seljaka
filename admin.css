@@ -2003,3 +2003,45 @@ body.nd-workspace{
 .nd-workspace .nd-grouped-orders .nd-go-phone{
   color:#536458!important;
 }
+
+
+/* МОДУЛ НАБАВКА — ШИРИНА И ЧИТЉИВОСТ ПОТВРДЕ И ПРЕУЗИМАЊА */
+.ndp3 .ndp3-stage-group,
+.ndp3 .ndp3-stage-package,
+.ndp3 .ndp3-stage-line{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.ndp3 .ndp3-stage-package>header{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  padding:9px 10px;
+  border:1px solid #DCE4DC;
+  border-radius:10px;
+  background:#F3F5F2;
+  color:#344238;
+}
+.ndp3 .ndp3-stage-package>header strong{color:#285B3C}
+.ndp3 .ndp3-stage-input,
+.ndp3 .ndp3-stage-input>label,
+.ndp3 .ndp3-stage-input>div{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.ndp3 .ndp3-stage-input label{font-size:13px;line-height:1.45}
+.ndp3 .ndp3-stage-input input{
+  width:100%;
+  min-width:0;
+  min-height:54px;
+  box-sizing:border-box;
+  padding:10px 14px;
+}
+.ndp3 .ndp3-stage-input .ndp3-stage-line-meta{font-size:13px;line-height:1.5}
+@media(max-width:520px){
+  .ndp3 .ndp3-stage-actions{display:grid;grid-template-columns:minmax(0,1fr);width:100%}
+  .ndp3 .ndp3-stage-actions .ndp3-btn{width:100%;min-width:0;min-height:52px;flex:none;white-space:normal}
+}
