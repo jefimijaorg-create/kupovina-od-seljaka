@@ -155,7 +155,7 @@ export async function saveCustomerOrderQuantities({client,tourId,items,draft}={}
  if(!changes.length)return {updated:0};
  const changedKeys=[...new Set(changes.map(x=>key(x.productId,x.variantId)))];
  const [allocationRows,customerShares]=await Promise.all([
-  client.from('tura_nabavka_dodele').select('id,product_id,variant_id,viber_status,potvrdjeno_pakovanja,preuzeto_pakovanja').eq('tura_id',tourId),
+  client.from('tura_nabavka_dodele').select('id,product_id,variant_id,broj_pakovanja,viber_status,potvrdjeno_pakovanja,preuzeto_pakovanja').eq('tura_id',tourId),
   client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',ids)
  ]);
  if(allocationRows.error)throw new Error(allocationRows.error.message);
@@ -163,6 +163,9 @@ export async function saveCustomerOrderQuantities({client,tourId,items,draft}={}
  for(const change of changes){
   const assigned=(customerShares.data||[]).filter(x=>String(x.stavka_porudzbine_id)===String(change.id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
   if(assigned>change.newCount)throw new Error('Нова наручена количина не може бити мања од већ додељене количине купца. Прво измени расподелу газдинствима.');
+  const proposedDemand=rows.filter(x=>key(x.product_id,x.variant_id)===key(change.productId,change.variantId)).reduce((sum,x)=>sum+(String(x.id)===String(change.id)?change.newCount:n(x.package_count)),0);
+  const aggregateAssigned=(allocationRows.data||[]).filter(x=>key(x.product_id,x.variant_id)===key(change.productId,change.variantId)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
+  if(aggregateAssigned>proposedDemand)throw new Error('Нова укупна наручена количина је мања од већ распоређене количине за ову амбалажу. Прво измени расподелу газдинствима.');
   const progressed=(allocationRows.data||[]).filter(x=>key(x.product_id,x.variant_id)===key(change.productId,change.variantId)).some(x=>x.viber_status!=='not_sent'||n(x.potvrdjeno_pakovanja)>0||n(x.preuzeto_pakovanja)>0);
   if(progressed)throw new Error('Ова амбалажа већ има послато или потврђено требовање газдинству. Измена поруџбине је закључана да се не би разишле послате количине.');
  }
