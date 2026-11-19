@@ -43,7 +43,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     .nd-go-count{font-size:11px;font-weight:900;color:#286344;background:#e5efe6;border:1px solid #d4e3d5;padding:5px 9px;border-radius:8px;white-space:nowrap}
     .nd-go-drop{padding:12px;display:grid;gap:10px;min-height:52px;transition:background .15s,border-color .15s}
     .nd-go-drop.nd-go-over{background:rgba(234,88,12,.10);outline:2px dashed #f97316;outline-offset:-5px}
-    .nd-go-customer{border:1px solid #e0e8e0;border-radius:11px;background:#f8faf7;padding:10px;display:grid;gap:8px}.nd-go-buyer{border:1px solid #e0e8e0;border-radius:11px;background:#f8faf7;padding:10px;display:grid;gap:8px}.nd-go-buyer-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.nd-go-order-card{border:1px solid #e1e8e1;border-radius:9px;background:#fff;padding:9px;display:grid;gap:8px}
+    .nd-go-customer{border:1px solid #e0e8e0;border-radius:11px;background:#f8faf7;padding:10px;display:grid;gap:8px}.nd-go-buyer{border:1px solid #e0e8e0;border-radius:11px;background:#f8faf7;padding:10px;display:grid;gap:8px}.nd-go-buyer-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:7px 9px;border-radius:8px;background:#f8faf7;color:#20352a}.nd-go-order-card{border:1px solid #e1e8e1;border-radius:9px;background:#fff;padding:9px;display:grid;gap:8px}
     .nd-go-customer-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .nd-go-customer-name{font-weight:900;color:#20352a;font-size:14px}
     .nd-go-phone{display:block;color:#617266;font-size:12px;margin-top:4px}
