@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.7.3
+ * Version: 1.7.4
  * Updated: 2026-11-19
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -1728,15 +1728,36 @@ body.nd-workspace{
 @media(max-width:420px){.ndp3 .ndp3-customer-allocation-row{gap:7px;padding:9px}.ndp3 .ndp3-customer-allocation-controls{gap:4px}.ndp3 .ndp3-customer-allocation-controls>button{width:32px;height:38px}.ndp3 .ndp3-customer-allocation-controls>input{width:44px;height:38px}.ndp3 .ndp3-customer-allocation-copy>strong{font-size:13px}}
 
 
-/* МОДУЛ НАБАВКА — ИЗМЕНА НАРУЏБИНА КУПАЦА */
-.ndp3 .ndp3-customer-order-edit{align-items:center}
-.ndp3 .ndp3-customer-order-controls{display:flex;align-items:center;gap:6px;flex:0 0 auto}
-.ndp3 .ndp3-customer-order-controls>button{width:38px;height:42px;border:1px solid #285B3C;border-radius:10px;background:#FFFFFF;color:#285B3C;font-size:23px;font-weight:900;line-height:1}
+/* МОДУЛ НАБАВКА — УРЕЂЕН ПРИКАЗ ИЗМЕНЕ ПОРУЏБИНА */
+.ndp3 .ndp3-customer-orders{padding:14px;background:#F3F5F2;border:1px solid #DCE4DC;border-radius:15px}
+.ndp3 .ndp3-customer-orders-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.ndp3 .ndp3-customer-orders-head>div{display:grid;gap:3px;min-width:0}
+.ndp3 .ndp3-customer-orders-head strong{font-size:15px;line-height:1.3;color:#344238}
+.ndp3 .ndp3-customer-orders-head small{font-size:11px;line-height:1.4;font-weight:500;color:#59685D}
+.ndp3 .ndp3-customer-orders-head>b{flex:0 0 auto;padding:6px 9px;border-radius:20px;background:#E4ECE5;color:#285B3C;font-size:12px}
+.ndp3 .ndp3-customer-orders-list{display:grid;gap:8px}
+.ndp3 .ndp3-customer-order-edit{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px;background:#FFFFFF;border:1px solid #E0E6E0;border-radius:12px;min-width:0}
+.ndp3 .ndp3-customer-order-name{display:grid;gap:4px;min-width:0}
+.ndp3 .ndp3-customer-order-name>strong{font-size:14px;line-height:1.3;font-weight:850;overflow-wrap:anywhere;color:#344238}
+.ndp3 .ndp3-customer-order-name>span,.ndp3 .ndp3-customer-order-name>small{font-size:11px;line-height:1.35;color:#59685D}
+.ndp3 .ndp3-customer-order-name>.ndp3-customer-order-mass{font-size:12px;font-weight:800;color:#285B3C}
+.ndp3 .ndp3-customer-order-edit-field{display:grid;justify-items:center;gap:4px}
+.ndp3 .ndp3-customer-order-edit-field>label{font-size:10px;line-height:1.2;font-weight:800;color:#59685D;text-transform:uppercase;letter-spacing:.04em}
+.ndp3 .ndp3-customer-order-edit-field>small{font-size:10px;color:#59685D}
+.ndp3 .ndp3-customer-order-controls{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+.ndp3 .ndp3-customer-order-controls>button{width:36px;height:40px;border:1px solid #B9C9BC;border-radius:9px;background:#FFFFFF;color:#285B3C;font-size:22px;font-weight:900;line-height:1}
 .ndp3 .ndp3-customer-order-controls>button:disabled{opacity:.4}
-.ndp3 .ndp3-customer-order-controls>input{width:58px;min-width:0;height:42px;padding:4px;border:1px solid #AAB8AC;border-radius:10px;background:#FFFFFF;color:#344238;text-align:center;font-size:17px;font-weight:900}
-.ndp3 .ndp3-customer-orders-total{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:11px 12px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF;color:#344238;font-size:12px;font-weight:800}
+.ndp3 .ndp3-customer-order-controls>input{width:48px;min-width:0;height:40px;padding:4px;border:1px solid #285B3C;border-radius:9px;background:#FFFFFF;color:#344238;text-align:center;font-size:17px;font-weight:900}
+.ndp3 .ndp3-customer-orders-total{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding:12px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF;color:#344238;font-size:12px;font-weight:800}
 .ndp3 .ndp3-customer-orders-total>b{color:#285B3C;font-size:14px;text-align:right}
 .ndp3 .ndp3-customer-orders-save{width:100%;min-height:48px;margin-top:10px}
 .ndp3 .ndp3-customer-orders-saved,.ndp3 .ndp3-customer-orders-help{display:block;margin-top:9px;color:#344238;font-size:11px;line-height:1.45}
 .ndp3 .ndp3-customer-orders-help{color:#59685D}
-@media(max-width:420px){.ndp3 .ndp3-customer-order-edit{gap:7px;padding:9px}.ndp3 .ndp3-customer-order-controls{gap:4px}.ndp3 .ndp3-customer-order-controls>button{width:33px;height:39px}.ndp3 .ndp3-customer-order-controls>input{width:46px;height:39px}.ndp3 .ndp3-customer-order-name>strong{font-size:13px}}
+@media(max-width:420px){
+ .ndp3 .ndp3-customer-orders{padding:10px}
+ .ndp3 .ndp3-customer-order-edit{grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:10px}
+ .ndp3 .ndp3-customer-order-name>strong{font-size:13px}
+ .ndp3 .ndp3-customer-order-controls{gap:4px}
+ .ndp3 .ndp3-customer-order-controls>button{width:32px;height:38px}
+ .ndp3 .ndp3-customer-order-controls>input{width:42px;height:38px}
+}
