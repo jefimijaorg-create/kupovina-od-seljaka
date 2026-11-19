@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.8.5
+ * Version: 1.8.6
  * Updated: 2026-11-19
- * Description: Adds an in-app copyable message preview for farms without a phone or when clipboard access fails.
+ * Description: Shows per-farm customer names and their allocated package quantities in the procurement request view.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -102,7 +102,19 @@ export function renderProcurementStageView(ctx){
       const ff=farm(row.gazdinstvo_id),requested=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja),collected=n(row.preuzeto_pakovanja),sent=row.viber_status==='sent';
       const state=collected>=confirmed&&confirmed>0?'Преузето':confirmed>0?'Делимично потврђено':sent?'Чека потврду':'Чека слање';
       const canSend=row.viber_status==='not_sent'&&requested>confirmed;
-      return '<div class="ndp3-request-allocation"><div><strong>'+e(ff?.name||'Газдинство #'+row.gazdinstvo_id)+' · '+f(requested)+' пак.</strong><small>'+e(state)+' · Потврђено '+f(confirmed)+' · Преузето '+f(collected)+'</small></div>'+(row.viber_status==='not_sent'&&confirmed===0&&collected===0?'<button class="ndp3-btn" type="button" data-action="edit-allocation" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Уреди доделу</button>':'')+(canSend?'<button class="ndp3-btn" type="button" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање</button>':'')+'</div>';
+      const customerTotals=new Map();
+      for(const item of s.items.filter(source=>String(source.product_id)===String(d.productId)&&String(source.variant_id)===String(d.variantId))){
+       for(const farmShare of (item.farm_allocations||[]).filter(share=>String(share.gazdinstvo_id)===String(row.gazdinstvo_id))){
+        const customerKey=item.customer_id===null||item.customer_id===undefined?'missing:'+String(item.id):String(item.customer_id);
+        const current=customerTotals.get(customerKey)||{name:item.customer_name||'Купац није повезан',packages:0};
+        current.packages+=n(farmShare.broj_pakovanja);
+        customerTotals.set(customerKey,current);
+       }
+      }
+      const customerBreakdown=customerTotals.size
+       ? '<div class="ndp3-customer-breakdown"><b>Купци и њихове количине</b>'+[...customerTotals.values()].map(customer=>'<span><strong>'+e(customer.name)+'</strong><small>'+f(customer.packages)+' × '+f(d.packageSize)+' '+e(d.packageUnit)+' ('+e(qty(customer.packages,d))+')</small></span>').join('')+'</div>'
+       : '<div class="ndp3-customer-breakdown"><small>Појединачна расподела купаца за ово газдинство није евидентирана.</small></div>';
+      return '<div class="ndp3-request-allocation"><div><strong>'+e(ff?.name||'Газдинство #'+row.gazdinstvo_id)+' · '+f(requested)+' пак.</strong><small>'+e(state)+' · Потврђено '+f(confirmed)+' · Преузето '+f(collected)+'</small>'+customerBreakdown+'</div>'+(row.viber_status==='not_sent'&&confirmed===0&&collected===0?'<button class="ndp3-btn" type="button" data-action="edit-allocation" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Уреди доделу</button>':'')+(canSend?'<button class="ndp3-btn" type="button" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање</button>':'')+'</div>';
      }).join('')+'</div>':'<div class="ndp3-request-product-total">Још нема додела газдинствима.</div>';
      return '<div class="ndp3-request-package-row"><div><b>'+e(v?.name||v?.size_label||d.packagingLabel||'Амбалажа')+'</b>'+(!d.allocatable?'<small class="ndp3-note error">Амбалажа није повезана са варијантом производа. Количина је приказана, али расподела је блокирана док се веза не исправи.</small>':'')+'<small>Потребно: '+packageLabel(d.packages)+' · Распоређено: '+packageLabel(allocated(d.productId,d.variantId))+' · Преостало: '+packageLabel(remaining)+'</small><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно потребно: '+e(amountLabel(d.packages,d))+' · Извор: '+e(sourceSummary(d))+'</small>'+assignmentHtml+'</div><div class="ndp3-request-package-count">'+f(remaining)+' <small>преостало</small></div></div>';
     }).join('')+(remainingAll>0&&allocationReady?'<div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" data-product-id="'+e(productId)+'" '+(!writable||s.busy?'disabled':'')+'>Требуј преостало по газдинствима</button></div>':(!allocationReady?'<div class="ndp3-request-product-total">Расподела није доступна док се не повеже недостајућа амбалажа.</div>':''))+'</article>';
