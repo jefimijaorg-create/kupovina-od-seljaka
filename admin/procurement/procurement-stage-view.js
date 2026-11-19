@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.8.8
+ * Version: 1.8.9
  * Updated: 2026-11-19
  * Description: Shows per-farm customer names and their allocated package quantities in the procurement request view.
  * Scope: Existing ADMIN Workspace only.
@@ -87,7 +87,7 @@ export function renderProcurementStageView(ctx){
   };
   const requestProductsHtml=(()=>{
    const groups=new Map();
-   for(const d of s.demands.filter(x=>x.valid && x.productId)){
+   for(const d of s.demands.filter(x=>x.valid && x.productId && Math.max(0,x.packages-allocated(x.productId,x.variantId))>0)){
     const id=String(d.productId);
     if(!groups.has(id))groups.set(id,[]);
     groups.get(id).push(d);
