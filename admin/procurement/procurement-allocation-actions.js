@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT ALLOCATION ACTIONS
- * Version: 1.1.1
+ * Version: 1.1.2
  * Updated: 2026-11-19
  * Description: Validates and persists procurement allocation carts and safely edits unsent allocation quantities.
  * Scope: Existing ADMIN Workspace; existing Supabase tables and RLS only. No schema changes.
@@ -131,6 +131,63 @@ export async function saveCustomerFarmAllocation({client,tourId,row,items,draft}
   for(const old of updated){const result=await client.from('tura_stavke_raspodela').update({broj_pakovanja:old.broj_pakovanja,updated_at:old.updated_at}).eq('id',old.id);if(result.error)rollback.push(result.error.message);}
   for(const old of deleted){const result=await client.from('tura_stavke_raspodela').insert({stavka_porudzbine_id:old.stavka_porudzbine_id,gazdinstvo_id:old.gazdinstvo_id,broj_pakovanja:old.broj_pakovanja,created_at:old.created_at,updated_at:old.updated_at});if(result.error)rollback.push(result.error.message);}
   if(rollback.length)throw new Error((error.message||String(error))+' Враћање претходног стања није у потпуности успело: '+rollback.join('; '));
+  throw error;
+ }
+}
+
+
+export async function saveCustomerOrderQuantities({client,tourId,items,draft}={}) {
+ if(!client||!tourId||!Array.isArray(items)||!items.length)throw new Error('Нема ставки купаца за измену.');
+ const tour=await client.from('ture').select('status').eq('id',tourId).maybeSingle();
+ if(tour.error)throw new Error(tour.error.message);
+ if(tour.data?.status!=='processing')throw new Error('Измена поруџбина је дозвољена само на тури у статусу обраде.');
+ const ids=items.map(x=>x.id);
+ const fresh=await client.from('stavke_porudzbine').select('id,tura_id,product_id,variant_id,package_count').in('id',ids).eq('tura_id',tourId);
+ if(fresh.error)throw new Error(fresh.error.message);
+ const rows=fresh.data||[];
+ if(rows.length!==ids.length)throw new Error('Неке ставке поруџбина више нису доступне у овој тури. Освежи приказ.');
+ const changes=[];
+ for(const item of rows){
+  const count=Number(draft?.[String(item.id)]??item.package_count);
+  if(!Number.isInteger(count)||count<0||count>9999)throw new Error('Количина за купца мора бити цео број од 0 до 9.999 паковања.');
+  if(count!==n(item.package_count))changes.push({id:item.id,oldCount:n(item.package_count),newCount:count,productId:item.product_id,variantId:item.variant_id});
+ }
+ if(!changes.length)return {updated:0};
+ const changedKeys=[...new Set(changes.map(x=>key(x.productId,x.variantId)))];
+ const [allocationRows,customerShares]=await Promise.all([
+  client.from('tura_nabavka_dodele').select('id,product_id,variant_id,viber_status,potvrdjeno_pakovanja,preuzeto_pakovanja').eq('tura_id',tourId),
+  client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',ids)
+ ]);
+ if(allocationRows.error)throw new Error(allocationRows.error.message);
+ if(customerShares.error)throw new Error(customerShares.error.message);
+ for(const change of changes){
+  const assigned=(customerShares.data||[]).filter(x=>String(x.stavka_porudzbine_id)===String(change.id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
+  if(assigned>change.newCount)throw new Error('Нова наручена количина не може бити мања од већ додељене количине купца. Прво измени расподелу газдинствима.');
+  const progressed=(allocationRows.data||[]).filter(x=>key(x.product_id,x.variant_id)===key(change.productId,change.variantId)).some(x=>x.viber_status!=='not_sent'||n(x.potvrdjeno_pakovanja)>0||n(x.preuzeto_pakovanja)>0);
+  if(progressed)throw new Error('Ова амбалажа већ има послато или потврђено требовање газдинству. Измена поруџбине је закључана да се не би разишле послате количине.');
+ }
+ const applied=[];
+ try{
+  for(const change of changes){
+   const result=await client.from('stavke_porudzbine').update({package_count:change.newCount}).eq('id',change.id).eq('tura_id',tourId).select('id,package_count').maybeSingle();
+   if(result.error)throw new Error(result.error.message);
+   if(!result.data||n(result.data.package_count)!==change.newCount)throw new Error('База није потврдила измену поруџбине купца.');
+   applied.push(change);
+  }
+  const verify=await client.from('stavke_porudzbine').select('id,package_count').in('id',changes.map(x=>x.id)).eq('tura_id',tourId);
+  if(verify.error)throw new Error(verify.error.message);
+  for(const change of changes){
+   const row=(verify.data||[]).find(x=>String(x.id)===String(change.id));
+   if(!row||n(row.package_count)!==change.newCount)throw new Error('Поновно читање није потврдило све измене поруџбина.');
+  }
+  return {updated:changes.length};
+ }catch(error){
+  const rollback=[];
+  for(const change of [...applied].reverse()){
+   const result=await client.from('stavke_porudzbine').update({package_count:change.oldCount}).eq('id',change.id).eq('tura_id',tourId);
+   if(result.error)rollback.push(result.error.message);
+  }
+  if(rollback.length)throw new Error((error.message||String(error))+' Враћање претходних количина није у потпуности успело: '+rollback.join('; '));
   throw error;
  }
 }
