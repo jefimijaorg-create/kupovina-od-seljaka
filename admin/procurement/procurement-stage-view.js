@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.9.3
- * Updated: 2026-11-19
- * Description: Adds farm-first expandable pickup view; preserves pickup quantities and actions.
+ * Version: 1.9.4
+ * Updated: 2026-11-20
+ * Description: Hides empty phase counters and the confirmation tab when no rows await confirmation; preserves procurement workflow.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -151,7 +151,7 @@ export function renderProcurementStageView(ctx){
   const missingVariantCount=s.demands.filter(x=>x.valid&&!x.allocatable).length;
   const demandWarning=(invalidDemandCount||invalidSourceCount||missingVariantCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација и '+invalidSourceCount+' ставки без производа нису укључене у збирове. '+missingVariantCount+' производа имају поруџбину, али им недостаје повезана амбалажа; приказани су, али расподела је блокирана.</div>':'';
   host.innerHTML='<header class="ndp3-head"><div><div class="ndp3-kicker">ОПЕРАТИВНА ТАБЛА · ТУРА #'+e(tourId)+'</div><h1>Набавка</h1><p>'+e(s.tour?.naziv||'Тура')+' · Сви производи и паковања из базе</p></div><button class="ndp3-btn" data-action="back">← Назад</button></header>'+
-   '<nav class="ndp3-phase-tabs" aria-label="Фазе набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'" >Требовање<small>'+(requestDemandCount)+' ставки</small></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'">Потврда<small>'+confirmRows.length+' ставки</small></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'">Преузимање<small>'+collectRows.length+' ставки</small></button><button class="ndp3-phase-tab" data-stage="history" aria-selected="'+(s.stage==='history')+'">Историја<small>'+history.length+'</small></button></nav>'+
+   '<nav class="ndp3-phase-tabs" aria-label="Фазе набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'" >Требовање'+(requestDemandCount?'<small>'+requestDemandCount+' ставки</small>':'')+'</button>'+(confirmRows.length?'<button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'">Потврда<small>'+confirmRows.length+' ставки</small></button>':'')+'<button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'">Преузимање'+(collectRows.length?'<small>'+collectRows.length+' ставки</small>':'')+'</button><button class="ndp3-phase-tab" data-stage="history" aria-selected="'+(s.stage==='history')+'">Историја'+(history.length?'<small>'+history.length+'</small>':'')+'</button></nav>'+
    (s.stage==='collect'?'':'<div class="ndp3-view-switch"><button type="button" data-view="products" aria-pressed="'+(s.view==='products')+'">По производима</button><button type="button" data-view="farms" aria-pressed="'+(s.view==='farms')+'">По газдинствима</button></div>')+
    
    '<section class="ndp3-kpis"><div class="ndp3-kpi"><b>'+totalNeeded()+'</b><span>УКУПНО ПОТРЕБНО</span></div>'+(s.demands.some(d=>ordered(d.productId,d.variantId)>0)?'<div class="ndp3-kpi"><b>'+totalOrdered()+'</b><span>ЗАХТЕВАНО</span></div>':'')+'<div class="ndp3-kpi"><b>'+totalRemaining()+'</b><span>МОЖЕ ЈОШ ДА СЕ ЗАХТЕВА</span></div>'+(s.demands.some(d=>allocationsFor(d.productId,d.variantId).some(x=>n(x.preuzeto_pakovanja)>0))?'<div class="ndp3-kpi"><b>'+totalCollected()+'</b><span>ПРЕУЗЕТО</span></div>':'')+'</section>'+
