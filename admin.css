@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.9.3
+ * Version: 1.9.4
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2507,4 +2507,50 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .ndp3 .ndp3-customer-allocation-controls>input{min-width:0;flex:1 1 auto}
   .nd-workspace .ndp3 .ndp3-modal-dialog{width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px)!important}
   .nd-workspace table{display:block;width:100%;max-width:100%;overflow-x:auto}
+}
+
+
+/* ПОПРАВКА ПРЕУЗИМАЊА — ПУНА ШИРИНА УНУТРАШЊИХ ПОЉА */
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-line{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+}
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-line-title,
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-line-meta,
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-values,
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input,
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-actions{
+  grid-column:1/-1!important;
+  justify-self:stretch!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  box-sizing:border-box!important;
+}
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+  gap:10px!important;
+}
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input>label{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important;
+}
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input>label input{
+  display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;
+}
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input>div{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+}
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input .ndp3-stage-line-meta{
+  white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important;
+}
+.nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-actions .ndp3-btn{
+  width:100%!important;max-width:100%!important;white-space:normal!important;
 }
