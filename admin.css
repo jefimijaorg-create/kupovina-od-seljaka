@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.9.6
+ * Version: 1.9.7
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -1550,7 +1550,7 @@ body.nd-workspace{
 .ndp3-request-allocation-list{display:grid;gap:6px;margin:8px 0 2px}
 .ndp3-request-allocation{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px;border:1px solid #DCE4DC;border-radius:10px;background:#F3F5F2}
 .ndp3-request-allocation strong{display:block;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
-.ndp3-customer-breakdown{display:grid;gap:6px;margin-top:8px;padding:8px;border-radius:10px;background:#F3F5F2;border:1px solid #DCE4DC}.ndp3-customer-breakdown>b{font-size:10px;color:#285B3C}.ndp3-customer-breakdown>span{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding-top:5px;border-top:1px solid #DCE4DC}.ndp3-customer-breakdown>span strong{font-size:11px;color:#344238}.ndp3-customer-breakdown>span small,.ndp3-customer-breakdown>small{font-size:10px;color:#344238;text-align:right;line-height:1.4}
+.ndp3-customer-breakdown{display:grid;gap:6px;margin-top:8px;padding:8px;border-radius:10px;background:#F3F5F2;border:1px solid #DCE4DC}.ndp3-customer-breakdown>b{font-size:10px;color:#285B3C}.ndp3-customer-breakdown>span{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding-top:5px;border-top:1px solid #DCE4DC}.ndp3-customer-breakdown>span strong{font-size:11px;color:#344238}.ndp3-customer-breakdown>span small,.ndp3-customer-breakdown>small{font-size:10px;color:#344238;text-align:right;line-height:1.4}.ndp3-customer-breakdown .ndp3-customer-pickup-input{display:block;width:64px;max-width:100%;min-height:40px;margin:5px 0 0 auto;padding:5px;border:1px solid #AAB8AC;border-radius:8px;background:#FFFFFF;color:#344238;text-align:center;font-size:16px;font-weight:850;font-variant-numeric:tabular-nums}
 .ndp3-request-allocation small{display:block;margin-top:3px;color:#344238;font-size:10px;line-height:1.35}
 .ndp3-request-allocation .ndp3-btn{min-height:40px;padding:7px 9px;font-size:10px}
 .ndp3-request-product-action{display:grid;gap:7px}
