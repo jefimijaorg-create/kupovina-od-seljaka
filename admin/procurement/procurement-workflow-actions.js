@@ -110,9 +110,11 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
       .select('stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja')
       .in('stavka_porudzbine_id', itemIds) : { data: [], error: null };
     if (sharesResult.error) throw new Error('Провера доделе купцима није успела: ' + sharesResult.error.message);
-    const allowed = new Map((sharesResult.data || [])
-      .filter(share => String(share.gazdinstvo_id) === String(live.gazdinstvo_id))
-      .map(share => [String(share.stavka_porudzbine_id), number(share.broj_pakovanja)]));
+    const allowed = new Map();
+    for (const share of (sharesResult.data || []).filter(item => String(item.gazdinstvo_id) === String(live.gazdinstvo_id))) {
+      const itemId = String(share.stavka_porudzbine_id);
+      allowed.set(itemId, (allowed.get(itemId) || 0) + number(share.broj_pakovanja));
+    }
     const seen = new Set();
     normalizedCustomerPickup = [];
     let customerTotal = 0;
@@ -148,6 +150,7 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
     .eq('id', row.id)
     .eq('naruceno_pakovanja', live.naruceno_pakovanja)
     .eq('potvrdjeno_pakovanja', live.potvrdjeno_pakovanja)
+    .eq('preuzeto_pakovanja', live.preuzeto_pakovanja)
     .select('id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,raspodela_kupcima,potvrdjeno_at,updated_at')
     .maybeSingle();
   if (result.error) throw new Error(result.error.message);
