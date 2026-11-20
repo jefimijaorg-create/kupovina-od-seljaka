@@ -14,6 +14,7 @@ export function renderProcurementStageView(ctx){
   const requestDemandCount=requestRows.length;
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
+  if(s.stage==='confirm'&&!confirmRows.length)s.stage='request';
   const rows=s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
   const groupByFarms=s.stage==='collect'||s.view==='farms';
   const transferCandidates=row=>{const ids=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))];return ids.map(id=>farm(id)).filter(Boolean);};
