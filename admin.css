@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.9.1
+ * Version: 1.9.2
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2250,4 +2250,66 @@ main,#orders-tab,#procurement-tab,#delivery-tab,#debts-tab,
   #orders-tab button,#procurement-tab button,#delivery-tab button,#debts-tab button,
   #supplier-sheet-content button{min-height:46px}
   #bottom-tab-nav{left:0;right:0}
+}
+
+
+/* ПОПРАВКА ПРИКАЗА ТРЕБОВАЊА — ЈЕДНА КАРТИЦА ПО РЕДУ НА МОБИЛНОМ */
+.nd-workspace .ndp3 .ndp3-request-products{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  gap:12px!important;
+}
+.nd-workspace .ndp3 .ndp3-request-product-card{
+  display:flex!important;flex-direction:column!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  padding:14px!important;
+  background:#FFFFFF!important;color:#344238!important;
+  border:1px solid #DCE4DC!important;border-radius:14px!important;
+  box-shadow:0 2px 8px rgba(40,91,60,.07)!important;
+}
+.nd-workspace .ndp3 .ndp3-request-product-head{
+  display:flex!important;justify-content:space-between!important;
+  align-items:flex-start!important;flex-wrap:wrap!important;
+  gap:8px!important;padding:0 0 11px!important;margin:0 0 4px!important;
+  border-bottom:1px solid #DCE4DC!important;
+  background:#FFFFFF!important;color:#344238!important;
+}
+.nd-workspace .ndp3 .ndp3-request-product-head strong{
+  color:#285B3C!important;font-size:17px!important;font-weight:850!important;
+}
+.nd-workspace .ndp3 .ndp3-request-product-total{
+  color:#647268!important;font-size:12px!important;line-height:1.5!important;
+}
+.nd-workspace .ndp3 .ndp3-request-package-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(76px,auto)!important;
+  width:100%!important;min-width:0!important;gap:10px!important;
+  border-top:1px solid #E8EDE8!important;
+}
+.nd-workspace .ndp3 .ndp3-request-package-row b{color:#344238!important}
+.nd-workspace .ndp3 .ndp3-request-package-row small{color:#647268!important}
+.nd-workspace .ndp3 .ndp3-request-package-count{
+  background:#F3F5F2!important;color:#285B3C!important;
+  border:1px solid #DCE4DC!important;border-radius:10px!important;
+}
+.nd-workspace .ndp3 .ndp3-request-package-count small{color:#647268!important}
+.nd-workspace .ndp3 .ndp3-request-allocation{
+  background:#F3F5F2!important;border-color:#DCE4DC!important;color:#344238!important;
+}
+.nd-workspace .ndp3 .ndp3-request-allocation strong,
+.nd-workspace .ndp3 .ndp3-request-allocation small{color:#344238!important}
+@media(max-width:767px){
+  .nd-workspace .ndp3 .ndp3-request-products{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .nd-workspace .ndp3 .ndp3-request-product-card{
+    grid-column:1/-1!important;width:100%!important;
+  }
+  .nd-workspace .ndp3 .ndp3-request-product-head{align-items:flex-start!important}
+  .nd-workspace .ndp3 .ndp3-request-package-row{
+    grid-template-columns:minmax(0,1fr) 84px!important;
+  }
+  .nd-workspace .ndp3 .ndp3-request-product-action .ndp3-btn{
+    width:100%!important;min-width:0!important;
+  }
 }
