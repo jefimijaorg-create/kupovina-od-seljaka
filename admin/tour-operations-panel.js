@@ -1,7 +1,7 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.1.0
- * Updated: 2026-11-19
+ * Version: 1.1.1
+ * Updated: 2026-11-20
  * Description: Displays order prices and adds an RLS-protected open-to-processing tour transition.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -79,7 +79,22 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if(activeTab==='orders') body='<div data-grouped-orders-root></div>';
     if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id)||farmMap.get(p?.gazdinstvo_id);return '<article class="nd-ops-card" data-open-procurement-product="'+esc(item.product_id||'')+'" role="button" tabindex="0" aria-label="Отвори набавку за '+esc(p?.name||'производ')+'"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
     if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
-    if(activeTab==='delivery') body=state.tourStops.length?state.tourStops.map(stop=>{const p=pointMap.get(stop.punkt_id);const orders=state.orders.filter(o=>o.punkt_id===stop.punkt_id);return '<article class="nd-ops-card"><strong>'+esc(stop.redosled)+'. '+esc(p?.name||'Пункт није доступан')+'</strong><div>'+esc(p?.city||'')+' · '+esc(p?.address||'')+'</div><small>'+esc(stop.vreme||p?.vreme||'Време није наведено')+' · '+orders.length+' поруџбина · '+(stop.aktivan?'Активан':'Неактиван')+'</small></article>'}).join(''):'<div class="nd-ops-empty">За ову туру нису дефинисани пунктови.</div>';
+    if(activeTab==='delivery') body=state.tourStops.length?state.tourStops.map(stop=>{
+      const p=pointMap.get(stop.punkt_id),orders=state.orders.filter(o=>o.punkt_id===stop.punkt_id),orderIds=new Set(orders.map(o=>String(o.id)));
+      const customerRows=state.procurementAllocations.flatMap(allocation=>{
+        const product=productMap.get(allocation.product_id),variant=variantMap.get(allocation.variant_id);
+        const shares=Array.isArray(allocation.raspodela_kupcima)?allocation.raspodela_kupcima:[];
+        return shares.filter(share=>Number(share.preuzeto_pakovanja)>0).map(share=>{
+          const item=state.items.find(x=>String(x.id)===String(share.stavka_porudzbine_id));
+          const order=item?orderMap.get(item.porudzbina_id):null;
+          if(!item||!order||!orderIds.has(String(order.id)))return '';
+          const customer=customerMap.get(order.kupac_id);
+          return '<div class="nd-ops-customer-pickup"><strong>'+esc(customer?.ime_prezime||'Купац није повезан')+'</strong><small>'+esc(product?.name||'Производ')+' · '+esc(variant?.name||variant?.size_label||'Амбалажа')+' · '+esc(share.preuzeto_pakovanja)+' пак.</small></div>';
+        }).filter(Boolean);
+      });
+      const manifest=customerRows.length?'<div class="nd-ops-customer-manifest"><strong>Стварно преузето по купцима</strong>'+customerRows.join('')+'</div>':'<div class="nd-ops-customer-manifest"><small>Расподела стварно преузетих паковања по купцима још није евидентирана.</small></div>';
+      return '<article class="nd-ops-card"><strong>'+esc(stop.redosled)+'. '+esc(p?.name||'Пункт није доступан')+'</strong><div>'+esc(p?.city||'')+' · '+esc(p?.address||'')+'</div><small>'+esc(stop.vreme||p?.vreme||'Време није наведено')+' · '+orders.length+' поруџбина · '+(stop.aktivan?'Активан':'Неактиван')+'</small>'+manifest+'</article>';
+    }).join(''):'<div class="nd-ops-empty">За ову туру нису дефинисани пунктови.</div>';
     if(groupedOrdersView){groupedOrdersView.destroy();groupedOrdersView=null;}
     shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div><button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     shell.querySelector('[data-back]').addEventListener('click',onBack);

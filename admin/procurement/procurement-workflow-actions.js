@@ -1,7 +1,7 @@
 /*
  * NARUČI ДОМАЋЕ — PROCUREMENT WORKFLOW ACTIONS
- * Version: 1.1.1
- * Updated: 2026-11-19
+ * Version: 1.1.2
+ * Updated: 2026-11-20
  * Description: Returns unconfirmed supplier quantities to demand and verifies the history-backed update.
  * Scope: Existing ADMIN Workspace, existing Supabase schema/RLS/triggers only.
  */
@@ -79,14 +79,14 @@ export async function transferUnconfirmedProcurement({ client, sourceRow, target
   return { ...result, target: targetRead.data, source: sourceRead.data };
 }
 
-export async function saveProcurementTracking({ client, row, confirmed, collected }) {
+export async function saveProcurementTracking({ client, row, confirmed, collected, customerPickup }) {
   if (!row?.id) throw new TypeError('Ставка набавке није пронађена.');
   if (!Number.isInteger(Number(confirmed)) || Number(confirmed) < 0 ||
       !Number.isInteger(Number(collected)) || Number(collected) < 0) {
     throw new Error('Количине морају бити цели ненегативни бројеви паковања.');
   }
   const fresh = await client.from('tura_nabavka_dodele')
-    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status')
+    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,raspodela_kupcima,viber_status')
     .eq('id', row.id).maybeSingle();
   if (fresh.error) throw new Error(fresh.error.message);
   if (!fresh.data) throw new Error('Требовање више није доступно. Освежи приказ.');
@@ -97,12 +97,47 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
   if (Number(collected) < number(live.preuzeto_pakovanja)) throw new Error('Преузета количина не може бити накнадно умањена.');
   if (live.viber_status !== 'sent' && live.viber_status !== 'replied') throw new Error('Потврда је дозвољена тек након слања захтева газдинству.');
 
+  let normalizedCustomerPickup;
+  if (Array.isArray(customerPickup)) {
+    const itemResult = await client.from('stavke_porudzbine')
+      .select('id,tura_id,product_id,variant_id')
+      .eq('tura_id', live.tura_id)
+      .eq('product_id', live.product_id)
+      .eq('variant_id', live.variant_id);
+    if (itemResult.error) throw new Error('Провера ставки купаца није успела: ' + itemResult.error.message);
+    const itemIds = (itemResult.data || []).map(item => item.id);
+    const sharesResult = itemIds.length ? await client.from('tura_stavke_raspodela')
+      .select('stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja')
+      .in('stavka_porudzbine_id', itemIds) : { data: [], error: null };
+    if (sharesResult.error) throw new Error('Провера доделе купцима није успела: ' + sharesResult.error.message);
+    const allowed = new Map();
+    for (const share of (sharesResult.data || []).filter(item => String(item.gazdinstvo_id) === String(live.gazdinstvo_id))) {
+      const itemId = String(share.stavka_porudzbine_id);
+      allowed.set(itemId, (allowed.get(itemId) || 0) + number(share.broj_pakovanja));
+    }
+    const seen = new Set();
+    normalizedCustomerPickup = [];
+    let customerTotal = 0;
+    for (const entry of customerPickup) {
+      const itemId = String(entry?.stavka_porudzbine_id ?? '');
+      const count = Number(entry?.preuzeto_pakovanja);
+      if (!itemId || seen.has(itemId) || !allowed.has(itemId) || !Number.isInteger(count) || count < 0 || count > allowed.get(itemId)) {
+        throw new Error('Расподела преузимања по купцима садржи неважећу ставку или количину. Освежи податке.');
+      }
+      seen.add(itemId);
+      if (count > 0) normalizedCustomerPickup.push({ stavka_porudzbine_id: Number(itemId), preuzeto_pakovanja: count });
+      customerTotal += count;
+    }
+    if (customerTotal > Number(collected)) throw new Error('Збир преузетих паковања по купцима не може бити већи од стварно преузете количине газдинства.');
+  }
+
   const now = new Date().toISOString();
   const patch = {
     potvrdjeno_pakovanja: Number(confirmed),
     preuzeto_pakovanja: Number(collected),
     updated_at: now
   };
+  if (Array.isArray(customerPickup)) patch.raspodela_kupcima = normalizedCustomerPickup;
   // Option 1: the quantity the farm cannot confirm returns to Требовање.
   // The history trigger stores the complete before/after allocation snapshots.
   if (Number(confirmed) < requested) {
@@ -115,7 +150,8 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
     .eq('id', row.id)
     .eq('naruceno_pakovanja', live.naruceno_pakovanja)
     .eq('potvrdjeno_pakovanja', live.potvrdjeno_pakovanja)
-    .select('id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,potvrdjeno_at,updated_at')
+    .eq('preuzeto_pakovanja', live.preuzeto_pakovanja)
+    .select('id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,raspodela_kupcima,potvrdjeno_at,updated_at')
     .maybeSingle();
   if (result.error) throw new Error(result.error.message);
   if (!result.data ||
