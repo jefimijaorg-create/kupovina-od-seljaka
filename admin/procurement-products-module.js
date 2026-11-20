@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.10.13
+ * Version: 4.10.14
  * Updated: 2026-11-20
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,9 +8,9 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.0';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.9.6';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=1.9.7';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.4';
-import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.1';
+import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.2';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities } from './procurement/procurement-allocation-actions.js?v=1.1.2';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
 
@@ -36,7 +36,11 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack}){
  const setNote=(v,err=false)=>{s.notice=v;s.error=err;render();};
  async function load(onProgress){
   const d=await loadProcurementData({client,tourId,onProgress});
-  Object.assign(s,{tour:d.tour,tourPoints:d.tourPoints||[],items:d.items,products:d.products,variants:d.variants,farms:d.farms,offers:d.relevantOffers,allocations:d.allocations});
+  const pickupShares=await client.from('tura_nabavka_dodele').select('id,raspodela_kupcima').eq('tura_id',tourId);
+  if(pickupShares.error)throw new Error('Расподела преузимања по купцима: '+pickupShares.error.message);
+  const pickupById=new Map((pickupShares.data||[]).map(row=>[String(row.id),Array.isArray(row.raspodela_kupcima)?row.raspodela_kupcima:[]]));
+  const allocations=(d.allocations||[]).map(row=>({...row,raspodela_kupcima:pickupById.get(String(row.id))||[]}));
+  Object.assign(s,{tour:d.tour,tourPoints:d.tourPoints||[],items:d.items,products:d.products,variants:d.variants,farms:d.farms,offers:d.relevantOffers,allocations});
   s.demands=buildProcurementDemands({items:s.items,products:s.products,variants:s.variants});
   s.history=await loadProcurementHistory({client,tourId,limit:300});
  }
@@ -130,7 +134,10 @@ async function saveField(id){
   const newlyCollected=Math.max(0,collected-n(row.preuzeto_pakovanja));
   s.busy=true;render();
   try{
-   await saveProcurementTracking({client,row,confirmed,collected});
+   const customerPickup=stageBeforeSave==='collect'
+    ? [...host.querySelectorAll('[data-customer-pickup][data-id="'+id+'"]')].map(input=>({stavka_porudzbine_id:Number(input.dataset.itemId),preuzeto_pakovanja:Number(input.value)}))
+    : undefined;
+   await saveProcurementTracking({client,row,confirmed,collected,customerPickup});
    await load();
    s.stage=stageBeforeSave==='collect'?'collect':(confirmed>collected?'collect':'confirm');
    const remaining=Math.max(0,confirmed-collected);
