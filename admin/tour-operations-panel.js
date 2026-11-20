@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.0.9
+ * Version: 1.1.0
  * Updated: 2026-11-19
  * Description: Displays order prices and adds an RLS-protected open-to-processing tour transition.
  */
@@ -97,7 +97,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       } catch (error) { statusBusy = false; showError(error); }
     });
     if(activeTab==='orders'){
-      import('./orders/tour-orders-grouped-view.js?v=1.0.6').then(mod=>{
+      import('./orders/tour-orders-grouped-view.js?v=1.0.5').then(mod=>{
         if(disposed || activeTab!=='orders') return;
         const target=shell.querySelector('[data-grouped-orders-root]');
         if(!target) return;
