@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.0.4
+ * Version: 1.0.5
  * Updated: 2026-11-19
  * Description: Displays verified package and line prices plus buyer payable totals; retains compact cards and point quick actions.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -23,51 +23,6 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     if (!linesByOrder.has(key)) linesByOrder.set(key, []);
     linesByOrder.get(key).push(line);
   }
-
-  const style = document.createElement('style');
-  style.textContent = `
-    .nd-go-point-sheet{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px}
-    .nd-go-point-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(3px)}
-    .nd-go-point-dialog{position:relative;width:min(100%,420px);padding:20px;border:1px solid #d9e3d9;border-radius:16px;background:#fff;box-shadow:0 18px 48px rgba(18,43,26,.2);display:grid;gap:12px;color:#20352a}
-    .nd-go-point-dialog h3{margin:0;font-size:17px;color:#20352a}.nd-go-point-dialog p{margin:0;color:#68786d;font-size:12px}.nd-go-point-dialog label{font-size:12px;font-weight:800;color:#43564a}
-    .nd-go-point-dialog select{width:100%;min-height:46px;padding:10px;border-radius:10px;background:#fff;color:#20352a;border:1px solid #cbd8cc}
-    .nd-go-point-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}.nd-go-point-actions button{min-height:42px;padding:9px 13px;border-radius:10px;background:#f1f6f1;border:1px solid #d5e1d5;color:#315b40;font-weight:800}.nd-go-point-actions [data-save-point]{background:#286344;border-color:#286344;color:white}.nd-go-point-actions button:disabled{opacity:.55}
-
-    .nd-grouped-orders{display:grid;gap:16px}
-    .nd-go-intro{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:4px 2px}
-    .nd-go-intro h2{margin:0;font-size:19px;font-weight:900;color:#f8fafc}
-    .nd-go-intro p{margin:4px 0 0;color:#94a3b8;font-size:12px}
-    .nd-go-point{border:1px solid #d9e3d9;border-radius:12px;background:#fff;color:#20352a;overflow:hidden}
-    .nd-go-point-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#edf4ed;border-bottom:1px solid #d9e3d9}
-    .nd-go-point-head h3{margin:0;font-size:15px;font-weight:900;color:#20352a}
-    .nd-go-count{font-size:11px;font-weight:900;color:#286344;background:#e5efe6;border:1px solid #d4e3d5;padding:5px 9px;border-radius:8px;white-space:nowrap}
-    .nd-go-drop{padding:12px;display:grid;gap:10px;min-height:52px;transition:background .15s,border-color .15s}
-    .nd-go-drop.nd-go-over{background:rgba(234,88,12,.10);outline:2px dashed #f97316;outline-offset:-5px}
-    .nd-go-customer{border:1px solid #e0e8e0;border-radius:11px;background:#f8faf7;padding:10px;display:grid;gap:8px}.nd-go-buyer{border:1px solid #e0e8e0;border-radius:11px;background:#f8faf7;padding:10px;display:grid;gap:8px}.nd-go-buyer-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:7px 9px;border-radius:8px;background:#f8faf7;color:#20352a}.nd-go-order-card{border:1px solid #e1e8e1;border-radius:9px;background:#fff;padding:9px;display:grid;gap:8px}
-    .nd-go-customer-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .nd-go-customer-name{font-weight:900;color:#20352a;font-size:14px}
-    .nd-go-phone{display:block;color:#617266;font-size:12px;margin-top:4px}
-    .nd-go-quick-point{min-height:38px;padding:6px 10px;border:1px solid #cbdccb;border-radius:9px;background:#f0f6f0;color:#286344;font-size:11px;font-weight:800;white-space:nowrap}.nd-go-quick-point:disabled{opacity:.55}
-    .nd-go-lines{display:grid;gap:6px}
-    .nd-go-line{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#43564a;border-top:1px solid #edf1ed;padding-top:6px}
-    .nd-go-line strong{color:#20352a;text-align:right;font-weight:800}.nd-go-price{display:block;color:#8a5a1d;font-size:11px;font-weight:800;margin-top:3px}.nd-go-buyer-total{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 10px;border-radius:9px;background:#edf5ed;border:1px solid #dce8dc;color:#315b40;font-size:12px;font-weight:900}.nd-go-buyer-total strong{color:#194b32;font-size:15px}
-    .nd-go-order-meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;color:#68786d;font-size:11px}
-    .nd-go-pill{border:0;border-radius:0;padding:0;color:#94a3b8}
-    .nd-go-assign{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .nd-go-assign label{font-size:11px;color:#94a3b8;font-weight:800}
-    .nd-go-assign select{min-height:40px;max-width:100%;padding:7px 10px;border-radius:10px;background:#fff;color:#20352a;border:1px solid #cbd8cc}
-    .nd-go-drag{width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:#edf4ed;color:#286344;font-size:19px;touch-action:none;cursor:grab}
-    .nd-go-drag:active{cursor:grabbing}
-    .nd-go-order{display:flex;gap:10px;align-items:flex-start}
-    .nd-go-order-card.nd-go-dragging{opacity:.42;transform:scale(.985)}
-    .nd-go-empty{padding:12px;text-align:center;color:#68786d;font-size:13px}
-    .nd-go-feedback{padding:11px 13px;border-radius:10px;background:#edf7ef;border:1px solid #cfe4d2;color:#285b3c;font-size:12px}
-    .nd-go-error{background:#fff0ed;border-color:#f0d4cf;color:#8e3c34}
-    .nd-go-unassigned .nd-go-point-head{background:#fff5e8}
-    .nd-go-unassigned .nd-go-count{color:#8a5a1d;background:#fff0d9;border-color:#f0d9b5}
-    @media(max-width:600px){.nd-go-customer-top{flex-wrap:wrap}}
-  `;
-  document.head.append(style);
 
   const rootNode = document.createElement('div');
   rootNode.className = 'nd-grouped-orders';
