@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT REQUEST ALLOCATION SHEET
- * Version: 1.3.2
+ * Version: 1.3.3
  * Updated: 2026-11-20
  * Description: Shows a read-only customer order breakdown while keeping farm allocation quantities editable.
  * Scope: Existing ADMIN Workspace; existing Supabase schema only.
@@ -35,7 +35,7 @@ const renderCustomerOrderList=(items,d,f,e)=>{
   return {name:row.customer_name||'Купац није повезан',count:Math.max(0,n(row.package_count)-assigned),ordered:n(row.package_count)};
  }).filter(row=>row.count>0);
  const total=entries.reduce((sum,row)=>sum+row.count,0);
- return '<section class="ndp3-customer-orders"><div class="ndp3-customer-orders-head"><div><strong>Поруџбине купаца</strong><small>Преглед ко је наручио ову амбалажу</small></div><b>'+f(entries.length)+' купаца</b></div><div class="ndp3-customer-orders-list">'+(entries.length?entries.map(row=>'<div class="ndp3-customer-order"><div class="ndp3-customer-order-name"><strong>'+e(row.name)+'</strong><small>Извор: поруџбина купца</small></div><div class="ndp3-customer-order-quantity"><strong>'+f(row.count)+' паковање'+(row.count===1?'':'а')+'</strong><small>'+e(grams===null?f(row.count)+' пак.':formatMass(grams*row.count))+'</small></div></div>').join(''):'<div class="ndp3-customer-orders-saved">Све поруџбине су већ распоређене.</div>')+'</div><div class="ndp3-customer-orders-total"><span>Укупно преостало за доделу</span><b>'+f(total)+' паковања'+(grams===null?'':' · '+e(formatMass(grams*total)))+'</b></div></section>';
+ return '<section class="ndp3-customer-orders"><div class="ndp3-customer-orders-head"><div><strong>Поруџбине купаца</strong><small>Преглед ко је наручио ову амбалажу</small></div><b>'+f(entries.length)+' купаца</b></div><div class="ndp3-customer-orders-list">'+(entries.length?entries.map(row=>'<div class="ndp3-customer-order"><div class="ndp3-customer-order-name"><strong>'+e(row.name)+'</strong><small>Извор: поруџбина купца</small></div><div class="ndp3-customer-order-qty"><b>${f(row.count)} паковање${row.count===1?'':'а'}</b><span>${e(grams===null?f(row.count)+' пак.':formatMass(grams*row.count))}</span></div></div>').join(''):'<div class="ndp3-customer-orders-saved">Све поруџбине су већ распоређене.</div>')+'</div><div class="ndp3-customer-orders-total"><span>Укупно преостало за доделу</span><b>'+f(total)+' паковања'+(grams===null?'':' · '+e(formatMass(grams*total)))+'</b></div></section>';
 };
 const renderCustomerOrderRemainder=(items,d,orderDraft,f,e)=>{
  const rows=items.filter(row=>String(row.product_id)===String(d.productId)&&String(row.variant_id)===String(d.variantId));
