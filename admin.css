@@ -2165,3 +2165,89 @@ header.sticky button:hover{background:#F3F5F2!important}
 .nd-go-point,.nd-go-customer,.nd-go-buyer,.nd-go-order-card{width:100%;max-width:100%;box-sizing:border-box}
 .nd-go-intro h2{color:#344238!important}.nd-go-intro p{color:#647268!important}
 @media(max-width:600px){.nd-grouped-orders{width:100%;gap:12px}.nd-go-point-head,.nd-go-buyer-head{align-items:flex-start;flex-wrap:wrap}.nd-go-drop{padding:9px}.nd-go-order{min-width:0}.nd-go-order-card{min-width:0}}
+
+
+/* ==================================================
+ * УНИФИКАЦИЈА КОМПОНЕНАТА — СВИ ADMIN МОДУЛИ
+ * Једнака ширина унутар родитеља, уједначене димензије
+ * елемената исте врсте и стабилан Android приказ.
+ * ================================================== */
+:root{
+  --admin-control-height:46px;
+  --admin-control-radius:10px;
+  --admin-card-radius:14px;
+  --admin-card-border:#DCE4DC;
+  --admin-card-bg:#FFFFFF;
+  --admin-page-bg:#F3F5F2;
+  --admin-text:#344238;
+  --admin-primary:#285B3C;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+body{background:var(--admin-page-bg)!important;color:var(--admin-text)!important}
+main,#orders-tab,#procurement-tab,#delivery-tab,#debts-tab,
+#orders-summary,#points,#debts-summary,#debts-list,
+.nd-workspace,.nd-workspace .nd-main,.nd-workspace .nd-content,
+.nd-grouped-orders,.ndp3,.ndp3-stage,.ndp3-stage-list{
+  width:100%;max-width:100%;min-width:0;
+}
+#orders-tab>div,#procurement-tab>div,#delivery-tab>div,#debts-tab>div,
+#orders-summary>section,#points>section,#debts-list>details,
+.nd-workspace .nd-panel,.nd-workspace .nd-ops-card,
+.nd-go-point,.nd-go-customer,.nd-go-buyer,.nd-go-order-card,
+.ndp3 .ndp3-stage-group,.ndp3 .ndp3-stage-package,
+.ndp3 .ndp3-collect-farm{
+  width:100%;max-width:100%;min-width:0;
+  box-sizing:border-box;
+  border-radius:var(--admin-card-radius);
+  border-color:var(--admin-card-border);
+  background:var(--admin-card-bg);
+  color:var(--admin-text);
+}
+#orders-tab button,#procurement-tab button,#delivery-tab button,#debts-tab button,
+#supplier-sheet-content button,.nd-go-point-sheet button,
+.nd-workspace .nd-panel button,.nd-workspace .nd-ops-card button{
+  min-height:var(--admin-control-height);
+  max-width:100%;
+  border-radius:var(--admin-control-radius);
+  box-sizing:border-box;
+}
+#orders-tab input,#orders-tab select,#orders-tab textarea,
+#procurement-tab input,#procurement-tab select,#procurement-tab textarea,
+#delivery-tab input,#delivery-tab select,#delivery-tab textarea,
+#debts-tab input,#debts-tab select,#debts-tab textarea,
+#supplier-sheet-content input,#supplier-sheet-content select,#supplier-sheet-content textarea,
+.nd-workspace input,.nd-workspace select,.nd-workspace textarea{
+  width:100%;max-width:100%;min-width:0;
+  min-height:var(--admin-control-height);
+  border-radius:var(--admin-control-radius)!important;
+  box-sizing:border-box;
+}
+#orders-tab .grid>*,#procurement-tab .grid>*,
+#delivery-tab .grid>*,#debts-tab .grid>*,
+.nd-workspace .nd-tour-grid>*,.nd-workspace .nd-layout>*,
+.ndp3 .grid>*,.nd-grouped-orders>*{
+  min-width:0;max-width:100%;
+}
+#orders-tab .flex,#procurement-tab .flex,#delivery-tab .flex,#debts-tab .flex,
+.nd-workspace .nd-panel-head,.nd-go-point-head,.nd-go-buyer-head{
+  min-width:0;
+}
+#orders-tab img,#procurement-tab img,#delivery-tab img,#debts-tab img,
+.nd-workspace img{max-width:100%;height:auto}
+#orders-tab table,#procurement-tab table,#delivery-tab table,#debts-tab table{
+  width:100%;max-width:100%;table-layout:fixed;
+}
+#bottom-tab-nav{width:100%;max-width:100%;box-sizing:border-box}
+#bottom-tab-nav button{min-height:58px;max-width:100%;box-sizing:border-box}
+.nd-workspace .nd-tour-bottom-nav{max-width:100%;box-sizing:border-box}
+@media(max-width:767px){
+  main{width:100%;max-width:100%;min-width:0}
+  #orders-tab>div,#procurement-tab>div,#delivery-tab>div,#debts-tab>div,
+  #orders-summary>section,#points>section,.nd-workspace .nd-panel{
+    padding:14px!important;border-radius:13px!important;
+  }
+  #orders-tab button,#procurement-tab button,#delivery-tab button,#debts-tab button,
+  #supplier-sheet-content button{min-height:46px}
+  #bottom-tab-nav{left:0;right:0}
+}
