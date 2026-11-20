@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.10.8
+ * Version: 4.10.9
  * Updated: 2026-11-20
- * Description: Applies the approved light visual frame to procurement header, phase navigation, view switch, summary metrics and main panel; preserves existing procurement behavior.
+ * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
@@ -123,12 +123,22 @@ async function saveField(id){
   if(siblings.reduce((a,x)=>a+n(x.preuzeto_pakovanja),0)+collected>d.packages)return setNote('Укупно преузето премашује потребу туре.',true);
   if(siblings.reduce((a,x)=>a+n(x.potvrdjeno_pakovanja),0)+confirmed>d.packages)return setNote('Укупно потврђено премашује потребу туре.',true);
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
+  const stageBeforeSave=s.stage;
+  const farmName=farm(row.gazdinstvo_id)?.name||('Газдинство #'+row.gazdinstvo_id);
+  const productName=prod(row.product_id)?.name||'Производ';
+  const variantName=variant(row.variant_id)?.name||variant(row.variant_id)?.size_label||'Паковање';
+  const newlyCollected=Math.max(0,collected-n(row.preuzeto_pakovanja));
   s.busy=true;render();
   try{
-   const saved=await saveProcurementTracking({client,row,confirmed,collected});
-   await load();s.stage=confirmed>collected?'collect':'confirm';
-   setNote('Количина је сачувана и поново прочитана из базе. Историја измене је евидентирана.');
-  }catch(err){setNote('Унос није сачуван: '+(err.message||String(err)),true);}
+   await saveProcurementTracking({client,row,confirmed,collected});
+   await load();
+   s.stage=stageBeforeSave==='collect'?'collect':(confirmed>collected?'collect':'confirm');
+   const remaining=Math.max(0,confirmed-collected);
+   const resultMessage=newlyCollected>0
+    ?'Преузимање евидентирано и проверено у бази: '+farmName+' · '+productName+' · '+variantName+' — '+f(newlyCollected)+' нових паковања. Укупно преузето: '+f(collected)+' од '+f(confirmed)+'. '+(remaining>0?'Преостало за преузимање: '+f(remaining)+' паковања.':'Сва потврђена количина је преузета.')
+    :'Промена преузете количине је сачувана и проверена у бази за '+farmName+' · '+productName+' · '+variantName+'. Укупно преузето: '+f(collected)+' од '+f(confirmed)+' паковања. '+(remaining>0?'Преостало: '+f(remaining)+' паковања.':'Преузимање је завршено.');
+   setNote(resultMessage);
+  }catch(err){s.stage=stageBeforeSave;setNote('Преузимање није потврђено као сачувано: '+(err.message||String(err)),true);}
   finally{s.busy=false;render();}
  }
  async function generateViber(){
