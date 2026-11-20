@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.9.5
+ * Version: 1.9.6
  * Updated: 2026-11-20
- * Description: Clarifies the request phase as product selection; hides empty phase counters and confirmation tab.
+ * Description: Shows customer-by-customer allocated package breakdown in confirmation and pickup phases.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -55,7 +55,15 @@ export function renderProcurementStageView(ctx){
     controls='<div class="ndp3-stage-input"><label>Стварно преузето (паковања)<input type="number" inputmode="numeric" pattern="[0-9]*" min="'+f(collected)+'" max="'+f(confirmed)+'" step="1" data-field="preuzeto_pakovanja" data-id="'+e(row.id)+'" value="'+f(confirmed)+'" '+(!writable||s.busy||!canCollectProcurement(row)?'disabled':'')+'></label><div><div class="ndp3-stage-line-meta">Преостало за преузимање: <strong>'+f(Math.max(0,confirmed-collected))+' паковања</strong></div><div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="save-field" data-id="'+e(row.id)+'" '+(!writable||s.busy||!canCollectProcurement(row)?'disabled':'')+'>Евидентирај преузимање</button></div></div></div>';
    }
    const lineTitle=groupByFarms?(p?.name||'Производ')+' · '+(v?.name||v?.size_label||'Паковање'):(ff?.name||'Газдинство није пронађено');
-   return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(lineTitle)+'</div><div class="ndp3-stage-line-meta">'+e(ff?.name||'Газдинство није пронађено')+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div>'+(s.stage==='collect'?'':'<div class="ndp3-stage-line-meta">Извор: '+e(sourceSummary(d))+'</div>')+'<div class="ndp3-stage-values">'+values+'</div>'+controls+'</article>';
+   const customerTotals=new Map();
+   for(const item of s.items.filter(x=>String(x.product_id)===String(row.product_id)&&String(x.variant_id)===String(row.variant_id))){
+    const assigned=(item.farm_allocations||[]).filter(a=>String(a.gazdinstvo_id)===String(row.gazdinstvo_id)).reduce((sum,a)=>sum+n(a.broj_pakovanja),0);
+    if(assigned<=0)continue;
+    const customerKey=String(item.customer_id??('missing:'+item.id));
+    const customer=customerTotals.get(customerKey)||{name:item.customer_name||'Купац није повезан',packages:0};customer.packages+=assigned;customerTotals.set(customerKey,customer);
+   }
+   const customerBreakdown=customerTotals.size?'<div class="ndp3-customer-breakdown"><b>Купци и њихове количине</b>'+[...customerTotals.values()].map(customer=>'<span><strong>'+e(customer.name)+'</strong><small>'+f(customer.packages)+' × '+f(d?.packageSize||0)+' '+e(d?.packageUnit||'')+' ('+e(qty(customer.packages,d))+')</small></span>').join('')+'</div>':'<div class="ndp3-customer-breakdown"><small>Нема повезаних купаца за ову доделу.</small></div>';
+   return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(lineTitle)+'</div><div class="ndp3-stage-line-meta">'+e(ff?.name||'Газдинство није пронађено')+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div>'+customerBreakdown+(s.stage==='collect'?'':'<div class="ndp3-stage-line-meta">Извор: '+e(sourceSummary(d))+'</div>')+'<div class="ndp3-stage-values">'+values+'</div>'+controls+'</article>';
   };
   const groupedRows=()=>{
    const groups=new Map();
