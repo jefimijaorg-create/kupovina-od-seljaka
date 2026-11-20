@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.9.2
+ * Version: 1.9.3
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2312,4 +2312,199 @@ main,#orders-tab,#procurement-tab,#delivery-tab,#debts-tab,
   .nd-workspace .ndp3 .ndp3-request-product-action .ndp3-btn{
     width:100%!important;min-width:0!important;
   }
+}
+
+
+/* =========================================================
+ * ЈЕДИНСТВЕНИ СТАНДАРД СВИХ МОДУЛА — ЗАВРШНО УСКЛАЂИВАЊЕ
+ * Поруџбине · Производи · Набавка · Достава · Газдинства
+ * Све визуелне измене остају централизоване у admin.css.
+ * ========================================================= */
+body.nd-workspace{
+  --nd-bg:#F3F5F2;--nd-paper:#FFFFFF;--nd-ink:#344238;
+  --nd-muted:#647268;--nd-green:#285B3C;--nd-green-dark:#285B3C;
+  --nd-green-pale:#E5EEE6;--nd-line:#DCE4DC;--nd-warning:#E8A04A;
+  background:#F3F5F2!important;color:#344238!important;
+}
+html:has(body.nd-workspace){background:#F3F5F2!important}
+.nd-workspace .nd-main{width:100%!important;max-width:1500px;min-width:0}
+.nd-workspace .nd-panel,
+.nd-workspace .nd-ops-card,
+.nd-workspace .nd-order-card,
+.nd-workspace .nd-go-point,
+.nd-workspace .nd-go-customer,
+.nd-workspace .nd-go-buyer,
+.nd-workspace .nd-go-order-card,
+.nd-workspace .ndp3 .ndp3-panel,
+.nd-workspace .ndp3 .ndp3-stage-group,
+.nd-workspace .ndp3 .ndp3-stage-package,
+.nd-workspace .ndp3 .ndp3-collect-farm,
+.nd-workspace .ndp3 .ndp3-history-item{
+  width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+  background:#FFFFFF!important;color:#344238!important;
+  border:1px solid #DCE4DC!important;border-radius:14px!important;
+  box-shadow:0 2px 8px rgba(40,91,60,.06)!important;
+}
+.nd-workspace .nd-panel-head,
+.nd-workspace .nd-page-head,
+.nd-workspace .nd-drawer-head,
+.nd-workspace .nd-dialog .nd-panel-head,
+.nd-workspace .ndp3 .ndp3-panel>.ndp3-row,
+.nd-workspace .ndp3 .ndp3-stage-group>header{
+  border-color:#DCE4DC!important;
+}
+.nd-workspace .nd-panel-head h2,
+.nd-workspace .ndp3 .ndp3-panel h2,
+.nd-workspace .ndp3 .ndp3-stage-group>header strong,
+.nd-workspace .ndp3 .ndp3-stage-package>header strong{
+  color:#344238!important;
+}
+.nd-workspace .nd-page-head{
+  background:#285B3C!important;border-color:#285B3C!important;
+  border-radius:14px!important;box-shadow:none!important;
+}
+.nd-workspace .nd-page-head h1{color:#FFFFFF!important}
+.nd-workspace .nd-page-head p{color:#F0F5F1!important}
+.nd-workspace .nd-page-head:before,
+.nd-workspace .nd-page-head:after{opacity:.12}
+.nd-workspace .nd-nav button[aria-current=page],
+.nd-workspace .nd-tour-bottom-nav button.is-active{
+  background:#E5EEE6!important;border-color:#DCE4DC!important;color:#285B3C!important;
+  box-shadow:none!important;
+}
+.nd-workspace .nd-tour-bottom-nav{
+  background:#FFFFFF!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .nd-tour-bottom-nav button{color:#344238!important}
+.nd-workspace button,
+.nd-workspace input,.nd-workspace select,.nd-workspace textarea,
+#orders-tab button,#procurement-tab button,#delivery-tab button,#debts-tab button,
+#supplier-sheet-content button{
+  box-sizing:border-box;max-width:100%;
+}
+.nd-workspace input,.nd-workspace select,.nd-workspace textarea,
+#orders-tab input,#orders-tab select,#orders-tab textarea,
+#procurement-tab input,#procurement-tab select,#procurement-tab textarea,
+#delivery-tab input,#delivery-tab select,#delivery-tab textarea,
+#debts-tab input,#debts-tab select,#debts-tab textarea{
+  background:#FFFFFF!important;color:#344238!important;border-color:#DCE4DC!important;
+}
+.nd-workspace input::placeholder,.nd-workspace textarea::placeholder{color:#647268!important;opacity:1}
+.nd-workspace .ndp3 .ndp3-phase-tabs{
+  background:#FFFFFF!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab{
+  background:#F3F5F2!important;color:#344238!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab small{color:#647268!important}
+.nd-workspace .ndp3 .ndp3-phase-tab[aria-selected=true]{
+  background:#E5EEE6!important;color:#285B3C!important;border-color:#285B3C!important;
+}
+.nd-workspace .ndp3 .ndp3-phase-tab[aria-selected=true] small{color:#285B3C!important}
+.nd-workspace .ndp3 .ndp3-view-switch button{
+  background:#FFFFFF!important;color:#344238!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-view-switch button[aria-pressed=true]{
+  background:#E5EEE6!important;color:#285B3C!important;border-color:#285B3C!important;
+}
+.nd-workspace .ndp3 .ndp3-kpi,
+.nd-workspace .ndp3 .ndp3-stage-values>span,
+.nd-workspace .ndp3 .ndp3-package-totals span,
+.nd-workspace .ndp3 .ndp3-package-metrics span,
+.nd-workspace .ndp3 .ndp3-allocation-recap span{
+  background:#F3F5F2!important;color:#344238!important;border:1px solid #DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-kpi b,
+.nd-workspace .ndp3 .ndp3-stage-values>span>b,
+.nd-workspace .ndp3 .ndp3-package-totals b,
+.nd-workspace .ndp3 .ndp3-package-metrics b,
+.nd-workspace .ndp3 .ndp3-allocation-recap b{color:#285B3C!important}
+.nd-workspace .ndp3 .ndp3-kpi span,
+.nd-workspace .ndp3 .ndp3-stage-line-meta,
+.nd-workspace .ndp3 .ndp3-history-item time{color:#647268!important}
+.nd-workspace .ndp3 .ndp3-stage-package,
+.nd-workspace .ndp3 .ndp3-customer-breakdown,
+.nd-workspace .ndp3 .ndp3-request-allocation,
+.nd-workspace .ndp3 .ndp3-customer-orders,
+.nd-workspace .ndp3 .ndp3-customer-order,
+.nd-workspace .ndp3 .ndp3-customer-allocation-row,
+.nd-workspace .ndp3 .ndp3-allocation-product,
+.nd-workspace .ndp3 .ndp3-allocation-quantity{
+  background:#FFFFFF!important;color:#344238!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-note{
+  background:#F3F5F2!important;color:#344238!important;border:1px solid #DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-note.error,
+.nd-workspace .ndp3 .ndp3-package-warning{
+  background:#FFF1ED!important;color:#8A3F32!important;border-color:#F0D7D0!important;
+}
+.nd-workspace .ndp3 .ndp3-chip{
+  background:#F3F5F2!important;color:#344238!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-chip.green{
+  background:#E5EEE6!important;color:#285B3C!important;border-color:#C9D9CC!important;
+}
+.nd-workspace .ndp3 .ndp3-chip.amber,
+.nd-workspace .ndp3 .ndp3-chip.red{
+  background:#FFF3E3!important;color:#80521E!important;border-color:#E8A04A!important;
+}
+.nd-workspace .ndp3 .ndp3-btn{
+  min-height:46px;background:#FFFFFF!important;color:#285B3C!important;
+  border:1px solid #DCE4DC!important;border-radius:10px!important;
+}
+.nd-workspace .ndp3 .ndp3-btn.primary{
+  background:#285B3C!important;color:#FFFFFF!important;border-color:#285B3C!important;
+}
+.nd-workspace .ndp3 .ndp3-modal-dialog,
+.nd-workspace .ndp3 .ndp3-modal-dialog .ndp3-modal-head{
+  background:#FFFFFF!important;color:#344238!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-modal-dialog h2,
+.nd-workspace .ndp3 .ndp3-modal-dialog h3,
+.nd-workspace .ndp3 .ndp3-modal-dialog strong{color:#344238!important}
+.nd-workspace .ndp3 .ndp3-modal-dialog label,
+.nd-workspace .ndp3 .ndp3-modal-dialog small{color:#647268!important}
+.nd-workspace .ndp3 .ndp3-modal-dialog input,
+.nd-workspace .ndp3 .ndp3-modal-dialog select,
+.nd-workspace .ndp3 .ndp3-modal-dialog textarea{
+  background:#FFFFFF!important;color:#344238!important;border-color:#DCE4DC!important;
+}
+.nd-workspace .ndp3 .ndp3-customer-allocation-controls>button{
+  min-width:42px;min-height:42px;background:#E5EEE6!important;color:#285B3C!important;
+  border:1px solid #DCE4DC!important;border-radius:10px!important;
+}
+.nd-workspace .ndp3 .ndp3-customer-allocation-controls>input{min-height:44px}
+.nd-workspace .ndp3 .ndp3-stage-input input{min-height:46px}
+.nd-workspace .nd-grouped-orders,
+.nd-workspace .nd-grouped-orders .nd-go-point,
+.nd-workspace .nd-grouped-orders .nd-go-customer,
+.nd-workspace .nd-grouped-orders .nd-go-buyer,
+.nd-workspace .nd-grouped-orders .nd-go-order-card{
+  width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+}
+@media(max-width:767px){
+  .nd-workspace .nd-tour-grid,
+  .nd-workspace .nd-grouped-orders,
+  .nd-workspace .ndp3 .ndp3-request-products,
+  #orders-tab .grid,#procurement-tab .grid,#delivery-tab .grid,#debts-tab .grid{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+  }
+  .nd-workspace .nd-main{width:100%!important;max-width:100%!important;padding-left:12px!important;padding-right:12px!important}
+  .nd-workspace .nd-panel,.nd-workspace .nd-ops-card,
+  .nd-workspace .nd-go-point,.nd-workspace .nd-go-customer,
+  .nd-workspace .nd-go-buyer,.nd-workspace .nd-go-order-card,
+  .nd-workspace .ndp3 .ndp3-panel,.nd-workspace .ndp3 .ndp3-stage-group,
+  .nd-workspace .ndp3 .ndp3-stage-package{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    padding:14px!important;border-radius:14px!important;
+  }
+  .nd-workspace .ndp3 .ndp3-request-product-card{grid-column:1/-1!important}
+  .nd-workspace .ndp3 .ndp3-request-package-row{grid-template-columns:minmax(0,1fr) 84px!important}
+  .nd-workspace .ndp3 .ndp3-customer-allocation-row{grid-template-columns:minmax(0,1fr)!important}
+  .nd-workspace .ndp3 .ndp3-customer-allocation-controls{width:100%;max-width:100%}
+  .nd-workspace .ndp3 .ndp3-customer-allocation-controls>input{min-width:0;flex:1 1 auto}
+  .nd-workspace .ndp3 .ndp3-modal-dialog{width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px)!important}
+  .nd-workspace table{display:block;width:100%;max-width:100%;overflow-x:auto}
 }
