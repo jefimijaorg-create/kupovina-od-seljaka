@@ -132,11 +132,12 @@ async function saveField(id){
   const productName=prod(row.product_id)?.name||'Производ';
   const variantName=variant(row.variant_id)?.name||variant(row.variant_id)?.size_label||'Паковање';
   const newlyCollected=Math.max(0,collected-n(row.preuzeto_pakovanja));
+  // Read customer inputs before render() replaces the stage DOM and its unsaved values.
+  const customerPickup=stageBeforeSave==='collect'
+   ? [...host.querySelectorAll('[data-customer-pickup][data-id="'+id+'"]')].map(input=>({stavka_porudzbine_id:Number(input.dataset.itemId),preuzeto_pakovanja:Number(input.value)}))
+   : undefined;
   s.busy=true;render();
   try{
-   const customerPickup=stageBeforeSave==='collect'
-    ? [...host.querySelectorAll('[data-customer-pickup][data-id="'+id+'"]')].map(input=>({stavka_porudzbine_id:Number(input.dataset.itemId),preuzeto_pakovanja:Number(input.value)}))
-    : undefined;
    await saveProcurementTracking({client,row,confirmed,collected,customerPickup});
    await load();
    s.stage=stageBeforeSave==='collect'?'collect':(confirmed>collected?'collect':'confirm');
