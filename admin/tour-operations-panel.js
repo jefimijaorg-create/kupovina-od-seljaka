@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.3
+ * Version: 1.5.4
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -44,7 +44,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const productIds = uniq(state.items.map(x=>x.product_id));
     const variantIds = uniq(state.items.map(x=>x.variant_id));
     const farmIds = uniq(state.items.map(x=>x.gazdinstvo_id));
-    const ordersResult = orderIds.length ? await client.from('porudzbine').select('id,kupac_id,status,procurement_status,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at,ukupna_cena,dostavljac').in('id',orderIds) : {data:[],error:null};
+    const ordersResult = orderIds.length ? await client.from('porudzbine').select('id,kupac_id,status,procurement_status,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at,ukupna_cena,naplaceno,dostavljac').in('id',orderIds) : {data:[],error:null};
     state.orders = fail(ordersResult, 'Поруџбине');
     const customerIds = uniq(state.orders.map(x=>x.kupac_id));
     const customerResult = customerIds.length ? await client.from('kupci').select('id,ime_prezime,telefon').in('id',customerIds) : {data:[],error:null};
@@ -155,8 +155,18 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const marginKnown=purchaseKnown&&salesKnown;
       const margin=marginKnown?sales-purchase:null;
       const marginPercent=marginKnown&&sales!==0?(margin/sales)*100:null;
+      let paid=0,paidKnown=true,receivable=0,receivableKnown=true;
+      for(const order of state.orders){
+        const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(order.id));
+        const orderValue=orderItems.reduce((sum,item)=>sum+(lineSale(item)??0),0);
+        if(orderItems.some(item=>lineSale(item)===null))receivableKnown=false;
+        const paidValue=order.naplaceno;
+        if(paidValue===null||paidValue===undefined||paidValue===''||!Number.isFinite(Number(paidValue)))paidKnown=false;
+        else paid+=Number(paidValue);
+        if(orderItems.every(item=>lineSale(item)!==null))receivable+=Math.max(0,orderValue-(Number(paidValue)||0));
+      }
       const missingCount=purchaseMissing+salesMissing;
-      const rows=(map,renderRow)=>[...map.entries()].sort((a,b)=>b[1].value!==undefined?b[1].value-a[1].value:(b[1].cost||0)-(a[1].cost||0)).map(([name,row])=>renderRow(name,row)).join('')||'<div class="nd-report-empty">Нема евидентираних ставки.</div>';
+      const rows=(map,renderRow)=>[...map.entries()].sort((a,b)=>Number(b[1])-Number(a[1])).map(([name,row])=>renderRow(name,row)).join('')||'<div class="nd-report-empty">Нема евидентираних ставки.</div>';
       const purchaseCards=[...purchaseByFarm.entries()].map(([name,row])=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>'+qty(row.quantity)+' преузетих паковања · '+row.lines+' ставки</small></div><b>'+money(row.known?row.cost:null)+'</b></article>').join('')||'<div class="nd-report-empty">Нема евидентиране набавке за ову туру.</div>';
       const customerCards=rows(salesByCustomer,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Вредност поруџбина</small></div><b>'+money(value)+'</b></article>');
       const pointCards=rows(salesByPoint,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Продајна вредност</small></div><b>'+money(value)+'</b></article>');
@@ -167,6 +177,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         '<section class="nd-report-section"><h3>Набавка по газдинствима</h3>'+purchaseCards+'</section>'+
         '<section class="nd-report-section"><h3>Продаја по купцима</h3>'+customerCards+'</section>'+
         '<section class="nd-report-section"><h3>Продаја по пунктовима</h3>'+pointCards+'</section>'+
+        '<section class="nd-report-section"><h3>Наплата</h3><article class="nd-report-row"><div><strong>Наплаћено</strong><small>Збир евидентираних уплата по поруџбинама</small></div><b>'+money(paidKnown?paid:null)+'</b></article><article class="nd-report-row"><div><strong>Преостало за наплату</strong><small>Вредност поруџбина умањена за евидентирану наплату</small></div><b>'+money(receivableKnown&&paidKnown?receivable:null)+'</b></article></section>'+
         '<section class="nd-report-section"><h3>Резултат по производима</h3>'+productCards+'</section>'+
         '<footer class="nd-report-foot">Извор: евиденција ставki поруџбина и набавка активне туре. Бруто разлика не укључује доставу, гориво, рад и друге режијске трошкове. Извештај је информативан и не мења податке.</footer></section>';
     }
@@ -404,6 +415,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     shell.innerHTML='<header class="nd-ops-head"><div><small>'+(activeTab==='report'?'ФИНАНСИЈСКИ ИЗВЕШТАЈ':'ОПЕРАТИВНИ ПРЕГЛЕД')+' · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div>'+(canReadProducts?'<button type="button" data-open-report>Финансијски извештај</button>':'')+'<button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     const compactOpsHead=shell.querySelector('.nd-ops-head');
     const adminTopbar=document.querySelector('.nd-topbar');
+    if(adminTopbar)adminTopbar.querySelectorAll('.nd-ops-head').forEach(node=>node.remove());
     if(compactOpsHead&&adminTopbar)adminTopbar.appendChild(compactOpsHead);
     shell.querySelector('[data-back]').addEventListener('click',onBack);
     shell.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
@@ -553,5 +565,5 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   }
   function showError(error){shell.innerHTML='<div class="nd-ops-error"><strong>Подаци нису учитани</strong><p>'+esc(error.message||String(error))+'</p><button type="button" data-back>Назад</button></div>';shell.querySelector('[data-back]').addEventListener('click',onBack)}
   try { await load(); } catch(error) { showError(error); }
-  return { destroy(){disposed=true;loadToken++;if(groupedOrdersView)groupedOrdersView.destroy();orderSheetPromise.then(sheet=>sheet.destroy()).catch(()=>{});root.replaceChildren();} };
+  return { destroy(){disposed=true;loadToken++;if(groupedOrdersView)groupedOrdersView.destroy();document.querySelectorAll('.nd-topbar>.nd-ops-head').forEach(node=>node.remove());orderSheetPromise.then(sheet=>sheet.destroy()).catch(()=>{});root.replaceChildren();} };
 }
