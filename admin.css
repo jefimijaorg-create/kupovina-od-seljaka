@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.0.8
+ * Version: 2.0.9
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2610,13 +2610,13 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 
 /* 5. КЛИКAБИЛНА СТАВКА И БИЛАНС */
 .nd-workspace .nd-tour-ops .nd-ops-delivery-items{display:grid;gap:8px;min-width:0;margin-top:8px}
-.nd-workspace .nd-tour-ops .nd-ops-delivery-item{display:flex;flex-direction:column;gap:8px;min-width:0;padding:10px;border:1px solid #DCE4DC;border-radius:10px;background:#F8FAF7;cursor:pointer;transition:border-color .15s,background .15s}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important;gap:8px;min-width:0;width:100%!important;max-width:100%!important;padding:10px;border:1px solid #DCE4DC;border-radius:10px;background:#F8FAF7;cursor:pointer;transition:border-color .15s,background .15s;box-sizing:border-box}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-item:focus-visible{outline:3px solid rgba(40,91,60,.22);outline-offset:2px;border-color:#285B3C}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-item.has-deficit{border:2px solid #C65A4B;background:#FFF4F1}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-item-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-item-head strong{color:#344238;font-size:13px;font-weight:850;line-height:1.25;overflow-wrap:anywhere;min-width:0}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-variant{margin-top:3px;color:#647268;font-size:11px}
-.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:6px;width:100%!important;max-width:100%!important;min-width:0!important;align-self:stretch!important;margin-top:2px;box-sizing:border-box}.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{grid-column:auto!important;grid-row:auto!important;width:auto!important;max-width:none!important;min-width:0!important;justify-self:stretch!important;box-sizing:border-box}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:flex!important;flex-direction:row!important;align-items:stretch!important;gap:6px;width:100%!important;max-width:100%!important;min-width:0!important;min-height:0;grid-column:1/-1!important;align-self:stretch!important;margin-top:2px;box-sizing:border-box}.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{display:flex!important;flex:1 1 0!important;flex-direction:column!important;justify-content:center!important;width:0!important;max-width:none!important;min-width:0!important;grid-column:auto!important;grid-row:auto!important;justify-self:stretch!important;box-sizing:border-box}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics span{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;padding:8px 9px;border:1px solid #E3E9E2;border-radius:8px;background:#FFFFFF;color:#526056;font-size:10px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{color:#344238;font-size:14px;font-weight:900;line-height:1.2}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-deficit{border-color:#DCE4DC!important;background:#F3F5F2!important;color:#526056!important}.nd-workspace .nd-tour-ops .nd-ops-delivery-deficit b{color:#344238!important}.nd-workspace .nd-tour-ops .nd-ops-delivery-deficit.is-active{border-color:#D98B80!important;background:#FCE5E1!important;color:#8A3027!important}.nd-workspace .nd-tour-ops .nd-ops-delivery-deficit.is-active b{color:#A52F25!important}
