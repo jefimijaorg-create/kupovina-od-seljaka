@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.0.1
+ * Version: 2.0.2
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2577,7 +2577,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 
 
 /* МОДУЛ ДОСТАВА — КОМПАКТНЕ КАРТИЦЕ, ФИНАНСИЈЕ И ПОТВРДА ИСПОРУКЕ */
-.nd-workspace .nd-tour-ops .nd-ops-content{display:flex;flex-direction:column;align-items:stretch;gap:12px;width:100%;max-width:800px;min-width:0;margin-inline:auto;padding-inline:12px;box-sizing:border-box}
+.nd-workspace .nd-tour-ops .nd-ops-content{display:flex;flex-direction:column;align-items:stretch;gap:12px;width:100%;max-width:1120px;min-width:0;margin-inline:auto;padding-inline:12px;box-sizing:border-box}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;min-width:0}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary>div{min-width:0;padding:10px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary small{display:block;color:#526056;font-size:10px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
@@ -2636,7 +2636,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-control input{min-height:64px;font-size:25px}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-save{min-height:52px;font-size:14px;font-weight:900}
 @media(min-width:601px) and (max-width:900px){
-  .nd-workspace .nd-tour-ops .nd-ops-content{max-width:800px;padding-inline:14px;gap:13px}
+  .nd-workspace .nd-tour-ops .nd-ops-content{max-width:1000px;padding-inline:14px;gap:13px}
   .nd-workspace .nd-tour-ops .nd-ops-delivery-point{padding:14px;gap:11px}
   .nd-workspace .nd-tour-ops .nd-ops-delivery-customer{padding:12px;gap:10px}
   .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{gap:5px}
@@ -2678,3 +2678,21 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-ops-calculator-keys button.equals{background:#285B3C;border-color:#285B3C;color:#FFFFFF}
 .nd-workspace .nd-ops-calculator-note{display:block;margin-top:11px;color:#647268;font-size:10px;line-height:1.4;text-align:center}
 @media(max-width:600px){.nd-workspace .nd-ops-calculator-launch{right:12px;bottom:calc(76px + env(safe-area-inset-bottom));min-height:46px}.nd-workspace .nd-ops-calculator{padding:12px}.nd-workspace .nd-ops-calculator-keys button{min-height:54px}}
+
+/* МОДУЛ ДОСТАВА — TABLET-FIRST БИЛАНС И БРЗА ПОТВРДА */
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head{grid-column:1/-1}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer{height:100%;box-sizing:border-box}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item{display:flex;flex-direction:column;gap:7px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics span{min-width:0;justify-content:center;padding:8px 7px;font-size:10px;line-height:1.25}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{font-size:12px;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-deficit b{color:#A33F32}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item.has-deficit{border-color:#D98B80;background:#FFF8F6}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-quick{width:100%;min-height:50px;padding:10px 12px;border:1px solid #285B3C;border-radius:10px;background:#285B3C;color:#FFFFFF;font-size:13px;font-weight:900;touch-action:manipulation}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-quick.is-filled{background:#E5EEE6;color:#285B3C;border-color:#A7C9AA}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-quick:disabled{background:#EEF1ED;color:#7B887E;border-color:#DCE4DC}
+@media(max-width:760px){
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-point{grid-template-columns:minmax(0,1fr)}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-point-head{grid-column:auto}
+}
