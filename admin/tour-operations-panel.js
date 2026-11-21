@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.1.1
+ * Version: 1.1.2
  * Updated: 2026-11-21
  * Description: Displays order prices and adds an RLS-protected open-to-processing tour transition.
  */
@@ -81,12 +81,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if(activeTab==='delivery') {
       const pointSections = state.points.map(point => {
         const pointOrders = state.orders.filter(order => String(order.punkt_id ?? '') === String(point.id));
-        const orderRows = pointOrders.length ? pointOrders.map(order => {
+        if (!pointOrders.length) return '';
+        const orderRows = pointOrders.map(order => {
           const customer = customerMap.get(order.kupac_id);
           const orderItems = state.items.filter(item => String(item.porudzbina_id) === String(order.id));
           const packageTotal = orderItems.reduce((sum,item) => sum + (Number(item.package_count) || 0),0);
           return '<div class="nd-ops-delivery-order"><strong>'+esc(customer?.ime_prezime || ('Купац #'+(order.kupac_id ?? '—')) )+'</strong><div>Поруџбина #'+esc(order.id)+' · '+orderItems.length+' ставки · '+packageTotal.toLocaleString('sr-RS')+' паковања</div>'+(customer?.telefon||order.telefon?'<small>Телефон: '+esc(customer?.telefon||order.telefon)+'</small>':'')+(order.adresa_dostave?'<small>Адреса: '+esc(order.adresa_dostave)+'</small>':'')+'</div>';
-        }).join('') : '<div class="nd-ops-empty">Нема поруџбина за овај пункт у активној тури.</div>';
+        }).join('');
         return '<article class="nd-ops-card nd-ops-delivery-point"><strong>'+esc(point.name||('Пункт #'+point.id))+'</strong><div>'+esc([point.city,point.address].filter(Boolean).join(' · '))+'</div><small>'+pointOrders.length+' поруџбина</small>'+orderRows+'</article>';
       }).join('');
       const assignedPointIds = new Set(state.points.map(point => String(point.id)));
