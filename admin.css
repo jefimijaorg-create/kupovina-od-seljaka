@@ -2961,67 +2961,13 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 }
 
 
-/* ADMIN CENTRAL — ПОЧЕТНА ДУГОВАЊА ПО ГАЗДИНСТВИМА · V4 */
-html.nd-central-light,html.nd-central-light body{background:#F3F5F2!important;color:#344238!important;color-scheme:light!important}
-body.nd-central-light{padding-bottom:0!important;font-family:Arial,system-ui,sans-serif!important}
-.nd-central-light .shell{max-width:920px;padding:14px 14px 34px}
-.nd-central-light .top{padding:4px 0 14px}
-.nd-central-light .brand small{color:#285B3C}
-.nd-central-light .brand strong{color:#344238}
-.nd-central-light .mark{background:#E5EEE7;color:#285B3C}
-.nd-central-light .quiet,.nd-central-light .filter{background:#fff!important;color:#344238!important;border:1px solid #D5DED7!important}
-.nd-central-light .hero{padding:18px 20px;border:1px solid #DCE4DD;border-radius:16px;background:#fff!important;box-shadow:0 3px 12px #3442380A}
-.nd-central-light .eyebrow{color:#285B3C}
-.nd-central-light .hero h1{color:#344238;font-size:clamp(22px,4vw,30px);margin:7px 0}
-.nd-central-light .hero p,.nd-central-light .section-head p{color:#657268}
-.nd-central-light .identity{margin-top:10px}
-.nd-central-light .pill{background:#EAF1EB;border:1px solid #D1DED3;color:#285B3C}
-.nd-central-light .section-head{margin-top:18px}
-.nd-central-light .section-head h2{color:#344238}
-.nd-central-light .home-action,.nd-central-light .tour-card{background:#fff!important;color:#344238!important;border:1px solid #DCE4DD!important}
-.nd-central-light .home-action-icon,.nd-central-light .tour-symbol{background:#EAF1EB;color:#285B3C}
-.nd-central-light .home-action small,.nd-central-light .tour-copy small{color:#657268}
-.nd-central-light .home-action-arrow,.nd-central-light .tour-arrow{color:#285B3C}
-.nd-central-light .tour-status{background:#EAF1EB;color:#285B3C}
-.nd-central-light .tour-status.closed{background:#F0F0F0;color:#5C625D}
-.nd-central-light .tour-status.processing{background:#FFF1DB;color:#86551A}
-.nd-central-light .diag{background:#fff;border:1px solid #DCE4DD}
-.nd-central-light .diag-head{border-color:#DCE4DD}
-.nd-central-light .diag-head strong{color:#344238}
-.nd-central-light .diag-line{color:#657268}
-.nd-central-light .footer{color:#657268}
-.nd-central-light .module-frame{background:#fff}
-.nd-debt-home{margin-top:16px}
-.nd-debt-total{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:16px;background:#285B3C;color:#fff;box-shadow:0 5px 16px #285B3C20}
-.nd-debt-kicker{display:block;font-size:10px;font-weight:900;letter-spacing:.1em;color:#E2F0E5}
-.nd-debt-total strong{display:block;margin-top:5px;font-size:clamp(27px,6vw,36px);line-height:1.1;font-weight:900;font-variant-numeric:tabular-nums}
-.nd-debt-total small{display:block;margin-top:6px;color:#E2F0E5;font-size:12px}
-.nd-debt-icon{display:grid;place-items:center;width:48px;height:48px;flex:0 0 48px;border-radius:14px;background:#FFFFFF20;font-size:27px;font-weight:900}
-.nd-debt-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:19px 2px 10px}
-.nd-debt-heading h2{margin:0;color:#344238;font-size:17px}
-.nd-debt-heading p{margin:4px 0 0;color:#657268;font-size:12px}
-.nd-debt-refresh{min-height:40px;padding:8px 13px;border:1px solid #C9D8CC;border-radius:10px;background:#fff;color:#285B3C;font-size:12px;font-weight:800}
-.nd-debt-list{display:grid;gap:10px}
-.nd-debt-card{min-width:0;padding:14px 15px;border:1px solid #DCE4DD;border-radius:14px;background:#fff;box-shadow:0 2px 8px #34423808}
-.nd-debt-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid #E8EDE9}
-.nd-debt-card-head h3{margin:0;color:#344238;font-family:Arial,system-ui,sans-serif!important;font-size:16px;font-weight:900;letter-spacing:0}
-.nd-debt-card-total{color:#285B3C;font-size:17px;font-weight:900;white-space:nowrap;font-variant-numeric:tabular-nums}
-.nd-debt-lines{display:grid;gap:0}
-.nd-debt-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #EEF1EE}
-.nd-debt-line:last-child{border-bottom:0;padding-bottom:0}
-.nd-debt-line-copy{min-width:0;display:grid;gap:4px}
-.nd-debt-line-copy strong{color:#344238;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
-.nd-debt-line-copy small{color:#657268;font-size:10px;line-height:1.35}
-.nd-debt-line>b{flex:0 0 auto;color:#344238;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.nd-debt-message{margin:8px 2px;color:#9A4E18;font-size:12px;overflow-wrap:anywhere}
-.nd-open-tours{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:50px;margin-top:16px;padding:12px 15px;border:1px solid #C9D8CC;border-radius:12px;background:#fff;color:#285B3C;font-size:13px;font-weight:900;text-align:left}
-.nd-open-tours span{font-size:22px;line-height:1}
-@media(max-width:620px){
- .nd-central-light .shell{padding:10px 11px 26px}
- .nd-central-light .hero{padding:15px 16px;border-radius:14px}
- .nd-debt-total{padding:16px;border-radius:14px}
- .nd-debt-card{padding:12px}
- .nd-debt-card-head h3{font-size:15px}
- .nd-debt-line-copy strong{font-size:11px}
- .nd-debt-line>b{font-size:12px}
-}
+/* ADMIN — ДЕТАЉИ ПОЈЕДИНАЧНИХ ДУГОВАЊА У ПРЕГЛЕДУ ГАЗДИНСТАВА */
+.nd-workspace .nd-debt-farm{min-width:0;padding:0 2px;border-bottom:1px solid #E4EAE5}
+.nd-workspace .nd-debt-farm:last-child{border-bottom:0}
+.nd-workspace .nd-debt-farm>.nd-debt-row{padding:11px 0 8px;border-bottom:0}
+.nd-workspace .nd-debt-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 9px 12px;margin:0 0 7px;border-left:3px solid #D7E4D9;border-radius:0 8px 8px 0;background:#F7F9F7}
+.nd-workspace .nd-debt-item-copy{display:grid;gap:3px;min-width:0}
+.nd-workspace .nd-debt-item-copy strong{color:#344238;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+.nd-workspace .nd-debt-item-copy small{color:#68766C;font-size:9px;line-height:1.35}
+.nd-workspace .nd-debt-item>b{flex:0 0 auto;color:#285B3C;font-size:11px;font-weight:900;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:420px){.nd-workspace .nd-debt-item{gap:6px;padding:7px 6px 8px 9px}.nd-workspace .nd-debt-item-copy strong{font-size:10px}.nd-workspace .nd-debt-item>b{font-size:10px}}
