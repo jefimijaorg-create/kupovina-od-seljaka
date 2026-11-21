@@ -36,6 +36,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const result = await client.from('ture').select('id,naziv,datum,status,dostavljac').eq('id', tourId).maybeSingle();
     if (result.error) throw result.error;
     if (!result.data) throw new Error('Изабрана тура није пронађена или немате дозволу за читање.');
+    if (result.data.status !== 'processing') throw new Error('Достава је доступна искључиво за туру која је у статусу обраде.');
     state.tour = result.data;
     const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,status_izdavanja,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
@@ -110,6 +111,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         Number.isFinite(Number(value))?Number(value).toLocaleString('sr-RS',{minimumFractionDigits:0,maximumFractionDigits:2})+' дин.':'Није доступно';
       const hasNumber=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
       const packageCountLabel=count=>Number(count||0).toLocaleString('sr-RS',{maximumFractionDigits:3})+' пак.';
+      const packageAmountLabel=(count,size,unit)=>{const amount=Number(count)*Number(size);return Number.isFinite(amount)?amount.toLocaleString('sr-RS',{maximumFractionDigits:3})+' '+esc(unit||''):'—'};
       const itemById=new Map(state.items.map(item=>[String(item.id),item]));
       const pickupByItem=new Map(),invalidItemIds=new Set(),invalidProductPairs=new Set();
       const productPair=row=>String(row.product_id??'')+'::'+String(row.variant_id??'');
@@ -215,16 +217,20 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             }).join(''):'<small>Нема потврђеног преузимања од газдинства.</small>';
             const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue;
             descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue});
-            return '<div class="nd-ops-delivery-item"><div class="nd-ops-delivery-item-head"><strong>'+
+            const deficitPackages=Math.max(0,ordered-picked);
+            const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
+            return '<div class="nd-ops-delivery-item'+(deficitPackages>0?' has-deficit':'')+'"><div class="nd-ops-delivery-item-head"><strong>'+
               esc(product?.name||'Производ није доступан')+' · '+esc(variant?.name||variant?.size_label||'Варијанта није наведена')+
               '</strong><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
               '<div class="nd-ops-delivery-metrics"><span>Наручено <b>'+packageCountLabel(ordered)+'</b></span>'+
-              '<span>Преузето од газдинства <b>'+packageCountLabel(picked)+'</b></span>'+
-              '<span>Испоручено купцу <b>'+packageCountLabel(deliveredPackages)+'</b></span></div>'+
+              '<span>Преузето <b>'+packageCountLabel(picked)+'</b></span>'+
+              '<span class="nd-ops-delivery-deficit">Недостаје <b>'+deficitLabel+'</b></span></div>'+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div>'+
-              '<div class="nd-ops-delivery-control"><label>Потврди испоручена паковања'+
+              '<div class="nd-ops-delivery-control"><label>Количина за предају'+
               '<input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
-              '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'></label><small>Највише доступно: '+packageCountLabel(available)+
+              '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'></label>'+
+              '<button type="button" class="nd-ops-delivery-quick" data-fill-delivery="'+esc(item.id)+'" '+(editable&&available>0?'':'disabled')+'>Попуни доступну количину · '+packageCountLabel(available)+'</button>'+
+              '<small>Количина се не може повећати изнад стварно преузете.'+
               (salePricePerPackage(item)!==null?' · '+money(salePricePerPackage(item))+' по паковању':' · продајна цена није доступна')+
               '</small></div></div>';
           }).join('');
@@ -363,6 +369,17 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       shell.querySelectorAll('[data-delivery-qty]').forEach(input=>{
         input.addEventListener('input',updateDeliveryAmounts);
         input.addEventListener('change',updateDeliveryAmounts);
+      });
+      shell.querySelectorAll('[data-fill-delivery]').forEach(button=>{
+        button.addEventListener('click',()=>{
+          if(button.disabled||deliveryBusy)return;
+          const input=shell.querySelector('[data-delivery-qty="'+button.dataset.fillDelivery+'"]');
+          if(!input||input.disabled)return;
+          input.value=input.max;
+          input.dispatchEvent(new Event('input',{bubbles:true}));
+          button.textContent='Количина је спремна за чување';
+          button.classList.add('is-filled');
+        });
       });
       updateDeliveryAmounts();
     }
