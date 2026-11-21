@@ -242,7 +242,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         const phone=customer?.telefon||orders[0]?.telefon||'';
         return '<article class="nd-ops-delivery-customer"><div class="nd-ops-delivery-customer-head"><div><strong>'+
           esc(customer?.ime_prezime||('Купац #'+(orders[0]?.kupac_id??'—')))+
-          (phone?'<a class="nd-ops-delivery-customer-phone" href="tel:'+esc(String(phone).replace(/[^\\d+]/g,''))+'">'+esc(phone)+'</a>':'')+
+          (phone?'<a class="nd-ops-delivery-customer-phone" href="tel:'+esc(String(phone).replace(/[^0-9+]/g,''))+'">'+esc(phone)+'</a>':'')+
           '<small class="nd-ops-delivery-order-refs">'+orders.map(order=>'#'+esc(order.id)).join(' · ')+'</small>'+
           '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
           orderHtml+
