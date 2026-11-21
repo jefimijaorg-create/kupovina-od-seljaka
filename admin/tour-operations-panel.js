@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.0
+ * Version: 1.4.1
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -135,6 +135,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         if(hasNumber(item.unit_price)&&hasNumber(item.package_count))return Number(item.unit_price)*Number(item.package_count);
         return null;
       };
+      const salePricePerPackage=item=>{
+        const count=Number(item.package_count),total=lineSaleValue(item);
+        if(total!==null&&Number.isFinite(count)&&count>0)return total/count;
+        return hasNumber(item.unit_price)?Number(item.unit_price):null;
+      };
       let purchaseTotal=0,purchaseKnown=true;
       for(const row of state.procurementAllocations){
         const picked=Math.max(0,Number(row.preuzeto_pakovanja)||0);
@@ -159,7 +164,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           if(invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||pickup>ordered+0.000001)invalid=true;
         }
         if(invalid){chargeKnown=false;continue}
-        if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)chargeKnown=false;else chargeTotal+=packages*Number(item.unit_price)}
+        if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)chargeKnown=false;else {const price=salePricePerPackage(item);if(price===null)chargeKnown=false;else chargeTotal+=packages*price}}
       }
       const summary='<section class="nd-ops-delivery-summary" aria-label="Финансијски преглед туре">'+
         '<div><small>Укупна набавна цена</small><strong>'+money(purchaseKnown?purchaseTotal:null)+'</strong></div>'+
@@ -186,7 +191,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const sale=lineSaleValue(item);if(sale===null)customerOrderedKnown=false;else customerOrdered+=sale;
             const billablePackages=checked?deliveredPackages:available;
             if(dataIssue)customerChargeKnown=false;
-            if(billablePackages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*Number(item.unit_price)}
+            if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
             const status=dataIssue?'Провери податке':!checked?'Чека потврду':deliveredPackages<=0?'Није испоручено':
               deliveredPackages+0.000001>=ordered?'Испоручено':'Делимично испоручено';
             const statusClass=dataIssue||(!checked&&picked===0)?'missing':!checked?'neutral':
@@ -208,7 +213,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
               '<div class="nd-ops-delivery-control"><label>Потврди испоручена паковања'+
               '<input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'></label><small>Највише доступно: '+packageCountLabel(available)+
-              (hasNumber(item.unit_price)?' · '+money(item.unit_price)+' по паковању':' · продајна цена није доступна')+
+              (salePricePerPackage(item)!==null?' · '+money(salePricePerPackage(item))+' по паковању':' · продајна цена није доступна')+
               '</small></div></div>';
           }).join('');
           const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
@@ -267,7 +272,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             packages=Number(item.isporucena_kolicina)/size;
           }
           if(invalid||!Number.isFinite(packages)||packages<0){known=false;continue}
-          if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)known=false;else total+=packages*Number(item.unit_price)}
+          if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)known=false;else {const price=salePricePerPackage(item);if(price===null)known=false;else total+=packages*price}}
         }
         const totalNode=shell.querySelector('[data-charge-total]');
         if(totalNode)totalNode.textContent=money(known?total:null);
@@ -280,7 +285,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const size=Number(line.item.package_size),packages=input?Number(input.value):
               (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1);
             if(line.hasDataIssue||input?.disabled||!Number.isFinite(packages)||packages<0){customerKnown=false;continue}
-            if(packages>0){if(!hasNumber(line.item.unit_price))customerKnown=false;else sum+=packages*Number(line.item.unit_price)}
+            if(packages>0){const price=salePricePerPackage(line.item);if(price===null)customerKnown=false;else sum+=packages*price}
           }
           const node=card.querySelector('[data-customer-charge]');if(node)node.textContent=money(customerKnown?sum:null);
         }
