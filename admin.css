@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.11
+ * Version: 2.1.12
  * Updated: 2026-11-21
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2810,3 +2810,40 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace:has(#entryHome:not([hidden])) #refreshBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #userLabel,
 .nd-workspace:has(#entryHome:not([hidden])) #activeTourStatus{display:none!important}
+
+/* ==================================================
+   ADMIN — КОМПАКТНО ЗАГЛАВЉЕ И ПРЕГЛЕД ТУРА НА ТАБЛЕТУ/МОБИЛНОМ
+   Смањује празан простор и групише статусне панеле.
+   ================================================== */
+@media(max-width:767px){
+  .nd-workspace .nd-main{padding:8px 10px calc(24px + env(safe-area-inset-bottom))!important}
+  .nd-workspace .nd-page-head{
+    display:flex!important;align-items:center!important;justify-content:space-between!important;
+    flex-wrap:wrap;gap:8px!important;min-height:0!important;
+    margin:0 0 9px!important;padding:11px 13px!important;border-radius:13px!important;
+  }
+  .nd-workspace .nd-page-head>div:first-child{flex:1 1 180px;min-width:0}
+  .nd-workspace .nd-page-head h1{font-size:21px!important;line-height:1.12!important;margin:3px 0!important}
+  .nd-workspace .nd-page-head p{font-size:11px!important;line-height:1.25!important}
+  .nd-workspace .nd-page-head .nd-eyebrow{font-size:9px!important;letter-spacing:.1em!important}
+  .nd-workspace .nd-page-head-actions{display:flex!important;align-items:center!important;gap:6px!important;flex:0 1 auto}
+  .nd-workspace .nd-page-head .nd-status{display:inline-flex!important;max-width:145px!important;min-height:28px!important;margin:0!important;padding:5px 7px!important;font-size:8px!important;white-space:normal}
+  .nd-workspace .nd-home-return{min-height:30px!important;padding:5px 8px!important;font-size:10px!important;white-space:nowrap}
+  .nd-workspace .nd-tour-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;align-items:start}
+  .nd-workspace .nd-panel{min-width:0!important;padding:10px!important;border-radius:13px!important}
+  .nd-workspace .nd-panel-head{gap:5px!important;padding-bottom:7px!important;margin-bottom:6px!important}
+  .nd-workspace .nd-panel-head h2{font-size:12px!important;line-height:1.2!important}
+  .nd-workspace .nd-count{min-width:27px!important;min-height:27px!important;font-size:12px!important;border-radius:9px!important}
+  .nd-workspace .nd-tour-list{gap:6px!important}
+  .nd-workspace .nd-tour-item{min-height:58px!important;gap:7px!important;padding:8px!important;border-radius:10px!important}
+  .nd-workspace .nd-tour-icon{width:32px!important;height:32px!important;flex-basis:32px!important;border-radius:9px!important;font-size:15px!important}
+  .nd-workspace .nd-tour-copy{gap:3px!important}
+  .nd-workspace .nd-tour-copy strong{font-size:11px!important;line-height:1.25!important}
+  .nd-workspace .nd-tour-copy small{font-size:9px!important;line-height:1.2!important}
+  .nd-workspace .nd-empty,.nd-workspace .nd-loading{padding:11px 6px!important;font-size:10px!important}
+}
+@media(max-width:390px){
+  .nd-workspace .nd-tour-grid{grid-template-columns:minmax(0,1fr)!important}
+  .nd-workspace .nd-page-head{align-items:flex-start!important}
+  .nd-workspace .nd-page-head-actions{width:100%;justify-content:flex-start}
+}
