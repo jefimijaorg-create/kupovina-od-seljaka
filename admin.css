@@ -2556,3 +2556,21 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 }
  .nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input>label{grid-template-columns:minmax(0,1fr) 88px!important}
 }
+
+
+/* МОДУЛ ДОСТАВА — СТАВКЕ КУПЦА И СТВАРНО ПРЕУЗИМАЊЕ ОД ГАЗДИНСТВА */
+.nd-workspace .nd-ops-delivery-items{display:grid;gap:9px;margin-top:10px;min-width:0}
+.nd-workspace .nd-ops-delivery-item{padding:10px;border:1px solid #DCE4DC;border-radius:11px;background:#F8FAF7;min-width:0}
+.nd-workspace .nd-ops-delivery-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.nd-workspace .nd-ops-delivery-item-head strong{color:#344238;font-size:14px}
+.nd-workspace .nd-ops-delivery-variant{margin-top:3px;color:#647268;font-size:12px}
+.nd-workspace .nd-ops-delivery-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:7px;font-size:11px;font-weight:750;background:#EEF1ED;color:#526056}
+.nd-workspace .nd-ops-delivery-status.complete{background:#E5EEE6;color:#285B3C}
+.nd-workspace .nd-ops-delivery-status.partial{background:#FFF3E3;color:#80521E}
+.nd-workspace .nd-ops-delivery-status.missing{background:#FFF1ED;color:#8A3F32}
+.nd-workspace .nd-ops-delivery-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}
+.nd-workspace .nd-ops-delivery-metrics span{display:flex;flex-direction:column;gap:3px;padding:7px;background:#FFFFFF;border:1px solid #E3E9E2;border-radius:8px;color:#647268;font-size:11px;min-width:0;overflow-wrap:anywhere}
+.nd-workspace .nd-ops-delivery-metrics b{color:#344238;font-size:13px}
+.nd-workspace .nd-ops-delivery-farms{display:grid;gap:4px;margin-top:8px}
+.nd-workspace .nd-ops-delivery-farms small{color:#526056;font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+@media(max-width:600px){.nd-workspace .nd-ops-delivery-metrics{grid-template-columns:minmax(0,1fr)}.nd-workspace .nd-ops-delivery-item{padding:9px}}
