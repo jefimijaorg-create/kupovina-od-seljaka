@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.0.5
+ * Version: 1.0.6
  * Updated: 2026-11-19
  * Description: Displays verified package and line prices plus buyer payable totals; retains compact cards and point quick actions.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -50,7 +50,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     }).join('') : '<div class="nd-go-empty">Нема ставки у корпи.</div>';
     return '<article class="nd-go-order-card" data-order-card="' + esc(order.id) + '">' +
       '<div class="nd-go-order"><button type="button" class="nd-go-drag" data-drag-order="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + ' aria-label="Превуци поруџбину #' + esc(order.id) + '" title="Превуци поруџбину">⠿</button>' +
-      '<div style="min-width:0;flex:1"><div class="nd-go-customer-top"><div class="nd-go-order-meta"><span>Поруџбина #' + esc(order.id) + '</span></div>' +
+      '<div class="nd-go-order-main"><div class="nd-go-customer-top"><div class="nd-go-order-meta"><span>Поруџбина #' + esc(order.id) + '</span></div>' +
       (canManage ? '<button type="button" class="nd-go-quick-point" data-quick-point="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + '>Промени пункт</button>' : '') + '</div>' +
       '<div class="nd-go-lines">' + lineHtml + '</div>' +
       '<div class="nd-go-order-meta">' + lines.length + ' ' + (lines.length === 1 ? 'производ' : 'производа') + '</div>' +
@@ -187,5 +187,5 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
   }
 
   render();
-  return { destroy() { root.replaceChildren(); style.remove(); } };
+  return { destroy() { root.replaceChildren(); } };
 }
