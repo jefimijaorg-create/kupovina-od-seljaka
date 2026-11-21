@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.8
+ * Version: 1.4.9
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -19,7 +19,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const role = core.getState().role;
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
-  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false;
+  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
   let calculatorExpression='0', calculatorJustEvaluated=false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
@@ -270,12 +270,29 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         return '<section class="nd-ops-card nd-ops-delivery-point"><div class="nd-ops-delivery-point-head"><div><strong>'+
           esc(pointName)+'</strong><small>'+esc(pointMeta||'')+'</small></div><span>'+byCustomer.size+' купаца</span></div>'+cards+'</section>';
       };
-      const pointSections=state.points.map(point=>{
-        const pointOrders=activeOrders.filter(order=>String(order.punkt_id??'')===String(point.id));
+      const pointWork=state.points.map(point=>{
+        const pointOrders=state.orders.filter(order=>String(order.punkt_id??'')===String(point.id));
+        if(!pointOrders.length)return null;
+        const remaining=pointOrders.filter(order=>order.dostava_obradjena!==true);
         const stop=state.tourStops.find(row=>String(row.punkt_id)===String(point.id));
         const schedule=stop?.vreme?'Време: '+stop.vreme:'';
-        return renderPointSection(point.id,point.name||('Пункт #'+point.id),[schedule,point.city,point.address].filter(Boolean).join(' · '),pointOrders);
-      }).join('');
+        const customers=new Set(pointOrders.map(order=>String(order.kupac_id??'unknown-'+order.id)));
+        return {point,pointOrders,remaining,customers,schedule};
+      }).filter(Boolean);
+      if(selectedDeliveryPointId!==null&&!pointWork.some(row=>String(row.point.id)===String(selectedDeliveryPointId)&&row.remaining.length)){
+        selectedDeliveryPointId=null;
+      }
+      const remainingPoints=pointWork.filter(row=>row.remaining.length>0);
+      const selectedWork=selectedDeliveryPointId===null?null:remainingPoints.find(row=>String(row.point.id)===String(selectedDeliveryPointId));
+      const pointSections=selectedWork
+        ? '<div class="nd-ops-delivery-point-detail"><button type="button" class="nd-ops-delivery-back" data-delivery-back>← Сви пунктови</button>'+
+          renderPointSection(selectedWork.point.id,selectedWork.point.name||('Пункт #'+selectedWork.point.id),[selectedWork.schedule,selectedWork.point.city,selectedWork.point.address].filter(Boolean).join(' · '),selectedWork.remaining)+'</div>'
+        : '<div class="nd-ops-delivery-point-list">'+remainingPoints.map(row=>
+          '<button type="button" class="nd-ops-delivery-point-choice" data-delivery-open-point="'+esc(row.point.id)+'">'+
+          '<span class="nd-ops-delivery-choice-copy"><strong>'+esc(row.point.name||('Пункт #'+row.point.id))+'</strong>'+
+          '<small>'+(row.schedule?'Долазак: '+esc(row.schedule.replace(/^Време:\s*/,'')):'Време није наведено')+'</small></span>'+
+          '<span class="nd-ops-delivery-choice-count">'+row.customers.size+' куп. · '+row.remaining.length+' пор.</span><span class="nd-ops-delivery-choice-arrow">›</span></button>'
+        ).join('')+(remainingPoints.length?'':'<div class="nd-ops-empty">Сви пунктови су завршени. Нема активних испорука.</div>')+'</div>';
       const assignedPointIds=new Set(state.points.map(point=>String(point.id)));
       const unassignedOrders=activeOrders.filter(order=>!order.punkt_id||!assignedPointIds.has(String(order.punkt_id)));
       const unassignedSection=unassignedOrders.length?renderPointSection('unassigned','Поруџбине без познатог пункта','Потребна је провера пункта',unassignedOrders):'';
@@ -310,7 +327,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           const node=card.querySelector('[data-customer-charge]');if(node)node.textContent=money(customerKnown?sum:null);
         }
       };
-      body=summary+(pointSections||'')+(unassignedSection||'')+
+      body=summary+'<div class="nd-ops-delivery-overview"><strong>'+remainingPoints.length+' преосталих пунктова</strong><span>'+pointWork.filter(row=>row.remaining.length===0).length+' завршених</span></div>'+(pointSections||'')+(unassignedSection||'')+
         (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
       body+='<button type="button" class="nd-ops-calculator-launch" data-calculator-open>⌗ Калкулатор</button>'+
         '<div class="nd-ops-calculator-overlay" data-calculator-overlay hidden><section class="nd-ops-calculator" role="dialog" aria-modal="true" aria-labelledby="ndCalculatorTitle">'+
@@ -367,6 +384,16 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       try { const sheet=await orderSheetPromise; await sheet.open(button.dataset.openOrder); }
       catch(error) { button.disabled=false; showError(error); }
     }));
+    shell.querySelectorAll('[data-delivery-open-point]').forEach(button=>button.addEventListener('click',()=>{
+      if(deliveryBusy||button.disabled)return;
+      selectedDeliveryPointId=String(button.dataset.deliveryOpenPoint);
+      render();
+    }));
+    shell.querySelector('[data-delivery-back]')?.addEventListener('click',()=>{
+      if(deliveryBusy)return;
+      selectedDeliveryPointId=null;
+      render();
+    });
     if(updateDeliveryAmounts){
       shell.querySelectorAll('[data-delivery-qty]').forEach(input=>{
         input.addEventListener('input',updateDeliveryAmounts);
