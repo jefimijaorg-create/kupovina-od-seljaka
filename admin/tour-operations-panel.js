@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.1
+ * Version: 1.4.2
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -20,6 +20,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
   let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false;
+  let calculatorExpression='0', calculatorJustEvaluated=false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
     client,
@@ -82,6 +83,17 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if (token !== loadToken || disposed) return;
     render();
   };
+  /* КАЛКУЛАТОР ДОСТАВЕ — САМОСТАЛАН ОБРАЧУН, БЕЗ УПИСА У БАЗУ */
+  function calculateDeliveryExpression(source) {
+    const text=String(source||'').replace(/,/g,'.').replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/\s+/g,'');
+    const tokens=text.match(/(?:\d+(?:\.\d*)?|\.\d+)|[()+\-*/]/g)||[];
+    if(!tokens.length||tokens.join('')!==text) throw new Error('Неисправан израз');
+    let i=0;
+    function factor(){const t=tokens[i];if(t==='+'){i++;return factor();}if(t==='-'){i++;return -factor();}if(t==='('){i++;const v=expression();if(tokens[i]!==')')throw new Error('Недостаје заграда');i++;return v;}if(t===undefined||t===')')throw new Error('Недостаје број');i++;return Number(t);}
+    function term(){let v=factor();while(tokens[i]==='*'||tokens[i]==='/'){const op=tokens[i++],r=factor();if(op==='/'&&r===0)throw new Error('Дељење нулом');v=op==='*'?v*r:v/r;}return v;}
+    function expression(){let v=term();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],r=term();v=op==='+'?v+r:v-r;}return v;}
+    const result=expression();if(i!==tokens.length||!Number.isFinite(result))throw new Error('Неисправан израз');return result;
+  }
   const mapBy=(rows,key)=>new Map(rows.map(row=>[row[key],row]));
   function render() {
     const orderMap=mapBy(state.orders,'id'), customerMap=mapBy(state.customers,'id'), productMap=mapBy(state.products,'id'), variantMap=mapBy(state.variants,'id'), farmMap=mapBy(state.farms,'id'), pointMap=mapBy(state.points,'id');
@@ -292,10 +304,33 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       };
       body=summary+(pointSections||'')+(unassignedSection||'')+
         (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
+      body+='<button type="button" class="nd-ops-calculator-launch" data-calculator-open>⌗ Калкулатор</button>'+
+        '<div class="nd-ops-calculator-overlay" data-calculator-overlay hidden><section class="nd-ops-calculator" role="dialog" aria-modal="true" aria-labelledby="ndCalculatorTitle">'+
+        '<header><strong id="ndCalculatorTitle">Калкулатор</strong><button type="button" data-calculator-close aria-label="Затвори">×</button></header>'+
+        '<div class="nd-ops-calculator-screen"><small data-calculator-expression>Рачунање</small><output data-calculator-display>0</output></div>'+
+        '<div class="nd-ops-calculator-keys">'+['7','8','9','÷','4','5','6','×','1','2','3','−','C','0',',','+','(',')','⌫','='].map(key=>'<button type="button" data-calculator-key="'+key+'" class="'+(['÷','×','−','+','='].includes(key)?'operator':'')+(key==='='?' equals':'')+(key==='C'?' clear':'')+'">'+key+'</button>').join('')+'</div>'+
+        '<small class="nd-ops-calculator-note">Самосталан рачун · не мења износ купца нити податке туре</small></section></div>';
     }
     if(groupedOrdersView){groupedOrdersView.destroy();groupedOrdersView=null;}
     shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div><button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     shell.querySelector('[data-back]').addEventListener('click',onBack);
+    const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
+    const updateCalc=()=>{if(calcDisplay)calcDisplay.textContent=calculatorExpression.replace(/\./g,',')||'0';};
+    const closeCalc=()=>{if(calcOverlay)calcOverlay.hidden=true;};
+    shell.querySelector('[data-calculator-open]')?.addEventListener('click',()=>{if(calcOverlay){calcOverlay.hidden=false;updateCalc();shell.querySelector('[data-calculator-close]')?.focus();}});
+    shell.querySelector('[data-calculator-close]')?.addEventListener('click',closeCalc);
+    calcOverlay?.addEventListener('click',event=>{if(event.target===calcOverlay)closeCalc();});
+    shell.querySelectorAll('[data-calculator-key]').forEach(button=>button.addEventListener('click',()=>{
+      const key=button.dataset.calculatorKey;
+      if(key==='C'){calculatorExpression='0';calculatorJustEvaluated=false;if(calcCaption)calcCaption.textContent='Рачунање';updateCalc();return;}
+      if(key==='⌫'){calculatorExpression=calculatorExpression.length>1?calculatorExpression.slice(0,-1):'0';calculatorJustEvaluated=false;updateCalc();return;}
+      if(key==='='){try{const result=calculateDeliveryExpression(calculatorExpression);calculatorExpression=String(Number(result.toPrecision(12)));calculatorJustEvaluated=true;if(calcCaption)calcCaption.textContent='Резултат';updateCalc();}catch(error){if(calcCaption)calcCaption.textContent=error.message||'Провери израз';}return;}
+      const operator=['+','−','×','÷'].includes(key);
+      if(calculatorJustEvaluated&&!operator&&key!==')')calculatorExpression='0';
+      calculatorJustEvaluated=false;
+      if(calculatorExpression==='0'&&!operator&&![')',','].includes(key))calculatorExpression=key;else calculatorExpression+=key;
+      if(calcCaption)calcCaption.textContent='Рачунање';updateCalc();
+    }));
     shell.querySelector('[data-tour-processing]')?.addEventListener('click', async event => {
       const button = event.currentTarget;
       if (statusBusy || state.tour.status !== 'open' || !['admin','super_admin'].includes(role)) return;
