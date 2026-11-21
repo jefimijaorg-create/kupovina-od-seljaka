@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.3
+ * Version: 1.4.4
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
