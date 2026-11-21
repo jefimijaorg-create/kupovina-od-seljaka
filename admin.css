@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.0.0
+ * Version: 2.0.1
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2577,7 +2577,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 
 
 /* МОДУЛ ДОСТАВА — КОМПАКТНЕ КАРТИЦЕ, ФИНАНСИЈЕ И ПОТВРДА ИСПОРУКЕ */
-.nd-workspace .nd-tour-ops .nd-ops-content{display:flex;flex-direction:column;align-items:stretch;gap:12px;width:100%;max-width:1080px;min-width:0;margin-inline:auto;padding-inline:clamp(0px,1.2vw,12px);box-sizing:border-box}
+.nd-workspace .nd-tour-ops .nd-ops-content{display:flex;flex-direction:column;align-items:stretch;gap:12px;width:100%;max-width:800px;min-width:0;margin-inline:auto;padding-inline:12px;box-sizing:border-box}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;min-width:0}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary>div{min-width:0;padding:10px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary small{display:block;color:#526056;font-size:10px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
@@ -2618,13 +2618,35 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-save{width:100%;min-height:44px;padding:10px 14px;border:1px solid #285B3C;border-radius:9px;background:#285B3C;color:#FFFFFF;font-size:12px;font-weight:850}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-save:disabled{opacity:.6}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-feedback{color:#80521E;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
-@media(min-width:768px){
-  .nd-workspace .nd-tour-ops .nd-ops-content{gap:14px}
-  .nd-workspace .nd-tour-ops .nd-ops-delivery-point{padding:16px;gap:12px}
-  .nd-workspace .nd-tour-ops .nd-ops-delivery-customer{padding:14px;gap:11px}
-  .nd-workspace .nd-tour-ops .nd-ops-delivery-control{padding:14px;gap:9px}
-  .nd-workspace .nd-tour-ops .nd-ops-delivery-control input{min-height:60px;font-size:24px}
-  .nd-workspace .nd-tour-ops .nd-ops-delivery-save{min-height:52px;font-size:14px}
+/* МОДУЛ ДОСТАВА — ТАБЛЕТСКА ШИРИНА И ЈАСНА ХИЈЕРАРХИЈА */
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head strong{font-size:13px;font-weight:700;line-height:1.25}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head small{font-size:10px;line-height:1.35}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head{gap:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head>div{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head>div>strong{font-size:15px;line-height:1.25}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-phone{margin-top:0;font-size:14px;font-weight:950;line-height:1.3;text-decoration:none}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order-refs{margin-top:1px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order{padding:10px 0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item{padding:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics span{min-width:0;padding:7px 6px;font-size:10px;line-height:1.25;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{font-size:12px;line-height:1.25}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control{gap:8px;margin-top:10px;padding:12px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control small{order:-1;display:block;padding:9px 11px;border:1px solid #E8A04A;border-left:4px solid #E8A04A;border-radius:8px;background:#FFF8EE;color:#67451F;font-size:12px;font-weight:900;line-height:1.4}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control input{min-height:64px;font-size:25px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-save{min-height:52px;font-size:14px;font-weight:900}
+@media(min-width:601px) and (max-width:900px){
+  .nd-workspace .nd-tour-ops .nd-ops-content{max-width:800px;padding-inline:14px;gap:13px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-point{padding:14px;gap:11px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-customer{padding:12px;gap:10px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{gap:5px}
+}
+@media(max-width:600px){
+  .nd-workspace .nd-tour-ops .nd-ops-content{padding-inline:8px;gap:10px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics span{padding:6px 4px;font-size:9px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{font-size:11px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-control{padding:10px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-control input{min-height:60px}
 }
 @media(max-width:600px){
   .nd-workspace .nd-tour-ops .nd-ops-delivery-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
