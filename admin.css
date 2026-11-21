@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.8
+ * Version: 2.1.9
  * Updated: 2026-11-21
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2763,3 +2763,36 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-tour-ops .nd-ops-delivery-action .nd-ops-delivery-quick{min-width:74px;padding-inline:7px;font-size:11px}
 }
 @media(max-width:360px){.nd-workspace .nd-tour-ops .nd-ops-delivery-main{grid-template-columns:minmax(0,1fr)}.nd-workspace .nd-tour-ops .nd-ops-delivery-action{justify-content:flex-start}}
+
+/* ==================================================
+   ADMIN — ПОЧЕТНИ ЕКРАН И ПОСТЕПЕНО ОТВАРАЊЕ РАДНОГ ПРОСТОРА
+   ================================================== */
+.nd-workspace .nd-entry-home{display:grid;align-content:center;gap:22px;width:100%;max-width:760px;min-height:calc(100dvh - 150px);margin:0 auto;padding:clamp(16px,4vw,32px);box-sizing:border-box}
+.nd-workspace .nd-entry-home[hidden]{display:none!important}
+.nd-workspace .nd-entry-heading{text-align:center}
+.nd-workspace .nd-entry-heading>span{color:#285B3C;font-size:11px;font-weight:900;letter-spacing:.14em}
+.nd-workspace .nd-entry-heading h1{margin:8px 0;color:#344238;font-size:clamp(25px,5vw,36px);font-weight:900;letter-spacing:-.03em}
+.nd-workspace .nd-entry-heading p{margin:0;color:#647268;font-size:14px}
+.nd-workspace .nd-entry-actions{display:grid;grid-template-columns:1fr;gap:12px}
+.nd-workspace .nd-entry-actions button{display:grid;grid-template-columns:54px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:14px;min-width:0;min-height:88px;padding:14px 17px;border:1px solid #DCE4DC;border-radius:15px;background:#FFFFFF;color:#344238;text-align:left;box-shadow:0 3px 12px rgba(40,91,60,.07);touch-action:manipulation}
+.nd-workspace .nd-entry-actions button>span{grid-row:1/3;display:grid;place-items:center;width:50px;height:50px;border-radius:13px;background:#E5EEE6;color:#285B3C;font-size:24px;font-weight:900}
+.nd-workspace .nd-entry-actions button strong{font-size:16px;font-weight:900;letter-spacing:.02em}
+.nd-workspace .nd-entry-actions button small{color:#647268;font-size:12px}
+.nd-workspace .nd-entry-actions button:active{background:#F3F5F2;border-color:#A7C9AA}
+.nd-workspace .nd-page-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nd-workspace .nd-home-return{min-height:40px;padding:8px 12px;border:1px solid #C9D8CB;border-radius:10px;background:#FFFFFF;color:#285B3C;font-size:12px;font-weight:850}
+.nd-workspace #tourListHead[hidden]{display:none!important}
+.nd-workspace #entryHome:not([hidden])~.nd-page-head{display:none!important}
+.nd-workspace #entryHome:not([hidden])~#dashboardTours,
+.nd-workspace #entryHome:not([hidden])~#tourOperationsRoot{display:none!important}
+.nd-workspace:has(#entryHome:not([hidden])) .nd-sidebar{display:none!important}
+.nd-workspace:has(#entryHome:not([hidden])) .nd-layout{grid-template-columns:minmax(0,1fr)!important}
+.nd-workspace:has(#entryHome:not([hidden])) .nd-main{padding-top:8px}
+.nd-workspace:has(#entryHome:not([hidden])) #menuBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #searchBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #notificationsBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #userBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #refreshBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #userLabel{display:none!important}
+@media(min-width:600px){.nd-workspace .nd-entry-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.nd-workspace .nd-entry-actions button{grid-template-columns:1fr;grid-template-rows:auto auto auto;justify-items:center;gap:8px;min-height:156px;text-align:center}.nd-workspace .nd-entry-actions button>span{grid-row:auto}.nd-workspace .nd-entry-actions button small{font-size:11px}}
+@media(max-width:420px){.nd-workspace .nd-entry-home{min-height:calc(100dvh - 95px);gap:18px;padding:14px 4px}.nd-workspace .nd-entry-actions button{min-height:82px;padding:12px}.nd-workspace .nd-entry-actions button>span{width:46px;height:46px}}
