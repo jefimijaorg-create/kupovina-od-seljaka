@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.3.0
+ * Version: 1.4.0
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -19,7 +19,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const role = core.getState().role;
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
-  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false;
+  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
     client,
@@ -48,8 +48,20 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const customerResult = customerIds.length ? await client.from('kupci').select('id,ime_prezime,telefon').in('id',customerIds) : {data:[],error:null};
     state.customers = fail(customerResult, 'Купци');
     // ДОСТАВА: сви постојећи пунктови су доступни за преглед; веза са tura_punktovi није услов.
-    const pointsResult = await client.from('punktovi').select('id,name,city,address').order('name',{ascending:true});
+    const [pointsResult, tourStopsResult] = await Promise.all([
+      client.from('punktovi').select('id,name,city,address,sort_order').order('sort_order',{ascending:true}),
+      client.from('tura_punktovi').select('punkt_id,redosled,aktivan,vreme').eq('tura_id',tourId).eq('aktivan',true).order('redosled',{ascending:true})
+    ]);
     state.points = fail(pointsResult,'Пунктови');
+    state.tourStops = fail(tourStopsResult,'Редослед пунктова');
+    if(state.tourStops.length){
+      const routeOrder=new Map(state.tourStops.map((stop,index)=>[String(stop.punkt_id),Number.isFinite(Number(stop.redosled))?Number(stop.redosled):index]));
+      state.points.sort((a,b)=>{
+        const av=routeOrder.has(String(a.id))?routeOrder.get(String(a.id)):Number.MAX_SAFE_INTEGER;
+        const bv=routeOrder.has(String(b.id))?routeOrder.get(String(b.id)):Number.MAX_SAFE_INTEGER;
+        return av-bv || (Number(a.sort_order)||0)-(Number(b.sort_order)||0);
+      });
+    }
     if (canReadProducts) {
       const procurementResult = await client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,raspodela_kupcima,preuzeto_pakovanja,naruceno,potvrdjeno_pakovanja').eq('tura_id',tourId);
       const procurementRows = fail(procurementResult,'Набавка');
@@ -75,155 +87,206 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const orderMap=mapBy(state.orders,'id'), customerMap=mapBy(state.customers,'id'), productMap=mapBy(state.products,'id'), variantMap=mapBy(state.variants,'id'), farmMap=mapBy(state.farms,'id'), pointMap=mapBy(state.points,'id');
     const title=esc(state.tour.naziv||('Тура #'+tourId));
     let body='';
+    let deliverySaveGroups = new Map();
+    let updateDeliveryAmounts = null;
     if(activeTab==='orders') body='<div data-grouped-orders-root></div>';
     if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id)||farmMap.get(p?.gazdinstvo_id);return '<article class="nd-ops-card" data-open-procurement-product="'+esc(item.product_id||'')+'" role="button" tabindex="0" aria-label="Отвори набавку за '+esc(p?.name||'производ')+'"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
     if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
     if(activeTab==='delivery') {
-      /* МОДУЛ ДОСТАВА — ТАЧНО ПОВЕЗИВАЊЕ ПРЕУЗЕТИХ КОЛИЧИНА СА ОРИГИНАЛНОМ СТАВКОМ */
-      const packageLabel = (count, item) => {
-        const packages = Number(count) || 0, size = Number(item?.package_size);
-        if (Number.isFinite(size) && size > 0) return (packages * size).toLocaleString('sr-RS') + ' ' + esc(item.package_unit || '');
-        return packages.toLocaleString('sr-RS') + ' пак.';
-      };
-      const itemById = new Map(state.items.map(item => [String(item.id), item]));
-      const pickupByItem = new Map();
-      const invalidItemIds = new Set();
-      const invalidProductPairs = new Set();
-      const productPair = row => String(row.product_id ?? '') + '::' + String(row.variant_id ?? '');
+      /* МОДУЛ ДОСТАВА — КОМПАКТНО ПО КУПЦУ, СА ПОТВРЂЕНОМ ИСПОРУКОМ */
+      const money=value=>value===null||value===undefined||value===''?'Није доступно':
+        Number.isFinite(Number(value))?Number(value).toLocaleString('sr-RS',{minimumFractionDigits:0,maximumFractionDigits:2})+' дин.':'Није доступно';
+      const hasNumber=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
+      const packageCountLabel=count=>Number(count||0).toLocaleString('sr-RS',{maximumFractionDigits:3})+' пак.';
+      const itemById=new Map(state.items.map(item=>[String(item.id),item]));
+      const pickupByItem=new Map(),invalidItemIds=new Set(),invalidProductPairs=new Set();
+      const productPair=row=>String(row.product_id??'')+'::'+String(row.variant_id??'');
+      deliverySaveGroups=new Map();
 
-      for (const allocation of state.procurementAllocations) {
-        const pair = productPair(allocation);
-        let entries = allocation.raspodela_kupcima;
-        if (typeof entries === 'string') {
-          try { entries = entries.trim() ? JSON.parse(entries) : []; }
-          catch (_) { entries = null; }
-        }
-        if (entries == null) entries = [];
-        if (!Array.isArray(entries)) {
-          invalidProductPairs.add(pair);
-          continue;
-        }
-
-        const normalizedEntries = [];
-        for (const entry of entries) {
-          const itemId = entry?.stavka_porudzbine_id;
-          const quantity = Number(entry?.preuzeto_pakovanja);
-          if (itemId === null || itemId === undefined || !Number.isFinite(quantity) || quantity < 0) {
-            invalidProductPairs.add(pair);
+      for(const allocation of state.procurementAllocations) {
+        const pair=productPair(allocation);
+        let entries=allocation.raspodela_kupcima;
+        if(typeof entries==='string'){try{entries=entries.trim()?JSON.parse(entries):[]}catch(_){entries=null}}
+        if(entries==null)entries=[];
+        if(!Array.isArray(entries)){invalidProductPairs.add(pair);continue}
+        const normalized=[];
+        for(const entry of entries){
+          const itemId=entry?.stavka_porudzbine_id,quantity=Number(entry?.preuzeto_pakovanja);
+          if(itemId===null||itemId===undefined||!Number.isFinite(quantity)||quantity<0){invalidProductPairs.add(pair);continue}
+          const item=itemById.get(String(itemId));
+          if(!item||String(item.product_id??'')!==String(allocation.product_id??'')||String(item.variant_id??'')!==String(allocation.variant_id??'')){
+            if(item)invalidItemIds.add(String(item.id));else invalidProductPairs.add(pair);
             continue;
           }
-          const item = itemById.get(String(itemId));
-          if (!item || String(item.product_id ?? '') !== String(allocation.product_id ?? '') ||
-              String(item.variant_id ?? '') !== String(allocation.variant_id ?? '')) {
-            if (item) invalidItemIds.add(String(item.id));
-            else invalidProductPairs.add(pair);
-            continue;
-          }
-          normalizedEntries.push({ item, quantity, allocation });
+          normalized.push({item,quantity,allocation});
         }
-
-        const assignedTotal = normalizedEntries.reduce((sum, entry) => sum + entry.quantity, 0);
-        const pickedAtFarm = Math.max(0, Number(allocation.preuzeto_pakovanja) || 0);
-        const exceedsPickup = assignedTotal > pickedAtFarm;
-        for (const entry of normalizedEntries) {
-          const itemId = String(entry.item.id);
-          if (!pickupByItem.has(itemId)) pickupByItem.set(itemId, []);
-          pickupByItem.get(itemId).push({
-            quantity: entry.quantity,
-            allocation,
-            pickedAtFarm,
-            exceedsPickup
-          });
-          if (exceedsPickup) invalidItemIds.add(itemId);
+        const assignedTotal=normalized.reduce((sum,row)=>sum+row.quantity,0);
+        const pickedAtFarm=Math.max(0,Number(allocation.preuzeto_pakovanja)||0),exceedsPickup=assignedTotal>pickedAtFarm;
+        for(const row of normalized){
+          const key=String(row.item.id);
+          if(!pickupByItem.has(key))pickupByItem.set(key,[]);
+          pickupByItem.get(key).push({quantity:row.quantity,allocation,pickedAtFarm,exceedsPickup});
+          if(exceedsPickup)invalidItemIds.add(key);
         }
       }
 
-      const renderDeliveryOrder = order => {
-        const customer = customerMap.get(order.kupac_id);
-        const orderItems = state.items.filter(item => String(item.porudzbina_id) === String(order.id));
-        const packageTotal = orderItems.reduce((sum,item) => sum + (Number(item.package_count) || 0),0);
-        const itemRows = canReadProducts ? orderItems.map(item => {
-          const product = productMap.get(item.product_id);
-          const variant = variantMap.get(item.variant_id);
-          const ordered = Math.max(0, Number(item.package_count) || 0);
-          const pickupRows = pickupByItem.get(String(item.id)) || [];
-          const collected = pickupRows.reduce((sum,row) => sum + row.quantity, 0);
-          const difference = ordered - collected;
-          const hasDataIssue = invalidItemIds.has(String(item.id)) ||
-            invalidProductPairs.has(productPair(item)) || collected > ordered;
-          const status = hasDataIssue ? 'Провери расподелу' :
-            ordered === 0 ? 'Нема наручене количине' :
-            collected === 0 ? 'Није преузето' :
-            difference === 0 ? 'Преузето' :
-            difference > 0 ? 'Делимично преузето' : 'Више од нарученог';
-          const statusClass = hasDataIssue || difference < 0 ? 'missing' :
-            ordered === 0 ? 'neutral' :
-            difference === 0 ? 'complete' :
-            collected === 0 ? 'missing' : 'partial';
-          const differenceLabel = difference > 0
-            ? 'Недостаје ' + packageLabel(difference,item)
-            : difference < 0
-              ? 'Вишак ' + packageLabel(Math.abs(difference),item)
-              : 'Без разлике';
-          const farmLines = pickupRows.length ? pickupRows.map(row => {
-            const farmName = farmMap.get(row.allocation.gazdinstvo_id)?.name ||
-              ('Газдинство #' + row.allocation.gazdinstvo_id);
-            const audit = row.exceedsPickup
-              ? ' · ПРОВЕРА: расподељено купцима више него што је газдинство преузело'
-              : '';
-            return '<small>' + esc(farmName) + ': купцу припада ' +
-              packageLabel(row.quantity,item) + ' · газдинство преузело укупно ' +
-              packageLabel(row.pickedAtFarm,item) + audit + '</small>';
-          }).join('') : '<small>' +
-            (hasDataIssue ? 'Подаци расподеле нису у одобреном формату или не одговарају оригиналној ставци.' :
-              'Нема повезаног стварног преузимања за ову ставку.') +
-            '</small>';
-          return '<div class="nd-ops-delivery-item"><div class="nd-ops-delivery-item-head"><strong>' +
-            esc(product?.name || 'Производ није доступан') +
-            '</strong><span class="nd-ops-delivery-status ' + statusClass + '">' +
-            esc(status) + '</span></div><div class="nd-ops-delivery-variant">' +
-            esc(variant?.name || variant?.size_label || 'Основна варијанта') +
-            '</div><div class="nd-ops-delivery-metrics"><span>Наручено <b>' +
-            packageLabel(ordered,item) + '</b></span><span>Стварно преузето <b>' +
-            packageLabel(collected,item) + '</b></span><span>Разлика <b>' +
-            esc(differenceLabel) + '</b></span></div><div class="nd-ops-delivery-farms">' +
-            farmLines + '</div></div>';
-        }).join('') : '';
-        return '<div class="nd-ops-delivery-order"><strong>' +
-          esc(customer?.ime_prezime || ('Купац #' + (order.kupac_id ?? '—'))) +
-          '</strong><div>Поруџбина #' + esc(order.id) + ' · ' + orderItems.length +
-          ' ставки · ' + packageTotal.toLocaleString('sr-RS') + ' паковања</div>' +
-          (customer?.telefon || order.telefon ? '<small>Телефон: ' +
-            esc(customer?.telefon || order.telefon) + '</small>' : '') +
-          (order.adresa_dostave ? '<small>Адреса: ' + esc(order.adresa_dostave) +
-            '</small>' : '') +
-          (canReadProducts ? '<div class="nd-ops-delivery-items">' +
-            (itemRows || '<small>У поруџбини нема ставки производа.</small>') +
-            '</div>' : '<small>Детаљи производа нису доступни за ову ADMIN улогу.</small>') +
-          '</div>';
+      const lineSaleValue=item=>{
+        if(hasNumber(item.cena_stavke))return Number(item.cena_stavke);
+        if(hasNumber(item.unit_price)&&hasNumber(item.package_count))return Number(item.unit_price)*Number(item.package_count);
+        return null;
+      };
+      let purchaseTotal=0,purchaseKnown=true;
+      for(const row of state.procurementAllocations){
+        const picked=Math.max(0,Number(row.preuzeto_pakovanja)||0);
+        if(picked<=0)continue;
+        if(!hasNumber(row.nabavna_cena))purchaseKnown=false;else purchaseTotal+=picked*Number(row.nabavna_cena);
+      }
+      let orderedSaleTotal=0,orderedSaleKnown=true;
+      for(const item of state.items){const value=lineSaleValue(item);if(value===null)orderedSaleKnown=false;else orderedSaleTotal+=value}
+      const activeOrders=state.orders.filter(order=>order.dostava_obradjena!==true);
+      const completedCount=state.orders.filter(order=>order.dostava_obradjena===true).length;
+      const activeCustomerIds=new Set(activeOrders.map(order=>String(order.kupac_id??'unknown-'+order.id)));
+      let chargeTotal=0,chargeKnown=true;
+      for(const item of state.items){
+        const order=orderMap.get(item.porudzbina_id),size=Number(item.package_size);
+        let packages=0,invalid=false;
+        if(item.stavka_cekirana===true&&hasNumber(item.isporucena_kolicina)&&Number(item.isporucena_kolicina)>0){
+          if(Number.isFinite(size)&&size>0)packages=Number(item.isporucena_kolicina)/size;else invalid=true;
+        }else if(order?.dostava_obradjena!==true){
+          const pickup=(pickupByItem.get(String(item.id))||[]).reduce((sum,row)=>sum+row.quantity,0);
+          const ordered=Math.max(0,Number(item.package_count)||0);
+          packages=Math.min(ordered,pickup);
+          if(invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||pickup>ordered+0.000001)invalid=true;
+        }
+        if(invalid){chargeKnown=false;continue}
+        if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)chargeKnown=false;else chargeTotal+=packages*Number(item.unit_price)}
+      }
+      const summary='<section class="nd-ops-delivery-summary" aria-label="Финансијски преглед туре">'+
+        '<div><small>Укупна набавна цена</small><strong>'+money(purchaseKnown?purchaseTotal:null)+'</strong></div>'+
+        '<div><small>Укупна продајна цена нарученог</small><strong>'+money(orderedSaleKnown?orderedSaleTotal:null)+'</strong></div>'+
+        '<div><small>За наплату · тренутни избор</small><strong data-charge-total>'+money(chargeKnown?chargeTotal:null)+'</strong></div>'+
+        '</section><div class="nd-ops-delivery-overview"><span>'+activeOrders.length+' активних поруџбина</span><span>'+activeCustomerIds.size+' купаца</span><span>'+completedCount+' завршених</span></div>';
+
+      const renderCustomerGroup=(pointKey,customerId,orders)=>{
+        const customer=customerMap.get(orders[0]?.kupac_id),groupKey=String(pointKey)+':'+String(customerId),descriptors=[];
+        let customerOrdered=0,customerOrderedKnown=true,customerCharge=0,customerChargeKnown=true,checkedLines=0,totalLines=0,hasIssue=false;
+        const orderHtml=orders.map(order=>{
+          const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(order.id));
+          const rows=orderItems.map(item=>{
+            totalLines++;
+            const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
+            const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
+            const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size);
+            const available=Math.min(ordered,picked),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
+            const deliveredPackages=Number.isFinite(size)&&size>0?deliveredBase/size:0;
+            const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
+              picked>ordered+0.000001||deliveredPackages>available+0.000001||!Number.isFinite(size)||size<=0;
+            const checked=item.stavka_cekirana===true;
+            if(checked)checkedLines++;if(dataIssue)hasIssue=true;
+            const sale=lineSaleValue(item);if(sale===null)customerOrderedKnown=false;else customerOrdered+=sale;
+            const billablePackages=checked?deliveredPackages:available;
+            if(dataIssue)customerChargeKnown=false;
+            if(billablePackages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*Number(item.unit_price)}
+            const status=dataIssue?'Провери податке':!checked?'Чека потврду':deliveredPackages<=0?'Није испоручено':
+              deliveredPackages+0.000001>=ordered?'Испоручено':'Делимично испоручено';
+            const statusClass=dataIssue||(!checked&&picked===0)?'missing':!checked?'neutral':
+              deliveredPackages<=0?'missing':deliveredPackages+0.000001>=ordered?'complete':'partial';
+            const farmLines=pickupRows.length?pickupRows.map(row=>{
+              const farmName=farmMap.get(row.allocation.gazdinstvo_id)?.name||('Газдинство #'+row.allocation.gazdinstvo_id);
+              return '<small>'+esc(farmName)+': преузето '+packageCountLabel(row.quantity)+' · укупно од газдинства '+
+                packageCountLabel(row.pickedAtFarm)+(row.exceedsPickup?' · ПРОВЕРА КОЛИЧИНЕ':'')+'</small>';
+            }).join(''):'<small>Нема потврђеног преузимања од газдинства.</small>';
+            const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue;
+            descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue});
+            return '<div class="nd-ops-delivery-item"><div class="nd-ops-delivery-item-head"><strong>'+
+              esc(product?.name||'Производ није доступан')+' · '+esc(variant?.name||variant?.size_label||'Варијанта није наведена')+
+              '</strong><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
+              '<div class="nd-ops-delivery-metrics"><span>Наручено <b>'+packageCountLabel(ordered)+'</b></span>'+
+              '<span>Преузето од газдинства <b>'+packageCountLabel(picked)+'</b></span>'+
+              '<span>Испоручено купцу <b>'+packageCountLabel(deliveredPackages)+'</b></span></div>'+
+              '<div class="nd-ops-delivery-farms">'+farmLines+'</div>'+
+              '<div class="nd-ops-delivery-control"><label>Потврди испоручена паковања'+
+              '<input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
+              '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'></label><small>Највише доступно: '+packageCountLabel(available)+
+              (hasNumber(item.unit_price)?' · '+money(item.unit_price)+' по паковању':' · продајна цена није доступна')+
+              '</small></div></div>';
+          }).join('');
+          const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
+          return '<div class="nd-ops-delivery-order"><div class="nd-ops-delivery-order-head"><strong>Поруџбина #'+esc(order.id)+
+            '</strong><span>'+orderItems.length+' ставки</span></div>'+
+            (order.adresa_dostave?'<small>Адреса: '+esc(order.adresa_dostave)+'</small>':'')+
+            '<div class="nd-ops-delivery-items">'+(rows||'<small>Нема ставки у поруџбини.</small>')+'</div>'+
+            '<div class="nd-ops-delivery-order-total"><span>Вредност нарученог</span><strong>'+
+            money(orderItems.every(item=>lineSaleValue(item)!==null)?orderSale:null)+'</strong></div></div>';
+        }).join('');
+        deliverySaveGroups.set(groupKey,{orders,lines:descriptors});
+        const status=hasIssue?'Провери податке':checkedLines===0?'Чека потврду':checkedLines===totalLines?'Све ставке потврђене':'Делимично потврђено';
+        const statusClass=hasIssue?'missing':checkedLines===totalLines?'complete':checkedLines?'partial':'neutral';
+        return '<article class="nd-ops-delivery-customer"><div class="nd-ops-delivery-customer-head"><div><strong>'+
+          esc(customer?.ime_prezime||('Купац #'+(orders[0]?.kupac_id??'—')))+
+          '</strong><small>'+orders.map(order=>'#'+esc(order.id)).join(' · ')+
+          (customer?.telefon||orders[0]?.telefon?' · '+esc(customer?.telefon||orders[0]?.telefon):'')+
+          '</small></div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
+          orderHtml+
+          '<div class="nd-ops-delivery-customer-footer"><div><small>Вредност нарученог</small><strong>'+
+          money(customerOrderedKnown?customerOrdered:null)+'</strong></div><div><small>За наплату</small><strong data-customer-charge>'+
+          money(customerChargeKnown?customerCharge:null)+'</strong></div></div>'+
+          (canReadProducts&&state.tour.status==='processing'?
+            '<small class="nd-ops-delivery-feedback" data-delivery-feedback aria-live="polite"></small>'+
+            '<button type="button" class="nd-ops-delivery-save" data-save-delivery-customer="'+esc(groupKey)+'">Сачувај испоруку и заврши</button>':
+            '<small>Потврда је доступна само у тури која је у обради и за овлашћену ADMIN улогу.</small>')+
+          '</article>';
       };
 
-      const pointSections = state.points.map(point => {
-        const pointOrders = state.orders.filter(order => String(order.punkt_id ?? '') === String(point.id));
-        if (!pointOrders.length) return '';
-        const orderRows = pointOrders.map(renderDeliveryOrder).join('');
-        return '<article class="nd-ops-card nd-ops-delivery-point"><strong>' +
-          esc(point.name||('Пункт #'+point.id)) + '</strong><div>' +
-          esc([point.city,point.address].filter(Boolean).join(' · ')) +
-          '</div><small>' + pointOrders.length + ' поруџбина</small>' + orderRows + '</article>';
+      const renderPointSection=(pointId,pointName,pointMeta,orders)=>{
+        if(!orders.length)return '';
+        const byCustomer=new Map();
+        for(const order of orders){const key=String(order.kupac_id??'unknown-'+order.id);if(!byCustomer.has(key))byCustomer.set(key,[]);byCustomer.get(key).push(order)}
+        const cards=[...byCustomer.entries()].map(([customerId,customerOrders])=>
+          renderCustomerGroup(pointId,customerId,customerOrders.sort((a,b)=>Number(a.id)-Number(b.id)))).join('');
+        return '<section class="nd-ops-card nd-ops-delivery-point"><div class="nd-ops-delivery-point-head"><div><strong>'+
+          esc(pointName)+'</strong><small>'+esc(pointMeta||'')+'</small></div><span>'+byCustomer.size+' купаца</span></div>'+cards+'</section>';
+      };
+      const pointSections=state.points.map(point=>{
+        const pointOrders=activeOrders.filter(order=>String(order.punkt_id??'')===String(point.id));
+        return renderPointSection(point.id,point.name||('Пункт #'+point.id),[point.city,point.address].filter(Boolean).join(' · '),pointOrders);
       }).join('');
-      const assignedPointIds = new Set(state.points.map(point => String(point.id)));
-      const unassignedOrders = state.orders.filter(order =>
-        !order.punkt_id || !assignedPointIds.has(String(order.punkt_id)));
-      const unassignedSection = unassignedOrders.length
-        ? '<article class="nd-ops-card nd-ops-delivery-point"><strong>Поруџбине без познатог пункта</strong><small>' +
-          unassignedOrders.length + ' поруџбина</small>' +
-          unassignedOrders.map(order => renderDeliveryOrder(order) +
-            (order.punkt_id ? '<small>Сачувани ID пункта: ' + esc(order.punkt_id) + '</small>' :
-              '<small>Пункт није изабран у поруџбини.</small>')).join('') +
-          '</article>' : '';
-      body = pointSections + unassignedSection ||
-        '<div class="nd-ops-empty">Нема пунктова ни поруџбина за приказ.</div>';
+      const assignedPointIds=new Set(state.points.map(point=>String(point.id)));
+      const unassignedOrders=activeOrders.filter(order=>!order.punkt_id||!assignedPointIds.has(String(order.punkt_id)));
+      const unassignedSection=unassignedOrders.length?renderPointSection('unassigned','Поруџбине без познатог пункта','Потребна је провера пункта',unassignedOrders):'';
+      updateDeliveryAmounts=()=>{
+        let total=0,known=true;
+        for(const item of state.items){
+          const input=shell.querySelector('[data-delivery-qty="'+item.id+'"]'),size=Number(item.package_size);
+          let packages=0,invalid=false;
+          if(input){
+            packages=Number(input.value);
+            const line=[...deliverySaveGroups.values()].flatMap(group=>group.lines).find(row=>String(row.item.id)===String(item.id));
+            invalid=!!line?.hasDataIssue||input.disabled;
+          }else if(item.stavka_cekirana===true&&hasNumber(item.isporucena_kolicina)&&Number(item.isporucena_kolicina)>0&&Number.isFinite(size)&&size>0){
+            packages=Number(item.isporucena_kolicina)/size;
+          }
+          if(invalid||!Number.isFinite(packages)||packages<0){known=false;continue}
+          if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)known=false;else total+=packages*Number(item.unit_price)}
+        }
+        const totalNode=shell.querySelector('[data-charge-total]');
+        if(totalNode)totalNode.textContent=money(known?total:null);
+        for(const card of shell.querySelectorAll('.nd-ops-delivery-customer')){
+          const button=card.querySelector('[data-save-delivery-customer]'),group=button?deliverySaveGroups.get(button.dataset.saveDeliveryCustomer):null;
+          if(!group)continue;
+          let sum=0,customerKnown=true;
+          for(const line of group.lines){
+            const input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]');
+            const size=Number(line.item.package_size),packages=input?Number(input.value):
+              (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1);
+            if(line.hasDataIssue||input?.disabled||!Number.isFinite(packages)||packages<0){customerKnown=false;continue}
+            if(packages>0){if(!hasNumber(line.item.unit_price))customerKnown=false;else sum+=packages*Number(line.item.unit_price)}
+          }
+          const node=card.querySelector('[data-customer-charge]');if(node)node.textContent=money(customerKnown?sum:null);
+        }
+      };
+      body=summary+(pointSections||'')+(unassignedSection||'')+
+        (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
     }
     if(groupedOrdersView){groupedOrdersView.destroy();groupedOrdersView=null;}
     shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div><button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
@@ -255,6 +318,70 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       try { const sheet=await orderSheetPromise; await sheet.open(button.dataset.openOrder); }
       catch(error) { button.disabled=false; showError(error); }
     }));
+    if(updateDeliveryAmounts){
+      shell.querySelectorAll('[data-delivery-qty]').forEach(input=>{
+        input.addEventListener('input',updateDeliveryAmounts);
+        input.addEventListener('change',updateDeliveryAmounts);
+      });
+      updateDeliveryAmounts();
+    }
+    shell.querySelectorAll('[data-save-delivery-customer]').forEach(button=>{
+      button.addEventListener('click',async()=>{
+        if(deliveryBusy||state.tour.status!=='processing')return;
+        const group=deliverySaveGroups.get(button.dataset.saveDeliveryCustomer);
+        const card=button.closest('.nd-ops-delivery-customer'),feedback=card?.querySelector('[data-delivery-feedback]');
+        if(!group||!group.lines.length)return;
+        const payloads=[];
+        try{
+          for(const line of group.lines){
+            if(line.hasDataIssue)throw new Error('Постоји неусаглашеност у расподели. Прво провери податке за све ставке.');
+            const input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]'),packages=Number(input?.value);
+            if(!input||!Number.isFinite(packages)||packages<0||packages>line.availablePackages+0.000001)
+              throw new Error('Количина за ставку #'+line.item.id+' мора бити између 0 и стварно преузете количине.');
+            if(!Number.isFinite(line.packageSize)||line.packageSize<=0)throw new Error('Недостаје величина паковања за ставку #'+line.item.id+'.');
+            payloads.push({item:line.item,baseQuantity:Number((packages*line.packageSize).toFixed(6))});
+          }
+          deliveryBusy=true;button.disabled=true;button.textContent='ЧУВАМ И ПРОВЕРАВАМ…';
+          if(feedback)feedback.textContent='Чувам потврђене количине…';
+          for(const payload of payloads){
+            const result=await client.from('stavke_porudzbine').update({
+              kolicina_za_isporuku:payload.baseQuantity,isporucena_kolicina:payload.baseQuantity,stavka_cekirana:true
+            }).eq('id',payload.item.id).eq('tura_id',tourId)
+              .select('id,kolicina_za_isporuku,isporucena_kolicina,stavka_cekirana').maybeSingle();
+            if(result.error)throw result.error;
+            if(!result.data||result.data.stavka_cekirana!==true||
+              Math.abs(Number(result.data.isporucena_kolicina)-payload.baseQuantity)>0.000001||
+              Math.abs(Number(result.data.kolicina_za_isporuku)-payload.baseQuantity)>0.000001)
+              throw new Error('База није потврдила количину за ставку #'+payload.item.id+'.');
+            Object.assign(payload.item,result.data);
+          }
+          for(const order of group.orders){
+            const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(order.id));
+            if(!orderItems.length||!orderItems.every(item=>item.stavka_cekirana===true))continue;
+            const savedOrder=await client.from('porudzbine').update({
+              dostava_obradjena:true,dostava_obradjena_at:new Date().toISOString()
+            }).eq('id',order.id).eq('dostava_obradjena',false)
+              .select('id,dostava_obradjena,dostava_obradjena_at').maybeSingle();
+            if(savedOrder.error)throw savedOrder.error;
+            if(savedOrder.data)Object.assign(order,savedOrder.data);
+            else{
+              const verify=await client.from('porudzbine').select('id,dostava_obradjena,dostava_obradjena_at').eq('id',order.id).maybeSingle();
+              if(verify.error||verify.data?.dostava_obradjena!==true)
+                throw new Error('Ставке су сачуване, али база није потврдила завршетак поруџбине #'+order.id+'. Картица је задржана ради провере.');
+              Object.assign(order,verify.data);
+            }
+          }
+          if(feedback)feedback.textContent='База је потврдила испоруку. Освежавам активни приказ…';
+          await load();
+        }catch(error){
+          if(feedback)feedback.textContent='Није све потврђено: '+(error.message||String(error))+' Картица остаје приказана.';
+          else showError(error);
+        }finally{
+          deliveryBusy=false;
+          if(button.isConnected){button.disabled=false;button.textContent='Понови чување'}
+        }
+      });
+    });
     shell.querySelectorAll('[data-open-procurement-product]').forEach(card=>{
       const open=()=>{const productId=card.dataset.openProcurementProduct;if(productId)onOpenProcurement?.(productId);};
       card.addEventListener('click',open);
