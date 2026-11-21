@@ -206,10 +206,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const billablePackages=checked?deliveredPackages:available;
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
-            const status=dataIssue?'Провери податке':!checked?'Чека потврду':deliveredPackages<=0?'Није испоручено':
-              deliveredPackages+0.000001>=ordered?'Испоручено':'Делимично испоручено';
-            const statusClass=dataIssue||(!checked&&picked===0)?'missing':!checked?'neutral':
-              deliveredPackages<=0?'missing':deliveredPackages+0.000001>=ordered?'complete':'partial';
+            const status=dataIssue?'Провери податке':deficitPackages>0?'Недостаје '+packageCountLabel(deficitPackages):
+              checked&&deliveredPackages<=0?'Није испоручено':
+              checked&&deliveredPackages+0.000001<ordered?'Делимично испоручено':'';
+            const statusClass=dataIssue||deficitPackages>0||deliveredPackages<=0?'missing':'partial';
+            const itemStatusHtml=status?'<span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span>':'';
             const farmLines=pickupRows.length?pickupRows.map(row=>{
               const farmName=farmMap.get(row.allocation.gazdinstvo_id)?.name||('Газдинство #'+row.allocation.gazdinstvo_id);
               return '<small>'+esc(farmName)+': преузето '+packageCountLabel(row.quantity)+' · укупно од газдинства '+
@@ -220,12 +221,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const deficitPackages=Math.max(0,ordered-picked);
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
             return '<div class="nd-ops-delivery-item'+(deficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
-              esc(product?.name||'Производ није доступан')+
-              '</strong><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
-              '<div class="nd-ops-delivery-package-row"><strong class="nd-ops-delivery-package">'+esc(variant?.name||variant?.size_label||'Варијанта није наведена')+'</strong><span class="nd-ops-delivery-times">×</span>'+
-              '<label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
+              esc(product?.name||'Производ није доступан')+itemStatusHtml+'</div>'+
+              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-package">'+esc(variant?.name||variant?.size_label||'Варијанта није наведена')+'</strong><span>× '+packageCountLabel(ordered)+' наручено</span></div>'+
+              '<div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>КОМАДА</small></label>'+
-              '<button type="button" class="nd-ops-delivery-quick" data-confirm-delivery="'+esc(item.id)+'" '+(editable&&available>0?'':'disabled')+'>Потврди</button></div>'+
+              '<button type="button" class="nd-ops-delivery-quick" data-confirm-delivery="'+esc(item.id)+'" '+(editable&&available>0?'':'disabled')+'>Потврди</button></div></div>'+
               '<div class="nd-ops-delivery-price-row"><span>'+ (salePricePerPackage(item)!==null?'Цена по паковању':'Цена није доступна') +'</span><strong>'+money(salePricePerPackage(item))+'</strong></div>'+
               '<div class="nd-ops-delivery-metrics"><span>Наручено <b>'+packageCountLabel(ordered)+'</b></span>'+
               '<span>Преузето <b>'+packageCountLabel(picked)+'</b></span>'+
