@@ -2930,3 +2930,32 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-report-kpis article,.nd-workspace .nd-report-section,.nd-workspace .nd-report-title{break-inside:avoid;box-shadow:none!important}
  .nd-workspace .nd-report-title{display:block}
 }
+
+
+/* ==================================================
+   ADMIN — ПОЧЕТНИ ПРЕГЛЕД ДУГОВАЊА ГАЗДИНСТВИМА
+   ================================================== */
+.nd-workspace .nd-debt-overview{display:grid;gap:10px;width:100%;max-width:760px;margin:0 auto;padding:14px;background:#FFFFFF;border:1px solid #DCE4DC;border-radius:15px;box-sizing:border-box;color:#344238}
+.nd-workspace .nd-debt-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nd-workspace .nd-debt-head>div{min-width:0}
+.nd-workspace .nd-debt-head span{color:#285B3C;font-size:9px;font-weight:900;letter-spacing:.1em}
+.nd-workspace .nd-debt-head h2{margin:3px 0 0;color:#344238;font-size:16px;font-weight:900}
+.nd-workspace .nd-debt-head button{min-height:36px;padding:7px 11px;border:1px solid #C9D8CB;border-radius:9px;background:#F3F5F2;color:#285B3C;font-size:11px;font-weight:850}
+.nd-workspace .nd-debt-head button:disabled{opacity:.55}
+.nd-workspace .nd-debt-total{display:grid;gap:3px;padding:10px 12px;border-radius:11px;background:#F3F5F2}
+.nd-workspace .nd-debt-total small{color:#647268;font-size:9px;font-weight:900;letter-spacing:.06em}
+.nd-workspace .nd-debt-total strong{color:#285B3C;font-size:clamp(21px,4vw,27px);font-weight:900;line-height:1.15}
+.nd-workspace .nd-debt-list{display:grid;gap:0;min-width:0}
+.nd-workspace .nd-debt-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:10px 2px;border-bottom:1px solid #EDF1ED}
+.nd-workspace .nd-debt-row:last-child{border-bottom:0}
+.nd-workspace .nd-debt-row strong{min-width:0;color:#344238;font-size:13px;font-weight:850;overflow-wrap:anywhere}
+.nd-workspace .nd-debt-row b{flex:0 0 auto;color:#285B3C;font-size:13px;font-weight:900;text-align:right}
+.nd-workspace .nd-debt-foot,.nd-workspace .nd-debt-empty,.nd-workspace .nd-debt-loading{margin:0;color:#68766C;font-size:10px;line-height:1.4}
+.nd-workspace .nd-debt-error{margin:0;padding:9px;border-radius:9px;background:#FFF1EF;color:#8A3027;font-size:11px;overflow-wrap:anywhere}
+@media(max-width:420px){
+ .nd-workspace .nd-debt-overview{gap:8px;padding:11px;border-radius:13px}
+ .nd-workspace .nd-debt-head h2{font-size:14px}
+ .nd-workspace .nd-debt-total{padding:9px 10px}
+ .nd-workspace .nd-debt-row{padding:9px 1px}
+ .nd-workspace .nd-debt-row strong,.nd-workspace .nd-debt-row b{font-size:12px}
+}
