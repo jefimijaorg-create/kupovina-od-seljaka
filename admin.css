@@ -2978,3 +2978,14 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
    ================================================== */
 .nd-workspace #dashboardTours{grid-template-columns:minmax(0,1fr)!important;max-width:760px;margin-inline:auto}
 .nd-workspace #dashboardTours>.nd-panel{min-width:0;width:100%}
+
+
+/* ADMIN — ИНТЕРАКТИВНИ ПРЕГЛЕД ДУГОВАЊА ПО ГАЗДИНСТВИМА */
+.nd-workspace .nd-debt-search-wrap{display:grid;gap:6px;margin:12px 0 14px;color:#344238;font-size:12px;font-weight:800}
+.nd-workspace .nd-debt-search-wrap input{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #C9D5CC;border-radius:10px;background:#FFFFFF;color:#344238;font:inherit;font-weight:500;outline:none}
+.nd-workspace .nd-debt-search-wrap input:focus{border-color:#285B3C;box-shadow:0 0 0 3px rgba(40,91,60,.12)}
+.nd-workspace .nd-debt-toggle{display:flex;width:100%;align-items:center;text-align:left;cursor:pointer;background:#FFFFFF;color:#344238;font:inherit}
+.nd-workspace .nd-debt-toggle:focus-visible{outline:3px solid #E8A04A;outline-offset:2px;border-radius:8px}
+.nd-workspace .nd-debt-chevron{flex:0 0 auto;color:#285B3C;font-size:20px;transition:transform .18s ease}
+.nd-workspace .nd-debt-farm.is-expanded .nd-debt-chevron{transform:rotate(180deg)}
+.nd-workspace .nd-debt-details[hidden],.nd-workspace .nd-debt-farm[hidden]{display:none!important}
