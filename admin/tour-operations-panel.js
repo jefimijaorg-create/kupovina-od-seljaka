@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.2
+ * Version: 1.5.3
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -19,7 +19,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const role = core.getState().role;
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
-  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
+  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
   let calculatorExpression='0', calculatorJustEvaluated=false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
@@ -105,6 +105,71 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if(activeTab==='orders') body='<div data-grouped-orders-root></div>';
     if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id)||farmMap.get(p?.gazdinstvo_id);return '<article class="nd-ops-card" data-open-procurement-product="'+esc(item.product_id||'')+'" role="button" tabindex="0" aria-label="Отвори набавку за '+esc(p?.name||'производ')+'"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
     if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
+    if(activeTab==='report') {
+      const money=value=>value===null||value===undefined?'Није обрачунато':Number(value).toLocaleString('sr-RS',{minimumFractionDigits:0,maximumFractionDigits:2})+' дин.';
+      const qty=value=>Number(value||0).toLocaleString('sr-RS',{maximumFractionDigits:3});
+      const lineSale=item=>{
+        if(item.cena_stavke!==null&&item.cena_stavke!==undefined&&item.cena_stavke!==''&&Number.isFinite(Number(item.cena_stavke)))return Number(item.cena_stavke);
+        if(item.unit_price!==null&&item.unit_price!==undefined&&item.unit_price!==''&&item.package_count!==null&&item.package_count!==undefined&&Number.isFinite(Number(item.unit_price))&&Number.isFinite(Number(item.package_count)))return Number(item.unit_price)*Number(item.package_count);
+        return null;
+      };
+      const productName=item=>productMap.get(item.product_id)?.name||'Производ није наведен';
+      const variantName=item=>{const v=variantMap.get(item.variant_id);return v?.name||v?.size_label||'Варијанта није наведена';};
+      let sales=0,salesMissing=0;
+      const salesByCustomer=new Map(),salesByProduct=new Map(),salesByPoint=new Map();
+      for(const item of state.items){
+        const value=lineSale(item),order=orderMap.get(item.porudzbina_id);
+        if(value===null){salesMissing++;continue;} sales+=value;
+        const customer=customerMap.get(order?.kupac_id)?.ime_prezime||('Купац #'+(order?.kupac_id??'—'));
+        salesByCustomer.set(customer,(salesByCustomer.get(customer)||0)+value);
+        const point=pointMap.get(order?.punkt_id)?.name||'Пункт није наведен';
+        salesByPoint.set(point,(salesByPoint.get(point)||0)+value);
+        const key=String(item.product_id)+'::'+String(item.variant_id);
+        const old=salesByProduct.get(key)||{name:productName(item),variant:variantName(item),quantity:0,value:0};
+        old.quantity+=Number(item.package_count)||0;old.value+=value;salesByProduct.set(key,old);
+      }
+      let purchase=0,purchaseMissing=0,pickedPackages=0;
+      const purchaseByFarm=new Map(),purchaseByProduct=new Map();
+      for(const row of state.procurementAllocations){
+        const picked=Number(row.preuzeto_pakovanja);
+        if(!Number.isFinite(picked)||picked<=0)continue;
+        pickedPackages+=picked;
+        const farm=farmMap.get(row.gazdinstvo_id)?.name||('Газдинство #'+row.gazdinstvo_id);
+        const product=productMap.get(row.product_id)?.name||'Производ није наведен';
+        const variant=variantMap.get(row.variant_id)?.name||variantMap.get(row.variant_id)?.size_label||'Варијанта није наведена';
+        const key=String(row.product_id)+'::'+String(row.variant_id);
+        const oldProduct=purchaseByProduct.get(key)||{name:product,variant,quantity:0,cost:0,known:true};
+        oldProduct.quantity+=picked;
+        const farmRow=purchaseByFarm.get(farm)||{quantity:0,cost:0,known:true,lines:0};
+        farmRow.quantity+=picked;farmRow.lines++;
+        if(row.nabavna_cena===null||row.nabavna_cena===undefined||row.nabavna_cena===''||!Number.isFinite(Number(row.nabavna_cena))){
+          purchaseMissing++;farmRow.known=false;oldProduct.known=false;
+        }else{
+          const cost=picked*Number(row.nabavna_cena);purchase+=cost;farmRow.cost+=cost;oldProduct.cost+=cost;
+        }
+        purchaseByFarm.set(farm,farmRow);purchaseByProduct.set(key,oldProduct);
+      }
+      const hasProcurement=state.procurementAllocations.length>0;
+      const purchaseKnown=hasProcurement&&purchaseMissing===0;
+      const salesKnown=salesMissing===0;
+      const marginKnown=purchaseKnown&&salesKnown;
+      const margin=marginKnown?sales-purchase:null;
+      const marginPercent=marginKnown&&sales!==0?(margin/sales)*100:null;
+      const missingCount=purchaseMissing+salesMissing;
+      const rows=(map,renderRow)=>[...map.entries()].sort((a,b)=>b[1].value!==undefined?b[1].value-a[1].value:(b[1].cost||0)-(a[1].cost||0)).map(([name,row])=>renderRow(name,row)).join('')||'<div class="nd-report-empty">Нема евидентираних ставки.</div>';
+      const purchaseCards=[...purchaseByFarm.entries()].map(([name,row])=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>'+qty(row.quantity)+' преузетих паковања · '+row.lines+' ставки</small></div><b>'+money(row.known?row.cost:null)+'</b></article>').join('')||'<div class="nd-report-empty">Нема евидентиране набавке за ову туру.</div>';
+      const customerCards=rows(salesByCustomer,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Вредност поруџбина</small></div><b>'+money(value)+'</b></article>');
+      const pointCards=rows(salesByPoint,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Продајна вредност</small></div><b>'+money(value)+'</b></article>');
+      const productCards=[...salesByProduct.entries()].map(([key,row])=>{const cost=purchaseByProduct.get(key);const profit=cost?.known&&row.value!==null?row.value-cost.cost:null;return '<article class="nd-report-product"><div><strong>'+esc(row.name)+'</strong><small>'+esc(row.variant)+' · '+qty(row.quantity)+' паковања</small></div><div><span>Продаја</span><b>'+money(row.value)+'</b></div><div><span>Набавка</span><b>'+money(cost&&cost.known?cost.cost:null)+'</b></div><div><span>Разлика</span><b>'+money(profit)+'</b></div></article>';}).join('')||'<div class="nd-report-empty">Нема производа за анализу.</div>';
+      body='<section class="nd-report-page"><header class="nd-report-title"><div><small>КОМПЛЕТАН ФИНАНСИЈСКИ ИЗВЕШТАЈ · ТУРА #'+esc(tourId)+'</small><h2>'+title+'</h2><p>'+fmtDate(state.tour.datum)+' · Статус: '+esc(String(state.tour.status||'').toUpperCase())+'</p></div><button type="button" data-report-back>← Назад у оперативу</button></header>'+
+        '<div class="nd-report-kpis"><article><small>Укупна набавка</small><strong>'+money(purchaseKnown?purchase:null)+'</strong><span>'+qty(pickedPackages)+' преузетих паковања</span></article><article><small>Укупна продаја</small><strong>'+money(salesKnown?sales:null)+'</strong><span>'+state.orders.length+' поруџбина</span></article><article><small>Разлика · бруто</small><strong>'+money(margin)+'</strong><span>'+(marginPercent===null?'Маржа није обрачуната':marginPercent.toLocaleString('sr-RS',{maximumFractionDigits:2})+'% од продаје')+'</span></article></div>'+
+        '<div class="nd-report-notice '+(missingCount?'is-warning':'')+'"><strong>'+(missingCount?'Обрачун није потпун':'Обрачун цена је потпун')+'</strong><span>'+(hasProcurement?purchaseMissing+' ставки набавке без цене':'Набавка није евидентирана')+' · '+salesMissing+' ставки продаје без цене. Разлика је приказана само када су обе стране потпуне.</span></div>'+
+        '<section class="nd-report-section"><h3>Набавка по газдинствима</h3>'+purchaseCards+'</section>'+
+        '<section class="nd-report-section"><h3>Продаја по купцима</h3>'+customerCards+'</section>'+
+        '<section class="nd-report-section"><h3>Продаја по пунктовима</h3>'+pointCards+'</section>'+
+        '<section class="nd-report-section"><h3>Резултат по производима</h3>'+productCards+'</section>'+
+        '<footer class="nd-report-foot">Извор: евиденција ставki поруџбина и набавка активне туре. Бруто разлика не укључује доставу, гориво, рад и друге режијске трошкове. Извештај је информативан и не мења податке.</footer></section>';
+    }
     if(activeTab==='delivery') {
       /* МОДУЛ ДОСТАВА — КОМПАКТНО ПО КУПЦУ, СА ПОТВРЂЕНОМ ИСПОРУКОМ */
       const money=value=>value===null||value===undefined||value===''?'Није доступно':
@@ -336,11 +401,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     }
     if(groupedOrdersView){groupedOrdersView.destroy();groupedOrdersView=null;}
     shell.classList.toggle('nd-tour-ops-delivery',activeTab==='delivery');
-    shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div><button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
+    shell.innerHTML='<header class="nd-ops-head"><div><small>'+(activeTab==='report'?'ФИНАНСИЈСКИ ИЗВЕШТАЈ':'ОПЕРАТИВНИ ПРЕГЛЕД')+' · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div>'+(canReadProducts?'<button type="button" data-open-report>Финансијски извештај</button>':'')+'<button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     const compactOpsHead=shell.querySelector('.nd-ops-head');
     const adminTopbar=document.querySelector('.nd-topbar');
     if(compactOpsHead&&adminTopbar)adminTopbar.appendChild(compactOpsHead);
     shell.querySelector('[data-back]').addEventListener('click',onBack);
+    shell.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
+    shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery'].includes(returnFromReport)?returnFromReport:'orders';render();});
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
     const updateCalc=()=>{if(calcDisplay)calcDisplay.textContent=calculatorExpression.replace(/\./g,',')||'0';};
     const closeCalc=()=>{if(calcOverlay)calcOverlay.hidden=true;};
