@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.2
+ * Version: 1.4.3
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -239,11 +239,12 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         deliverySaveGroups.set(groupKey,{orders,lines:descriptors});
         const status=hasIssue?'Провери податке':checkedLines===0?'Чека потврду':checkedLines===totalLines?'Све ставке потврђене':'Делимично потврђено';
         const statusClass=hasIssue?'missing':checkedLines===totalLines?'complete':checkedLines?'partial':'neutral';
+        const phone=customer?.telefon||orders[0]?.telefon||'';
         return '<article class="nd-ops-delivery-customer"><div class="nd-ops-delivery-customer-head"><div><strong>'+
           esc(customer?.ime_prezime||('Купац #'+(orders[0]?.kupac_id??'—')))+
-          '</strong><small>'+orders.map(order=>'#'+esc(order.id)).join(' · ')+
-          (customer?.telefon||orders[0]?.telefon?' · '+esc(customer?.telefon||orders[0]?.telefon):'')+
-          '</small></div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
+          (phone?'<a class="nd-ops-delivery-customer-phone" href="tel:'+esc(String(phone).replace(/[^\\d+]/g,''))+'">'+esc(phone)+'</a>':'')+
+          '<small class="nd-ops-delivery-order-refs">'+orders.map(order=>'#'+esc(order.id)).join(' · ')+'</small>'+
+          '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
           orderHtml+
           '<div class="nd-ops-delivery-customer-footer"><div><small>Вредност нарученог</small><strong>'+
           money(customerOrderedKnown?customerOrdered:null)+'</strong></div><div><small>За наплату</small><strong data-customer-charge>'+
