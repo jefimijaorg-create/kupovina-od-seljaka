@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.6
+ * Version: 1.4.7
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -224,7 +224,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
               '</strong><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
               '<div class="nd-ops-delivery-metrics"><span>Наручено <b>'+packageCountLabel(ordered)+'</b></span>'+
               '<span>Преузето <b>'+packageCountLabel(picked)+'</b></span>'+
-              '<span class="nd-ops-delivery-deficit">Недостаје <b>'+deficitLabel+'</b></span></div>'+
+              '<span class="nd-ops-delivery-deficit'+(deficitPackages>0?' is-active':'')+'">Недостаје <b>'+deficitLabel+'</b></span></div>'+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div>'+
               '<div class="nd-ops-delivery-control"><label>Количина за предају'+
               '<input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
