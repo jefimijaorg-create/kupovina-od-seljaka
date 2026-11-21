@@ -46,6 +46,7 @@
       <section class="nd-debt-overview" id="producerDebtOverview" aria-label="Преглед дуговања газдинствима">
         <div class="nd-debt-head"><div><span>ФИНАНСИЈСКИ ПРЕГЛЕД</span><h2>Дуговања газдинствима</h2></div><button type="button" id="refreshProducerDebts">Освежи</button></div>
         <div class="nd-debt-total"><small>УКУПНО НЕИЗМИРЕНО</small><strong id="producerDebtTotal">—</strong></div>
+        <label class="nd-debt-search-wrap" for="producerDebtSearch"><span>Претрага газдинства или ставке</span><input id="producerDebtSearch" type="search" inputmode="search" placeholder="Унеси назив или период…" autocomplete="off"></label>
         <div class="nd-debt-list" id="producerDebtList" aria-live="polite"><p class="nd-debt-loading">Учитавам дуговања…</p></div>
         <p class="nd-debt-foot" id="producerDebtStatus">Износ се рачуна из евидентираних обавеза умањених за уплате.</p>
       </section>
@@ -110,7 +111,8 @@ function showEntryHome(){ $('entryHome').hidden=false;$('tourListHead').hidden=t
 function showTourList(mode){entryMode=mode;$('entryHome').hidden=true;$('tourListHead').hidden=false;$('dashboardTours').hidden=false;$('tourOperationsRoot').hidden=true;$('tourBottomNav').hidden=true;$('procurementBtn').hidden=true;$('tourListTitle').textContent=mode==='orders'?'Поруџбине':mode==='operations'?'Оператива':'Туре';$('tourListDescription').textContent=mode==='orders'?'Изабери туру чије поруџбине желиш да прегледаш.':mode==='operations'?'Изабери туру за оперативни рад и доставу.':'Изабери туру за наставак рада.';}
 function renderTours(status,target,countId){const list=$(target),items=tours.filter(t=>t.status===status);$(countId).textContent=String(items.length);list.replaceChildren();if(!items.length){const e=document.createElement('div');e.className='nd-empty';e.textContent=status==='open'?'Trenutno nema otvorenih tura.':'Trenutno nema tura u obradi.';list.appendChild(e);return}items.forEach(t=>{const row=document.createElement('button');row.type='button';row.className='nd-tour-item';row.addEventListener('click',()=>openTour(t));const icon=document.createElement('span');icon.className='nd-tour-icon';icon.textContent='🧭';const copy=document.createElement('span');copy.className='nd-tour-copy';const name=document.createElement('strong');name.textContent=t.naziv||('Tura '+t.id);const meta=document.createElement('small');meta.textContent=dateLabel(t.datum)+' · #'+t.id+' · '+statusLabel(t.status);copy.append(name,meta);row.append(icon,copy);list.appendChild(row)})}
 async function loadProducerDebts(){
- const list=$('producerDebtList'),total=$('producerDebtTotal'),status=$('producerDebtStatus'),button=$('refreshProducerDebts');
+ const list=$('producerDebtList'),total=$('producerDebtTotal'),status=$('producerDebtStatus'),button=$('refreshProducerDebts'),search=$('producerDebtSearch');
+ if(search&&!search.dataset.bound){search.dataset.bound='1';search.addEventListener('input',()=>{const q=search.value.trim().toLocaleLowerCase('sr-RS');let visible=0;list.querySelectorAll('.nd-debt-farm').forEach(card=>{const show=!q||(card.dataset.search||'').includes(q);card.hidden=!show;if(show)visible++});const count=list.querySelectorAll('.nd-debt-farm').length;status.textContent=q?'Приказано '+visible+' од '+count+' газдинстава за претрагу „'+search.value.trim()+'“.':'Приказана су сва газдинства и њихова дуговања.'})}
  if(!client||!list)return;
  if(button)button.disabled=true;
  list.replaceChildren();const loading=document.createElement('p');loading.className='nd-debt-loading';loading.textContent='Учитавам дуговања…';list.appendChild(loading);
@@ -131,10 +133,13 @@ async function loadProducerDebts(){
   list.replaceChildren();
   sorted.forEach(group=>{
    const card=document.createElement('section');card.className='nd-debt-farm';
-   const head=document.createElement('div');head.className='nd-debt-row';
+   card.dataset.search=(group.name+' '+group.rows.map(r=>(r.period||'')+' '+r.id).join(' ')).toLocaleLowerCase('sr-RS');
+   const head=document.createElement('button');head.type='button';head.className='nd-debt-row nd-debt-toggle';head.setAttribute('aria-expanded','false');
    const name=document.createElement('strong');name.textContent=group.name;
    const amount=document.createElement('b');amount.textContent=new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(group.total)+' дин.';
-   head.append(name,amount);card.appendChild(head);
+   const chevron=document.createElement('span');chevron.className='nd-debt-chevron';chevron.setAttribute('aria-hidden','true');chevron.textContent='⌄';head.append(name,amount,chevron);card.appendChild(head);
+   const details=document.createElement('div');details.className='nd-debt-details';details.hidden=true;
+   head.addEventListener('click',()=>{const expanded=head.getAttribute('aria-expanded')==='true';head.setAttribute('aria-expanded',String(!expanded));details.hidden=expanded;card.classList.toggle('is-expanded',!expanded)});
    group.rows.forEach(row=>{
     const item=document.createElement('div');item.className='nd-debt-item';
     const detail=document.createElement('div');detail.className='nd-debt-item-copy';
@@ -142,9 +147,9 @@ async function loadProducerDebts(){
     const meta=document.createElement('small');meta.textContent='Евидентирано '+new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(Number(row.total_amount)||0)+' дин. · Исплаћено '+new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(Number(row.paid_amount)||0)+' дин.';
     detail.append(title,meta);
     const remaining=document.createElement('b');remaining.textContent=new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(row.remaining)+' дин.';
-    item.append(detail,remaining);card.appendChild(item);
+    item.append(detail,remaining);details.appendChild(item);
    });
-   list.appendChild(card);
+   card.appendChild(details);list.appendChild(card);
   });
   const lineCount=outstanding.length;
   status.textContent='Приказано '+sorted.length+' газдинстава и '+lineCount+' засебних ставки. Делимичне уплате су одузете од укупног износа.';
