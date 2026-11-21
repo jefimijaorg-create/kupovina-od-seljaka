@@ -1,5 +1,5 @@
 /* NARUČI DOMAĆE — ADMIN WORKSPACE
-   VISUAL SYSTEM 3.0 · Version 3.6.2 · Complete presentation-layer replacement
+   VISUAL SYSTEM 3.0 · Version 3.6.3 · Complete presentation-layer replacement
    JS contracts, IDs, data attributes and Supabase workflows remain unchanged. */
 :root{
  --nd-bg:#edf2ed;--nd-surface:#fff;--nd-soft:#f5f8f4;--nd-ink:#20352a;--nd-muted:#68786d;
@@ -345,8 +345,3 @@ body.nd-workspace{margin:0!important;padding:0 0 max(12px,env(safe-area-inset-bo
  .nd-workspace .ndp3-phase-tab{font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){.nd-workspace *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-/* МОДУЛ ДОСТАВА — ЗАВРШНИ ПРИОРИТЕТИ ЗА ХОРИЗОНТАЛНИ БИЛАНС */
-html body .nd-workspace .nd-tour-ops .nd-ops-delivery-item{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important;width:100%!important;max-width:100%!important;min-width:0!important}
-html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-flow:column!important;align-items:stretch!important;justify-items:stretch!important;gap:6px!important;width:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;grid-column:1/-1!important;justify-self:stretch!important;align-self:stretch!important;box-sizing:border-box!important}
-html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;flex:initial!important;width:100%!important;max-width:none!important;min-width:0!important;grid-column:auto!important;grid-row:1!important;justify-self:stretch!important;box-sizing:border-box!important}
-@media(max-width:380px){html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{gap:4px!important}html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{padding:6px 4px!important;font-size:9px!important}html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{font-size:11px!important}}
