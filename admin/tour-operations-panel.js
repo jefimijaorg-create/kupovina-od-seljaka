@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.4
+ * Version: 1.5.5
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -172,7 +172,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const pointCards=rows(salesByPoint,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Продајна вредност</small></div><b>'+money(value)+'</b></article>');
       const productCards=[...salesByProduct.entries()].map(([key,row])=>{const cost=purchaseByProduct.get(key);const profit=cost?.known&&row.value!==null?row.value-cost.cost:null;return '<article class="nd-report-product"><div><strong>'+esc(row.name)+'</strong><small>'+esc(row.variant)+' · '+qty(row.quantity)+' паковања</small></div><div><span>Продаја</span><b>'+money(row.value)+'</b></div><div><span>Набавка</span><b>'+money(cost&&cost.known?cost.cost:null)+'</b></div><div><span>Разлика</span><b>'+money(profit)+'</b></div></article>';}).join('')||'<div class="nd-report-empty">Нема производа за анализу.</div>';
       body='<section class="nd-report-page"><header class="nd-report-title"><div><small>КОМПЛЕТАН ФИНАНСИЈСКИ ИЗВЕШТАЈ · ТУРА #'+esc(tourId)+'</small><h2>'+title+'</h2><p>'+fmtDate(state.tour.datum)+' · Статус: '+esc(String(state.tour.status||'').toUpperCase())+'</p></div><button type="button" data-report-back>← Назад у оперативу</button></header>'+
-        '<div class="nd-report-kpis"><article><small>Укупна набавка</small><strong>'+money(purchaseKnown?purchase:null)+'</strong><span>'+qty(pickedPackages)+' преузетих паковања</span></article><article><small>Укупна продаја</small><strong>'+money(salesKnown?sales:null)+'</strong><span>'+state.orders.length+' поруџбина</span></article><article><small>Разлика · бруто</small><strong>'+money(margin)+'</strong><span>'+(marginPercent===null?'Маржа није обрачуната':marginPercent.toLocaleString('sr-RS',{maximumFractionDigits:2})+'% од продаје')+'</span></article></div>'+
+        '<div class="nd-report-print"><button type="button" data-report-print>Штампај / сачувај као PDF</button></div><div class="nd-report-kpis"><article><small>Укупна набавка</small><strong>'+money(purchaseKnown?purchase:null)+'</strong><span>'+qty(pickedPackages)+' преузетих паковања</span></article><article><small>Укупна продаја</small><strong>'+money(salesKnown?sales:null)+'</strong><span>'+state.orders.length+' поруџбина</span></article><article><small>Разлика · бруто</small><strong>'+money(margin)+'</strong><span>'+(marginPercent===null?'Маржа није обрачуната':marginPercent.toLocaleString('sr-RS',{maximumFractionDigits:2})+'% од продаје')+'</span></article></div>'+
         '<div class="nd-report-notice '+(missingCount?'is-warning':'')+'"><strong>'+(missingCount?'Обрачун није потпун':'Обрачун цена је потпун')+'</strong><span>'+(hasProcurement?purchaseMissing+' ставки набавке без цене':'Набавка није евидентирана')+' · '+salesMissing+' ставки продаје без цене. Разлика је приказана само када су обе стране потпуне.</span></div>'+
         '<section class="nd-report-section"><h3>Набавка по газдинствима</h3>'+purchaseCards+'</section>'+
         '<section class="nd-report-section"><h3>Продаја по купцима</h3>'+customerCards+'</section>'+
@@ -419,6 +419,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if(compactOpsHead&&adminTopbar)adminTopbar.appendChild(compactOpsHead);
     shell.querySelector('[data-back]').addEventListener('click',onBack);
     shell.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
+    shell.querySelector('[data-report-print]')?.addEventListener('click',()=>window.print());
     shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery'].includes(returnFromReport)?returnFromReport:'orders';render();});
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
     const updateCalc=()=>{if(calcDisplay)calcDisplay.textContent=calculatorExpression.replace(/\./g,',')||'0';};
