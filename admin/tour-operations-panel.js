@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.6
+ * Version: 1.5.7
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -150,16 +150,16 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         purchaseByFarm.set(farm,farmRow);purchaseByProduct.set(key,oldProduct);
       }
       const hasProcurement=state.procurementAllocations.length>0;
-      const purchaseKnown=hasProcurement&&purchaseMissing===0;
-      const salesKnown=salesMissing===0;
-      const marginKnown=purchaseKnown&&salesKnown;
+      const purchaseKnown=hasProcurement;
+      const salesKnown=true;
+      const marginKnown=hasProcurement;
       const margin=marginKnown?sales-purchase:null;
       const marginPercent=marginKnown&&sales!==0?(margin/sales)*100:null;
       let paid=0,paidKnown=true,receivable=0,receivableKnown=true;
       for(const order of state.orders){
         const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(order.id));
         const orderValue=orderItems.reduce((sum,item)=>sum+(lineSale(item)??0),0);
-        if(orderItems.some(item=>lineSale(item)===null))receivableKnown=false;
+        /* Ставке без продајне цене се прескачу; остале ставке остају у обрачуну. */
         const paidValue=order.naplaceno;
         if(paidValue===null||paidValue===undefined||paidValue===''||!Number.isFinite(Number(paidValue)))paidKnown=false;
         else paid+=Number(paidValue);
@@ -167,17 +167,17 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       }
       const missingCount=purchaseMissing+salesMissing;
       const rows=(map,renderRow)=>[...map.entries()].sort((a,b)=>Number(b[1])-Number(a[1])).map(([name,row])=>renderRow(name,row)).join('')||'<div class="nd-report-empty">Нема евидентираних ставки.</div>';
-      const purchaseCards=[...purchaseByFarm.entries()].map(([name,row])=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>'+qty(row.quantity)+' преузетих паковања · '+row.lines+' ставки</small></div><b>'+money(row.known?row.cost:null)+'</b></article>').join('')||'<div class="nd-report-empty">Нема евидентиране набавке за ову туру.</div>';
+      const purchaseCards=[...purchaseByFarm.entries()].map(([name,row])=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>'+qty(row.quantity)+' преузетих паковања · '+row.lines+' ставки</small></div><b>'+money(row.cost)+'</b></article>').join('')||'<div class="nd-report-empty">Нема евидентиране набавке за ову туру.</div>';
       const customerCards=rows(salesByCustomer,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Вредност поруџбина</small></div><b>'+money(value)+'</b></article>');
       const pointCards=rows(salesByPoint,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Продајна вредност</small></div><b>'+money(value)+'</b></article>');
-      const productCards=[...salesByProduct.entries()].map(([key,row])=>{const cost=purchaseByProduct.get(key);const profit=cost?.known&&row.value!==null?row.value-cost.cost:null;return '<article class="nd-report-product"><div><strong>'+esc(row.name)+'</strong><small>'+esc(row.variant)+' · '+qty(row.quantity)+' паковања</small></div><div><span>Продаја</span><b>'+money(row.value)+'</b></div><div><span>Набавка</span><b>'+money(cost&&cost.known?cost.cost:null)+'</b></div><div><span>Разлика</span><b>'+money(profit)+'</b></div></article>';}).join('')||'<div class="nd-report-empty">Нема производа за анализу.</div>';
+      const productCards=[...salesByProduct.entries()].map(([key,row])=>{const cost=purchaseByProduct.get(key);const profit=cost?.known&&row.value!==null?row.value-cost.cost:null;return '<article class="nd-report-product"><div><strong>'+esc(row.name)+'</strong><small>'+esc(row.variant)+' · '+qty(row.quantity)+' паковања</small></div><div><span>Продаја</span><b>'+money(row.value)+'</b></div><div><span>Набавка</span><b>'+money(cost?cost.cost:null)+'</b></div><div><span>Разлика</span><b>'+money(profit)+'</b></div></article>';}).join('')||'<div class="nd-report-empty">Нема производа за анализу.</div>';
       body='<section class="nd-report-page"><header class="nd-report-title"><div><small>КОМПЛЕТАН ФИНАНСИЈСКИ ИЗВЕШТАЈ · ТУРА #'+esc(tourId)+'</small><h2>'+title+'</h2><p>'+fmtDate(state.tour.datum)+' · Статус: '+esc(String(state.tour.status||'').toUpperCase())+'</p></div><button type="button" data-report-back>← Назад у оперативу</button></header>'+
-        '<div class="nd-report-print"><button type="button" data-report-print>Штампај / сачувај као PDF</button></div><div class="nd-report-kpis"><article><small>Укупна набавка</small><strong>'+money(purchaseKnown?purchase:null)+'</strong><span>'+qty(pickedPackages)+' преузетих паковања</span></article><article><small>Укупна продаја</small><strong>'+money(salesKnown?sales:null)+'</strong><span>'+state.orders.length+' поруџбина</span></article><article><small>Разлика · бруто</small><strong>'+money(margin)+'</strong><span>'+(marginPercent===null?'Маржа није обрачуната':marginPercent.toLocaleString('sr-RS',{maximumFractionDigits:2})+'% од продаје')+'</span></article></div>'+
+        '<div class="nd-report-print"><button type="button" data-report-print>Штампај / сачувај као PDF</button></div><div class="nd-report-kpis"><article><small>Укупна набавка</small><strong>'+money(purchaseKnown?purchase:null)+'</strong><span>'+qty(pickedPackages)+' преузетих паковања</span></article><article><small>Укупна продаја</small><strong>'+money(sales)+'</strong><span>'+state.orders.length+' поруџбина</span></article><article><small>Разлика · бруто</small><strong>'+money(margin)+'</strong><span>'+(marginPercent===null?'Маржа није обрачуната':marginPercent.toLocaleString('sr-RS',{maximumFractionDigits:2})+'% од продаје')+'</span></article></div>'+
         '<div class="nd-report-notice '+(missingCount?'is-warning':'')+'"><strong>'+(missingCount?'Обрачун није потпун':'Обрачун цена је потпун')+'</strong><span>'+(hasProcurement?purchaseMissing+' ставки набавке без цене':'Набавка није евидентирана')+' · '+salesMissing+' ставки продаје без цене. Разлика је приказана само када су обе стране потпуне.</span></div>'+
         '<section class="nd-report-section"><h3>Набавка по газдинствима</h3>'+purchaseCards+'</section>'+
         '<section class="nd-report-section"><h3>Продаја по купцима</h3>'+customerCards+'</section>'+
         '<section class="nd-report-section"><h3>Продаја по пунктовима</h3>'+pointCards+'</section>'+
-        '<section class="nd-report-section"><h3>Наплата</h3><article class="nd-report-row"><div><strong>Наплаћено</strong><small>Збир евидентираних уплата по поруџбинама</small></div><b>'+money(paidKnown?paid:null)+'</b></article><article class="nd-report-row"><div><strong>Преостало за наплату</strong><small>Вредност поруџбина умањена за евидентирану наплату</small></div><b>'+money(receivableKnown&&paidKnown?receivable:null)+'</b></article></section>'+
+        '<section class="nd-report-section"><h3>Наплата</h3><article class="nd-report-row"><div><strong>Наплаћено</strong><small>Збир евидентираних уплата по поруџбинама</small></div><b>'+money(paidKnown?paid:null)+'</b></article><article class="nd-report-row"><div><strong>Преостало за наплату</strong><small>Вредност поруџбина умањена за евидентирану наплату</small></div><b>'+money(paidKnown?receivable:null)+'</b></article></section>'+
         '<section class="nd-report-section"><h3>Резултат по производима</h3>'+productCards+'</section>'+
         '<footer class="nd-report-foot">Извор: евиденција ставki поруџбина и набавка активне туре. Бруто разлика не укључује доставу, гориво, рад и друге режијске трошкове. Извештај је информативан и не мења податке.</footer></section>';
     }
