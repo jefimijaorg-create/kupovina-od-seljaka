@@ -1,0 +1,90 @@
+<!doctype html>
+<!-- NARUČI DOMAĆE — ADMIN ДОСТАВА
+     Version: 1.0.0
+     Shared operations: admin/tour-operations-panel.js v1.4.8
+     Styles: centralized in /admin.css only. -->
+<html lang="sr-Cyrl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F3F5F2">
+<title>Достава · ADMIN · Наручи домаће</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin.css?v=2.1.6">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/admin/admin.js?v=1.1.0"></script>
+</head>
+<body class="nd-workspace">
+<header class="nd-topbar">
+  <a class="nd-icon-btn nd-delivery-back" href="/admin-workspace.html" aria-label="Повратак у ADMIN">←</a>
+  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>НАРУЧИ ДОМАЋЕ</strong><small>ДОСТАВА</small></span></div>
+  <span class="nd-build-version" aria-label="Страница Достава, верзија 1.0.0">v1.0.0</span>
+</header>
+<main class="nd-main nd-delivery-main">
+  <section class="nd-page-head"><div><div class="nd-eyebrow">ПОСЕБАН ОПЕРАТИВНИ МОДУЛ</div><h1>Достава</h1><p>Пунктови, сатница и предаја поруџбина за туру у обради.</p></div><span class="nd-status" id="deliveryConnection" aria-live="polite">ПРОВЕРА ПРИСТУПА…</span></section>
+  <section class="nd-panel" id="deliveryTourPicker"><div class="nd-panel-head"><h2>Туре у обради</h2><button class="nd-icon-btn" id="deliveryReload" type="button">Освежи</button></div><div class="nd-tour-list" id="deliveryTourList"><div class="nd-loading">Учитавам туре…</div></div></section>
+  <section id="deliveryRoot" class="nd-tour-operations-root" hidden></section>
+</main>
+<script>
+(function(){
+'use strict';
+const SUPABASE_URL='https://kszkehxrcuagymlfowqj.supabase.co';
+const SUPABASE_KEY='sb_publishable_TRZp6skXsdIUsE4Vl65_2Q_QskFb532';
+const $=id=>document.getElementById(id);
+let client=null,core=null,deliveryPanel=null;
+function showPicker(){
+  if(deliveryPanel){deliveryPanel.destroy();deliveryPanel=null;}
+  $('deliveryRoot').hidden=true;$('deliveryRoot').replaceChildren();$('deliveryTourPicker').hidden=false;
+}
+async function loadTours(){
+  $('deliveryReload').disabled=true;$('deliveryConnection').textContent='УЧИТАВАМ ТУРЕ…';
+  try{
+    const {data,error}=await client.from('ture').select('id,naziv,datum,status').eq('status','processing').order('datum',{ascending:false}).order('id',{ascending:false});
+    if(error)throw error;
+    const list=$('deliveryTourList');list.replaceChildren();
+    if(!data?.length){const empty=document.createElement('div');empty.className='nd-empty';empty.textContent='Тренутно нема тура у обради.';list.append(empty);}
+    else data.forEach(tour=>{
+      const button=document.createElement('button');button.type='button';button.className='nd-tour-item';
+      const icon=document.createElement('span');icon.className='nd-tour-icon';icon.textContent='🚚';
+      const copy=document.createElement('span');copy.className='nd-tour-copy';
+      const name=document.createElement('strong');name.textContent=tour.naziv||('Тура #'+tour.id);
+      const meta=document.createElement('small');meta.textContent=(tour.datum?new Date(tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'Датум није наведен')+' · Тура #'+tour.id+' · У ОБРАДИ';
+      copy.append(name,meta);button.append(icon,copy);button.addEventListener('click',()=>openDelivery(tour.id));list.append(button);
+    });
+    $('deliveryConnection').textContent='ПОВЕЗАНО · '+data.length+' ТУРА У ОБРАДИ';
+  }catch(error){$('deliveryTourList').textContent='Не могу да учитам туре: '+(error.message||String(error));$('deliveryConnection').textContent='ГРЕШКА ПРИ УЧИТАВАЊУ';}
+  finally{$('deliveryReload').disabled=false;}
+}
+async function openDelivery(tourId){
+  $('deliveryTourPicker').hidden=true;$('deliveryRoot').hidden=false;$('deliveryRoot').innerHTML='<div class="nd-loading">Отварам доставу…</div>';
+  try{
+    const mod=await import('/admin/tour-operations-panel.js?v=1.4.8');
+    deliveryPanel=await mod.mountTourOperations({root:$('deliveryRoot'),core,tourId:String(tourId),initialTab:'delivery',onBack:showPicker,onOpenProcurement:null});
+  }catch(error){$('deliveryRoot').textContent='Достава није доступна: '+(error.message||String(error));}
+}
+async function boot(){
+  try{
+    await window.NDAdmin.ready;
+    if(!window.supabase?.createClient)throw Error('Supabase SDK није учитан.');
+    client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+    const {data:{session},error}=await client.auth.getSession();if(error)throw error;
+    if(!session?.access_token){location.replace('/admin2.html?next='+encodeURIComponent('/admin-dostava.html'));return;}
+    const {data:{user},error:userError}=await client.auth.getUser();if(userError||!user)throw Error('Налог није потврђен.');
+    const {data:record,error:roleError}=await client.from('app_users').select('role,is_active,display_name,username').eq('auth_user_id',user.id).maybeSingle();
+    if(roleError)throw roleError;
+    if(!record||record.is_active!==true||!['super_admin','admin','operator','viewer'].includes(record.role))throw Error('Немате дозволу за ADMIN приступ.');
+    core={authenticated:true,client,getState:()=>({user,role:record.role}),api:(rpcName,options={})=>client.rpc(rpcName,options)};
+    await window.NDAdmin.start(core);
+    $('deliveryConnection').textContent='ПРИЈАВЉЕН · '+(record.display_name||record.username||user.email||'ADMIN');
+    await loadTours();
+    client.auth.onAuthStateChange((event,nextSession)=>{if(event==='SIGNED_OUT'||!nextSession?.access_token)location.replace('/admin2.html?next='+encodeURIComponent('/admin-dostava.html'));});
+  }catch(error){$('deliveryConnection').textContent='ПРИСТУП НИЈЕ ПОТВРЂЕН';$('deliveryTourList').textContent=error.message||String(error);}
+}
+$('deliveryReload').addEventListener('click',loadTours);
+boot();
+})();
+</script>
+</body>
+</html>
