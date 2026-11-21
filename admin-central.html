@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#10251f">
-<title>ADMIN центар · Наручи домаће</title>
+<meta name="theme-color" content="#F3F5F2">
+<title>Дуговања по газдинствима · Наручи домаће</title>
 <script>if(location.protocol==="http:"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -21,23 +21,34 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 .overlay{position:fixed;inset:0;z-index:50;background:#030907eF;display:none;flex-direction:column;padding:10px}.overlay.open{display:flex}.modal{width:min(1500px,100%);height:100%;margin:auto;background:var(--bg);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line)}.modal-head strong{font-size:13px}.modal-head button{min-width:42px;min-height:42px}.module-frame{border:0;width:100%;height:100%;background:white;flex:1}
 @media(max-width:620px){.shell{padding:12px 12px 30px}.top{padding:5px 0 16px}.brand strong{font-size:16px}.top-actions .quiet{padding:9px}.hero{padding:20px;border-radius:20px}.section-head{margin-top:23px}.overlay{padding:0}.modal{border-radius:0;border:0}.modal-head{padding-top:max(8px,env(safe-area-inset-top));align-items:flex-start}.modal-actions{gap:5px}.modal-actions button{padding:8px;font-size:11px}}
 </style>
+<link rel="stylesheet" href="/admin.css?v=20261121-216">
 </head>
-<body>
+<body class="nd-central-light">
 <div id="boot">Покрећем безбедносну проверу ADMIN система…</div>
 <div id="app">
 <div class="shell">
 <header class="top">
- <div class="brand"><div class="mark">🌿</div><div><small>NARUČI DOMAĆE · ADMIN</small><strong>Избор туре</strong></div></div>
+ <div class="brand"><div class="mark">🌿</div><div><small>NARUČI DOMAĆE · ADMIN</small><strong>Дуговања по газдинствима</strong></div></div>
  <div class="top-actions"><button class="quiet" id="refreshBtn" type="button">Освежи</button><button class="quiet" id="logoutBtn" type="button">Одјава</button></div>
 </header>
 <section class="hero">
- <div class="eyebrow">ADMIN CENTRAL · V3</div>
- <h1>Изабери туру и настави са радом.</h1>
- <p>Ово је почетна страна ADMIN система. Изабери туру из стварне базе података да би отворио њен оперативни преглед.</p>
+ <div class="eyebrow">ADMIN CENTRAL · V4</div>
+ <h1>Дуговања по газдинствима.</h1>
+ <p>На једном месту видиш сва неизмирена дуговања према газдинствима, раздвојена по евидентираним ставкама.</p>
  <div class="identity"><span class="pill" id="rolePill">Провера улоге…</span><span class="pill" id="userPill">Провера корисника…</span><span class="pill">Supabase сесија активна</span></div>
 </section>
-<section id="tourHome">
- <div class="section-head"><div><h2>Изабери шта желиш да отвориш</h2><p>Изабери једну од три могућности.</p></div></div>
+<section id="debtHome" class="nd-debt-home">
+ <div class="nd-debt-total">
+  <div><span class="nd-debt-kicker">УКУПНО НЕИЗМИРЕНО</span><strong id="debtTotal">Учитавање…</strong><small id="debtCount">Преузимам податке из базе</small></div>
+  <span class="nd-debt-icon" aria-hidden="true">₽</span>
+ </div>
+ <div class="nd-debt-heading"><div><h2>Дуговања по газдинствима</h2><p>Свака ставка је приказана засебно.</p></div><button class="nd-debt-refresh" id="refreshDebts" type="button">Освежи</button></div>
+ <div id="debtCards" class="nd-debt-list" aria-live="polite"><div class="empty">Учитавање дуговања из базе…</div></div>
+ <p id="debtMessage" class="nd-debt-message" role="status"></p>
+ <button type="button" class="nd-open-tours" id="showTours">Отвори туре и оперативу <span>›</span></button>
+</section>
+<section id="tourHome" hidden>
+ <div class="section-head"><div><h2>Туре и оператива</h2><p>Изабери шта желиш да отвориш.</p></div><button class="filter" id="backToDebts" type="button">← Дуговања</button></div>
  <div class="home-actions">
   <button type="button" class="home-action" data-open-list="active"><span class="home-action-icon">🟢</span><span><strong>Активне туре</strong><small>Туре које су у току или су планиране</small></span><span class="home-action-arrow">›</span></button>
   <button type="button" class="home-action" data-open-list="closed"><span class="home-action-icon">📁</span><span><strong>Затворене туре</strong><small>Архива завршених тура</small></span><span class="home-action-arrow">›</span></button>
@@ -56,7 +67,7 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
  <div class="diag-head"><strong>Трајна дијагностика система</strong><span class="diag-state" id="diagState">ПОКРЕТАЊЕ</span></div>
  <div class="diag-body"><div id="diagLog"></div><div class="diag-actions"><button class="quiet" id="copyDiag" type="button">Копирај запис</button><button class="quiet" id="clearDiag" type="button">Очисти запис</button></div></div>
 </section>
-<footer class="footer"><span>Наручи домаће · ADMIN</span><span>Верзија V3 · примена: admin-central.html · почетна са три дугмета</span></footer>
+<footer class="footer"><span>Наручи домаће · ADMIN</span><span>Верзија V4 · почетна: дуговања по газдинствима</span></footer>
 </div>
 </div>
 <div class="overlay" id="moduleOverlay" role="dialog" aria-modal="true" aria-label="Оперативни модул">
@@ -102,8 +113,72 @@ async function verifyAccess(){
  $('userPill').textContent='НАЛОГ: '+(user.email||user.id);
  $('diagState').textContent='СЕСИЈА ПОТВРЂЕНА';
  log('Приступ одобрен · корисник '+user.id+' · улога '+record.role,'ok');
- $('boot').style.display='none';$('app').style.display='block';await loadTours();
+ $('boot').style.display='none';$('app').style.display='block';await loadDebts();await loadTours();
 }
+
+function money(value){return new Intl.NumberFormat('sr-RS',{maximumFractionDigits:2}).format(Number(value)||0)+' дин.'}
+async function loadDebts(){
+ const root=$('debtCards'), totalNode=$('debtTotal'), countNode=$('debtCount'), message=$('debtMessage');
+ if(!root)return;
+ root.innerHTML='<div class="empty">Учитавање дуговања из базе…</div>';
+ message.textContent='';
+ try{
+  const [payoutsResult, farmsResult]=await Promise.all([
+   client.from('producer_payouts').select('id,producer_id,period,total_amount,paid_amount,is_paid,created_at').order('created_at',{ascending:false}).limit(500),
+   client.from('gazdinstva').select('id,name').order('name',{ascending:true})
+  ]);
+  if(payoutsResult.error)throw payoutsResult.error;
+  if(farmsResult.error)throw farmsResult.error;
+  const farms=new Map((farmsResult.data||[]).map(f=>[String(f.id),f.name||('Газдинство #'+f.id)]));
+  const grouped=new Map();
+  (payoutsResult.data||[]).forEach(row=>{
+   const remaining=Math.max(0,(Number(row.total_amount)||0)-(Number(row.paid_amount)||0));
+   if(remaining<=0)return;
+   const key=String(row.producer_id);
+   if(!grouped.has(key))grouped.set(key,{name:farms.get(key)||('Газдинство #'+key),rows:[],total:0});
+   const group=grouped.get(key);
+   group.rows.push({...row,remaining});
+   group.total+=remaining;
+  });
+  const groups=[...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr'));
+  const grandTotal=groups.reduce((sum,g)=>sum+g.total,0);
+  totalNode.textContent=money(grandTotal);
+  const lineCount=groups.reduce((sum,g)=>sum+g.rows.length,0);
+  countNode.textContent=groups.length+' газдинства · '+lineCount+' '+(lineCount===1?'ставка':lineCount<5?'ставке':'ставки');
+  root.replaceChildren();
+  if(!groups.length){
+   const empty=document.createElement('div');empty.className='empty';empty.textContent='Тренутно нема неизмирених дуговања.';root.appendChild(empty);
+  }else groups.forEach(group=>{
+   const card=document.createElement('article');card.className='nd-debt-card';
+   const head=document.createElement('div');head.className='nd-debt-card-head';
+   const name=document.createElement('h3');name.textContent=group.name;
+   const sum=document.createElement('strong');sum.className='nd-debt-card-total';sum.textContent=money(group.total);
+   head.append(name,sum);card.append(head);
+   const list=document.createElement('div');list.className='nd-debt-lines';
+   group.rows.sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||''))).forEach(row=>{
+    const line=document.createElement('div');line.className='nd-debt-line';
+    const copy=document.createElement('div');copy.className='nd-debt-line-copy';
+    const title=document.createElement('strong');title.textContent=row.period||('Дуговање #'+row.id);
+    const meta=document.createElement('small');meta.textContent='Укупно '+money(row.total_amount)+' · Исплаћено '+money(row.paid_amount);
+    copy.append(title,meta);
+    const amount=document.createElement('b');amount.textContent=money(row.remaining);
+    line.append(copy,amount);list.append(line);
+   });
+   card.append(list);root.append(card);
+  });
+  log('Дуговања учитана из producer_payouts · '+lineCount+' ставки · '+money(grandTotal),'ok');
+ }catch(error){
+  totalNode.textContent='Није доступно';
+  countNode.textContent='Подаци нису учитани';
+  root.innerHTML='<div class="empty">Дуговања тренутно нису доступна. Покушај поново.</div>';
+  message.textContent='Грешка при учитавању: '+(error.message||String(error));
+  log('Грешка при учитавању дуговања: '+(error.message||String(error)),'error');
+ }
+}
+function showDebtHome(){
+ $('debtHome').hidden=false;$('tourHome').hidden=true;$('tourResults').hidden=true;
+}
+
 function statusLabel(status){return ({processing:'У ОБРАДИ',open:'АКТИВНА',closed:'ЗАТВОРЕНА',full:'ПОПУЊЕНА',scheduled:'ПЛАНИРАНА'})[String(status||'').toLowerCase()]||String(status||'БЕЗ СТАТУСА').toUpperCase()}
 function dateLabel(value){if(!value)return 'Датум није наведен';const d=new Date(value+'T12:00:00');return Number.isNaN(d.getTime())?'Датум није наведен':d.toLocaleDateString('sr-RS',{day:'2-digit',month:'long',year:'numeric'})}
 async function loadTours(){
@@ -130,7 +205,7 @@ function showTourList(filter){
  $('tourSearch').value='';
  renderTours();
 }
-function showTourHome(){$('tourResults').hidden=true;$('tourHome').hidden=false}
+function showTourHome(){$('debtHome').hidden=true;$('tourResults').hidden=true;$('tourHome').hidden=false}
 function renderTours(){
  const root=$('tourList');if(!root)return;
  const q=String($('tourSearch')?.value||'').trim().toLocaleLowerCase('sr');
@@ -165,13 +240,16 @@ function openTour(tour){
 }
 function closeTour(){$('moduleOverlay').classList.remove('open');$('moduleFrame').src='about:blank';document.body.style.overflow='';}
 $('tourSearch').addEventListener('input',renderTours);
+$('showTours').addEventListener('click',showTourHome);
+$('backToDebts').addEventListener('click',showDebtHome);
+$('refreshDebts').addEventListener('click',loadDebts);
 document.querySelectorAll('[data-open-list]').forEach(btn=>btn.addEventListener('click',()=>showTourList(btn.dataset.openList)));
 $('backToHome').addEventListener('click',showTourHome);
 $('closeModule').addEventListener('click',closeTour);
 $('changeTour').addEventListener('click',closeTour);
 $('moduleOverlay').addEventListener('click',e=>{if(e.target===$('moduleOverlay'))closeTour()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('moduleOverlay').classList.contains('open'))closeTour()});
-$('refreshBtn').addEventListener('click',async()=>{const b=$('refreshBtn');b.disabled=true;try{await verifyAccess();await loadTours();log('Сесија и списак тура су освежени.','ok')}catch(e){fail(e.message)}finally{b.disabled=false}});
+$('refreshBtn').addEventListener('click',async()=>{const b=$('refreshBtn');b.disabled=true;try{await verifyAccess();log('Сесија, дуговања и списак тура су освежени.','ok')}catch(e){fail(e.message)}finally{b.disabled=false}});
 $('logoutBtn').addEventListener('click',async()=>{if(!client)return;const b=$('logoutBtn');b.disabled=true;try{const {error}=await client.auth.signOut();if(error)throw error;log('Корисник је одјављен.','ok');location.replace('/admin2.html')}catch(e){log('Одјава није успела: '+e.message,'error');b.disabled=false}});
 $('copyDiag').addEventListener('click',async()=>{const txt=logEntries.map(x=>'['+x.time+'] '+x.message).join('\n');try{await navigator.clipboard.writeText(txt);log('Дијагностички запис је копиран.','ok')}catch(e){log('Копирање није доступно: '+e.message,'error')}});
 $('clearDiag').addEventListener('click',()=>{logEntries=[];persist();renderLog();log('Дијагностички запис је очишћен.')});
