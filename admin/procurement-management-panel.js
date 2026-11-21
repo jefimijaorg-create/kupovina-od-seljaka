@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.6.0
+ * Version: 1.6.1
  * Updated: 2026-11-18
  * Description: Coordinates procurement workflow and delegates pure demand and allocation calculations to a dedicated module.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
@@ -18,8 +18,7 @@ async function copyText(text) {
   const field = document.createElement('textarea');
   field.value = text;
   field.setAttribute('readonly', '');
-  field.style.position = 'fixed';
-  field.style.opacity = '0';
+  field.className = 'nd-copy-fallback-field';
   document.body.appendChild(field);
   field.select();
   const copied = document.execCommand('copy');
