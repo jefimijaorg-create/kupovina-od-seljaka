@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.5
+ * Version: 1.4.6
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -219,7 +219,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue});
             const deficitPackages=Math.max(0,ordered-picked);
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
-            return '<div class="nd-ops-delivery-item'+(deficitPackages>0?' has-deficit':'')+'"><div class="nd-ops-delivery-item-head"><strong>'+
+            return '<div class="nd-ops-delivery-item'+(deficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
               esc(product?.name||'Производ није доступан')+' · '+esc(variant?.name||variant?.size_label||'Варијанта није наведена')+
               '</strong><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
               '<div class="nd-ops-delivery-metrics"><span>Наручено <b>'+packageCountLabel(ordered)+'</b></span>'+
@@ -318,6 +318,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         '<small class="nd-ops-calculator-note">Самосталан рачун · не мења износ купца нити податке туре</small></section></div>';
     }
     if(groupedOrdersView){groupedOrdersView.destroy();groupedOrdersView=null;}
+    shell.classList.toggle('nd-tour-ops-delivery',activeTab==='delivery');
     shell.innerHTML='<header class="nd-ops-head"><div><small>ОПЕРАТИВНИ ПРЕГЛЕД · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div><button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
     shell.querySelector('[data-back]').addEventListener('click',onBack);
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
@@ -382,6 +383,16 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       });
       updateDeliveryAmounts();
     }
+    shell.querySelectorAll('[data-delivery-item-card]').forEach(itemCard=>{
+      const focusQuantity=event=>{
+        if(event.type==='click'&&event.target.closest('button,a,input,label'))return;
+        if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return;
+        if(event.type==='keydown')event.preventDefault();
+        itemCard.querySelector('[data-delivery-qty]')?.focus();
+      };
+      itemCard.addEventListener('click',focusQuantity);
+      itemCard.addEventListener('keydown',focusQuantity);
+    });
     shell.querySelectorAll('[data-confirm-delivery]').forEach(button=>{
       button.addEventListener('click',async()=>{
         if(deliveryBusy||state.tour.status!=='processing'||button.disabled)return;
