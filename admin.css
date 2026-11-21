@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.14
+ * Version: 2.1.15
  * Updated: 2026-11-21
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2918,4 +2918,15 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-report-product strong{font-size:11px}
  .nd-workspace .nd-report-product small,.nd-workspace .nd-report-product span{font-size:9px}
  .nd-workspace .nd-report-product b{font-size:10px}
+}
+
+.nd-workspace .nd-report-print{display:flex;justify-content:flex-end}
+.nd-workspace .nd-report-print button{min-height:42px;padding:9px 14px;border:1px solid #C8D8CA;border-radius:10px;background:#285B3C;color:#fff;font-weight:850}
+@media print{
+ body.nd-workspace{background:#fff!important}
+ .nd-topbar,.nd-sidebar,.nd-tour-bottom-nav,.nd-ops-head,.nd-ops-foot,.nd-report-title button,.nd-report-print{display:none!important}
+ .nd-workspace .nd-layout,.nd-workspace .nd-main{display:block!important;width:100%!important;max-width:none!important;padding:0!important;margin:0!important}
+ .nd-workspace .nd-report-page{gap:8px}
+ .nd-workspace .nd-report-kpis article,.nd-workspace .nd-report-section,.nd-workspace .nd-report-title{break-inside:avoid;box-shadow:none!important}
+ .nd-workspace .nd-report-title{display:block}
 }
