@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.9.6
+ * Version: 1.9.7
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2624,3 +2624,25 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
   .nd-workspace .nd-tour-ops .nd-ops-delivery-customer{padding:9px}
 }
+
+
+/* ==================================================
+   МОДУЛ ДОСТАВА — ПЛУТАЈУЋИ КАЛКУЛАТОР
+   ================================================== */
+.nd-workspace .nd-ops-calculator-launch{position:fixed;right:14px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:1200;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:0 16px;border:1px solid #285B3C;border-radius:999px;background:#285B3C;color:#FFFFFF;font-size:13px;font-weight:850;box-shadow:0 4px 14px rgba(24,55,35,.22)}
+.nd-workspace .nd-ops-calculator-overlay{position:fixed;inset:0;z-index:2400;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(26,39,30,.48)}
+.nd-workspace .nd-ops-calculator-overlay[hidden]{display:none}
+.nd-workspace .nd-ops-calculator{width:min(100%,360px);padding:14px;border:1px solid #DCE4DC;border-radius:17px;background:#FFFFFF;color:#344238;box-shadow:0 16px 48px rgba(20,35,24,.24)}
+.nd-workspace .nd-ops-calculator>header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.nd-workspace .nd-ops-calculator>header strong{font-size:16px;font-weight:900}
+.nd-workspace .nd-ops-calculator>header button{width:40px;min-height:40px;border:1px solid #DCE4DC;border-radius:10px;background:#F3F5F2;color:#344238;font-size:24px}
+.nd-workspace .nd-ops-calculator-screen{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:7px;min-height:82px;margin-bottom:12px;padding:12px;border:1px solid #DCE4DC;border-radius:11px;background:#F3F5F2;overflow-wrap:anywhere}
+.nd-workspace .nd-ops-calculator-screen small{color:#647268;font-size:10px}
+.nd-workspace .nd-ops-calculator-screen output{max-width:100%;color:#285B3C;font-size:clamp(24px,7vw,32px);font-weight:900;line-height:1.2;overflow-wrap:anywhere}
+.nd-workspace .nd-ops-calculator-keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.nd-workspace .nd-ops-calculator-keys button{min-width:0;min-height:52px;border:1px solid #DCE4DC;border-radius:10px;background:#F3F5F2;color:#344238;font-size:19px;font-weight:800;touch-action:manipulation}
+.nd-workspace .nd-ops-calculator-keys button.operator{border-color:#C9D8CB;background:#E8F0E9;color:#285B3C}
+.nd-workspace .nd-ops-calculator-keys button.clear{background:#FFF3E3;border-color:#F0D7B6;color:#80521E}
+.nd-workspace .nd-ops-calculator-keys button.equals{background:#285B3C;border-color:#285B3C;color:#FFFFFF}
+.nd-workspace .nd-ops-calculator-note{display:block;margin-top:11px;color:#647268;font-size:10px;line-height:1.4;text-align:center}
+@media(max-width:600px){.nd-workspace .nd-ops-calculator-launch{right:12px;bottom:calc(76px + env(safe-area-inset-bottom));min-height:46px}.nd-workspace .nd-ops-calculator{padding:12px}.nd-workspace .nd-ops-calculator-keys button{min-height:54px}}
