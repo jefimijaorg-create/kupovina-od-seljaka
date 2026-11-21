@@ -164,7 +164,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           if(invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||pickup>ordered+0.000001)invalid=true;
         }
         if(invalid){chargeKnown=false;continue}
-        if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)chargeKnown=false;else {const price=salePricePerPackage(item);if(price===null)chargeKnown=false;else chargeTotal+=packages*price}}
+        if(packages>0){if(!Number.isFinite(size)||size<=0)chargeKnown=false;else {const price=salePricePerPackage(item);if(price===null)chargeKnown=false;else chargeTotal+=packages*price}}
       }
       const summary='<section class="nd-ops-delivery-summary" aria-label="Финансијски преглед туре">'+
         '<div><small>Укупна набавна цена</small><strong>'+money(purchaseKnown?purchaseTotal:null)+'</strong></div>'+
@@ -272,7 +272,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             packages=Number(item.isporucena_kolicina)/size;
           }
           if(invalid||!Number.isFinite(packages)||packages<0){known=false;continue}
-          if(packages>0){if(!hasNumber(item.unit_price)||!Number.isFinite(size)||size<=0)known=false;else {const price=salePricePerPackage(item);if(price===null)known=false;else total+=packages*price}}
+          if(packages>0){if(!Number.isFinite(size)||size<=0)known=false;else {const price=salePricePerPackage(item);if(price===null)known=false;else total+=packages*price}}
         }
         const totalNode=shell.querySelector('[data-charge-total]');
         if(totalNode)totalNode.textContent=money(known?total:null);
