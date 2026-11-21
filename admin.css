@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.12
+ * Version: 2.1.13
  * Updated: 2026-11-21
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -735,7 +735,16 @@ body.nd-product-panel-open{overflow:hidden}
 /* 20. ADMIN tour operations panel — version 1.0.3 */
 .nd-workspace .nd-tour-operations-root[hidden],.nd-workspace [hidden]{display:none!important}
 .nd-workspace .nd-tour-ops{display:flex;flex-direction:column;min-height:0;gap:14px}
-.nd-workspace .nd-ops-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px;border:1px solid #334155;border-radius:16px;background:#111c32}
+.nd-workspace .nd-ops-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #334155;border-radius:12px;background:#111c32}
+.nd-workspace .nd-topbar>.nd-ops-head{order:20;flex:1 0 100%;min-width:0;margin:0 0 2px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 10px}
+.nd-workspace .nd-topbar>.nd-ops-head>div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 10px;min-width:0}
+.nd-workspace .nd-topbar>.nd-ops-head small{grid-column:1/-1;font-size:9px;letter-spacing:.08em}
+.nd-workspace .nd-topbar>.nd-ops-head h1{margin:0;font-size:15px;line-height:1.2;overflow-wrap:anywhere}
+.nd-workspace .nd-topbar>.nd-ops-head p{margin:0;font-size:10px;white-space:nowrap}
+.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats{grid-column:1/-1;gap:5px;margin-top:2px}
+.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{padding:4px 7px;font-size:9px}
+.nd-workspace .nd-topbar>.nd-ops-head>button{min-height:34px;padding:6px 10px;border-radius:9px;font-size:11px;white-space:nowrap}
+.nd-workspace .nd-tour-ops>.nd-ops-head{display:none}
 .nd-workspace .nd-ops-head small{color:#fb923c;font-size:10px;font-weight:900;letter-spacing:.13em}
 .nd-workspace .nd-ops-head h1{margin:6px 0;font-size:clamp(22px,4vw,30px)}
 .nd-workspace .nd-ops-head p{margin:0;color:#94a3b8;font-size:12px}
@@ -2846,4 +2855,18 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-tour-grid{grid-template-columns:minmax(0,1fr)!important}
   .nd-workspace .nd-page-head{align-items:flex-start!important}
   .nd-workspace .nd-page-head-actions{width:100%;justify-content:flex-start}
+}
+
+/* ADMIN — компактни оперативни преглед у горњој траци */
+@media(max-width:760px){
+ .nd-workspace .nd-topbar{gap:6px;padding:7px 9px;align-items:center}
+ .nd-workspace .nd-topbar>.nd-ops-head{padding:8px 10px}
+ .nd-workspace .nd-topbar>.nd-ops-head h1{font-size:14px}
+ .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{font-size:9px}
+}
+@media(max-width:390px){
+ .nd-workspace .nd-topbar>.nd-ops-head{grid-template-columns:minmax(0,1fr) auto}
+ .nd-workspace .nd-topbar>.nd-ops-head>div{grid-template-columns:minmax(0,1fr)}
+ .nd-workspace .nd-topbar>.nd-ops-head p{white-space:normal}
+ .nd-workspace .nd-topbar>.nd-ops-head>button{font-size:10px;padding:5px 8px}
 }
