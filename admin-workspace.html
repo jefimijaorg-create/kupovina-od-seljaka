@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   NARUČI DOMAĆE — ADMIN WORKSPACE
-  Version: 1.16.94
+  Version: 1.16.95
   Updated: 2026-11-21
   Description: Applies the unified approved light component system across the existing ADMIN Workspace.
   Scope: Existing authenticated ADMIN workspace; procurement writes are protected by RLS and a database trigger.
@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin.css?v=2.1.16">
+<link rel="stylesheet" href="/admin.css?v=2.1.17">
 <!-- Drugi CSS je isključen; svi stilovi se učitavaju iz /admin.css. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/admin/admin.js?v=1.1.0"></script>
@@ -25,7 +25,7 @@
 <header class="nd-topbar">
   <button class="nd-icon-btn" id="menuBtn" type="button" aria-label="Otvori navigaciju" aria-expanded="false">☰</button>
   <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>NARUČI DOMAĆE</strong><small>ADMIN WORKSPACE</small></span></div>
-  <span class="nd-build-version" aria-label="Верзија ADMIN-а 1.16.94" title="Верзија ADMIN-а">v1.16.94</span>
+  <span class="nd-build-version" aria-label="Верзија ADMIN-а 1.16.95" title="Верзија ADMIN-а">v1.16.95</span>
   <span class="nd-status" id="activeTourStatus" aria-live="polite"></span>
   <button class="nd-icon-btn nd-procurement-entry" id="procurementBtn" type="button" hidden>Набавка</button>
   <button class="nd-icon-btn" id="searchBtn" type="button" aria-label="Pretraga">⌕</button>
@@ -33,7 +33,7 @@
   <span class="nd-user-label" id="userLabel">Provera naloga…</span>
   <button class="nd-icon-btn" id="userBtn" type="button" aria-label="Korisnički nalog">♙</button>
   <button class="nd-icon-btn" id="refreshBtn" type="button" aria-label="Osveži podatke">↻</button>
-  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.16.94</span>
+  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.16.95</span>
 </header>
 <div class="nd-layout">
   <aside class="nd-sidebar" aria-label="Glavna navigacija">
@@ -43,17 +43,17 @@
   <main class="nd-main">
     <section class="nd-entry-home" id="entryHome" aria-label="Почетни избор">
       <div class="nd-entry-heading"><span>НАРУЧИ ДОМАЋЕ</span><h1>Изабери радни простор</h1><p>Изабери шта желиш да отвориш.</p></div>
-      <div class="nd-entry-actions">
-        <button type="button" data-entry-mode="tours"><span aria-hidden="true">🧭</span><strong>ТУРЕ</strong><small>Преглед и избор туре</small></button>
-        <button type="button" data-entry-mode="orders"><span aria-hidden="true">▤</span><strong>ПОРУЏБИНЕ</strong><small>Поруџбине у оквиру туре</small></button>
-        <button type="button" data-entry-mode="operations"><span aria-hidden="true">⇢</span><strong>ОПЕРАТИВА</strong><small>Оперативни рад и достава</small></button>
-      </div>
       <section class="nd-debt-overview" id="producerDebtOverview" aria-label="Преглед дуговања газдинствима">
         <div class="nd-debt-head"><div><span>ФИНАНСИЈСКИ ПРЕГЛЕД</span><h2>Дуговања газдинствима</h2></div><button type="button" id="refreshProducerDebts">Освежи</button></div>
         <div class="nd-debt-total"><small>УКУПНО НЕИЗМИРЕНО</small><strong id="producerDebtTotal">—</strong></div>
         <div class="nd-debt-list" id="producerDebtList" aria-live="polite"><p class="nd-debt-loading">Учитавам дуговања…</p></div>
         <p class="nd-debt-foot" id="producerDebtStatus">Износ се рачуна из евидентираних обавеза умањених за уплате.</p>
       </section>
+      <div class="nd-entry-actions">
+        <button type="button" data-entry-mode="tours"><span aria-hidden="true">🧭</span><strong>ТУРЕ</strong><small>Преглед и избор туре</small></button>
+        <button type="button" data-entry-mode="orders"><span aria-hidden="true">▤</span><strong>ПОРУЏБИНЕ</strong><small>Поруџбине у оквиру туре</small></button>
+        <button type="button" data-entry-mode="operations"><span aria-hidden="true">⇢</span><strong>ОПЕРАТИВА</strong><small>Оперативни рад и достава</small></button>
+      </div>
     </section>
     <div class="nd-page-head" id="tourListHead" hidden>
       <div class="nd-page-head-copy"><div class="nd-eyebrow">ЦЕНТРАЛНИ АДМИН</div><h1 id="tourListTitle">Туре</h1><p id="tourListDescription">Изабери туру за наставак рада.</p></div>
@@ -119,18 +119,39 @@ async function loadProducerDebts(){
  if(button)button.disabled=true;
  list.replaceChildren();const loading=document.createElement('p');loading.className='nd-debt-loading';loading.textContent='Учитавам дуговања…';list.appendChild(loading);
  try{
-  const {data:rows,error}=await client.from('producer_payouts').select('producer_id,total_amount,paid_amount,is_paid');
+  const {data:rows,error}=await client.from('producer_payouts').select('id,producer_id,period,total_amount,paid_amount,is_paid,created_at').order('created_at',{ascending:true}).limit(500);
   if(error)throw error;
-  const ids=[...new Set((rows||[]).filter(r=>Number(r.total_amount||0)>Number(r.paid_amount||0)).map(r=>r.producer_id).filter(Boolean))];
+  const outstanding=(rows||[]).map(row=>({...row,remaining:Math.max(0,Number(row.total_amount||0)-Number(row.paid_amount||0))})).filter(row=>row.remaining>0&&row.producer_id);
+  const ids=[...new Set(outstanding.map(row=>row.producer_id))];
   if(!ids.length){total.textContent='0 дин.';list.replaceChildren();const empty=document.createElement('p');empty.className='nd-debt-empty';empty.textContent='Нема евидентираних неизмирених дуговања.';list.appendChild(empty);status.textContent='Стање је ажурирано.';return}
   const {data:farms,error:farmError}=await client.from('gazdinstva').select('id,name').in('id',ids);
   if(farmError)throw farmError;
   const names=new Map((farms||[]).map(f=>[String(f.id),f.name||('Газдинство #'+f.id)]));
-  const sums=new Map();(rows||[]).forEach(r=>{const remaining=Math.max(0,Number(r.total_amount||0)-Number(r.paid_amount||0));if(remaining<=0||!r.producer_id)return;const key=String(r.producer_id);sums.set(key,(sums.get(key)||0)+remaining)});
-  const sorted=[...sums.entries()].sort((a,b)=>b[1]-a[1]);const grand=sorted.reduce((n,item)=>n+item[1],0);
+  const groups=new Map();
+  outstanding.forEach(row=>{const key=String(row.producer_id);if(!groups.has(key))groups.set(key,{name:names.get(key)||('Газдинство #'+key),rows:[],total:0});const group=groups.get(key);group.rows.push(row);group.total+=row.remaining});
+  const sorted=[...groups.values()].sort((a,b)=>b.total-a.total);
+  const grand=sorted.reduce((sum,group)=>sum+group.total,0);
   total.textContent=new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(grand)+' дин.';
-  list.replaceChildren();sorted.forEach(([farmId,amount])=>{const row=document.createElement('div');row.className='nd-debt-row';const name=document.createElement('strong');name.textContent=names.get(farmId)||('Газдинство #'+farmId);const value=document.createElement('b');value.textContent=new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(amount)+' дин.';row.append(name,value);list.appendChild(row)});
-  status.textContent='Приказана су сва газдинства са преосталим дуговањем. Делимичне уплате су одузете од укупног износа.';
+  list.replaceChildren();
+  sorted.forEach(group=>{
+   const card=document.createElement('section');card.className='nd-debt-farm';
+   const head=document.createElement('div');head.className='nd-debt-row';
+   const name=document.createElement('strong');name.textContent=group.name;
+   const amount=document.createElement('b');amount.textContent=new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(group.total)+' дин.';
+   head.append(name,amount);card.appendChild(head);
+   group.rows.forEach(row=>{
+    const item=document.createElement('div');item.className='nd-debt-item';
+    const detail=document.createElement('div');detail.className='nd-debt-item-copy';
+    const title=document.createElement('strong');title.textContent=row.period||('Дуговање #'+row.id);
+    const meta=document.createElement('small');meta.textContent='Евидентирано '+new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(Number(row.total_amount)||0)+' дин. · Исплаћено '+new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(Number(row.paid_amount)||0)+' дин.';
+    detail.append(title,meta);
+    const remaining=document.createElement('b');remaining.textContent=new Intl.NumberFormat('sr-RS',{maximumFractionDigits:0}).format(row.remaining)+' дин.';
+    item.append(detail,remaining);card.appendChild(item);
+   });
+   list.appendChild(card);
+  });
+  const lineCount=outstanding.length;
+  status.textContent='Приказано '+sorted.length+' газдинстава и '+lineCount+' засебних ставки. Делимичне уплате су одузете од укупног износа.';
  }catch(error){total.textContent='—';list.replaceChildren();const failure=document.createElement('p');failure.className='nd-debt-error';failure.textContent='Дуговања тренутно нису доступна: '+(error.message||String(error));list.appendChild(failure);status.textContent='Провери везу и дозволе за читање финансијске евиденције.';console.error('[ADMIN Workspace] loadProducerDebts:',error)}
  finally{if(button)button.disabled=false}
 }
