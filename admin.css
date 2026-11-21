@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.13
+ * Version: 2.1.14
  * Updated: 2026-11-21
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2869,4 +2869,53 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-topbar>.nd-ops-head>div{grid-template-columns:minmax(0,1fr)}
  .nd-workspace .nd-topbar>.nd-ops-head p{white-space:normal}
  .nd-workspace .nd-topbar>.nd-ops-head>button{font-size:10px;padding:5px 8px}
+}
+
+
+/* =========================================================
+   ФИНАНСИЈСКИ ИЗВЕШТАЈ ТУРЕ — КОМПАКТАН ПРИКАЗ ЗА ADMIN
+   ========================================================= */
+.nd-workspace .nd-report-page{display:grid;gap:16px;min-width:0;color:#344238}
+.nd-workspace .nd-report-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;background:#fff;border:1px solid #DCE4DC;border-radius:14px}
+.nd-workspace .nd-report-title small{font-size:10px;font-weight:850;letter-spacing:.08em;color:#285B3C}
+.nd-workspace .nd-report-title h2{margin:5px 0;color:#344238;font-size:21px;line-height:1.25}
+.nd-workspace .nd-report-title p{margin:0;color:#647267;font-size:12px}
+.nd-workspace .nd-report-title button{flex:0 0 auto;min-height:42px;padding:9px 12px;border:1px solid #C8D8CA;border-radius:10px;background:#F3F5F2;color:#285B3C;font-weight:800}
+.nd-workspace .nd-report-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.nd-workspace .nd-report-kpis article{display:grid;gap:6px;min-width:0;padding:15px;background:#fff;border:1px solid #DCE4DC;border-radius:13px}
+.nd-workspace .nd-report-kpis small,.nd-workspace .nd-report-kpis span{color:#657267;font-size:11px;line-height:1.35}
+.nd-workspace .nd-report-kpis strong{color:#285B3C;font-size:clamp(17px,2.3vw,25px);font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .nd-report-notice{display:grid;gap:4px;padding:12px 14px;border:1px solid #C8D8CA;border-radius:12px;background:#F3F5F2;color:#344238;font-size:12px;line-height:1.45}
+.nd-workspace .nd-report-notice strong{color:#285B3C}
+.nd-workspace .nd-report-notice.is-warning{border-color:#E8A04A;background:#FFF8ED}
+.nd-workspace .nd-report-notice.is-warning strong{color:#8A541A}
+.nd-workspace .nd-report-section{display:grid;gap:8px;padding:14px;background:#fff;border:1px solid #DCE4DC;border-radius:13px}
+.nd-workspace .nd-report-section h3{margin:0 0 3px;color:#344238;font-size:15px}
+.nd-workspace .nd-report-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #EDF1ED}
+.nd-workspace .nd-report-row>div{display:grid;gap:3px;min-width:0}
+.nd-workspace .nd-report-row strong{font-size:13px;color:#344238;overflow-wrap:anywhere}
+.nd-workspace .nd-report-row small{font-size:11px;color:#68766C}
+.nd-workspace .nd-report-row>b{flex:0 0 auto;color:#285B3C;font-size:13px}
+.nd-workspace .nd-report-product{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr));gap:8px;align-items:center;padding:10px 0;border-top:1px solid #EDF1ED}
+.nd-workspace .nd-report-product>div{display:grid;gap:3px;min-width:0}
+.nd-workspace .nd-report-product strong{font-size:12px;color:#344238;overflow-wrap:anywhere}
+.nd-workspace .nd-report-product small,.nd-workspace .nd-report-product span{font-size:10px;color:#68766C}
+.nd-workspace .nd-report-product b{font-size:12px;color:#285B3C;overflow-wrap:anywhere}
+.nd-workspace .nd-report-empty{padding:12px;color:#68766C;font-size:12px}
+.nd-workspace .nd-report-foot{padding:10px 2px;color:#68766C;font-size:11px;line-height:1.5}
+@media(max-width:767px){
+ .nd-workspace .nd-report-page{gap:10px}
+ .nd-workspace .nd-report-title{display:grid;grid-template-columns:minmax(0,1fr);padding:12px}
+ .nd-workspace .nd-report-title h2{font-size:18px}
+ .nd-workspace .nd-report-title button{width:100%}
+ .nd-workspace .nd-report-kpis{gap:6px}
+ .nd-workspace .nd-report-kpis article{padding:9px 8px;gap:5px}
+ .nd-workspace .nd-report-kpis small{font-size:9px}
+ .nd-workspace .nd-report-kpis strong{font-size:15px}
+ .nd-workspace .nd-report-kpis span{font-size:9px}
+ .nd-workspace .nd-report-section{padding:11px}
+ .nd-workspace .nd-report-product{grid-template-columns:minmax(0,1fr) repeat(3,minmax(0,.8fr));gap:5px}
+ .nd-workspace .nd-report-product strong{font-size:11px}
+ .nd-workspace .nd-report-product small,.nd-workspace .nd-report-product span{font-size:9px}
+ .nd-workspace .nd-report-product b{font-size:10px}
 }
