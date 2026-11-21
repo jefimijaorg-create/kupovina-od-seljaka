@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.4.7
+ * Version: 1.4.8
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -272,7 +272,9 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       };
       const pointSections=state.points.map(point=>{
         const pointOrders=activeOrders.filter(order=>String(order.punkt_id??'')===String(point.id));
-        return renderPointSection(point.id,point.name||('Пункт #'+point.id),[point.city,point.address].filter(Boolean).join(' · '),pointOrders);
+        const stop=state.tourStops.find(row=>String(row.punkt_id)===String(point.id));
+        const schedule=stop?.vreme?'Време: '+stop.vreme:'';
+        return renderPointSection(point.id,point.name||('Пункт #'+point.id),[schedule,point.city,point.address].filter(Boolean).join(' · '),pointOrders);
       }).join('');
       const assignedPointIds=new Set(state.points.map(point=>String(point.id)));
       const unassignedOrders=activeOrders.filter(order=>!order.punkt_id||!assignedPointIds.has(String(order.punkt_id)));
