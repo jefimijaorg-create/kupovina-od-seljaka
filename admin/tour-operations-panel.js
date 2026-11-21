@@ -201,6 +201,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
               picked>ordered+0.000001||deliveredPackages>available+0.000001||!Number.isFinite(size)||size<=0;
             const checked=item.stavka_cekirana===true;
+            const deficitPackages=Math.max(0,ordered-picked);
             if(checked)checkedLines++;if(dataIssue)hasIssue=true;
             const sale=lineSaleValue(item);if(sale===null)customerOrderedKnown=false;else customerOrdered+=sale;
             const billablePackages=checked?deliveredPackages:available;
@@ -218,7 +219,6 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             }).join(''):'<small>Нема потврђеног преузимања од газдинства.</small>';
             const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue;
             descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue});
-            const deficitPackages=Math.max(0,ordered-picked);
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
             return '<div class="nd-ops-delivery-item'+(deficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
               esc(product?.name||'Производ није доступан')+itemStatusHtml+'</div>'+
