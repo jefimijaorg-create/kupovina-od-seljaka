@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.3
+ * Version: 2.1.4
  * Updated: 2026-11-21
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2623,7 +2623,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-item-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px;min-width:0}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-item-head strong{color:#344238;font-size:13px;font-weight:850;line-height:1.25;overflow-wrap:anywhere;min-width:0}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-variant{margin-top:3px;color:#647268;font-size:11px}
-.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:flex!important;flex-direction:row!important;align-items:stretch!important;gap:6px;width:100%!important;max-width:100%!important;min-width:0!important;min-height:0;grid-column:1/-1!important;align-self:stretch!important;margin-top:2px;box-sizing:border-box}.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{display:flex!important;flex:1 1 0!important;flex-direction:column!important;justify-content:center!important;width:0!important;max-width:none!important;min-width:0!important;grid-column:auto!important;grid-row:auto!important;justify-self:stretch!important;box-sizing:border-box}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:row;align-items:stretch;justify-items:stretch;gap:6px;width:100%;max-width:100%;min-width:0;min-height:0;grid-column:1/-1;align-self:stretch;margin-top:2px;box-sizing:border-box}.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-width:0;width:100%;max-width:none;grid-column:auto;grid-row:auto;box-sizing:border-box}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics span{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;padding:8px 9px;border:1px solid #E3E9E2;border-radius:8px;background:#FFFFFF;color:#526056;font-size:10px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{color:#344238;font-size:14px;font-weight:900;line-height:1.2}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-deficit{border-color:#DCE4DC!important;background:#F3F5F2!important;color:#526056!important}.nd-workspace .nd-tour-ops .nd-ops-delivery-deficit b{color:#344238!important}.nd-workspace .nd-tour-ops .nd-ops-delivery-deficit.is-active{border-color:#D98B80!important;background:#FCE5E1!important;color:#8A3027!important}.nd-workspace .nd-tour-ops .nd-ops-delivery-deficit.is-active b{color:#A52F25!important}
@@ -2668,12 +2668,6 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-ops-calculator-keys button.equals{background:#285B3C;border-color:#285B3C;color:#FFFFFF}
 .nd-workspace .nd-ops-calculator-note{display:block;margin-top:11px;color:#647268;font-size:10px;line-height:1.4;text-align:center}
 @media(max-width:600px){.nd-workspace .nd-ops-calculator-launch{right:12px;bottom:calc(76px + env(safe-area-inset-bottom));min-height:46px}.nd-workspace .nd-ops-calculator{padding:12px}.nd-workspace .nd-ops-calculator-keys button{min-height:54px}}
-/* МОДУЛ ДОСТАВА — ЗАВРШНИ ПРИОРИТЕТИ ЗА ХОРИЗОНТАЛНИ БИЛАНС */
-html body .nd-workspace .nd-tour-ops .nd-ops-delivery-item{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important;width:100%!important;max-width:100%!important;min-width:0!important}
-html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-flow:row!important;align-items:stretch!important;justify-items:stretch!important;gap:6px!important;width:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;grid-column:1/-1!important;justify-self:stretch!important;align-self:stretch!important;box-sizing:border-box!important}
-html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;flex:initial!important;width:100%!important;max-width:none!important;min-width:0!important;grid-column:auto!important;grid-row:1!important;justify-self:stretch!important;box-sizing:border-box!important}
-@media(max-width:380px){html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{gap:4px!important}html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{padding:6px 4px!important;font-size:9px!important}html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{font-size:11px!important}}
-
 
 /* ==================================================
    ЦЕНТРАЛИЗОВАНЕ ДОПУНЕ — НАБАВКА, ПРОИЗВОДИ, ПОРУЏБИНЕ И АНАЛИТИКА
@@ -2708,3 +2702,7 @@ html body .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics>span{display:flex!
 .nta table{min-width:0;width:100%;table-layout:auto}
 .nta th,.nta td{white-space:normal;overflow-wrap:anywhere}
 @media(max-width:600px){.nta{padding:10px}.nta-head{align-items:flex-start;flex-wrap:wrap}.nta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nta-table-wrap{overflow-x:auto}.nta table{font-size:10px}}
+
+/* ЦЕНТРАЛИЗОВАНИ ПОМОЋНИ СТИЛОВИ — БЕЗ INLINE CSS У МОДУЛИМА */
+.nd-copy-fallback-field{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+.nd-workspace .nd-grouped-orders .nd-go-order-main{min-width:0;flex:1}
