@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.9
+ * Version: 2.1.10
  * Updated: 2026-11-21
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2796,3 +2796,17 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace:has(#entryHome:not([hidden])) #userLabel{display:none!important}
 @media(min-width:600px){.nd-workspace .nd-entry-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.nd-workspace .nd-entry-actions button{grid-template-columns:1fr;grid-template-rows:auto auto auto;justify-items:center;gap:8px;min-height:156px;text-align:center}.nd-workspace .nd-entry-actions button>span{grid-row:auto}.nd-workspace .nd-entry-actions button small{font-size:11px}}
 @media(max-width:420px){.nd-workspace .nd-entry-home{min-height:calc(100dvh - 95px);gap:18px;padding:14px 4px}.nd-workspace .nd-entry-actions button{min-height:82px;padding:12px}.nd-workspace .nd-entry-actions button>span{width:46px;height:46px}}
+
+/* ADMIN — почетни екран мора бити затворено стање већ у HTML-у, пре покретања JavaScript-а */
+.nd-workspace #dashboardTours[hidden],
+.nd-workspace #tourListHead[hidden],
+.nd-workspace #tourOperationsRoot[hidden],
+.nd-workspace #tourBottomNav[hidden],
+.nd-workspace #entryHome[hidden]{display:none!important}
+.nd-workspace:has(#entryHome:not([hidden])) #menuBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #searchBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #notificationsBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #userBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #refreshBtn,
+.nd-workspace:has(#entryHome:not([hidden])) #userLabel,
+.nd-workspace:has(#entryHome:not([hidden])) #activeTourStatus{display:none!important}
