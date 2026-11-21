@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 1.9.9
+ * Version: 2.0.0
  * Updated: 2026-11-20
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2577,7 +2577,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 
 
 /* МОДУЛ ДОСТАВА — КОМПАКТНЕ КАРТИЦЕ, ФИНАНСИЈЕ И ПОТВРДА ИСПОРУКЕ */
-.nd-workspace .nd-tour-ops .nd-ops-content{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:760px;min-width:0;margin-inline:auto;box-sizing:border-box}
+.nd-workspace .nd-tour-ops .nd-ops-content{display:flex;flex-direction:column;align-items:stretch;gap:12px;width:100%;max-width:1080px;min-width:0;margin-inline:auto;padding-inline:clamp(0px,1.2vw,12px);box-sizing:border-box}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;min-width:0}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary>div{min-width:0;padding:10px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-summary small{display:block;color:#526056;font-size:10px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
@@ -2618,6 +2618,14 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-save{width:100%;min-height:44px;padding:10px 14px;border:1px solid #285B3C;border-radius:9px;background:#285B3C;color:#FFFFFF;font-size:12px;font-weight:850}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-save:disabled{opacity:.6}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-feedback{color:#80521E;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+@media(min-width:768px){
+  .nd-workspace .nd-tour-ops .nd-ops-content{gap:14px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-point{padding:16px;gap:12px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-customer{padding:14px;gap:11px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-control{padding:14px;gap:9px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-control input{min-height:60px;font-size:24px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-save{min-height:52px;font-size:14px}
+}
 @media(max-width:600px){
   .nd-workspace .nd-tour-ops .nd-ops-delivery-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
   .nd-workspace .nd-tour-ops .nd-ops-delivery-summary>div{padding:8px 6px}
