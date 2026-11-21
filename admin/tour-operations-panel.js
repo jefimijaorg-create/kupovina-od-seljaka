@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.5
+ * Version: 1.5.6
  * Updated: 2026-11-21
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -417,8 +417,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const adminTopbar=document.querySelector('.nd-topbar');
     if(adminTopbar)adminTopbar.querySelectorAll('.nd-ops-head').forEach(node=>node.remove());
     if(compactOpsHead&&adminTopbar)adminTopbar.appendChild(compactOpsHead);
-    shell.querySelector('[data-back]').addEventListener('click',onBack);
-    shell.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
+    compactOpsHead?.querySelector('[data-back]')?.addEventListener('click',onBack);
+    compactOpsHead?.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
     shell.querySelector('[data-report-print]')?.addEventListener('click',()=>window.print());
     shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery'].includes(returnFromReport)?returnFromReport:'orders';render();});
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
@@ -562,7 +562,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       card.addEventListener('click',open);
       card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});
     });
-    shell.querySelector('[data-refresh]').addEventListener('click',async e=>{e.currentTarget.disabled=true;try{await load()}catch(error){showError(error)}finally{if(e.currentTarget)e.currentTarget.disabled=false}});
+    shell.querySelector('[data-refresh]')?.addEventListener('click',async e=>{e.currentTarget.disabled=true;try{await load()}catch(error){showError(error)}finally{if(e.currentTarget)e.currentTarget.disabled=false}});
   }
   function showError(error){shell.innerHTML='<div class="nd-ops-error"><strong>Подаци нису учитани</strong><p>'+esc(error.message||String(error))+'</p><button type="button" data-back>Назад</button></div>';shell.querySelector('[data-back]').addEventListener('click',onBack)}
   try { await load(); } catch(error) { showError(error); }
