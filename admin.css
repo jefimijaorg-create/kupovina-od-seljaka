@@ -2574,3 +2574,53 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-ops-delivery-farms{display:grid;gap:4px;margin-top:8px}
 .nd-workspace .nd-ops-delivery-farms small{color:#526056;font-size:11px;line-height:1.45;overflow-wrap:anywhere}
 @media(max-width:600px){.nd-workspace .nd-ops-delivery-metrics{grid-template-columns:minmax(0,1fr)}.nd-workspace .nd-ops-delivery-item{padding:9px}}
+
+
+/* МОДУЛ ДОСТАВА — КОМПАКТНЕ КАРТИЦЕ, ФИНАНСИЈЕ И ПОТВРДА ИСПОРУКЕ */
+.nd-workspace .nd-tour-ops .nd-ops-content{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-summary>div{min-width:0;padding:10px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-summary small{display:block;color:#526056;font-size:10px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-summary strong{display:block;margin-top:5px;color:#285B3C;font-size:clamp(12px,2.5vw,17px);font-weight:900;line-height:1.25;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-overview{display:flex;flex-wrap:wrap;gap:7px;color:#526056;font-size:11px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-overview span{padding:6px 9px;border:1px solid #DCE4DC;border-radius:99px;background:#FFFFFF}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point{display:flex;flex-direction:column;gap:9px;width:100%;min-width:0;padding:12px;border:1px solid #DCE4DC;border-radius:13px;background:#F3F5F2;color:#344238}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point>div,.nd-workspace .nd-tour-ops .nd-ops-delivery-point>section{min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head strong{color:#344238;font-size:14px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head small{display:block;margin-top:3px;color:#647268;font-size:11px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head>span{color:#526056;font-size:11px;white-space:nowrap}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer{display:flex;flex-direction:column;gap:9px;width:100%;min-width:0;padding:11px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF;color:#344238}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head strong{display:block;color:#344238;font-size:14px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head small{display:block;margin-top:3px;color:#647268;font-size:10px;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order{padding:8px 0;border-top:1px solid #E3E9E2;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order-head{display:flex;justify-content:space-between;gap:8px;color:#344238;font-size:11px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order-head span{color:#647268}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order-total,.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-footer{display:flex;justify-content:space-between;gap:12px;min-width:0;padding-top:7px;border-top:1px solid #E3E9E2;color:#526056;font-size:11px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order-total strong,.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-footer strong{color:#285B3C;font-size:13px;font-weight:900}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-footer>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-footer small{color:#647268;font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item{padding:9px;border:1px solid #DCE4DC;border-radius:9px;background:#F8FAF7;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item-head strong{color:#344238;font-size:12px;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics span{padding:6px;background:#FFFFFF;color:#526056;font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{color:#344238;font-size:11px;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-farms small{color:#526056;font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;margin-top:8px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control label{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#344238;font-size:11px;font-weight:750}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control input{width:104px;min-width:80px;min-height:40px;padding:7px 9px;border:1px solid #BFCBC0;border-radius:8px;background:#FFFFFF;color:#344238;font-size:15px;font-weight:800}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control input:focus{outline:2px solid #285B3C;outline-offset:1px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control input:disabled{background:#F3F5F2;color:#7B887E}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-control small{color:#647268;font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-save{width:100%;min-height:44px;padding:10px 14px;border:1px solid #285B3C;border-radius:9px;background:#285B3C;color:#FFFFFF;font-size:12px;font-weight:850}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-save:disabled{opacity:.6}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-feedback{color:#80521E;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+@media(max-width:600px){
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-summary>div{padding:8px 6px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-summary small{font-size:9px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-summary strong{font-size:12px}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .nd-workspace .nd-tour-ops .nd-ops-delivery-customer{padding:9px}
+}
