@@ -221,7 +221,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue});
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
             return '<div class="nd-ops-delivery-item'+(deficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
-              esc(product?.name||'Производ није доступан')+itemStatusHtml+'</div>'+
+              esc(product?.name||'Производ није доступан')+'</strong>'+itemStatusHtml+'</div>'+
               '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-package">'+esc(variant?.name||variant?.size_label||'Варијанта није наведена')+'</strong><span>× '+packageCountLabel(ordered)+' наручено</span></div>'+
               '<div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>КОМАДА</small></label>'+
