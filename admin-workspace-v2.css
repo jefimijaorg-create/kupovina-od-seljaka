@@ -1,5 +1,5 @@
 /* NARUČI DOMAĆE — ADMIN WORKSPACE
-   VISUAL SYSTEM 3.0 · Complete presentation-layer replacement
+   VISUAL SYSTEM 3.0 · Version 3.6.1 · Complete presentation-layer replacement
    JS contracts, IDs, data attributes and Supabase workflows remain unchanged. */
 :root{
  --nd-bg:#edf2ed;--nd-surface:#fff;--nd-soft:#f5f8f4;--nd-ink:#20352a;--nd-muted:#68786d;
@@ -35,7 +35,7 @@ body.nd-workspace{margin:0!important;padding:0 0 max(12px,env(safe-area-inset-bo
 .nd-workspace .nd-brand-copy{display:grid;gap:1px}
 .nd-workspace .nd-brand-copy strong{font-size:13px;line-height:1.15;letter-spacing:.055em;color:var(--nd-deep)!important}
 .nd-workspace .nd-brand-copy small{font-size:9px;letter-spacing:.13em;color:#78877c!important}
-.nd-workspace #buildVersion{display:none!important}
+.nd-workspace .nd-topbar{position:relative!important}.nd-workspace #buildVersion{display:inline-flex!important;position:absolute!important;top:4px!important;right:10px!important;z-index:5!important;align-items:center;justify-content:center;min-height:22px;padding:3px 7px;border:1px solid #BFD2C3;border-radius:7px;background:#E5EEE7;color:#285B3C!important;font-size:8px;font-weight:900;line-height:1;letter-spacing:.035em;white-space:nowrap;box-shadow:0 1px 3px rgba(35,63,43,.08)}
 .nd-workspace .nd-status{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:5px 10px;border:1px solid var(--nd-line)!important;border-radius:999px;background:#f5f8f4!important;color:var(--nd-muted)!important;font-size:10px;font-weight:850;letter-spacing:.045em;white-space:nowrap}
 .nd-workspace .nd-status.ok{background:var(--nd-green-soft)!important;border-color:#cfe1d1!important;color:var(--nd-green)!important}
 .nd-workspace #activeTourStatus{justify-self:end}
