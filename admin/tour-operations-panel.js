@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.16
+ * Version: 1.5.17
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -72,7 +72,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const allVariantIds = uniq([...variantIds,...procurementRows.map(x=>x.variant_id)]);
       const allFarmIds = uniq([...farmIds,...procurementRows.map(x=>x.gazdinstvo_id)]);
       const [productsResult, variantsResult, itemAllocResult, offersResult] = await Promise.all([
-        allProductIds.length ? client.from('products').select('id,name,gazdinstvo_id').in('id',allProductIds) : Promise.resolve({data:[],error:null}),
+        allProductIds.length ? client.from('products').select('id,name,gazdinstvo_id,price').in('id',allProductIds) : Promise.resolve({data:[],error:null}),
         allVariantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,price,is_active').in('id',allVariantIds) : Promise.resolve({data:[],error:null}),
         state.items.length ? client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',state.items.map(x=>x.id)) : Promise.resolve({data:[],error:null}),
         allProductIds.length && allVariantIds.length ? client.from('product_offers').select('product_id,variant_id,gazdinstvo_id,sale_price').in('product_id',allProductIds).in('variant_id',allVariantIds) : Promise.resolve({data:[],error:null})
@@ -105,7 +105,9 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const available=exact||offers.find(row=>hasNumber(row.sale_price));
     if(available)return Number(available.sale_price);
     const variant=state.variants.find(row=>String(row.id)===String(item.variant_id));
-    return hasNumber(variant?.price)?Number(variant.price):null;
+    if(hasNumber(variant?.price))return Number(variant.price);
+    const product=state.products.find(row=>String(row.id)===String(item.product_id));
+    return hasNumber(product?.price)?Number(product.price):null;
   };
   function render() {
     const orderMap=mapBy(state.orders,'id'), customerMap=mapBy(state.customers,'id'), productMap=mapBy(state.products,'id'), variantMap=mapBy(state.variants,'id'), farmMap=mapBy(state.farms,'id'), pointMap=mapBy(state.points,'id');
