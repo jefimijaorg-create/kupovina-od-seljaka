@@ -1,7 +1,7 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
  * Version: 4.10.15
- * Updated: 2026-11-20
+ * Updated: 2026-11-22
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
