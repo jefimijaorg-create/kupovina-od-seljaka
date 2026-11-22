@@ -404,28 +404,40 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       };
       body=summary+'<div class="nd-ops-delivery-overview"><strong>'+remainingPoints.length+' преосталих пунктова</strong><span>'+pointWork.filter(row=>row.remaining.length===0).length+' завршених</span></div>'+(pointSections||'')+(unassignedSection||'')+
         (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
-      const vehicleGroups=new Map(),vehicleFarmGroups=new Map();
+      /* У ВОЗИЛУ — груписање по производу; варијанте и добављачи остају раздвојени. */
+      const vehicleGroups=new Map();
       for(const allocation of state.procurementAllocations){
         const packages=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
         if(packages<=0)continue;
-        const key=productPair(allocation),product=productMap.get(allocation.product_id),variant=variantMap.get(allocation.variant_id);
-        const productName=product?.name||'Производ није доступан',variantName=variant?.name||variant?.size_label||'Варијанта није наведена';
+        const product=productMap.get(allocation.product_id),variant=variantMap.get(allocation.variant_id);
+        const variantName=variant?.name||variant?.size_label||'Варијанта није наведена';
+        const packageLabel=variant?.size_label||((variant?.package_value&&variant?.package_unit)?Number(variant.package_value).toLocaleString('sr-RS')+' '+variant.package_unit:'Паковање није наведено');
+        if(/стакл|stakl|glass/i.test(variantName+' '+packageLabel))continue;
         const farmName=farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id);
-        const group=vehicleGroups.get(key)||{name:productName,variant:variantName,packages:0};
-        group.packages+=packages;vehicleGroups.set(key,group);
-        const farmKey=String(allocation.gazdinstvo_id??'unknown');
-        const farmGroup=vehicleFarmGroups.get(farmKey)||{name:farmName,rows:new Map(),total:0};
-        const row=farmGroup.rows.get(key)||{name:productName,variant:variantName,packages:0};
-        row.packages+=packages;farmGroup.rows.set(key,row);farmGroup.total+=packages;vehicleFarmGroups.set(farmKey,farmGroup);
+        const productKey=String(allocation.product_id??'unknown');
+        const productGroup=vehicleGroups.get(productKey)||{name:product?.name||'Производ није доступан',lines:new Map(),totalPackages:0,quantityTotals:new Map()};
+        const lineKey=String(allocation.variant_id??'unknown')+'::'+String(allocation.gazdinstvo_id??'unknown');
+        const unit=variant?.package_unit||variant?.unit||'';
+        const line=productGroup.lines.get(lineKey)||{variant:variantName,farm:farmName,packages:0,quantity:0,unit,packageLabel};
+        line.packages+=packages;
+        const packageValue=Number(variant?.package_value);
+        if(Number.isFinite(packageValue)&&packageValue>0&&unit){
+          line.quantity+=packages*packageValue;
+          productGroup.quantityTotals.set(unit,(productGroup.quantityTotals.get(unit)||0)+packages*packageValue);
+        }
+        productGroup.totalPackages+=packages;
+        productGroup.lines.set(lineKey,line);vehicleGroups.set(productKey,productGroup);
       }
-      const vehicleRows=[...vehicleGroups.values()].map(group=>'<article class="nd-ops-card"><strong>'+esc(group.name)+'</strong><div>'+esc(group.variant)+'</div><div class="nd-ops-qty">'+packageCountLabel(group.packages)+'</div></article>').join('');
-      const farmPickupRows=[...vehicleFarmGroups.values()].map(farm=>'<article class="nd-ops-card"><div class="nd-ops-delivery-point-head"><strong>'+esc(farm.name)+'</strong><b>'+packageCountLabel(farm.total)+'</b></div>'+[...farm.rows.values()].map(row=>'<div class="nd-ops-delivery-item"><strong>'+esc(row.name)+'</strong><div>'+esc(row.variant)+'</div><div class="nd-ops-qty">'+packageCountLabel(row.packages)+'</div></div>').join('')+'</article>').join('');
-      const pointScheduleRows=state.tourStops.map((stop,index)=>{const point=state.points.find(row=>String(row.id)===String(stop.punkt_id));return '<div class="nd-ops-delivery-item"><strong>'+esc(point?.name||('Пункт #'+stop.punkt_id))+'</strong><div>'+(point?.city?esc(point.city)+' · ':'')+'<b>'+(stop.vreme?esc(stop.vreme):'Време није одређено')+'</b></div></div>'}).join('');
-      const vehicleHtml='<section class="nd-ops-card"><h2>Сатница пунктова</h2><p>Планирано време доласка на сваки пункт ове туре.</p>'+(pointScheduleRows||'<div class="nd-ops-empty">За ову туру нису подешени пунктови.</div>')+'</section><section class="nd-ops-card"><h2>Садржај возила</h2><p>Укупне потврђене количине преузете за ову туру.</p><div class="nd-ops-delivery-overview"><strong>'+[...vehicleGroups.values()].reduce((sum,row)=>sum+row.packages,0).toLocaleString('sr-RS',{maximumFractionDigits:3})+' паковања</strong><span>'+vehicleGroups.size+' врста производа</span></div>'+(vehicleRows||'<div class="nd-ops-empty">Још нема потврђених количина за возило.</div>')+'</section><section class="nd-ops-card"><h2>Преузето од газдинстава</h2><p>Преглед шта је преузето са сваког газдинства, по производу и варијанти.</p>'+(farmPickupRows||'<div class="nd-ops-empty">Нема евидентираног преузимања од газдинстава.</div>')+'</section>';
+      const qtyLabel=(value,unit)=>Number(value).toLocaleString('sr-RS',{maximumFractionDigits:3})+' '+esc(unit);
+      const vehicleRows=[...vehicleGroups.values()].map(group=>{
+        const totals=[...group.quantityTotals.entries()].map(([unit,value])=>qtyLabel(value,unit)).join(' · ');
+        return '<article class="nd-vehicle-product"><header><strong>'+esc(group.name)+'</strong><b>'+packageCountLabel(group.totalPackages)+'</b></header><div class="nd-vehicle-product-total"><strong>'+(totals||'Количина по јединици није наведена')+'</strong><small>Укупно</small></div><div class="nd-vehicle-lines">'+[...group.lines.values()].map(line=>'<div class="nd-vehicle-line"><div><strong>'+esc(line.variant)+'</strong><small>'+esc(line.farm)+'</small></div><div class="nd-vehicle-line-pack"><b>'+packageCountLabel(line.packages)+'</b><small>'+esc(line.packageLabel)+'</small></div></div>').join('')+'</div></article>';
+      }).join('');
+      const vehicleHtml='<section class="nd-vehicle-list">'+(vehicleRows||'<div class="nd-ops-empty">Нема евидентираних преузетих производа за ову туру.</div>')+'</section>';
       const deliveryTabs='<nav class="nd-ops-delivery-tabs" aria-label="Приказ доставе"><button type="button" data-delivery-view="routes" aria-pressed="'+(deliveryView==='routes'?'true':'false')+'" class="'+(deliveryView==='routes'?'is-active':'')+'">Пунктови и испорука</button><button type="button" data-delivery-view="vehicle" aria-pressed="'+(deliveryView==='vehicle'?'true':'false')+'" class="'+(deliveryView==='vehicle'?'is-active':'')+'">У возилу</button></nav>';
       if(deliveryView==='vehicle')body=vehicleHtml;
       body=deliveryTabs+body;
-      body+='<button type="button" class="nd-ops-calculator-launch" data-calculator-open>⌗ Калкулатор</button>'+
+      if(deliveryView!=='vehicle')body+='<button type="button" class="nd-ops-calculator-launch" data-calculator-open>⌗ Калкулатор</button>'+
         '<div class="nd-ops-calculator-overlay" data-calculator-overlay hidden><section class="nd-ops-calculator" role="dialog" aria-modal="true" aria-labelledby="ndCalculatorTitle">'+
         '<header><strong id="ndCalculatorTitle">Калкулатор</strong><button type="button" data-calculator-close aria-label="Затвори">×</button></header>'+
         '<div class="nd-ops-calculator-screen"><small data-calculator-expression>Рачунање</small><output data-calculator-display>0</output></div>'+
