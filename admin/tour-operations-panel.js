@@ -1,7 +1,7 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.7
- * Updated: 2026-11-21
+ * Version: 1.5.8
+ * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -403,6 +403,21 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       };
       body=summary+'<div class="nd-ops-delivery-overview"><strong>'+remainingPoints.length+' преосталих пунктова</strong><span>'+pointWork.filter(row=>row.remaining.length===0).length+' завршених</span></div>'+(pointSections||'')+(unassignedSection||'')+
         (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
+      const vehicleGroups=new Map();
+      for(const allocation of state.procurementAllocations){
+        const packages=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
+        if(packages<=0)continue;
+        const key=productPair(allocation),product=productMap.get(allocation.product_id),variant=variantMap.get(allocation.variant_id);
+        const group=vehicleGroups.get(key)||{name:product?.name||'Производ није доступан',variant:variant?.name||variant?.size_label||'Варијанта није наведена',packages:0,farms:[]};
+        group.packages+=packages;
+        group.farms.push({name:farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id),packages});
+        vehicleGroups.set(key,group);
+      }
+      const vehicleRows=[...vehicleGroups.values()].map(group=>'<article class="nd-ops-card"><strong>'+esc(group.name)+'</strong><div>'+esc(group.variant)+'</div><div class="nd-ops-qty">'+packageCountLabel(group.packages)+'</div><small>'+group.farms.map(farm=>esc(farm.name)+': '+packageCountLabel(farm.packages)).join(' · ')+'</small></article>').join('');
+      const vehicleHtml='<section class="nd-ops-card"><h2>Садржај возила</h2><p>Потврђене количине преузете од газдинстава за ову туру.</p><div class="nd-ops-delivery-overview"><strong>'+[...vehicleGroups.values()].reduce((sum,row)=>sum+row.packages,0).toLocaleString('sr-RS',{maximumFractionDigits:3})+' паковања</strong><span>'+vehicleGroups.size+' врста производа</span></div>'+(vehicleRows||'<div class="nd-ops-empty">Још нема потврђених количина за возило.</div>')+'</section>';
+      const deliveryTabs='<nav class="nd-ops-delivery-tabs" aria-label="Приказ доставе"><button type="button" data-delivery-view="routes" aria-pressed="'+(deliveryView==='routes'?'true':'false')+'" class="'+(deliveryView==='routes'?'is-active':'')+'">Пунктови и испорука</button><button type="button" data-delivery-view="vehicle" aria-pressed="'+(deliveryView==='vehicle'?'true':'false')+'" class="'+(deliveryView==='vehicle'?'is-active':'')+'">У возилу</button></nav>';
+      if(deliveryView==='vehicle')body=vehicleHtml;
+      body=deliveryTabs+body;
       body+='<button type="button" class="nd-ops-calculator-launch" data-calculator-open>⌗ Калкулатор</button>'+
         '<div class="nd-ops-calculator-overlay" data-calculator-overlay hidden><section class="nd-ops-calculator" role="dialog" aria-modal="true" aria-labelledby="ndCalculatorTitle">'+
         '<header><strong id="ndCalculatorTitle">Калкулатор</strong><button type="button" data-calculator-close aria-label="Затвори">×</button></header>'+
@@ -420,6 +435,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     compactOpsHead?.querySelector('[data-back]')?.addEventListener('click',onBack);
     compactOpsHead?.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
     shell.querySelector('[data-report-print]')?.addEventListener('click',()=>window.print());
+    shell.querySelectorAll('[data-delivery-view]').forEach(button=>button.addEventListener('click',()=>{deliveryView=button.dataset.deliveryView==='vehicle'?'vehicle':'routes';render();}));
+
     shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery'].includes(returnFromReport)?returnFromReport:'orders';render();});
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
     const updateCalc=()=>{if(calcDisplay)calcDisplay.textContent=calculatorExpression.replace(/\./g,',')||'0';};
