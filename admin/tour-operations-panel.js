@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.12
+ * Version: 1.5.13
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -211,8 +211,14 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           }
           normalized.push({item,quantity,allocation});
         }
+        const pickedAtFarm=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
+        /* Ако расподела по купцима није уписана, безбедно повежи укупно преузимање само када постоји тачно једна ставка истог производа и варијанте у тури. */
+        if(normalized.length===0&&pickedAtFarm>0){
+          const candidates=state.items.filter(item=>String(item.product_id??'')===String(allocation.product_id??'')&&String(item.variant_id??'')===String(allocation.variant_id??''));
+          if(candidates.length===1)normalized.push({item:candidates[0],quantity:pickedAtFarm,allocation});
+        }
         const assignedTotal=normalized.reduce((sum,row)=>sum+row.quantity,0);
-        const pickedAtFarm=Math.max(0,Number(allocation.preuzeto_pakovanja)||0),exceedsPickup=assignedTotal>pickedAtFarm;
+        const exceedsPickup=assignedTotal>pickedAtFarm;
         for(const row of normalized){
           const key=String(row.item.id);
           if(!pickupByItem.has(key))pickupByItem.set(key,[]);
@@ -284,10 +290,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const billablePackages=checked?deliveredPackages:available;
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
-            const status=dataIssue?'Провери податке':deficitPackages>0?'Недостаје '+packageCountLabel(deficitPackages):
-              checked&&deliveredPackages<=0?'Није испоручено':
-              checked&&deliveredPackages+0.000001<ordered?'Делимично испоручено':'';
-            const statusClass=dataIssue||deficitPackages>0||deliveredPackages<=0?'missing':'partial';
+            const status=dataIssue?'Провери податке':
+              picked+0.000001>=ordered&&ordered>0?'Преузето у целости':
+              picked>0?'Делимично преузето · недостаје '+packageCountLabel(deficitPackages):
+              'Није преузето · недостаје '+packageCountLabel(deficitPackages);
+            const statusClass=dataIssue?'missing':picked+0.000001>=ordered&&ordered>0?'complete':picked>0?'partial':'missing';
             const itemStatusHtml=status?'<span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span>':'';
             const farmLines=pickupRows.length?pickupRows.map(row=>{
               const farmName=farmMap.get(row.allocation.gazdinstvo_id)?.name||('Газдинство #'+row.allocation.gazdinstvo_id);
