@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.15
+ * Version: 1.5.16
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -22,7 +22,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
   let deliveryView = 'routes';
   let calculatorExpression='0', calculatorJustEvaluated=false;
-  const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
+  const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], productOffers:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
     client,
     getState: () => ({ orders:state.orders, customers:state.customers, points:state.points, productCatalog:state.products }),
@@ -71,13 +71,14 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const allProductIds = uniq([...productIds,...procurementRows.map(x=>x.product_id)]);
       const allVariantIds = uniq([...variantIds,...procurementRows.map(x=>x.variant_id)]);
       const allFarmIds = uniq([...farmIds,...procurementRows.map(x=>x.gazdinstvo_id)]);
-      const [productsResult, variantsResult, itemAllocResult] = await Promise.all([
+      const [productsResult, variantsResult, itemAllocResult, offersResult] = await Promise.all([
         allProductIds.length ? client.from('products').select('id,name,gazdinstvo_id').in('id',allProductIds) : Promise.resolve({data:[],error:null}),
-        allVariantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,is_active').in('id',allVariantIds) : Promise.resolve({data:[],error:null}),
-        state.items.length ? client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',state.items.map(x=>x.id)) : Promise.resolve({data:[],error:null})
+        allVariantIds.length ? client.from('product_variants').select('id,product_id,name,size_label,unit,package_value,package_unit,price,is_active').in('id',allVariantIds) : Promise.resolve({data:[],error:null}),
+        state.items.length ? client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',state.items.map(x=>x.id)) : Promise.resolve({data:[],error:null}),
+        allProductIds.length && allVariantIds.length ? client.from('product_offers').select('product_id,variant_id,gazdinstvo_id,sale_price').in('product_id',allProductIds).in('variant_id',allVariantIds) : Promise.resolve({data:[],error:null})
       ]);
       state.products=fail(productsResult,'Производи'); state.variants=fail(variantsResult,'Варијанте');
-      state.itemAllocations=fail(itemAllocResult,'Расподела ставки'); state.procurementAllocations=procurementRows;
+      state.itemAllocations=fail(itemAllocResult,'Расподела ставки'); state.productOffers=fail(offersResult,'Продајне цене'); state.procurementAllocations=procurementRows;
       const resolvedFarmIds = uniq([...allFarmIds,...state.products.map(product=>product.gazdinstvo_id)]);
       const farmsResult = resolvedFarmIds.length ? await client.from('gazdinstva').select('id,name,phone').in('id',resolvedFarmIds) : {data:[],error:null};
       state.farms=fail(farmsResult,'Газдинства');
@@ -97,6 +98,15 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const result=expression();if(i!==tokens.length||!Number.isFinite(result))throw new Error('Неисправан израз');return result;
   }
   const mapBy=(rows,key)=>new Map(rows.map(row=>[row[key],row]));
+  const hasNumber=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
+  const salePriceFor=item=>{
+    const offers=state.productOffers.filter(row=>String(row.product_id)===String(item.product_id)&&String(row.variant_id)===String(item.variant_id));
+    const exact=offers.find(row=>String(row.gazdinstvo_id)===String(item.gazdinstvo_id)&&hasNumber(row.sale_price));
+    const available=exact||offers.find(row=>hasNumber(row.sale_price));
+    if(available)return Number(available.sale_price);
+    const variant=state.variants.find(row=>String(row.id)===String(item.variant_id));
+    return hasNumber(variant?.price)?Number(variant.price):null;
+  };
   function render() {
     const orderMap=mapBy(state.orders,'id'), customerMap=mapBy(state.customers,'id'), productMap=mapBy(state.products,'id'), variantMap=mapBy(state.variants,'id'), farmMap=mapBy(state.farms,'id'), pointMap=mapBy(state.points,'id');
     const title=esc(state.tour.naziv||('Тура #'+tourId));
@@ -112,7 +122,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const lineSale=item=>{
         if(item.cena_stavke!==null&&item.cena_stavke!==undefined&&item.cena_stavke!==''&&Number.isFinite(Number(item.cena_stavke)))return Number(item.cena_stavke);
         if(item.unit_price!==null&&item.unit_price!==undefined&&item.unit_price!==''&&item.package_count!==null&&item.package_count!==undefined&&Number.isFinite(Number(item.unit_price))&&Number.isFinite(Number(item.package_count)))return Number(item.unit_price)*Number(item.package_count);
-        return null;
+        const fallbackPrice=salePriceFor(item),count=Number(item.package_count);
+        return fallbackPrice!==null&&Number.isFinite(count)&&count>=0?fallbackPrice*count:null;
       };
       const productName=item=>productMap.get(item.product_id)?.name||'Производ није наведен';
       const variantName=item=>{const v=variantMap.get(item.variant_id);return v?.name||v?.size_label||'Варијанта није наведена';};
@@ -274,12 +285,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const lineSaleValue=item=>{
         if(hasNumber(item.cena_stavke))return Number(item.cena_stavke);
         if(hasNumber(item.unit_price)&&hasNumber(item.package_count))return Number(item.unit_price)*Number(item.package_count);
-        return null;
+        const fallbackPrice=salePriceFor(item),count=Number(item.package_count);
+        return fallbackPrice!==null&&Number.isFinite(count)&&count>=0?fallbackPrice*count:null;
       };
       const salePricePerPackage=item=>{
         const count=Number(item.package_count),total=lineSaleValue(item);
         if(total!==null&&Number.isFinite(count)&&count>0)return total/count;
-        return hasNumber(item.unit_price)?Number(item.unit_price):null;
+        return hasNumber(item.unit_price)?Number(item.unit_price):salePriceFor(item);
       };
       let purchaseTotal=0,purchaseKnown=true;
       for(const row of state.procurementAllocations){
