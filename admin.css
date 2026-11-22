@@ -2989,3 +2989,10 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-debt-chevron{flex:0 0 auto;color:#285B3C;font-size:20px;transition:transform .18s ease}
 .nd-workspace .nd-debt-farm.is-expanded .nd-debt-chevron{transform:rotate(180deg)}
 .nd-workspace .nd-debt-details[hidden],.nd-workspace .nd-debt-farm[hidden]{display:none!important}
+
+
+/* МОДУЛ ДОСТАВА — ПРЕГЛЕД САДРЖАЈА ВОЗИЛА */
+.nd-workspace .nd-tour-ops .nd-ops-delivery-tabs{display:flex;gap:8px;position:sticky;top:8px;z-index:5;padding:6px;margin:0 0 14px;background:#FFFFFF;border:1px solid #DCE4DC;border-radius:14px;box-shadow:0 2px 8px rgba(30,55,37,.06)}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-tabs button{flex:1;min-width:0;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:#F3F5F2;color:#344238;font:inherit;font-weight:700;cursor:pointer}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-tabs button.is-active{background:#285B3C;color:#FFFFFF}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-tabs button:focus-visible{outline:3px solid #E8A04A;outline-offset:2px}
