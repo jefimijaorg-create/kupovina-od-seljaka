@@ -1,8 +1,8 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.23
+ * Version: 2.1.24
  * Updated: 2026-11-22
- * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
+ * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -2876,31 +2876,34 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
    ФИНАНСИЈСКИ ИЗВЕШТАЈ ТУРЕ — КОМПАКТАН ПРИКАЗ ЗА ADMIN
    ========================================================= */
 .nd-workspace .nd-report-page{display:grid;gap:16px;min-width:0;color:#344238}
-.nd-workspace .nd-report-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;background:#fff;border:1px solid #DCE4DC;border-radius:14px}
+.nd-workspace .nd-report-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;background:#FFFFFF;border:1px solid #DCE4DC;border-radius:14px}
 .nd-workspace .nd-report-title small{font-size:10px;font-weight:850;letter-spacing:.08em;color:#285B3C}
 .nd-workspace .nd-report-title h2{margin:5px 0;color:#344238;font-size:21px;line-height:1.25}
 .nd-workspace .nd-report-title p{margin:0;color:#647267;font-size:12px}
 .nd-workspace .nd-report-title button{flex:0 0 auto;min-height:42px;padding:9px 12px;border:1px solid #C8D8CA;border-radius:10px;background:#F3F5F2;color:#285B3C;font-weight:800}
-.nd-workspace .nd-report-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.nd-workspace .nd-report-kpis article{display:grid;gap:6px;min-width:0;padding:15px;background:#fff;border:1px solid #DCE4DC;border-radius:13px}
-.nd-workspace .nd-report-kpis small,.nd-workspace .nd-report-kpis span{color:#657267;font-size:11px;line-height:1.35}
-.nd-workspace .nd-report-kpis strong{color:#285B3C;font-size:clamp(17px,2.3vw,25px);font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .nd-report-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch}
+.nd-workspace .nd-report-kpis article{display:grid;align-content:space-between;gap:8px;min-width:0;min-height:112px;padding:15px;background:#FFFFFF;border:1px solid #DCE4DC;border-radius:13px;box-shadow:0 3px 12px rgba(40,91,60,.05)}
+.nd-workspace .nd-report-kpis article:nth-child(2){background:#F8FAF8;border-color:#D4E1D6}
+.nd-workspace .nd-report-kpis article:nth-child(3){background:#EAF2EB;border-color:#AFC8B3}
+.nd-workspace .nd-report-kpis small{color:#647267;font-size:11px;font-weight:800;line-height:1.35;letter-spacing:.025em}
+.nd-workspace .nd-report-kpis span{color:#68766C;font-size:11px;line-height:1.35}
+.nd-workspace .nd-report-kpis strong{color:#285B3C;font-size:clamp(19px,2.5vw,27px);font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .nd-workspace .nd-report-notice{display:grid;gap:4px;padding:12px 14px;border:1px solid #C8D8CA;border-radius:12px;background:#F3F5F2;color:#344238;font-size:12px;line-height:1.45}
 .nd-workspace .nd-report-notice strong{color:#285B3C}
 .nd-workspace .nd-report-notice.is-warning{border-color:#E8A04A;background:#FFF8ED}
 .nd-workspace .nd-report-notice.is-warning strong{color:#8A541A}
-.nd-workspace .nd-report-section{display:grid;gap:8px;padding:14px;background:#fff;border:1px solid #DCE4DC;border-radius:13px}
-.nd-workspace .nd-report-section h3{margin:0 0 3px;color:#344238;font-size:15px}
+.nd-workspace .nd-report-section{display:grid;gap:8px;padding:14px;background:#FFFFFF;border:1px solid #DCE4DC;border-radius:13px;min-width:0}
+.nd-workspace .nd-report-section h3{margin:0 0 3px;color:#344238;font-size:15px;line-height:1.35}
 .nd-workspace .nd-report-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #EDF1ED}
 .nd-workspace .nd-report-row>div{display:grid;gap:3px;min-width:0}
 .nd-workspace .nd-report-row strong{font-size:13px;color:#344238;overflow-wrap:anywhere}
 .nd-workspace .nd-report-row small{font-size:11px;color:#68766C}
-.nd-workspace .nd-report-row>b{flex:0 0 auto;color:#285B3C;font-size:13px}
-.nd-workspace .nd-report-product{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr));gap:8px;align-items:center;padding:10px 0;border-top:1px solid #EDF1ED}
-.nd-workspace .nd-report-product>div{display:grid;gap:3px;min-width:0}
+.nd-workspace .nd-report-row>b{flex:0 0 auto;color:#285B3C;font-size:13px;font-variant-numeric:tabular-nums}
+.nd-workspace .nd-report-product{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr));gap:8px;align-items:center;padding:10px 0;border-top:1px solid #EDF1ED;min-width:0}
+.nd-workspace .nd-report-product>div{display:grid;gap:4px;min-width:0;padding:2px}
 .nd-workspace .nd-report-product strong{font-size:12px;color:#344238;overflow-wrap:anywhere}
-.nd-workspace .nd-report-product small,.nd-workspace .nd-report-product span{font-size:10px;color:#68766C}
-.nd-workspace .nd-report-product b{font-size:12px;color:#285B3C;overflow-wrap:anywhere}
+.nd-workspace .nd-report-product small,.nd-workspace .nd-report-product span{font-size:10px;color:#68766C;line-height:1.3}
+.nd-workspace .nd-report-product b{font-size:12px;color:#285B3C;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .nd-workspace .nd-report-empty{padding:12px;color:#68766C;font-size:12px}
 .nd-workspace .nd-report-foot{padding:10px 2px;color:#68766C;font-size:11px;line-height:1.5}
 @media(max-width:767px){
@@ -2908,16 +2911,19 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-report-title{display:grid;grid-template-columns:minmax(0,1fr);padding:12px}
  .nd-workspace .nd-report-title h2{font-size:18px}
  .nd-workspace .nd-report-title button{width:100%}
- .nd-workspace .nd-report-kpis{gap:6px}
- .nd-workspace .nd-report-kpis article{padding:9px 8px;gap:5px}
- .nd-workspace .nd-report-kpis small{font-size:9px}
- .nd-workspace .nd-report-kpis strong{font-size:15px}
- .nd-workspace .nd-report-kpis span{font-size:9px}
+ .nd-workspace .nd-report-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .nd-workspace .nd-report-kpis article{min-height:96px;padding:11px 10px;gap:7px}
+ .nd-workspace .nd-report-kpis article:nth-child(3){grid-column:1/-1}
+ .nd-workspace .nd-report-kpis small{font-size:10px}
+ .nd-workspace .nd-report-kpis strong{font-size:clamp(17px,4.5vw,21px)}
+ .nd-workspace .nd-report-kpis span{font-size:10px}
  .nd-workspace .nd-report-section{padding:11px}
- .nd-workspace .nd-report-product{grid-template-columns:minmax(0,1fr) repeat(3,minmax(0,.8fr));gap:5px}
+ .nd-workspace .nd-report-product{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:stretch}
+ .nd-workspace .nd-report-product>div:first-child{grid-column:1/-1;padding:0 1px 7px;border-bottom:1px solid #EDF1ED}
+ .nd-workspace .nd-report-product>div:not(:first-child){padding:7px 6px;border-radius:8px;background:#F3F5F2}
  .nd-workspace .nd-report-product strong{font-size:11px}
  .nd-workspace .nd-report-product small,.nd-workspace .nd-report-product span{font-size:9px}
- .nd-workspace .nd-report-product b{font-size:10px}
+ .nd-workspace .nd-report-product b{font-size:11px}
 }
 
 .nd-workspace .nd-report-print{display:flex;justify-content:flex-end}
@@ -3046,29 +3052,44 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 
 
 /* ADMIN ИЗВЕШТАЈ — ЦЕЛА НАРУЏБИНА ПО ГАЗДИНСТВИМА */
-.nd-workspace .nd-report-order-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;background:#F3F5F2;border:1px solid #DCE4DC;border-radius:11px}
-.nd-workspace .nd-report-order-summary>div{display:grid;gap:4px;min-width:0;padding:5px}
+.nd-workspace .nd-report-order-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;background:#F7F9F7;border:1px solid #DCE4DC;border-radius:11px;min-width:0}
+.nd-workspace .nd-report-order-summary>div{display:grid;align-content:space-between;gap:5px;min-width:0;min-height:62px;padding:9px;border:1px solid #E4EAE5;border-radius:8px;background:#FFFFFF}
 .nd-workspace .nd-report-order-summary small,.nd-workspace .nd-report-farm-totals small,.nd-workspace .nd-report-farm-product>div>small{color:#68766C;font-size:10px;line-height:1.3}
-.nd-workspace .nd-report-order-summary strong{color:#285B3C;font-size:15px;font-weight:900;overflow-wrap:anywhere}
-.nd-workspace .nd-report-farm-card{display:grid;gap:7px;padding:11px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF}
+.nd-workspace .nd-report-order-summary strong{color:#285B3C;font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.nd-workspace .nd-report-order-summary>div:nth-child(4){background:#EAF2EB;border-color:#D1E0D3}
+.nd-workspace .nd-report-order-summary>div:nth-child(5){grid-column:1/-1;background:#EAF2EB;border-color:#AFC8B3}
+.nd-workspace .nd-report-farm-card{display:grid;gap:7px;padding:11px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF;min-width:0}
 .nd-workspace .nd-report-farm-card>header{display:grid;gap:8px}
 .nd-workspace .nd-report-farm-card>header>div:first-child{display:grid;gap:3px}
 .nd-workspace .nd-report-farm-card>header strong{color:#344238;font-size:14px;font-weight:900}
 .nd-workspace .nd-report-farm-card>header small{color:#68766C;font-size:10px}
 .nd-workspace .nd-report-farm-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.nd-workspace .nd-report-farm-totals>span{display:grid;gap:3px;padding:8px;border-radius:8px;background:#F3F5F2}
-.nd-workspace .nd-report-farm-totals b{color:#285B3C;font-size:13px;font-weight:900;overflow-wrap:anywhere}
-.nd-workspace .nd-report-farm-product{display:grid;grid-template-columns:minmax(0,1fr) minmax(68px,.7fr) minmax(68px,.7fr);gap:7px;align-items:center;padding:8px 0 2px;border-top:1px solid #EDF1ED}
-.nd-workspace .nd-report-farm-product>div{display:grid;gap:3px;min-width:0}
+.nd-workspace .nd-report-farm-totals>span{display:grid;gap:4px;min-width:0;padding:9px;border:1px solid #E4EAE5;border-radius:8px;background:#F3F5F2}
+.nd-workspace .nd-report-farm-totals>span:nth-child(2){background:#EAF2EB;border-color:#D1E0D3}
+.nd-workspace .nd-report-farm-totals b{color:#285B3C;font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.nd-workspace .nd-report-farm-product{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(76px,.8fr));gap:8px;align-items:center;padding:9px 0 2px;border-top:1px solid #EDF1ED;min-width:0}
+.nd-workspace .nd-report-farm-product>div{display:grid;gap:4px;min-width:0}
+.nd-workspace .nd-report-farm-product>div:not(:first-child){padding:6px;border-radius:8px;background:#F7F9F7}
 .nd-workspace .nd-report-farm-product-name strong{color:#344238;font-size:11px;line-height:1.3;overflow-wrap:anywhere}
 .nd-workspace .nd-report-farm-product-name small{color:#68766C;font-size:9px;line-height:1.3}
-.nd-workspace .nd-report-farm-product>div>b{color:#285B3C;font-size:11px;font-weight:900;overflow-wrap:anywhere}
-@media(max-width:420px){
- .nd-workspace .nd-report-order-summary{gap:5px;padding:8px}
+.nd-workspace .nd-report-farm-product>div>b{color:#285B3C;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media(max-width:767px){
+ .nd-workspace .nd-report-order-summary{gap:6px;padding:8px}
+ .nd-workspace .nd-report-order-summary>div{min-height:58px;padding:8px}
  .nd-workspace .nd-report-order-summary small{font-size:9px}
  .nd-workspace .nd-report-order-summary strong{font-size:13px}
  .nd-workspace .nd-report-farm-card{padding:9px}
- .nd-workspace .nd-report-farm-product{grid-template-columns:minmax(0,1fr) minmax(60px,.65fr) minmax(60px,.65fr);gap:5px}
+ .nd-workspace .nd-report-farm-product{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .nd-workspace .nd-report-farm-product-name{grid-column:1/-1;padding-bottom:6px;border-bottom:1px solid #EDF1ED}
+ .nd-workspace .nd-report-farm-product>div:not(:first-child){padding:7px}
+ .nd-workspace .nd-report-farm-product-name strong{font-size:11px}
+ .nd-workspace .nd-report-farm-product>div>b{font-size:11px}
+}
+@media(max-width:420px){
+ .nd-workspace .nd-report-order-summary{gap:5px;padding:7px}
+ .nd-workspace .nd-report-order-summary strong{font-size:12px}
+ .nd-workspace .nd-report-farm-card{padding:9px}
+ .nd-workspace .nd-report-farm-product{gap:5px}
  .nd-workspace .nd-report-farm-product-name strong{font-size:10px}
  .nd-workspace .nd-report-farm-product>div>b{font-size:10px}
 }
