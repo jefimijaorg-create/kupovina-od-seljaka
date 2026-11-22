@@ -2996,3 +2996,24 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-tabs button{flex:1;min-width:0;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:#F3F5F2;color:#344238;font:inherit;font-weight:700;cursor:pointer}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-tabs button.is-active{background:#285B3C;color:#FFFFFF}
 .nd-workspace .nd-tour-ops .nd-ops-delivery-tabs button:focus-visible{outline:3px solid #E8A04A;outline-offset:2px}
+
+
+/* МОДУЛ НАБАВКА — ПРЕУЗЕТО И ДУГОВАЊА */
+.nd-workspace .ndp3-debt-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 12px}
+.nd-workspace .ndp3-debt-summary article{display:grid;gap:5px;min-width:0;padding:12px;background:#F3F5F2;border:1px solid #DCE4DC;border-radius:12px}
+.nd-workspace .ndp3-debt-summary small{color:#647268;font-size:10px;font-weight:900;letter-spacing:.04em}
+.nd-workspace .ndp3-debt-summary strong{color:#285B3C;font-size:clamp(17px,3.5vw,24px);font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .ndp3-debt-section{display:grid;gap:7px;margin-top:12px;padding:12px;background:#FFFFFF;border:1px solid #DCE4DC;border-radius:12px}
+.nd-workspace .ndp3-debt-section>header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nd-workspace .ndp3-debt-section>header h3{margin:0;color:#344238;font-size:14px}
+.nd-workspace .ndp3-debt-section>header span{color:#68766C;font-size:10px;font-weight:800}
+.nd-workspace .ndp3-debt-product{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px 0;border-top:1px solid #EDF1ED}
+.nd-workspace .ndp3-debt-product-main,.nd-workspace .ndp3-debt-product-price{display:grid;gap:3px;min-width:0}
+.nd-workspace .ndp3-debt-product-main strong,.nd-workspace .ndp3-debt-farm-row strong{color:#344238;font-size:12px;overflow-wrap:anywhere}
+.nd-workspace .ndp3-debt-product-main small,.nd-workspace .ndp3-debt-product-price small,.nd-workspace .ndp3-debt-farm-row small{color:#68766C;font-size:10px;line-height:1.35}
+.nd-workspace .ndp3-debt-product-price{text-align:right;align-content:start}
+.nd-workspace .ndp3-debt-product-price b,.nd-workspace .ndp3-debt-farm-row>b{color:#285B3C;font-size:12px;font-weight:900;white-space:nowrap}
+.nd-workspace .ndp3-debt-farm-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #EDF1ED}
+.nd-workspace .ndp3-debt-farm-row>div{display:grid;gap:3px;min-width:0}
+.nd-workspace .ndp3-debt-foot{margin:4px 0 0;color:#68766C;font-size:10px;line-height:1.45}
+@media(max-width:420px){.nd-workspace .ndp3-debt-summary{gap:6px}.nd-workspace .ndp3-debt-summary article{padding:9px}.nd-workspace .ndp3-debt-summary small{font-size:9px}.nd-workspace .ndp3-debt-summary strong{font-size:16px}.nd-workspace .ndp3-debt-section{padding:10px}.nd-workspace .ndp3-debt-product{gap:6px}.nd-workspace .ndp3-debt-product-main strong,.nd-workspace .ndp3-debt-farm-row strong{font-size:11px}.nd-workspace .ndp3-debt-product-main small,.nd-workspace .ndp3-debt-product-price small,.nd-workspace .ndp3-debt-farm-row small{font-size:9px}.nd-workspace .ndp3-debt-product-price b,.nd-workspace .ndp3-debt-farm-row>b{font-size:10px}}
