@@ -3143,3 +3143,44 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics span{padding:3px 4px;font-size:7px}
  .nd-workspace .nd-tour-ops .nd-ops-delivery-metrics b{font-size:9px}
 }
+
+
+/* МОДУЛ ДОСТАВА — ХОРИЗОНТАЛНИ КОМПАКТАН ПРИКАЗ */
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point{padding:7px;gap:5px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 10px;padding:5px 7px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head>div{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 9px;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head strong{font-size:12px;line-height:1.2}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head small{display:inline;margin:0;font-size:9px;line-height:1.2}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-point-head>span{font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-overview{padding:6px 9px;font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-overview strong{font-size:12px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-back{min-height:34px;padding:5px 10px;font-size:12px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer{padding:6px;gap:4px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head{align-items:center}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-head strong{font-size:11px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item{grid-template-columns:minmax(0,1fr)!important;gap:3px!important;padding:5px 7px!important}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-item-head strong{font-size:11px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-product-info{display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px;min-width:0}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-package{font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-action{display:flex;align-items:center;gap:5px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-qty-wrap{display:flex;align-items:center;gap:3px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-qty-wrap input{width:54px;min-height:30px;padding:3px 5px;font-size:13px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-quick{width:auto;min-width:50px;min-height:30px;padding:4px 7px;font-size:9px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-price-row{display:flex;align-items:center;justify-content:flex-start;gap:6px;font-size:9px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-price-row strong{font-size:10px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-farms{gap:1px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-farms small{font-size:8px;line-height:1.2}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-order-total{padding-top:3px;font-size:9px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-customer-footer{padding-top:4px}
+.nd-workspace .nd-tour-ops .nd-ops-delivery-metrics{display:none!important}
+@media(max-width:420px){
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-point{padding:5px}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-point-head{padding:4px 5px}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-point-head strong{font-size:11px}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-point-head small{font-size:8px}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-item{padding:4px 5px!important}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-main{gap:4px}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-qty-wrap input{width:48px;min-height:28px}
+ .nd-workspace .nd-tour-ops .nd-ops-delivery-quick{min-width:44px;min-height:28px;padding:3px 5px;font-size:8px}
+}
