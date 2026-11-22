@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.13
+ * Version: 1.5.14
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -168,6 +168,49 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       }
       const missingCount=purchaseMissing+salesMissing;
       const rows=(map,renderRow)=>[...map.entries()].sort((a,b)=>Number(b[1])-Number(a[1])).map(([name,row])=>renderRow(name,row)).join('')||'<div class="nd-report-empty">Нема евидентираних ставки.</div>';
+      /* ЦЕЛА НАРУЏБИНА ПО ГАЗДИНСТВИМА — набавка и продаја рачунају се по нарученој количини; преузето се приказује засебно. */
+      const salesUnitByPair=new Map();
+      for(const item of state.items){
+        const count=Number(item.package_count),value=lineSale(item);
+        if(!Number.isFinite(count)||count<=0||value===null)continue;
+        const key=String(item.product_id)+'::'+String(item.variant_id);
+        const old=salesUnitByPair.get(key)||{quantity:0,value:0};
+        old.quantity+=count;old.value+=value;salesUnitByPair.set(key,old);
+      }
+      const farmOrderFinance=new Map();
+      let orderPackages=0,pickedOrderPackages=0,orderPurchaseTotal=0,orderSalesTotal=0;
+      let orderPurchaseMissing=0,orderSalesMissing=0;
+      for(const allocation of state.procurementAllocations){
+        const orderedRaw=allocation.broj_pakovanja??allocation.naruceno_pakovanja??allocation.naruceno??0;
+        const ordered=Math.max(0,Number(orderedRaw)||0),picked=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
+        if(ordered<=0&&picked<=0)continue;
+        const farmName=farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id);
+        const productName=productMap.get(allocation.product_id)?.name||'Производ није наведен';
+        const variant=variantMap.get(allocation.variant_id)?.name||variantMap.get(allocation.variant_id)?.size_label||'Варијанта није наведена';
+        const key=String(allocation.product_id)+'::'+String(allocation.variant_id);
+        const salesMeta=salesUnitByPair.get(key);
+        const salePerPackage=salesMeta&&salesMeta.quantity>0?salesMeta.value/salesMeta.quantity:null;
+        const purchaseKnown=allocation.nabavna_cena!==null&&allocation.nabavna_cena!==undefined&&allocation.nabavna_cena!==''&&Number.isFinite(Number(allocation.nabavna_cena));
+        const purchaseValue=purchaseKnown?ordered*Number(allocation.nabavna_cena):null;
+        const salesValue=salePerPackage!==null?ordered*salePerPackage:null;
+        let farm=farmOrderFinance.get(farmName);
+        if(!farm){farm={ordered:0,picked:0,purchase:0,sales:0,purchaseKnown:true,salesKnown:true,products:new Map()};farmOrderFinance.set(farmName,farm);}
+        farm.ordered+=ordered;farm.picked+=picked;
+        if(purchaseValue===null){farm.purchaseKnown=false;orderPurchaseMissing++;}else{farm.purchase+=purchaseValue;orderPurchaseTotal+=purchaseValue;}
+        if(salesValue===null){farm.salesKnown=false;orderSalesMissing++;}else{farm.sales+=salesValue;orderSalesTotal+=salesValue;}
+        const productKey=key+'::'+String(allocation.gazdinstvo_id);
+        const product=farm.products.get(productKey)||{name:productName,variant,ordered:0,picked:0,purchase:0,sales:0,purchaseKnown:true,salesKnown:true};
+        product.ordered+=ordered;product.picked+=picked;
+        if(purchaseValue===null)product.purchaseKnown=false;else product.purchase+=purchaseValue;
+        if(salesValue===null)product.salesKnown=false;else product.sales+=salesValue;
+        farm.products.set(productKey,product);
+        orderPackages+=ordered;pickedOrderPackages+=picked;
+      }
+      const farmOrderCards=[...farmOrderFinance.entries()].sort((a,b)=>a[0].localeCompare(b[0],'sr')).map(([farmName,farm])=>
+        '<article class="nd-report-farm-card"><header><div><strong>'+esc(farmName)+'</strong><small>'+qty(farm.ordered)+' наручено · '+qty(farm.picked)+' преузето</small></div><div class="nd-report-farm-totals"><span><small>Набавна вредност</small><b>'+money(farm.purchaseKnown?farm.purchase:null)+'</b></span><span><small>Продајна вредност</small><b>'+money(farm.salesKnown?farm.sales:null)+'</b></span></div></header>'+
+        [...farm.products.values()].map(product=>'<div class="nd-report-farm-product"><div class="nd-report-farm-product-name"><strong>'+esc(product.name)+'</strong><small>'+esc(product.variant)+'</small><small>'+qty(product.ordered)+' наручено · '+qty(product.picked)+' преузето</small></div><div><small>Набавка</small><b>'+money(product.purchaseKnown?product.purchase:null)+'</b></div><div><small>Продаја</small><b>'+money(product.salesKnown?product.sales:null)+'</b></div></div>').join('')+'</article>'
+      ).join('')||'<div class="nd-report-empty">Нема евидентираних газдинстава за ову туру.</div>';
+      const farmOrderSummary='<div class="nd-report-order-summary"><div><small>Укупно наручено</small><strong>'+qty(orderPackages)+' паковања</strong></div><div><small>Укупно преузето</small><strong>'+qty(pickedOrderPackages)+' паковања</strong></div><div><small>Набавна вредност наруџбине</small><strong>'+money(orderPurchaseMissing?null:orderPurchaseTotal)+'</strong></div><div><small>Продајна вредност наруџбине</small><strong>'+money(orderSalesMissing?null:orderSalesTotal)+'</strong></div><div><small>Разлика у цени</small><strong>'+money(orderPurchaseMissing||orderSalesMissing?null:orderSalesTotal-orderPurchaseTotal)+'</strong></div></div>';
       const purchaseCards=[...purchaseByFarm.entries()].map(([name,row])=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>'+qty(row.quantity)+' преузетих паковања · '+row.lines+' ставки</small></div><b>'+money(row.cost)+'</b></article>').join('')||'<div class="nd-report-empty">Нема евидентиране набавке за ову туру.</div>';
       const customerCards=rows(salesByCustomer,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Вредност поруџбина</small></div><b>'+money(value)+'</b></article>');
       const pointCards=rows(salesByPoint,(name,value)=>'<article class="nd-report-row"><div><strong>'+esc(name)+'</strong><small>Продајна вредност</small></div><b>'+money(value)+'</b></article>');
@@ -175,7 +218,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       body='<section class="nd-report-page"><header class="nd-report-title"><div><small>КОМПЛЕТАН ФИНАНСИЈСКИ ИЗВЕШТАЈ · ТУРА #'+esc(tourId)+'</small><h2>'+title+'</h2><p>'+fmtDate(state.tour.datum)+' · Статус: '+esc(String(state.tour.status||'').toUpperCase())+'</p></div><button type="button" data-report-back>← Назад у оперативу</button></header>'+
         '<div class="nd-report-print"><button type="button" data-report-print>Штампај / сачувај као PDF</button></div><div class="nd-report-kpis"><article><small>Укупна набавка</small><strong>'+money(purchaseKnown?purchase:null)+'</strong><span>'+qty(pickedPackages)+' преузетих паковања</span></article><article><small>Укупна продаја</small><strong>'+money(sales)+'</strong><span>'+state.orders.length+' поруџбина</span></article><article><small>Разлика · бруто</small><strong>'+money(margin)+'</strong><span>'+(marginPercent===null?'Маржа није обрачуната':marginPercent.toLocaleString('sr-RS',{maximumFractionDigits:2})+'% од продаје')+'</span></article></div>'+
         '<div class="nd-report-notice '+(missingCount?'is-warning':'')+'"><strong>'+(missingCount?'Обрачун није потпун':'Обрачун цена је потпун')+'</strong><span>'+(hasProcurement?purchaseMissing+' ставки набавке без цене':'Набавка није евидентирана')+' · '+salesMissing+' ставки продаје без цене. Разлика је приказана само када су обе стране потпуне.</span></div>'+
-        '<section class="nd-report-section"><h3>Набавка по газдинствима</h3>'+purchaseCards+'</section>'+
+        '<section class="nd-report-section nd-report-order-section"><h3>Целокупна наруџбина по газдинствима</h3>'+farmOrderSummary+farmOrderCards+'<p class="nd-report-foot">Набавна и продајна вредност рачунају се за целу наручену количину. Преузета количина је посебно приказана и не мења вредност наруџбине.</p></section>'+
+        '<section class="nd-report-section"><h3>Трошак стварно преузете робе по газдинствима</h3>'+purchaseCards+'</section>'+
         '<section class="nd-report-section"><h3>Продаја по купцима</h3>'+customerCards+'</section>'+
         '<section class="nd-report-section"><h3>Продаја по пунктовима</h3>'+pointCards+'</section>'+
         '<section class="nd-report-section"><h3>Наплата</h3><article class="nd-report-row"><div><strong>Наплаћено</strong><small>Збир евидентираних уплата по поруџбинама</small></div><b>'+money(paidKnown?paid:null)+'</b></article><article class="nd-report-row"><div><strong>Преостало за наплату</strong><small>Вредност поруџбина умањена за евидентирану наплату</small></div><b>'+money(paidKnown?receivable:null)+'</b></article></section>'+
