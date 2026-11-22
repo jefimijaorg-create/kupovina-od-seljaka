@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.14
+ * Version: 1.5.15
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -307,10 +307,12 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         if(invalid){chargeKnown=false;continue}
         if(packages>0){if(!Number.isFinite(size)||size<=0)chargeKnown=false;else {const price=salePricePerPackage(item);if(price===null)chargeKnown=false;else chargeTotal+=packages*price}}
       }
-      const summary='<section class="nd-ops-delivery-summary" aria-label="Финансијски преглед туре">'+
-        '<div><small>Укупна набавна цена</small><strong>'+money(purchaseKnown?purchaseTotal:null)+'</strong></div>'+
-        '<div><small>Укупна продајна цена нарученог</small><strong>'+money(orderedSaleKnown?orderedSaleTotal:null)+'</strong></div>'+
-        '<div><small>За наплату · тренутни избор</small><strong data-charge-total>'+money(chargeKnown?chargeTotal:null)+'</strong></div>'+
+      const marginKnown=purchaseKnown&&orderedSaleKnown;
+      const marginTotal=marginKnown?orderedSaleTotal-purchaseTotal:null;
+      const summary='<section class="nd-ops-delivery-summary" aria-label="Укупни финансијски преглед туре">'+
+        '<div><small>Укупна набавна вредност</small><strong>'+money(purchaseKnown?purchaseTotal:null)+'</strong></div>'+
+        '<div><small>Укупна продајна вредност</small><strong>'+money(orderedSaleKnown?orderedSaleTotal:null)+'</strong></div>'+
+        '<div><small>Укупна разлика</small><strong>'+money(marginTotal)+'</strong></div>'+
         '</section><div class="nd-ops-delivery-overview"><span>'+activeOrders.length+' активних поруџбина</span><span>'+activeCustomerIds.size+' купаца</span><span>'+completedCount+' завршених</span></div>';
 
       const renderCustomerGroup=(pointKey,customerId,orders)=>{
