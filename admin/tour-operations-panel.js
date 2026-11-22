@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.10
+ * Version: 1.5.11
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -20,6 +20,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
   let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
+  let deliveryView = 'routes';
   let calculatorExpression='0', calculatorJustEvaluated=false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
