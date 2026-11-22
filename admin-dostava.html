@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- NARUČI DOMAĆE — ADMIN ДОСТАВА
-     Version: 1.0.5
+     Version: 1.0.6
      Shared operations: admin/tour-operations-panel.js v1.4.8
      Styles: centralized in /admin.css only. -->
 <html lang="sr-Cyrl">
@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin.css?v=2.1.20">
+<link rel="stylesheet" href="/admin.css?v=2.1.22">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/admin/admin.js?v=1.1.0"></script>
 </head>
@@ -20,7 +20,7 @@
 <header class="nd-topbar">
   <a class="nd-icon-btn nd-delivery-back" href="/admin-workspace.html" aria-label="Повратак у ADMIN">←</a>
   <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>НАРУЧИ ДОМАЋЕ</strong><small>ДОСТАВА</small></span></div>
-  <span class="nd-build-version" aria-label="Страница Достава, верзија 1.0.3">v1.0.3</span>
+  <span class="nd-build-version" aria-label="Страница Достава, верзија 1.0.6">v1.0.6</span>
 </header>
 <main class="nd-main nd-delivery-main">
   <section class="nd-page-head"><div><div class="nd-eyebrow">ПОСЕБАН ОПЕРАТИВНИ МОДУЛ</div><h1>Достава</h1><p>Пунктови, сатница и предаја поруџбина за туру у обради.</p></div><span class="nd-status" id="deliveryConnection" aria-live="polite">ПРОВЕРА ПРИСТУПА…</span></section>
@@ -60,7 +60,7 @@ async function loadTours(){
 async function openDelivery(tourId){
   $('deliveryTourPicker').hidden=true;$('deliveryRoot').hidden=false;$('deliveryRoot').innerHTML='<div class="nd-loading">Отварам доставу…</div>';
   try{
-    const mod=await import('/admin/tour-operations-panel.js?v=1.5.11');
+    const mod=await import('/admin/tour-operations-panel.js?v=1.5.12');
     deliveryPanel=await mod.mountTourOperations({root:$('deliveryRoot'),core,tourId:String(tourId),initialTab:'delivery',onBack:showPicker,onOpenProcurement:null});
   }catch(error){$('deliveryRoot').textContent='Достава није доступна: '+(error.message||String(error));}
 }
