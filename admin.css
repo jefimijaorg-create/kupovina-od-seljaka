@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.25
+ * Version: 2.1.27
  * Updated: 2026-11-22
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2774,22 +2774,29 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 @media(max-width:360px){.nd-workspace .nd-tour-ops .nd-ops-delivery-main{grid-template-columns:minmax(0,1fr)}.nd-workspace .nd-tour-ops .nd-ops-delivery-action{justify-content:flex-start}}
 
 /* ==================================================
-   ADMIN — ПОЧЕТНИ ЕКРАН И ПОСТЕПЕНО ОТВАРАЊЕ РАДНОГ ПРОСТОРА
+   ADMIN — ПОЧЕТНИ ЕКРАН, ТРИ ОПЕРАТИВНЕ ЦЕЛИНЕ И ДУГОВАЊА
    ================================================== */
-.nd-workspace .nd-entry-home{display:grid;align-content:center;gap:22px;width:100%;max-width:760px;min-height:calc(100dvh - 150px);margin:0 auto;padding:clamp(16px,4vw,32px);box-sizing:border-box}
+.nd-workspace .nd-entry-home{display:grid;align-content:start;gap:20px;width:100%;max-width:980px;min-height:calc(100dvh - 150px);margin:0 auto;padding:clamp(16px,3vw,28px);box-sizing:border-box;overflow-x:hidden}
 .nd-workspace .nd-entry-home[hidden]{display:none!important}
 .nd-workspace .nd-entry-heading{text-align:center}
 .nd-workspace .nd-entry-heading>span{color:#285B3C;font-size:11px;font-weight:900;letter-spacing:.14em}
-.nd-workspace .nd-entry-heading h1{margin:8px 0;color:#344238;font-size:clamp(25px,5vw,36px);font-weight:900;letter-spacing:-.03em}
+.nd-workspace .nd-entry-heading h1{margin:8px 0;color:#344238;font-size:clamp(25px,5vw,34px);font-weight:900;letter-spacing:-.03em}
 .nd-workspace .nd-entry-heading p{margin:0;color:#647268;font-size:14px}
-.nd-workspace .nd-entry-actions{display:grid;grid-template-columns:1fr;gap:12px}
-.nd-workspace .nd-entry-actions button{display:grid;grid-template-columns:54px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:14px;min-width:0;min-height:88px;padding:14px 17px;border:1px solid #DCE4DC;border-radius:15px;background:#FFFFFF;color:#344238;text-align:left;box-shadow:0 3px 12px rgba(40,91,60,.07);touch-action:manipulation}
-.nd-workspace .nd-entry-actions button>span{grid-row:1/3;display:grid;place-items:center;width:50px;height:50px;border-radius:13px;background:#E5EEE6;color:#285B3C;font-size:24px;font-weight:900}
-.nd-workspace .nd-entry-actions button strong{font-size:16px;font-weight:900;letter-spacing:.02em}
-.nd-workspace .nd-entry-actions button small{color:#647268;font-size:12px}
-.nd-workspace .nd-entry-actions button:active{background:#F3F5F2;border-color:#A7C9AA}
+.nd-workspace .nd-entry-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch;min-width:0}
+.nd-workspace .nd-entry-card{display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px;border:1px solid #DCE4DC;border-radius:15px;background:#FFFFFF;color:#344238;box-shadow:0 3px 12px rgba(40,91,60,.07)}
+.nd-workspace .nd-entry-card-head{display:flex;align-items:center;gap:12px;min-width:0}
+.nd-workspace .nd-entry-card-head>span{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border-radius:12px;background:#E5EEE6;color:#285B3C;font-size:23px}
+.nd-workspace .nd-entry-card-head strong{display:block;color:#344238;font-size:16px;font-weight:900;letter-spacing:.02em}
+.nd-workspace .nd-entry-card-head small{display:block;margin-top:3px;color:#647268;font-size:11px;line-height:1.4}
+.nd-workspace .nd-entry-shortcuts{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;min-width:0}
+.nd-workspace .nd-entry-shortcuts button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-width:0;min-height:48px;padding:9px 11px;border:1px solid #DCE4DC;border-radius:10px;background:#F3F5F2;color:#344238;text-align:left;font-size:12px;font-weight:800;line-height:1.25;touch-action:manipulation}
+.nd-workspace .nd-entry-shortcuts button::after{content:'›';flex:0 0 auto;color:#285B3C;font-size:19px;font-weight:900}
+.nd-workspace .nd-entry-shortcuts button:active{border-color:#A7C9AA;background:#EAF1EB}
+.nd-workspace .nd-debt-page{width:100%;max-width:980px;margin:0 auto;padding:clamp(14px,3vw,26px);box-sizing:border-box;overflow-x:hidden}
+.nd-workspace .nd-debt-page[hidden]{display:none}
+.nd-workspace .nd-debt-page .nd-page-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
 .nd-workspace .nd-page-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.nd-workspace .nd-home-return{min-height:40px;padding:8px 12px;border:1px solid #C9D8CB;border-radius:10px;background:#FFFFFF;color:#285B3C;font-size:12px;font-weight:850}
+.nd-workspace .nd-home-return{min-height:48px;padding:9px 14px;border:1px solid #C9D8CB;border-radius:10px;background:#FFFFFF;color:#285B3C;font-size:12px;font-weight:850;touch-action:manipulation}
 .nd-workspace #tourListHead[hidden]{display:none!important}
 .nd-workspace #entryHome:not([hidden])~.nd-page-head{display:none!important}
 .nd-workspace #entryHome:not([hidden])~#dashboardTours,
@@ -2803,15 +2810,27 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace:has(#entryHome:not([hidden])) #userBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #refreshBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #userLabel{display:none!important}
-@media(min-width:600px){.nd-workspace .nd-entry-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.nd-workspace .nd-entry-actions button{grid-template-columns:1fr;grid-template-rows:auto auto auto;justify-items:center;gap:8px;min-height:156px;text-align:center}.nd-workspace .nd-entry-actions button>span{grid-row:auto}.nd-workspace .nd-entry-actions button small{font-size:11px}}
-@media(max-width:420px){.nd-workspace .nd-entry-home{min-height:calc(100dvh - 95px);gap:18px;padding:14px 4px}.nd-workspace .nd-entry-actions button{min-height:82px;padding:12px}.nd-workspace .nd-entry-actions button>span{width:46px;height:46px}}
-
+@media(max-width:1024px){
+  .nd-workspace .nd-entry-home{max-width:720px;min-height:calc(100dvh - 120px);gap:18px;padding:16px 12px}
+  .nd-workspace .nd-entry-actions{grid-template-columns:minmax(0,1fr);gap:12px}
+  .nd-workspace .nd-entry-card{padding:14px}
+  .nd-workspace .nd-entry-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+  .nd-workspace .nd-entry-home{min-height:calc(100dvh - 95px);gap:16px;padding:12px 4px}
+  .nd-workspace .nd-entry-heading h1{font-size:25px}
+  .nd-workspace .nd-entry-shortcuts{grid-template-columns:minmax(0,1fr)}
+  .nd-workspace .nd-entry-card{padding:13px}
+  .nd-workspace .nd-debt-page{padding:12px 4px}
+  .nd-workspace .nd-debt-page .nd-page-head{align-items:flex-start;flex-direction:column}
+}
 /* ADMIN — почетни екран мора бити затворено стање већ у HTML-у, пре покретања JavaScript-а */
 .nd-workspace #dashboardTours[hidden],
 .nd-workspace #tourListHead[hidden],
 .nd-workspace #tourOperationsRoot[hidden],
 .nd-workspace #tourBottomNav[hidden],
-.nd-workspace #entryHome[hidden]{display:none!important}
+.nd-workspace #entryHome[hidden],
+.nd-workspace #producerDebtPage[hidden]{display:none!important}
 .nd-workspace:has(#entryHome:not([hidden])) #menuBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #searchBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #notificationsBtn,
