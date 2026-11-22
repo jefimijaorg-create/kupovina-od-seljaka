@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.22
+ * Version: 2.1.23
  * Updated: 2026-11-22
  * Description: Consolidates light-theme design tokens and aligns existing ADMIN buttons, cards and status indicators; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -3043,3 +3043,32 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-vehicle-line-pack{flex:0 0 auto;text-align:right}
 .nd-workspace .nd-vehicle-line-pack b{color:#285B3C;font-size:12px;font-weight:900}
 @media(max-width:420px){.nd-workspace .nd-tour-ops-vehicle-only .nd-ops-content{padding:7px 0 18px}.nd-workspace .nd-vehicle-product{padding:10px;gap:7px}.nd-workspace .nd-vehicle-product>header strong{font-size:13px}.nd-workspace .nd-vehicle-product-total strong{font-size:16px}.nd-workspace .nd-vehicle-line strong{font-size:11px}}
+
+
+/* ADMIN ИЗВЕШТАЈ — ЦЕЛА НАРУЏБИНА ПО ГАЗДИНСТВИМА */
+.nd-workspace .nd-report-order-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;background:#F3F5F2;border:1px solid #DCE4DC;border-radius:11px}
+.nd-workspace .nd-report-order-summary>div{display:grid;gap:4px;min-width:0;padding:5px}
+.nd-workspace .nd-report-order-summary small,.nd-workspace .nd-report-farm-totals small,.nd-workspace .nd-report-farm-product>div>small{color:#68766C;font-size:10px;line-height:1.3}
+.nd-workspace .nd-report-order-summary strong{color:#285B3C;font-size:15px;font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .nd-report-farm-card{display:grid;gap:7px;padding:11px;border:1px solid #DCE4DC;border-radius:11px;background:#FFFFFF}
+.nd-workspace .nd-report-farm-card>header{display:grid;gap:8px}
+.nd-workspace .nd-report-farm-card>header>div:first-child{display:grid;gap:3px}
+.nd-workspace .nd-report-farm-card>header strong{color:#344238;font-size:14px;font-weight:900}
+.nd-workspace .nd-report-farm-card>header small{color:#68766C;font-size:10px}
+.nd-workspace .nd-report-farm-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.nd-workspace .nd-report-farm-totals>span{display:grid;gap:3px;padding:8px;border-radius:8px;background:#F3F5F2}
+.nd-workspace .nd-report-farm-totals b{color:#285B3C;font-size:13px;font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .nd-report-farm-product{display:grid;grid-template-columns:minmax(0,1fr) minmax(68px,.7fr) minmax(68px,.7fr);gap:7px;align-items:center;padding:8px 0 2px;border-top:1px solid #EDF1ED}
+.nd-workspace .nd-report-farm-product>div{display:grid;gap:3px;min-width:0}
+.nd-workspace .nd-report-farm-product-name strong{color:#344238;font-size:11px;line-height:1.3;overflow-wrap:anywhere}
+.nd-workspace .nd-report-farm-product-name small{color:#68766C;font-size:9px;line-height:1.3}
+.nd-workspace .nd-report-farm-product>div>b{color:#285B3C;font-size:11px;font-weight:900;overflow-wrap:anywhere}
+@media(max-width:420px){
+ .nd-workspace .nd-report-order-summary{gap:5px;padding:8px}
+ .nd-workspace .nd-report-order-summary small{font-size:9px}
+ .nd-workspace .nd-report-order-summary strong{font-size:13px}
+ .nd-workspace .nd-report-farm-card{padding:9px}
+ .nd-workspace .nd-report-farm-product{grid-template-columns:minmax(0,1fr) minmax(60px,.65fr) minmax(60px,.65fr);gap:5px}
+ .nd-workspace .nd-report-farm-product-name strong{font-size:10px}
+ .nd-workspace .nd-report-farm-product>div>b{font-size:10px}
+}
