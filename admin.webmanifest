@@ -1,0 +1,20 @@
+{
+  "id": "/admin-workspace.html",
+  "name": "Наручи домаће — ADMIN",
+  "short_name": "ADMIN",
+  "description": "Административни радни простор Наручи домаће",
+  "start_url": "/admin-workspace.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F5F2",
+  "theme_color": "#285B3C",
+  "icons": [
+    {
+      "src": "/admin-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
