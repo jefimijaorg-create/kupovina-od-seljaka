@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.27
+ * Version: 2.1.28
  * Updated: 2026-11-22
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2804,7 +2804,6 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace:has(#entryHome:not([hidden])) .nd-sidebar{display:none!important}
 .nd-workspace:has(#entryHome:not([hidden])) .nd-layout{grid-template-columns:minmax(0,1fr)!important}
 .nd-workspace:has(#entryHome:not([hidden])) .nd-main{padding-top:8px}
-.nd-workspace:has(#entryHome:not([hidden])) #menuBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #searchBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #notificationsBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #userBtn,
@@ -2831,7 +2830,6 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace #tourBottomNav[hidden],
 .nd-workspace #entryHome[hidden],
 .nd-workspace #producerDebtPage[hidden]{display:none!important}
-.nd-workspace:has(#entryHome:not([hidden])) #menuBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #searchBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #notificationsBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #userBtn,
