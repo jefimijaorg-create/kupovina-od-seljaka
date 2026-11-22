@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.8
+ * Version: 1.5.9
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -403,18 +403,23 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       };
       body=summary+'<div class="nd-ops-delivery-overview"><strong>'+remainingPoints.length+' преосталих пунктова</strong><span>'+pointWork.filter(row=>row.remaining.length===0).length+' завршених</span></div>'+(pointSections||'')+(unassignedSection||'')+
         (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
-      const vehicleGroups=new Map();
+      const vehicleGroups=new Map(),vehicleFarmGroups=new Map();
       for(const allocation of state.procurementAllocations){
         const packages=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
         if(packages<=0)continue;
         const key=productPair(allocation),product=productMap.get(allocation.product_id),variant=variantMap.get(allocation.variant_id);
-        const group=vehicleGroups.get(key)||{name:product?.name||'Производ није доступан',variant:variant?.name||variant?.size_label||'Варијанта није наведена',packages:0,farms:[]};
-        group.packages+=packages;
-        group.farms.push({name:farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id),packages});
-        vehicleGroups.set(key,group);
+        const productName=product?.name||'Производ није доступан',variantName=variant?.name||variant?.size_label||'Варијанта није наведена';
+        const farmName=farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id);
+        const group=vehicleGroups.get(key)||{name:productName,variant:variantName,packages:0};
+        group.packages+=packages;vehicleGroups.set(key,group);
+        const farmKey=String(allocation.gazdinstvo_id??'unknown');
+        const farmGroup=vehicleFarmGroups.get(farmKey)||{name:farmName,rows:new Map(),total:0};
+        const row=farmGroup.rows.get(key)||{name:productName,variant:variantName,packages:0};
+        row.packages+=packages;farmGroup.rows.set(key,row);farmGroup.total+=packages;vehicleFarmGroups.set(farmKey,farmGroup);
       }
-      const vehicleRows=[...vehicleGroups.values()].map(group=>'<article class="nd-ops-card"><strong>'+esc(group.name)+'</strong><div>'+esc(group.variant)+'</div><div class="nd-ops-qty">'+packageCountLabel(group.packages)+'</div><small>'+group.farms.map(farm=>esc(farm.name)+': '+packageCountLabel(farm.packages)).join(' · ')+'</small></article>').join('');
-      const vehicleHtml='<section class="nd-ops-card"><h2>Садржај возила</h2><p>Потврђене количине преузете од газдинстава за ову туру.</p><div class="nd-ops-delivery-overview"><strong>'+[...vehicleGroups.values()].reduce((sum,row)=>sum+row.packages,0).toLocaleString('sr-RS',{maximumFractionDigits:3})+' паковања</strong><span>'+vehicleGroups.size+' врста производа</span></div>'+(vehicleRows||'<div class="nd-ops-empty">Још нема потврђених количина за возило.</div>')+'</section>';
+      const vehicleRows=[...vehicleGroups.values()].map(group=>'<article class="nd-ops-card"><strong>'+esc(group.name)+'</strong><div>'+esc(group.variant)+'</div><div class="nd-ops-qty">'+packageCountLabel(group.packages)+'</div></article>').join('');
+      const farmPickupRows=[...vehicleFarmGroups.values()].map(farm=>'<article class="nd-ops-card"><div class="nd-ops-delivery-point-head"><strong>'+esc(farm.name)+'</strong><b>'+packageCountLabel(farm.total)+'</b></div>'+[...farm.rows.values()].map(row=>'<div class="nd-ops-delivery-item"><strong>'+esc(row.name)+'</strong><div>'+esc(row.variant)+'</div><div class="nd-ops-qty">'+packageCountLabel(row.packages)+'</div></div>').join('')+'</article>').join('');
+      const vehicleHtml='<section class="nd-ops-card"><h2>Садржај возила</h2><p>Укупне потврђене количине преузете за ову туру.</p><div class="nd-ops-delivery-overview"><strong>'+[...vehicleGroups.values()].reduce((sum,row)=>sum+row.packages,0).toLocaleString('sr-RS',{maximumFractionDigits:3})+' паковања</strong><span>'+vehicleGroups.size+' врста производа</span></div>'+(vehicleRows||'<div class="nd-ops-empty">Још нема потврђених количина за возило.</div>')+'</section><section class="nd-ops-card"><h2>Преузето од газдинстава</h2><p>Преглед шта је преузето са сваког газдинства, по производу и варијанти.</p>'+(farmPickupRows||'<div class="nd-ops-empty">Нема евидентираног преузимања од газдинстава.</div>')+'</section>';
       const deliveryTabs='<nav class="nd-ops-delivery-tabs" aria-label="Приказ доставе"><button type="button" data-delivery-view="routes" aria-pressed="'+(deliveryView==='routes'?'true':'false')+'" class="'+(deliveryView==='routes'?'is-active':'')+'">Пунктови и испорука</button><button type="button" data-delivery-view="vehicle" aria-pressed="'+(deliveryView==='vehicle'?'true':'false')+'" class="'+(deliveryView==='vehicle'?'is-active':'')+'">У возилу</button></nav>';
       if(deliveryView==='vehicle')body=vehicleHtml;
       body=deliveryTabs+body;
