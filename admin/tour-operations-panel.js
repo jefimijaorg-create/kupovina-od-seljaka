@@ -545,10 +545,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       ?'<header class="nd-ops-head nd-vehicle-head"><div><small>УТОВАР · ТУРА #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+'</p></div><button type="button" data-back>← Назад</button></header>'
       :'<header class="nd-ops-head"><div><small>'+(activeTab==='report'?'ФИНАНСИЈСКИ ИЗВЕШТАЈ':'ОПЕРАТИВНИ ПРЕГЛЕД')+' · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div>'+(canReadProducts?'<button type="button" data-open-report>Финансијски извештај</button>':'')+'<button type="button" data-back>← Назад</button></header>';
     shell.innerHTML=opsHeader+'<section class="nd-ops-content" data-ops-content>'+body+'</section>'+(vehicleOnly?'':'<footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>');
+    /* HERO остаје унутар активног модула; не премешта се у глобално заглавље. */
     const compactOpsHead=shell.querySelector('.nd-ops-head');
-    const adminTopbar=document.querySelector('.nd-topbar');
-    if(adminTopbar)adminTopbar.querySelectorAll('.nd-ops-head').forEach(node=>node.remove());
-    if(compactOpsHead&&adminTopbar)adminTopbar.appendChild(compactOpsHead);
     compactOpsHead?.querySelector('[data-back]')?.addEventListener('click',onBack);
     compactOpsHead?.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
     shell.querySelector('[data-report-print]')?.addEventListener('click',()=>window.print());
@@ -700,5 +698,5 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   }
   function showError(error){shell.innerHTML='<div class="nd-ops-error"><strong>Подаци нису учитани</strong><p>'+esc(error.message||String(error))+'</p><button type="button" data-back>Назад</button></div>';shell.querySelector('[data-back]').addEventListener('click',onBack)}
   try { await load(); } catch(error) { showError(error); }
-  return { destroy(){disposed=true;loadToken++;if(groupedOrdersView)groupedOrdersView.destroy();document.querySelectorAll('.nd-topbar>.nd-ops-head').forEach(node=>node.remove());orderSheetPromise.then(sheet=>sheet.destroy()).catch(()=>{});root.replaceChildren();} };
+  return { destroy(){disposed=true;loadToken++;if(groupedOrdersView)groupedOrdersView.destroy();orderSheetPromise.then(sheet=>sheet.destroy()).catch(()=>{});root.replaceChildren();} };
 }
