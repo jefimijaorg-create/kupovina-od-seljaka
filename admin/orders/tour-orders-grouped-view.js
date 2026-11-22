@@ -1,7 +1,7 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.0.6
- * Updated: 2026-11-19
+ * Version: 1.0.7
+ * Updated: 2026-11-22
  * Description: Displays verified package and line prices plus buyer payable totals; retains compact cards and point quick actions.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
@@ -48,13 +48,12 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
         : '<small class="nd-go-price">Цена није евидентирана</small>';
       return '<div class="nd-go-line"><span>' + esc(name) + '<br><small>' + qty + '</small>' + priceHtml + '</span></div>';
     }).join('') : '<div class="nd-go-empty">Нема ставки у корпи.</div>';
-    return '<article class="nd-go-order-card" data-order-card="' + esc(order.id) + '">' +
-      '<div class="nd-go-order"><button type="button" class="nd-go-drag" data-drag-order="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + ' aria-label="Превуци поруџбину #' + esc(order.id) + '" title="Превуци поруџбину">⠿</button>' +
-      '<div class="nd-go-order-main"><div class="nd-go-customer-top"><div class="nd-go-order-meta"><span>Поруџбина #' + esc(order.id) + '</span></div>' +
-      (canManage ? '<button type="button" class="nd-go-quick-point" data-quick-point="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + '>Промени пункт</button>' : '') + '</div>' +
-      '<div class="nd-go-lines">' + lineHtml + '</div>' +
-      '<div class="nd-go-order-meta">' + lines.length + ' ' + (lines.length === 1 ? 'производ' : 'производа') + '</div>' +
-      '</div></div></article>';
+    const buyer = customerMap.get(String(order.kupac_id)) || {};
+    const point = pointMap.get(String(order.punkt_id));
+    return '<article class="nd-go-order-card nd-go-order-flat" data-order-card="' + esc(order.id) + '">' +
+      '<header class="nd-go-flat-head"><div class="nd-go-flat-identity"><strong>' + esc(buyer.ime_prezime || ('Купац · ' + (order.kupac_id ?? '—'))) + '</strong><span>Поруџбина #' + esc(order.id) + ' · ' + esc(point?.name || 'Без пункта') + '</span></div>' +
+      (canManage ? '<button type="button" class="nd-go-quick-point" data-quick-point="' + esc(order.id) + '" ' + (busyOrderId !== null ? 'disabled' : '') + '>Пункт</button>' : '') + '</header>' +
+      '<div class="nd-go-lines">' + lineHtml + '</div></article>';
   };
 
   const group = (pointId, rows, unassigned = false) => {
@@ -90,10 +89,9 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
       }
     }
     const orderedPointIds = [...(points || []).filter(p => assigned.has(String(p.id))).map(p => String(p.id)), ...[...assigned.keys()].filter(id => !(points || []).some(p => String(p.id) === id))];
-    rootNode.innerHTML = '<div class="nd-go-intro"><div><h2>Поруџбине по пунктовима</h2><p>Прво пункт, затим купац · садржај корпе и телефон су одмах видљиви</p></div><span class="nd-go-count">' + orders.length + ' укупно</span></div>' +
+    rootNode.innerHTML = '<div class="nd-go-intro"><div><h2>Поруџбине</h2><p>Све поруџбине у једном низу · ставке су приказане једна испод друге</p></div><span class="nd-go-count">' + orders.length + ' укупно</span></div>' +
       (feedback ? '<div class="nd-go-feedback ' + (feedbackError ? 'nd-go-error' : '') + '" role="status">' + esc(feedback) + '</div>' : '') +
-      orderedPointIds.map(id => group(id, assigned.get(id))).join('') +
-      group('', unassigned, true);
+      '<div class="nd-go-flat-list">' + [...orders].sort((a,b)=>Number(a.id)-Number(b.id)).map(orderCard).join('') + '</div>';
     rootNode.querySelectorAll('[data-quick-point]').forEach(button => button.addEventListener('click', () => openPointQuickAction(button.dataset.quickPoint)));
 
     rootNode.querySelectorAll('[data-drag-order]').forEach(handle => {
