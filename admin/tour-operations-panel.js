@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.11
+ * Version: 1.5.12
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -433,8 +433,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         '<small class="nd-ops-calculator-note">Самосталан рачун · не мења износ купца нити податке туре</small></section></div>';
     }
     if(groupedOrdersView){groupedOrdersView.destroy();groupedOrdersView=null;}
+    const vehicleOnly=activeTab==='delivery'&&deliveryView==='vehicle';
+    shell.classList.toggle('nd-tour-ops-vehicle-only',vehicleOnly);
     shell.classList.toggle('nd-tour-ops-delivery',activeTab==='delivery');
-    shell.innerHTML='<header class="nd-ops-head"><div><small>'+(activeTab==='report'?'ФИНАНСИЈСКИ ИЗВЕШТАЈ':'ОПЕРАТИВНИ ПРЕГЛЕД')+' · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div>'+(canReadProducts?'<button type="button" data-open-report>Финансијски извештај</button>':'')+'<button type="button" data-back>← Назад</button></header><section class="nd-ops-content" data-ops-content>'+body+'</section><footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>';
+    const opsHeader=vehicleOnly
+      ?'<header class="nd-ops-head nd-vehicle-head"><div><small>УТОВАР · ТУРА #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+'</p></div><button type="button" data-back>← Назад</button></header>'
+      :'<header class="nd-ops-head"><div><small>'+(activeTab==='report'?'ФИНАНСИЈСКИ ИЗВЕШТАЈ':'ОПЕРАТИВНИ ПРЕГЛЕД')+' · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div>'+(canReadProducts?'<button type="button" data-open-report>Финансијски извештај</button>':'')+'<button type="button" data-back>← Назад</button></header>';
+    shell.innerHTML=opsHeader+'<section class="nd-ops-content" data-ops-content>'+body+'</section>'+(vehicleOnly?'':'<footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>');
     const compactOpsHead=shell.querySelector('.nd-ops-head');
     const adminTopbar=document.querySelector('.nd-topbar');
     if(adminTopbar)adminTopbar.querySelectorAll('.nd-ops-head').forEach(node=>node.remove());
