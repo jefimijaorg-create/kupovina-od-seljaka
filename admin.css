@@ -3265,3 +3265,8 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-entry-heading p,.nd-workspace .nd-page-head p{font-size:10px!important}
  .nd-workspace .nd-brand-copy small{display:none}
 }
+
+/* ДОРАДА HERO ТЕКСТА — ВЕРТИКАЛНА ХИЈЕРАРХИЈА */
+.nd-workspace .nd-entry-heading{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
+.nd-workspace .nd-entry-heading>span{display:block}
+.nd-workspace .nd-entry-heading h1,.nd-workspace .nd-entry-heading p{width:100%}
