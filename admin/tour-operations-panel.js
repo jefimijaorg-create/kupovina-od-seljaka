@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.18
+ * Version: 1.5.19
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -371,9 +371,6 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>КОМАДА</small></label>'+
               '<button type="button" class="nd-ops-delivery-quick" data-confirm-delivery="'+esc(item.id)+'" '+(editable&&available>0?'':'disabled')+'>Потврди</button></div></div>'+
               '<div class="nd-ops-delivery-price-row"><span>'+ (salePricePerPackage(item)!==null?'Цена по паковању':'Цена није доступна') +'</span><strong>'+money(salePricePerPackage(item))+'</strong></div>'+
-              '<div class="nd-ops-delivery-metrics"><span>Наручено <b>'+packageCountLabel(ordered)+'</b></span>'+
-              '<span>Преузето <b>'+packageCountLabel(picked)+'</b></span>'+
-              '<span class="nd-ops-delivery-deficit'+(deficitPackages>0?' is-active':'')+'">Недостаје <b>'+deficitLabel+'</b></span></div>'+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div></div>';
           }).join('');
           const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
