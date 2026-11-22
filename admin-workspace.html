@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   NARUČI DOMAĆE — ADMIN WORKSPACE
-  Version: 1.17.04
+  Version: 1.17.05
   Updated: 2026-11-22
   Description: Applies the unified approved light component system across the existing ADMIN Workspace.
   Scope: Existing authenticated ADMIN workspace; procurement writes are protected by RLS and a database trigger.
@@ -17,17 +17,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin.css?v=2.1.27">
+<link rel="stylesheet" href="/admin.css?v=2.1.28">
 <!-- Drugi CSS je isključen; svi stilovi se učitavaju iz /admin.css. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/admin/admin.js?v=1.1.0"></script>
 </head>
 <body class="nd-workspace">
 <header class="nd-topbar">
-  <button class="nd-icon-btn" id="menuBtn" type="button" aria-label="Otvori navigaciju" aria-expanded="false">☰</button>
+  <button class="nd-icon-btn" id="menuBtn" type="button" aria-label="Отвори навигацију" aria-expanded="false">☰</button>
   <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>NARUČI DOMAĆE</strong><small>ADMIN WORKSPACE</small></span></div>
   <button class="nd-icon-btn" id="installAppBtn" type="button" aria-label="Инсталирај ADMIN апликацију">＋ Инсталирај</button>
-  <span class="nd-build-version" aria-label="Верзија ADMIN-а 1.17.04" title="Верзија ADMIN-а">v1.17.04</span>
+  <span class="nd-build-version" aria-label="Верзија ADMIN-а 1.17.05" title="Верзија ADMIN-а">v1.17.05</span>
   <span class="nd-status" id="activeTourStatus" aria-live="polite"></span>
   <button class="nd-icon-btn nd-procurement-entry" id="procurementBtn" type="button" hidden>Набавка</button>
   <button class="nd-icon-btn" id="searchBtn" type="button" aria-label="Pretraga">⌕</button>
@@ -35,10 +35,10 @@
   <span class="nd-user-label" id="userLabel">Provera naloga…</span>
   <button class="nd-icon-btn" id="userBtn" type="button" aria-label="Korisnički nalog">♙</button>
   <button class="nd-icon-btn" id="refreshBtn" type="button" aria-label="Osveži podatke">↻</button>
-  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.17.04</span>
+  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.17.05</span>
 </header>
 <div class="nd-layout">
-  <aside class="nd-sidebar" aria-label="Glavna navigacija">
+  <aside class="nd-sidebar" aria-label="Главна навигација">
     <div class="nd-nav-label">РАДНИ ПРОСТОР</div>
     <nav class="nd-nav" id="desktopNav"></nav>
   </aside>
@@ -103,8 +103,8 @@
 </div>
 <nav id="tourBottomNav" class="nd-tour-bottom-nav" aria-label="Навигација у активној тури" hidden><button type="button" data-tour-section="orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4zM8 9h8M8 12h8M8 15h5"/></svg><b>Поруџбине</b></button><button type="button" data-tour-section="products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5h7v7H4zM13 4.5h7v7h-7zM4 13.5h7v6H4zM13 13.5h7v6h-7z"/></svg><b>Производи</b></button><button type="button" data-tour-section="procurement"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v15H6zM9 8h6M9 11.5h6M9 15h3"/></svg><b>Набавка</b></button><button type="button" data-tour-section="delivery"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7zM7 19a1.7 1.7 0 1 0 0-3.4A1.7 1.7 0 0 0 7 19zM18 19a1.7 1.7 0 1 0 0-3.4A1.7 1.7 0 0 0 18 19z"/></svg><b>Достава</b></button><button type="button" data-tour-section="traceability"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><b>Следљивост</b></button></nav>
 <div class="nd-overlay" id="drawerOverlay" aria-hidden="true">
-  <aside class="nd-drawer" role="dialog" aria-modal="true" aria-label="Glavna navigacija">
-    <div class="nd-drawer-head"><strong>ADMIN MENI</strong><button class="nd-icon-btn" id="closeDrawer" type="button" aria-label="Zatvori meni">×</button></div>
+  <aside class="nd-drawer" role="dialog" aria-modal="true" aria-label="Главна навигација">
+    <div class="nd-drawer-head"><strong>АДМИН МЕНИ</strong><button class="nd-icon-btn" id="closeDrawer" type="button" aria-label="Затвори мени">×</button></div>
     <nav class="nd-nav" id="mobileNav"></nav>
   </aside>
 </div>
