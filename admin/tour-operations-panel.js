@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.19
+ * Version: 1.5.20
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -19,7 +19,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const role = core.getState().role;
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
-  let activeTab = ['orders','products','delivery'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
+  let activeTab = ['orders','products','delivery','traceability'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
   let deliveryView = 'routes';
   let calculatorExpression='0', calculatorJustEvaluated=false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], productOffers:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
@@ -118,6 +118,34 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if(activeTab==='orders') body='<div data-grouped-orders-root></div>';
     if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id)||farmMap.get(p?.gazdinstvo_id);return '<article class="nd-ops-card" data-open-procurement-product="'+esc(item.product_id||'')+'" role="button" tabindex="0" aria-label="Отвори набавку за '+esc(p?.name||'производ')+'"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
     if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
+    if(activeTab==='traceability') {
+      if(!canReadProducts) body='<div class="nd-ops-notice">Немате дозволу за преглед производа и газдинстава.</div>';
+      else {
+        const customerFor=item=>{const order=orderMap.get(item.porudzbina_id);return customerMap.get(order?.kupac_id)?.ime_prezime||('Купац #'+(order?.kupac_id??'—'));};
+        const packageFor=item=>{const variant=variantMap.get(item.variant_id);return variant?.name||variant?.size_label||((item.package_size??'')+' '+(item.package_unit||''))||'Амбалажа није наведена';};
+        const farmGroups=new Map();
+        state.items.forEach(item=>{
+          const farmId=item.gazdinstvo_id??state.products.find(p=>String(p.id)===String(item.product_id))?.gazdinstvo_id??'unknown';
+          const farmName=farmMap.get(farmId)?.name||(farmId==='unknown'?'Газдинство није повезано':('Газдинство #'+farmId));
+          const key=String(farmId);
+          if(!farmGroups.has(key))farmGroups.set(key,{name:farmName,products:new Map(),packages:new Map()});
+          const farm=farmGroups.get(key),productName=productMap.get(item.product_id)?.name||'Производ није наведен';
+          const productKey=String(item.product_id)+'::'+String(item.variant_id);
+          if(!farm.products.has(productKey))farm.products.set(productKey,{name:productName,variant:packageFor(item),items:[]});
+          farm.products.get(productKey).items.push(item);
+          const packageKey=String(item.variant_id||'')+'::'+String(item.package_size||'')+'::'+String(item.package_unit||'');
+          if(!farm.packages.has(packageKey))farm.packages.set(packageKey,{name:packageFor(item),product:productName,items:[]});
+          farm.packages.get(packageKey).items.push(item);
+        });
+        const qtyFor=rows=>rows.reduce((sum,item)=>sum+(Number(item.package_count)||0),0);
+        const detailsFor=(rows)=>rows.map(item=>'<div class="nd-trace-customer"><span>'+esc(customerFor(item))+'</span><b>'+esc(item.package_count??0)+' пак.</b><small>Поруџбина #'+esc(item.porudzbina_id)+'</small></div>').join('');
+        body='<div class="nd-trace-intro"><strong>Следљивост активне туре</strong><span>Изабери производ или амбалажу да видиш тачно ко је наручио и колико.</span></div>'+
+          [...farmGroups.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr')).map((farm,index)=>'<section class="nd-trace-farm"><header><strong>'+esc(farm.name)+'</strong><span>'+farm.products.size+' производа · '+farm.packages.size+' врста амбалаже</span></header>'+
+          '<h3>Производи</h3>'+[...farm.products.values()].map((group,i)=>'<details class="nd-trace-group"><summary><span><b>'+esc(group.name)+'</b><small>'+esc(group.variant)+'</small></span><strong>'+qtyFor(group.items).toLocaleString('sr-RS')+' пак.</strong></summary><div class="nd-trace-details">'+detailsFor(group.items)+'</div></details>').join('')+
+          '<h3>Амбалажа</h3>'+[...farm.packages.values()].map(group=>'<details class="nd-trace-group"><summary><span><b>'+esc(group.name)+'</b><small>'+esc(group.product)+'</small></span><strong>'+qtyFor(group.items).toLocaleString('sr-RS')+' пак.</strong></summary><div class="nd-trace-details">'+detailsFor(group.items)+'</div></details>').join('')+'</section>').join('')||
+          '<div class="nd-ops-empty">Нема поруџбина за приказ у активној тури.</div>';
+      }
+    }
     if(activeTab==='report') {
       const money=value=>value===null||value===undefined?'Није обрачунато':Number(value).toLocaleString('sr-RS',{minimumFractionDigits:0,maximumFractionDigits:2})+' дин.';
       const qty=value=>Number(value||0).toLocaleString('sr-RS',{maximumFractionDigits:3});
@@ -525,7 +553,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     shell.querySelector('[data-report-print]')?.addEventListener('click',()=>window.print());
     shell.querySelectorAll('[data-delivery-view]').forEach(button=>button.addEventListener('click',()=>{deliveryView=button.dataset.deliveryView==='vehicle'?'vehicle':'routes';render();}));
 
-    shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery'].includes(returnFromReport)?returnFromReport:'orders';render();});
+    shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery','traceability'].includes(returnFromReport)?returnFromReport:'orders';render();});
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
     const updateCalc=()=>{if(calcDisplay)calcDisplay.textContent=calculatorExpression.replace(/\./g,',')||'0';};
     const closeCalc=()=>{if(calcOverlay)calcOverlay.hidden=true;};
