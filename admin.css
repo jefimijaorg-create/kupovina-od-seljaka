@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.31
+ * Version: 2.1.32
  * Updated: 2026-11-22
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -3287,3 +3287,33 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-tour-ops>.nd-ops-content{min-width:0}
 @media(max-width:767px){.nd-workspace .nd-topbar{display:flex;flex-wrap:wrap;min-height:58px;padding:8px 12px;gap:8px}.nd-workspace .nd-tour-ops>.nd-ops-head{grid-template-columns:minmax(0,1fr);gap:10px;padding:15px;border-radius:15px}.nd-workspace .nd-tour-ops>.nd-ops-head>button{grid-column:1;grid-row:auto;width:100%;min-height:48px}.nd-workspace .nd-tour-ops>.nd-ops-head>div{width:100%}}
 @media(min-width:768px) and (max-width:1024px){.nd-workspace .nd-tour-ops>.nd-ops-head{padding:16px}}
+
+
+/* HERO НАБАВКЕ — КОМПАКТНО СВЕТЛО ЗАГЛАВЉЕ */
+.nd-workspace .nd-tour-ops>.nd-ops-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-width:0;padding:13px 15px;border:1px solid #DCE4DC!important;
+  border-radius:16px!important;background:#FFFFFF!important;
+  box-shadow:0 5px 18px rgba(35,63,43,.06)!important;color:#344238!important;
+}
+.nd-workspace .nd-tour-ops>.nd-ops-head>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.nd-workspace .nd-tour-ops>.nd-ops-head small{
+  color:#285B3C!important;font-size:10px;font-weight:900;letter-spacing:.09em;line-height:1.3;
+}
+.nd-workspace .nd-tour-ops>.nd-ops-head h1{
+  margin:0!important;color:#285B3C!important;font-size:25px!important;font-weight:900;line-height:1.12;letter-spacing:0!important;
+}
+.nd-workspace .nd-tour-ops>.nd-ops-head p{
+  margin:0!important;color:#68766C!important;font-size:12px!important;line-height:1.4;white-space:normal!important;
+}
+.nd-workspace .nd-tour-ops>.nd-ops-head>button{
+  flex:0 0 auto;min-height:48px!important;padding:10px 14px!important;
+  border:1px solid #DCE4DC!important;border-radius:12px!important;
+  background:#F3F5F2!important;color:#285B3C!important;font-size:13px;font-weight:800;
+}
+@media(max-width:767px){
+  .nd-workspace .nd-tour-ops>.nd-ops-head{padding:12px!important;gap:8px}
+  .nd-workspace .nd-tour-ops>.nd-ops-head h1{font-size:23px!important}
+  .nd-workspace .nd-tour-ops>.nd-ops-head p{font-size:11px!important}
+  .nd-workspace .nd-tour-ops>.nd-ops-head>button{min-height:48px!important;padding:9px 11px!important}
+}
