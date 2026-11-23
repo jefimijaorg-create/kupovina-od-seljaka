@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   NARUČI DOMAĆE — ADMIN WORKSPACE
-  Version: 1.17.17
+  Version: 1.17.18
   Updated: 2026-11-22
   Description: Applies the unified approved light component system across the existing ADMIN Workspace.
   Scope: Existing authenticated ADMIN workspace; procurement writes are protected by RLS and a database trigger.
@@ -11,13 +11,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#285B3C">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="manifest" href="/admin.webmanifest">
 <script>if(location.protocol==="http:"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
 <title>ADMIN Workspace · Наручи домаће</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin.css?v=2.1.40">
+<link rel="stylesheet" href="/admin.css?v=2.1.40&initial=1.17.18">
 <!-- Drugi CSS je isključen; svi stilovi se učitavaju iz /admin.css. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/admin/admin.js?v=1.1.0"></script>
@@ -26,7 +29,7 @@
 <header class="nd-topbar">
   <button class="nd-icon-btn" id="menuBtn" type="button" aria-label="Отвори навигацију" aria-expanded="false">☰</button>
   <div class="nd-home-hero-copy" id="homeHeroCopy"><strong>Оперативни преглед</strong><span>Изабери шта сада треба да урадиш у активној тури.</span></div>
-  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>НАРУЧИ ДОМАЋЕ</strong><small>ADMIN WORKSPACE</small></span><span class="nd-build-version" id="ndVersionIndicator" data-app-version="1.17.17" aria-live="polite" title="Провера верзије"><strong id="ndCssVersion">CSS v2.1.40</strong><small>ADMIN v1.17.17</small><em id="ndVersionState">ПРОВЕРА ВЕРЗИЈЕ…</em></span></div>
+  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>НАРУЧИ ДОМАЋЕ</strong><small>ADMIN WORKSPACE</small></span><span class="nd-build-version" id="ndVersionIndicator" data-app-version="1.17.18" aria-live="polite" title="Провера верзије"><strong id="ndCssVersion">CSS v2.1.40</strong><small>ADMIN v1.17.18</small><em id="ndVersionState">ПРОВЕРА ВЕРЗИЈЕ…</em></span></div>
   <button class="nd-icon-btn" id="installAppBtn" type="button" aria-label="Инсталирај ADMIN апликацију">＋ Инсталирај</button>
   <span class="nd-status" id="activeTourStatus" aria-live="polite"></span>
   <button class="nd-icon-btn nd-procurement-entry" id="procurementBtn" type="button" hidden>Набавка</button>
@@ -35,7 +38,7 @@
   <span class="nd-user-label" id="userLabel">Provera naloga…</span>
   <button class="nd-icon-btn" id="userBtn" type="button" aria-label="Korisnički nalog">♙</button>
   <button class="nd-icon-btn" id="refreshBtn" type="button" aria-label="Osveži podatke">↻</button>
-  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.17.17</span>
+  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.17.18</span>
 </header>
 <div class="nd-layout">
   <aside class="nd-sidebar" aria-label="Главна навигација">
@@ -203,71 +206,66 @@ boot();
 </script>
 
 <script>
-/* Провера стварно учитаног CSS-а у односу на најновији CSS у GitHub репозиторијуму. */
+/* СВЕЖЕ УЧИТАВАЊЕ ADMIN CSS-А — ЗАШТИТА ОД СТАРОГ КЕША */
 (function () {
   'use strict';
   const indicator = document.getElementById('ndVersionIndicator');
   const versionLabel = document.getElementById('ndCssVersion');
   const stateLabel = document.getElementById('ndVersionState');
-  if (!indicator || !versionLabel || !stateLabel) return;
+  const stylesheet = document.querySelector('link[rel="stylesheet"][href*="/admin.css"]');
+  if (!indicator || !versionLabel || !stateLabel || !stylesheet) return;
 
-  function compareVersions(a, b) {
-    const left = a.split('.').map(Number);
-    const right = b.split('.').map(Number);
-    for (let i = 0; i < Math.max(left.length, right.length); i++) {
-      const difference = (left[i] || 0) - (right[i] || 0);
-      if (difference) return difference;
-    }
-    return 0;
-  }
-
-  function showState(kind, label, title) {
+  function state(kind, label, title) {
     indicator.classList.remove('is-current', 'is-update', 'is-error');
     indicator.classList.add(kind);
     stateLabel.textContent = label;
     indicator.title = title;
   }
 
-  async function checkVersion() {
-    const rawVersion = getComputedStyle(document.documentElement)
-      .getPropertyValue('--nd-css-version').trim();
-    const loadedVersion = rawVersion.replace(/^["']|["']$/g, '');
-    if (!/^\d+(\.\d+)+$/.test(loadedVersion)) {
-      versionLabel.textContent = 'CSS верзија —';
-      showState('is-error', 'ВЕРЗИЈА НИЈЕ ПРОЧИТАНА', 'Није могуће прочитати верзију из учитаног CSS-а.');
-      return;
-    }
+  function readLoadedVersion() {
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue('--nd-css-version').trim().replace(/^["']|["']$/g, '');
+  }
 
-    versionLabel.textContent = 'CSS v' + loadedVersion;
-    showState('is-error', 'ПРОВЕРА У ТОКУ…', 'Учитао си CSS v' + loadedVersion + '. Проверавам GitHub репозиторијум.');
+  function reloadCss(version) {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Истекло време учитавања CSS-а.')), 15000);
+      stylesheet.onload = () => { clearTimeout(timeout); resolve(readLoadedVersion()); };
+      stylesheet.onerror = () => { clearTimeout(timeout); reject(new Error('ADMIN CSS није могао да се преузме.')); };
+      stylesheet.href = '/admin.css?v=' + encodeURIComponent(version) + '&fresh=' + Date.now();
+    });
+  }
 
+  async function checkAndRefresh() {
+    state('is-error', 'ПРОВЕРА И УЧИТАВАЊЕ…', 'Преузимам најновију верзију и заобилазим кеш прегледача.');
     try {
-      const url = 'https://raw.githubusercontent.com/jefimijaorg-create/kupovina-od-seljaka/main/admin.css?check=' + Date.now();
-      const response = await fetch(url, { cache: 'no-store', mode: 'cors' });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const latestCss = await response.text();
-      const match = latestCss.match(/^\s*\*\s*Version:\s*([0-9]+(?:\.[0-9]+)*)/m);
-      if (!match) throw new Error('Верзија није пронађена у CSS заглављу.');
-
+      const response = await fetch(
+        'https://raw.githubusercontent.com/jefimijaorg-create/kupovina-od-seljaka/main/admin.css?fresh=' + Date.now(),
+        { cache: 'no-store', mode: 'cors' }
+      );
+      if (!response.ok) throw new Error('GitHub HTTP ' + response.status);
+      const source = await response.text();
+      const match = source.match(/^\s*\*\s*Version:\s*([0-9]+(?:\.[0-9]+)*)/m);
+      if (!match) throw new Error('Верзија није пронађена у CSS фајлу.');
       const latestVersion = match[1];
-      const comparison = compareVersions(loadedVersion, latestVersion);
-      if (comparison === 0) {
-        showState('is-current', '✓ УСКЛАЂЕНО СА GITHUB-ОМ',
-          'Учитани CSS v' + loadedVersion + ' одговара најновијој верзији у GitHub репозиторијуму.');
-      } else if (comparison < 0) {
-        showState('is-update', 'НОВА ВЕРЗИЈА НА GITHUB-У',
-          'Учитан CSS v' + loadedVersion + '; у GitHub репозиторијуму је v' + latestVersion + '. Освежи страницу након објаве.');
-      } else {
-        showState('is-update', 'УЧИТАНА ЈЕ НОВИЈА ВЕРЗИЈА',
-          'Учитан CSS v' + loadedVersion + '; GitHub репозиторијум тренутно има v' + latestVersion + '.');
+
+      const loadedVersion = await reloadCss(latestVersion);
+      if (loadedVersion !== latestVersion) {
+        throw new Error('Учитао се CSS v' + loadedVersion + ', а очекиван је v' + latestVersion + '.');
       }
+
+      versionLabel.textContent = 'CSS v' + loadedVersion;
+      state('is-current', '✓ НОВИ CSS ЈЕ УЧИТАН',
+        'Учитао си најновији CSS v' + loadedVersion + '. Кеш је заобиђен новим URL параметром.');
     } catch (error) {
-      showState('is-error', 'ПРОВЕРА НИЈЕ УСПЕЛА',
-        'Учитан CSS v' + loadedVersion + '. GitHub верзију није било могуће проверити: ' + (error.message || error));
+      const loadedVersion = readLoadedVersion();
+      versionLabel.textContent = /^\d+(\.\d+)+$/.test(loadedVersion) ? 'CSS v' + loadedVersion : 'CSS верзија —';
+      state('is-error', 'ГРЕШКА УЧИТАВАЊА',
+        'Није потврђено свеже учитавање. ' + (error.message || error));
     }
   }
 
-  checkVersion();
+  checkAndRefresh();
 })();
 </script>
 
