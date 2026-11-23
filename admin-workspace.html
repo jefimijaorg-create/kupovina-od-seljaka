@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   NARUČI DOMAĆE — ADMIN WORKSPACE
-  Version: 1.17.18
+  Version: 1.17.20
   Updated: 2026-11-22
   Description: Applies the unified approved light component system across the existing ADMIN Workspace.
   Scope: Existing authenticated ADMIN workspace; procurement writes are protected by RLS and a database trigger.
@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin.css?v=2.1.50&restore=1">
+<link rel="stylesheet" href="/admin.css?v=2.1.51">
 <!-- Drugi CSS je isključen; svi stilovi se učitavaju iz /admin.css. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/admin/admin.js?v=1.1.0"></script>
@@ -29,7 +29,7 @@
 <header class="nd-topbar">
   <button class="nd-icon-btn" id="menuBtn" type="button" aria-label="Отвори навигацију" aria-expanded="false">☰</button>
   <div class="nd-home-hero-copy" id="homeHeroCopy"><strong>Оперативни преглед</strong><span>Изабери шта сада треба да урадиш у активној тури.</span></div>
-  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>НАРУЧИ ДОМАЋЕ</strong><small>ADMIN WORKSPACE</small></span><span class="nd-build-version" id="ndVersionIndicator" data-app-version="1.17.19" aria-live="polite" title="Провера верзије"><strong id="ndCssVersion">CSS v2.1.50</strong><small>ADMIN v1.17.19</small><em id="ndVersionState">ПРОВЕРА ВЕРЗИЈЕ…</em></span></div>
+  <div class="nd-brand"><span class="nd-brand-mark">⌂</span><span class="nd-brand-copy"><strong>НАРУЧИ ДОМАЋЕ</strong><small>ADMIN WORKSPACE</small></span><span class="nd-build-version" id="ndVersionIndicator" data-app-version="1.17.20" aria-live="polite" title="Провера верзије"><strong id="ndCssVersion">CSS v2.1.50</strong><small>ADMIN v1.17.20</small><em id="ndVersionState">ПРОВЕРА ВЕРЗИЈЕ…</em></span></div>
   <button class="nd-icon-btn" id="installAppBtn" type="button" aria-label="Инсталирај ADMIN апликацију">＋ Инсталирај</button>
   <span class="nd-status" id="activeTourStatus" aria-live="polite"></span>
   <button class="nd-icon-btn nd-procurement-entry" id="procurementBtn" type="button" hidden>Набавка</button>
@@ -38,7 +38,7 @@
   <span class="nd-user-label" id="userLabel">Provera naloga…</span>
   <button class="nd-icon-btn" id="userBtn" type="button" aria-label="Korisnički nalog">♙</button>
   <button class="nd-icon-btn" id="refreshBtn" type="button" aria-label="Osveži podatke">↻</button>
-  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.17.19</span>
+  <span class="nd-build-version" id="buildVersion" aria-label="Верзија апликације">ВЕРЗИЈА 1.17.20</span>
 </header>
 <div class="nd-layout">
   <aside class="nd-sidebar" aria-label="Главна навигација">
