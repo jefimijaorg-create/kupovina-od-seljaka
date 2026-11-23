@@ -546,7 +546,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       :'<header class="nd-ops-head"><div><small>'+(activeTab==='report'?'ФИНАНСИЈСКИ ИЗВЕШТАЈ':'ОПЕРАТИВНИ ПРЕГЛЕД')+' · #'+esc(tourId)+'</small><h1>'+title+'</h1><p>'+fmtDate(state.tour.datum)+' · '+esc(String(state.tour.status||'').toUpperCase())+'</p><div class="nd-ops-stats"><span>'+state.orders.length+' поруџбина</span><span>'+state.items.length+' ставки</span><span>'+state.customers.length+' купаца</span></div>'+(state.tour.status==='open'&&['admin','super_admin'].includes(role)?'<button type="button" data-tour-processing '+(statusBusy?'disabled':'')+'>'+(statusBusy?'Пребацујем…':'Затвори пријем · пребаци у обраду')+'</button>':'')+'</div>'+(canReadProducts?'<button type="button" data-open-report>Финансијски извештај</button>':'')+'<button type="button" data-back>← Назад</button></header>';
     document.querySelector('.nd-workspace .nd-topbar > .nd-ops-head')?.remove();
     shell.innerHTML=opsHeader+'<section class="nd-ops-content" data-ops-content>'+body+'</section>'+(vehicleOnly?'':'<footer class="nd-ops-foot"><span>Само читање · Подаци из Supabase</span><button type="button" data-refresh>Освежи</button></footer>');
-    /* HERO остаје унутар активног модула; не премешта се у глобално заглавље. */
+    /* Оперативни HERO се премешта у глобално заглавље да би мени и подаци туре били у истом реду. */
     const compactOpsHead=shell.querySelector('.nd-ops-head');
     compactOpsHead?.querySelector('[data-back]')?.addEventListener('click',onBack);
     compactOpsHead?.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
