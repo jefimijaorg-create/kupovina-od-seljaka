@@ -2772,7 +2772,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace:has(#entryHome:not([hidden])) #refreshBtn,
 .nd-workspace:has(#entryHome:not([hidden])) #userLabel{display:none!important}
 @media(max-width:1024px){
-  .nd-workspace .nd-entry-home{max-width:720px;min-height:calc(100dvh - 120px);gap:18px;padding:16px 12px}
+  .nd-workspace .nd-entry-home{max-width:1120px;min-height:0;gap:10px;padding:8px 14px}
   .nd-workspace .nd-entry-actions{grid-template-columns:minmax(0,1fr);gap:12px}
   .nd-workspace .nd-entry-card{padding:14px}
   .nd-workspace .nd-entry-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -3195,9 +3195,9 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-debt-page .nd-page-head{margin-bottom:14px}
 .nd-workspace .nd-tour-list-head{margin-bottom:14px}
 @media(max-width:1024px){
- .nd-workspace .nd-main{padding:16px 14px calc(110px + env(safe-area-inset-bottom))}
- .nd-workspace .nd-entry-home{gap:12px;padding:0}
- .nd-workspace .nd-entry-heading,.nd-workspace .nd-page-head{padding:13px 15px;border-radius:13px;margin-bottom:13px}
+ .nd-workspace .nd-main{padding:10px 16px calc(94px + env(safe-area-inset-bottom))}
+ .nd-workspace .nd-entry-home{max-width:1120px;min-height:0;gap:8px;padding:0}
+ .nd-workspace .nd-entry-heading,.nd-workspace .nd-page-head{padding:10px 14px;border-radius:12px;margin-bottom:9px}
 }
 @media(max-width:767px){
  .nd-workspace .nd-brand{gap:7px}
@@ -3283,18 +3283,15 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .nd-tour-ops>.nd-ops-head>div>button{
   width:100%;min-height:48px!important;margin-top:5px;
 }
-@media(max-width:1024px){
+@media(min-width:768px) and (max-width:1024px){
+  /* ТАБЛЕТ — HERO У ТРИ КОЛОНЕ, БЕЗ ТЕЛЕФОНСКОГ СЛАГАЊА */
   .nd-workspace .nd-tour-ops>.nd-ops-head{
-    grid-template-columns:minmax(0,1fr);gap:9px;padding:13px!important;
+    grid-template-columns:minmax(0,1fr) auto auto;gap:10px;padding:11px 14px!important;
   }
-  .nd-workspace .nd-tour-ops>.nd-ops-head>div,
-  .nd-workspace .nd-tour-ops>.nd-ops-head>[data-open-report],
-  .nd-workspace .nd-tour-ops>.nd-ops-head>[data-back]{
-    grid-column:1;grid-row:auto;width:100%;min-width:0;
-  }
-  .nd-workspace .nd-tour-ops>.nd-ops-head>button{
-    width:100%;min-height:48px!important;padding:9px 11px!important;
-  }
+  .nd-workspace .nd-tour-ops>.nd-ops-head>div{grid-column:1;grid-row:1;width:100%;min-width:0}
+  .nd-workspace .nd-tour-ops>.nd-ops-head>[data-open-report]{grid-column:2;grid-row:1;width:auto;min-width:112px}
+  .nd-workspace .nd-tour-ops>.nd-ops-head>[data-back]{grid-column:3;grid-row:1;width:auto;min-width:96px}
+  .nd-workspace .nd-tour-ops>.nd-ops-head>button{min-height:48px!important;padding:9px 12px!important;white-space:nowrap}
   .nd-workspace .nd-tour-ops>.nd-ops-head h1{font-size:23px!important}
   .nd-workspace .nd-tour-ops>.nd-ops-head p{font-size:11px!important}
 }
