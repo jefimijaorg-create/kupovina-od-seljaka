@@ -1,5 +1,5 @@
 /* ==================================================
- * Version: 2.1.45
+ * Version: 2.1.46
  * Updated: 2026-11-23
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -3468,7 +3468,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 /* ==================================================
    ИНДИКАТОР ВЕРЗИЈЕ ADMIN-А — УЧИТАНА ВЕРЗИЈА И ПРОВЕРА РЕПОЗИТОРИЈУМА
    ================================================== */
-:root{--nd-css-version:"2.1.45"}
+:root{--nd-css-version:"2.1.46"}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator{display:grid;flex:0 0 auto;align-content:center;justify-items:start;gap:2px;min-height:42px;margin:0;padding:5px 7px;border:1px solid #BFD2C3;border-radius:9px;background:#EAF2EB;color:#285B3C;line-height:1;white-space:nowrap}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator strong{font-size:9px;font-weight:900;letter-spacing:.02em}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator small{font-size:7px;font-weight:800;color:#59685D}
@@ -3483,10 +3483,10 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 
 
 /* =========================================================
-   TABLET HERO — КОМПАКТНА ДЕФИНИЦИЈА 768–1024 PX
+   TABLET HERO — КОМПАКТНА ДЕФИНИЦИЈА 768–1366 PX
    МЕНИ ЛЕВО + ПОДАЦИ ТУРЕ ДЕСНО У ИСТОМ РЕДУ
    ========================================================= */
-@media (min-width:768px) and (max-width:1024px){
+@media (min-width:768px) and (max-width:1366px){
   .nd-workspace .nd-topbar:has(>.nd-ops-head){
     display:grid;
     grid-template-columns:42px minmax(0,1fr);
