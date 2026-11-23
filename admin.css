@@ -1238,10 +1238,6 @@ body.nd-workspace{
   font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif!important;
 }
 .nd-workspace :where(h1,h2,h3,h4,p,small,strong,b){text-shadow:none}
-  background:rgba(255,255,255,.96)!important;border-bottom:1px solid var(--nd-line)!important;
-  box-shadow:0 3px 14px rgba(35,63,43,.045)!important;color:var(--nd-ink)!important;
-  backdrop-filter:blur(14px);
-}
 .nd-workspace .nd-brand-mark{background:var(--nd-green)!important;color:#fff!important}
 .nd-workspace .nd-brand-copy strong{color:var(--nd-ink)!important}
 .nd-workspace .nd-brand-copy small{color:var(--nd-muted)!important}
