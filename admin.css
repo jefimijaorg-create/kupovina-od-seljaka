@@ -1,6 +1,6 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.35
+ * Version: 2.1.36
  * Updated: 2026-11-23
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -3422,3 +3422,32 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace.nd-home-active .nd-home-hero-copy strong{font-size:16px}
  .nd-workspace.nd-home-active .nd-home-hero-copy span{font-size:9px}
 }
+
+
+/* ПОЧЕТНИ ЕКРАН — ИЗБОР ТУРЕ */
+.nd-workspace.nd-home-active .nd-home-hero-copy{display:none}
+.nd-workspace.nd-home-active .nd-topbar .nd-brand{display:flex}
+.nd-workspace.nd-home-active .nd-topbar{justify-content:space-between}
+.nd-workspace .nd-tour-entry-home{display:flex;flex-direction:column;align-items:stretch;gap:18px;width:100%;max-width:900px;min-height:0;margin:0 auto;padding:22px 16px 36px}
+.nd-workspace .nd-tour-entry-heading{display:flex;flex-direction:column;gap:6px}
+.nd-workspace .nd-tour-entry-heading h1{margin:0;color:#344238;font-size:clamp(23px,3vw,32px);font-weight:900;line-height:1.15}
+.nd-workspace .nd-tour-entry-heading p{margin:0;color:#526257;font-size:14px;line-height:1.5}
+.nd-workspace .nd-tour-entry-panel{padding:18px;border:1px solid #dce4dc;border-radius:18px;background:#fff;box-shadow:0 5px 18px rgba(40,91,60,.07)}
+.nd-workspace .nd-tour-entry-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.nd-workspace .nd-tour-entry-panel-head h2{margin:0;color:#344238;font-size:18px;font-weight:900}
+.nd-workspace .nd-tour-entry-panel-head span:not(.nd-tour-entry-count){display:block;margin-top:4px;color:#657368;font-size:12px}
+.nd-workspace .nd-tour-entry-count{display:grid;place-items:center;min-width:36px;height:36px;padding:0 10px;border-radius:11px;background:#eaf1eb;color:#285b3c;font-size:15px;font-weight:900}
+.nd-workspace .nd-tour-entry-list{gap:10px}
+.nd-workspace .nd-tour-entry-list .nd-tour-item{min-height:76px;padding:14px;border:1px solid #dce4dc;border-radius:14px;background:#f8faf8;color:#344238;text-align:left}
+.nd-workspace .nd-tour-entry-list .nd-tour-item:active{background:#edf4ee}
+.nd-workspace .nd-tour-entry-list .nd-tour-icon{width:42px;height:42px;flex-basis:42px;border-radius:12px;background:#e8f0e9}
+.nd-workspace .nd-tour-entry-list .nd-tour-copy strong{color:#344238;font-size:15px}
+.nd-workspace .nd-tour-entry-list .nd-tour-copy small{color:#526257;font-size:12px;line-height:1.45}
+.nd-workspace .nd-tour-entry-list .nd-empty,.nd-workspace .nd-tour-entry-list .nd-loading{border-color:#d5dfd6;color:#526257}
+@media(max-width:767px){
+ .nd-workspace.nd-home-active .nd-topbar{height:62px;min-height:62px;padding:7px 10px;gap:8px}
+ .nd-workspace .nd-tour-entry-home{gap:15px;padding:18px 12px 28px}
+ .nd-workspace .nd-tour-entry-panel{padding:14px;border-radius:15px}
+ .nd-workspace .nd-tour-entry-list .nd-tour-item{min-height:76px;padding:13px}
+}
+@media(min-width:768px) and (max-width:1024px){.nd-workspace .nd-tour-entry-home{padding:22px 20px}}
