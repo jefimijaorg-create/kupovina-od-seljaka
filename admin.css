@@ -1,7 +1,7 @@
 /* ==================================================
- * Version: 2.1.48
+ * Version: 2.1.49
  * Updated: 2026-11-23
- * Description: Refines the light financial report layout and Android readability; presentation only.
+ * Description: Adds compact buyer-integrated order tables, clickable line details and order actions; presentation only.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -3674,4 +3674,82 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-topbar>.nd-ops-head>[data-open-report]{display:none}
   .nd-workspace .nd-topbar>.nd-ops-head>[data-back]{grid-column:2;grid-row:1;min-width:0;min-height:40px;padding:6px 8px;font-size:10px}
   .nd-workspace .nd-tour-ops>.nd-ops-head{display:none!important}
+}
+
+
+/* МОДУЛ ПОРУЏБИНЕ — ЈЕДНА КАРТИЦА КУПЦА, ТАБЕЛА ПРОИЗВОДА И ОПЕРАТИВНЕ АКЦИЈЕ */
+.nd-workspace .nd-grouped-orders{display:grid;gap:12px;min-width:0;width:100%;color:#344238}
+.nd-workspace .nd-go-flat-list{display:grid;gap:12px;min-width:0}
+.nd-workspace .nd-go-order-card{display:grid;gap:0;min-width:0;overflow:hidden;border:1px solid #DCE5DD;border-radius:13px;background:#FFFFFF;box-shadow:0 3px 12px rgba(37,72,48,.07);color:#344238}
+.nd-workspace .nd-go-flat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 13px;background:#E5EFE6;border-bottom:1px solid #D4E2D6;color:#344238}
+.nd-workspace .nd-go-flat-identity{display:grid;gap:4px;min-width:0;flex:1 1 300px}
+.nd-workspace .nd-go-flat-identity>strong{font-size:15px;font-weight:900;color:#285B3C;line-height:1.2}
+.nd-workspace .nd-go-flat-identity>small{font-size:10px;color:#68766C;font-weight:750}
+.nd-workspace .nd-go-contact{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:11px;font-weight:750;color:#344238}
+.nd-workspace .nd-go-contact a{color:#285B3C;text-decoration:none}
+.nd-workspace .nd-go-status-badge{display:inline-flex;align-items:center;min-height:27px;padding:4px 9px;border:1px solid #D1E1D3;border-radius:7px;background:#FFFFFF;color:#285B3C;font-size:10px;font-weight:850;white-space:nowrap}
+.nd-workspace .nd-go-edit-order-top{min-height:36px;padding:6px 13px;border:1px solid #285B3C;border-radius:8px;background:#285B3C;color:#FFFFFF;font-size:11px;font-weight:850}
+.nd-workspace .nd-go-table-wrap{width:100%;min-width:0;overflow-x:hidden;padding:0 10px}
+.nd-workspace .nd-go-table{width:100%;border-collapse:collapse;table-layout:fixed;color:#344238;font-size:11px}
+.nd-workspace .nd-go-table th{padding:9px 6px;border-bottom:1px solid #DCE5DD;background:#F7F9F6;color:#526257;text-align:left;font-size:10px;font-weight:900;line-height:1.2;vertical-align:middle}
+.nd-workspace .nd-go-table th:nth-child(1){width:28%}
+.nd-workspace .nd-go-table th:nth-child(2){width:13%}
+.nd-workspace .nd-go-table th:nth-child(3){width:17%;text-align:right}
+.nd-workspace .nd-go-table th:nth-child(4){width:21%;text-align:right}
+.nd-workspace .nd-go-table th:nth-child(5){width:21%;text-align:right}
+.nd-workspace .nd-go-table td{padding:10px 6px;border-bottom:1px solid #E8EEE8;vertical-align:middle;overflow-wrap:anywhere}
+.nd-workspace .nd-go-table td:first-child strong{display:block;color:#344238;font-size:11px;font-weight:850;line-height:1.25}
+.nd-workspace .nd-go-table td:nth-child(2){color:#526257}
+.nd-workspace .nd-go-table .nd-go-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nd-workspace .nd-go-table .nd-go-price-cell{text-align:right;color:#285B3C;font-weight:900;font-variant-numeric:tabular-nums}
+.nd-workspace .nd-go-product-row{cursor:pointer;transition:background .14s ease}
+.nd-workspace .nd-go-product-row:hover,.nd-workspace .nd-go-product-row.is-open{background:#F2F7F2}
+.nd-workspace .nd-go-product-row:focus-visible{outline:2px solid #285B3C;outline-offset:-2px}
+.nd-workspace .nd-go-mobile-price{display:none}
+.nd-workspace .nd-go-detail-row td{padding:0 6px 9px;background:#F7FAF7}
+.nd-workspace .nd-go-detail{display:grid;gap:10px;padding:10px;border:1px solid #DCE8DD;border-radius:8px;background:#FFFFFF}
+.nd-workspace .nd-go-detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.nd-workspace .nd-go-detail-grid span{display:grid;gap:3px;color:#718075;font-size:10px}
+.nd-workspace .nd-go-detail-grid strong{color:#344238;font-size:11px}
+.nd-workspace .nd-go-edit-count,.nd-workspace .nd-go-order-editor label,.nd-workspace .nd-go-status-editor label{display:grid;gap:5px;color:#526257;font-size:11px;font-weight:800}
+.nd-workspace .nd-go-edit-count input,.nd-workspace .nd-go-order-editor input,.nd-workspace .nd-go-order-editor select,.nd-workspace .nd-go-status-editor select{width:100%;min-height:42px;padding:8px 10px;border:1px solid #C9D8CB!important;border-radius:8px!important;background:#FFFFFF!important;color:#344238!important}
+.nd-workspace .nd-go-order-editor,.nd-workspace .nd-go-status-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:11px 13px;background:#F7FAF7;border-bottom:1px solid #E1E9E1}
+.nd-workspace .nd-go-inline-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nd-workspace .nd-go-action-primary,.nd-workspace .nd-go-action-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 13px;border:1px solid #285B3C;border-radius:8px;font-size:11px;font-weight:850}
+.nd-workspace .nd-go-action-primary{background:#285B3C;color:#FFFFFF}
+.nd-workspace .nd-go-action-secondary{background:#FFFFFF;color:#285B3C}
+.nd-workspace .nd-go-buyer-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 12px;padding:10px 12px;border:1px solid #DCE8DD;border-radius:8px;background:#F1F6F1;color:#285B3C;font-size:11px;font-weight:900}
+.nd-workspace .nd-go-buyer-total strong{color:#285B3C;font-size:16px;font-weight:950;text-align:right}
+.nd-workspace .nd-go-order-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 12px 12px}
+.nd-workspace .nd-go-feedback{padding:9px 12px;border:1px solid #CFE0D1;border-radius:8px;background:#EDF5EE;color:#285B3C;font-size:11px;font-weight:750}
+.nd-workspace .nd-go-feedback.nd-go-error{border-color:#E8C9A2;background:#FFF5E8;color:#87521A}
+@media(min-width:768px) and (max-width:1024px){
+ .nd-workspace .nd-go-flat-list{gap:9px}
+ .nd-workspace .nd-go-flat-head{padding:9px 11px}
+ .nd-workspace .nd-go-table-wrap{padding:0 8px}
+ .nd-workspace .nd-go-table{font-size:10px}
+ .nd-workspace .nd-go-table th{padding:8px 5px;font-size:9px}
+ .nd-workspace .nd-go-table td{padding:9px 5px}
+ .nd-workspace .nd-go-table th:nth-child(1){width:27%}
+ .nd-workspace .nd-go-table th:nth-child(2){width:13%}
+ .nd-workspace .nd-go-table th:nth-child(3){width:17%}
+ .nd-workspace .nd-go-table th:nth-child(4){width:22%}
+ .nd-workspace .nd-go-table th:nth-child(5){width:21%}
+}
+@media(max-width:767px){
+ .nd-workspace .nd-go-table th{font-size:8px;padding:7px 3px}
+ .nd-workspace .nd-go-table td{font-size:9px;padding:8px 3px}
+ .nd-workspace .nd-go-table td:first-child strong{font-size:10px}
+ .nd-workspace .nd-go-table th:nth-child(1){width:27%}
+ .nd-workspace .nd-go-table th:nth-child(2){width:13%}
+ .nd-workspace .nd-go-table th:nth-child(3){width:16%}
+ .nd-workspace .nd-go-table th:nth-child(4){width:22%}
+ .nd-workspace .nd-go-table th:nth-child(5){width:22%}
+ .nd-workspace .nd-go-flat-head{gap:7px;padding:9px}
+ .nd-workspace .nd-go-flat-identity{flex-basis:100%}
+ .nd-workspace .nd-go-contact{gap:7px;font-size:10px}
+ .nd-workspace .nd-go-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .nd-workspace .nd-go-order-editor,.nd-workspace .nd-go-status-editor{grid-template-columns:1fr}
+ .nd-workspace .nd-go-order-actions>*{flex:1 1 100%}
+ .nd-workspace .nd-go-buyer-total{margin:8px;padding:9px}
 }
