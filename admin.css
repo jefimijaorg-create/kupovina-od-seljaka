@@ -724,6 +724,7 @@ body.nd-product-panel-open{overflow:hidden}
 .nd-workspace .nd-search{width:100%;padding:12px 14px;min-height:48px;border:1px solid #475569;border-radius:12px;background:#0b1222;color:#f8fafc}
 .nd-workspace .nd-user-label{display:none;color:#94a3b8;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(min-width:900px){.nd-workspace .nd-user-label{display:block}}
+@media(max-width:767px){.nd-workspace .nd-layout{display:block}.nd-workspace .nd-main{padding-top:20px}.nd-workspace .nd-tour-grid{grid-template-columns:1fr}.nd-workspace .nd-page-head{display:block}.nd-workspace .nd-page-head .nd-status{margin-top:12px}}
 @media(min-width:768px) and (max-width:899px){.nd-workspace .nd-layout{grid-template-columns:210px minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.nd-workspace *{scroll-behavior:auto!important;transition:none!important}}
 
@@ -1839,10 +1840,6 @@ body.nd-workspace{
   color:var(--nd-ink)!important;
 }
  .nd-workspace .nd-topbar{position:sticky;top:0;z-index:50}
-  position:sticky;top:0;z-index:50;min-height:76px;padding:10px clamp(16px,2.4vw,34px);
-  background:rgba(255,255,255,.9)!important;border-bottom:1px solid rgba(218,229,219,.9)!important;
-  box-shadow:0 5px 24px rgba(25,55,37,.045)!important;backdrop-filter:blur(18px) saturate(150%);
-}
 .nd-workspace .nd-brand{gap:12px}
 .nd-workspace .nd-brand-mark{
   width:46px;height:46px;flex-basis:46px;border-radius:15px;
