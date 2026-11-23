@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.21
+ * Version: 1.5.23
  * Updated: 2026-11-22
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -37,7 +37,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const result = await client.from('ture').select('id,naziv,datum,status,dostavljac').eq('id', tourId).maybeSingle();
     if (result.error) throw result.error;
     if (!result.data) throw new Error('Изабрана тура није пронађена или немате дозволу за читање.');
-    if (result.data.status !== 'processing') throw new Error('Достава је доступна искључиво за туру која је у статусу обраде.');
+    if (!['open','processing'].includes(result.data.status)) throw new Error('Тура није отворена нити је у обради.');
     state.tour = result.data;
     const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,status_izdavanja,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
