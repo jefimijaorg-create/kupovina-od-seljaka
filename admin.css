@@ -1,5 +1,5 @@
 /* ==================================================
- * Version: 2.1.44
+ * Version: 2.1.45
  * Updated: 2026-11-23
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -3468,7 +3468,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 /* ==================================================
    ИНДИКАТОР ВЕРЗИЈЕ ADMIN-А — УЧИТАНА ВЕРЗИЈА И ПРОВЕРА РЕПОЗИТОРИЈУМА
    ================================================== */
-:root{--nd-css-version:"2.1.44"}
+:root{--nd-css-version:"2.1.45"}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator{display:grid;flex:0 0 auto;align-content:center;justify-items:start;gap:2px;min-height:42px;margin:0;padding:5px 7px;border:1px solid #BFD2C3;border-radius:9px;background:#EAF2EB;color:#285B3C;line-height:1;white-space:nowrap}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator strong{font-size:9px;font-weight:900;letter-spacing:.02em}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator small{font-size:7px;font-weight:800;color:#59685D}
@@ -3483,22 +3483,22 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 
 
 /* =========================================================
-   TABLET HERO — НОВА ДЕФИНИЦИЈА 768–1024 PX
-   ЈЕДАН РЕД: МЕНИ ЛЕВО, АКТИВНА ТУРА ДЕСНО
+   TABLET HERO — КОМПАКТНА ДЕФИНИЦИЈА 768–1024 PX
+   МЕНИ ЛЕВО + ПОДАЦИ ТУРЕ ДЕСНО У ИСТОМ РЕДУ
    ========================================================= */
 @media (min-width:768px) and (max-width:1024px){
   .nd-workspace .nd-topbar:has(>.nd-ops-head){
     display:grid;
-    grid-template-columns:52px minmax(0,1fr);
-    grid-template-rows:minmax(76px,auto);
+    grid-template-columns:42px minmax(0,1fr);
+    grid-template-rows:minmax(52px,auto);
     align-items:center;
-    column-gap:12px;
+    column-gap:8px;
     row-gap:0;
     width:100%;
     min-width:0;
-    min-height:76px;
+    min-height:62px;
     height:auto;
-    padding:8px 16px;
+    padding:5px 12px;
     overflow:visible;
   }
   .nd-workspace .nd-topbar:has(>.nd-ops-head)>:not(#menuBtn):not(.nd-ops-head){
@@ -3507,10 +3507,10 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-topbar:has(>.nd-ops-head)>#menuBtn{
     grid-column:1;
     grid-row:1;
-    width:52px;
-    height:52px;
-    min-width:52px;
-    min-height:52px;
+    width:42px;
+    height:42px;
+    min-width:42px;
+    min-height:42px;
     margin:0;
   }
   .nd-workspace .nd-topbar>.nd-ops-head{
@@ -3519,13 +3519,13 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
     display:grid!important;
     grid-template-columns:minmax(0,1fr) auto auto;
     align-items:center;
-    gap:8px;
+    gap:6px;
     width:100%;
     min-width:0;
     max-width:none;
-    min-height:60px;
+    min-height:52px;
     margin:0;
-    padding:4px 0;
+    padding:2px 0;
     overflow:hidden;
     border:0!important;
     border-radius:0!important;
@@ -3540,26 +3540,26 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
     flex-direction:column;
     align-items:flex-start;
     justify-content:center;
-    gap:3px;
+    gap:2px;
     width:100%;
     min-width:0;
     overflow:hidden;
   }
   .nd-workspace .nd-topbar>.nd-ops-head small{
     color:#285B3C!important;
-    font-size:10px;
+    font-size:9px;
     font-weight:900;
-    line-height:1.1;
-    letter-spacing:.06em;
+    line-height:1.05;
+    letter-spacing:.04em;
     white-space:nowrap;
   }
   .nd-workspace .nd-topbar>.nd-ops-head h1{
     max-width:100%;
     margin:0!important;
     color:#285B3C!important;
-    font-size:clamp(18px,2.2vw,23px)!important;
+    font-size:16px!important;
     font-weight:900;
-    line-height:1.1;
+    line-height:1.05;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -3567,8 +3567,8 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-topbar>.nd-ops-head p{
     margin:0!important;
     color:#68766C!important;
-    font-size:11px!important;
-    line-height:1.2;
+    font-size:10px!important;
+    line-height:1.1;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -3576,19 +3576,19 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats{
     display:flex;
     flex-wrap:nowrap;
-    gap:5px;
-    margin:2px 0 0;
+    gap:4px;
+    margin:1px 0 0;
     min-width:0;
     overflow:hidden;
   }
   .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{
     flex:0 0 auto;
-    padding:3px 7px;
+    padding:2px 5px;
     border:1px solid #DCE7DE;
-    border-radius:8px;
+    border-radius:7px;
     background:#F3F5F2;
     color:#344238;
-    font-size:10px;
+    font-size:9px;
     font-weight:850;
     white-space:nowrap;
   }
@@ -3597,21 +3597,21 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    min-width:88px;
+    min-width:78px;
     min-height:48px;
-    padding:8px 11px;
+    padding:6px 8px;
     border:1px solid #D5E2D7!important;
-    border-radius:10px!important;
+    border-radius:9px!important;
     background:#EAF2EB!important;
     color:#285B3C!important;
-    font-size:12px;
+    font-size:11px;
     font-weight:850;
     white-space:nowrap;
   }
   .nd-workspace .nd-topbar>.nd-ops-head>[data-open-report]{grid-column:2;grid-row:1}
   .nd-workspace .nd-topbar>.nd-ops-head>[data-back]{grid-column:3;grid-row:1}
   .nd-workspace:has(.nd-topbar>.nd-ops-head) .nd-layout .ndp3 .ndp3-head{display:none!important}
-  .nd-workspace .nd-main{padding-top:10px;padding-bottom:calc(94px + env(safe-area-inset-bottom))}
+  .nd-workspace .nd-main{padding-top:8px;padding-bottom:calc(94px + env(safe-area-inset-bottom))}
   .nd-workspace .nd-tour-ops{gap:8px;min-height:0}
   .nd-workspace .nd-tour-ops>.nd-ops-head{display:none!important}
 }
