@@ -1,5 +1,5 @@
 /* ==================================================
- * Version: 2.1.42
+ * Version: 2.1.43
  * Updated: 2026-11-23
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -732,14 +732,7 @@ body.nd-product-panel-open{overflow:hidden}
 .nd-workspace .nd-tour-operations-root[hidden],.nd-workspace [hidden]{display:none!important}
 .nd-workspace .nd-tour-ops{display:flex;flex-direction:column;min-height:0;gap:14px}
 .nd-workspace .nd-ops-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #334155;border-radius:12px;background:#111c32}
-.nd-workspace .nd-topbar>.nd-ops-head{order:20;flex:1 0 100%;min-width:0;margin:0 0 2px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 10px}
-.nd-workspace .nd-topbar>.nd-ops-head>div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 10px;min-width:0}
-.nd-workspace .nd-topbar>.nd-ops-head small{grid-column:1/-1;font-size:9px;letter-spacing:.08em}
-.nd-workspace .nd-topbar>.nd-ops-head h1{margin:0;font-size:15px;line-height:1.2;overflow-wrap:anywhere}
-.nd-workspace .nd-topbar>.nd-ops-head p{margin:0;font-size:10px;white-space:nowrap}
-.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats{grid-column:1/-1;gap:5px;margin-top:2px}
-.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{padding:4px 7px;font-size:9px}
-.nd-workspace .nd-topbar>.nd-ops-head>button{min-height:34px;padding:6px 10px;border-radius:9px;font-size:11px;white-space:nowrap}
+/* Оперативни HERO стил је централизован у завршном модулу ADMIN HEADER. */
 .nd-workspace .nd-tour-ops>.nd-ops-head{display:flex}
 .nd-workspace .nd-ops-head small{color:#fb923c;font-size:10px;font-weight:900;letter-spacing:.13em}
 .nd-workspace .nd-ops-head h1{margin:6px 0;font-size:clamp(22px,4vw,30px)}
@@ -2836,18 +2829,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-page-head-actions{width:100%;justify-content:flex-start}
 }
 
-/* ADMIN — компактни оперативни преглед у горњој траци */
-@media(max-width:760px){
- .nd-workspace .nd-topbar>.nd-ops-head{padding:8px 10px}
- .nd-workspace .nd-topbar>.nd-ops-head h1{font-size:14px}
- .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{font-size:9px}
-}
-@media(max-width:390px){
- .nd-workspace .nd-topbar>.nd-ops-head{grid-template-columns:minmax(0,1fr) auto}
- .nd-workspace .nd-topbar>.nd-ops-head>div{grid-template-columns:minmax(0,1fr)}
- .nd-workspace .nd-topbar>.nd-ops-head p{white-space:normal}
- .nd-workspace .nd-topbar>.nd-ops-head>button{font-size:10px;padding:5px 8px}
-}
+/* Сви responsive стилови оперативног HERO-а налазе се у једном модулу на крају фајла. */
 
 
 /* =========================================================
@@ -3566,7 +3548,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 /* ==================================================
    ИНДИКАТОР ВЕРЗИЈЕ ADMIN-А — УЧИТАНА ВЕРЗИЈА И ПРОВЕРА РЕПОЗИТОРИЈУМА
    ================================================== */
-:root{--nd-css-version:"2.1.42"}
+:root{--nd-css-version:"2.1.43"}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator{display:grid;flex:0 0 auto;align-content:center;justify-items:start;gap:2px;min-height:42px;margin:0;padding:5px 7px;border:1px solid #BFD2C3;border-radius:9px;background:#EAF2EB;color:#285B3C;line-height:1;white-space:nowrap}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator strong{font-size:9px;font-weight:900;letter-spacing:.02em}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator small{font-size:7px;font-weight:800;color:#59685D}
@@ -3578,37 +3560,63 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 @media(max-width:767px){.nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator{min-height:38px;padding:4px 5px}.nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator strong{font-size:8px}.nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator small,.nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator em{font-size:6px}}
 
 
-/* ОПЕРАТИВНИ HERO УЗ МЕНИ — ЈЕДНО ЗАГЛАВЉЕ ЗА АКТИВНУ ТУРУ */
+/* =========================================================
+   ADMIN HEADER — ЈЕДНО ЗАГЛАВЉЕ ЗА АКТИВНУ ТУРУ
+   ========================================================= */
 .nd-workspace .nd-topbar:has(>.nd-ops-head)>:not(#menuBtn):not(.nd-ops-head){display:none!important}
 .nd-workspace .nd-topbar>.nd-ops-head{
- display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;
- flex:1 1 auto;min-width:0;max-width:none;margin:0;padding:4px 8px;gap:8px;
- border:0!important;border-radius:0!important;background:transparent!important;
- box-shadow:none!important;color:#344238;overflow:hidden
+  order:1;display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;
+  flex:1 1 0%;min-width:0;width:auto;max-width:none;align-items:center;
+  gap:6px;margin:0;padding:3px 7px;overflow:hidden;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;color:#344238;
 }
-.nd-workspace .nd-topbar>.nd-ops-head>div{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0;gap:2px;overflow:hidden}
-.nd-workspace .nd-topbar>.nd-ops-head small{color:#285B3C;font-size:9px;font-weight:900;line-height:1.15;letter-spacing:.06em}
-.nd-workspace .nd-topbar>.nd-ops-head h1{max-width:100%;margin:0;color:#285B3C;font-size:17px;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nd-workspace .nd-topbar>.nd-ops-head p{margin:0;color:#68766C;font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats{display:flex;flex-wrap:nowrap;gap:4px;margin-top:2px;min-width:0}
-.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{padding:3px 6px;border:1px solid #DCE7DE;border-radius:7px;background:#F3F5F2;color:#344238;font-size:9px;font-weight:850;white-space:nowrap}
-.nd-workspace .nd-topbar>.nd-ops-head>button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:7px 10px;border:1px solid #D5E2D7;border-radius:10px;background:#EAF2EB;color:#285B3C;font-size:11px;font-weight:850;white-space:nowrap}
+.nd-workspace .nd-topbar>.nd-ops-head>div{
+  display:grid;grid-template-columns:minmax(0,1fr);align-content:center;
+  min-width:0;gap:2px;overflow:hidden;
+}
+.nd-workspace .nd-topbar>.nd-ops-head small{
+  color:#285B3C;font-size:9px;font-weight:900;line-height:1.1;letter-spacing:.06em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.nd-workspace .nd-topbar>.nd-ops-head h1{
+  margin:0;color:#285B3C;font-size:17px;font-weight:900;line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.nd-workspace .nd-topbar>.nd-ops-head p{
+  margin:0;color:#68766C;font-size:10px;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats{
+  display:flex;flex-wrap:nowrap;gap:4px;min-width:0;margin-top:2px;overflow:hidden;
+}
+.nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{
+  flex:0 0 auto;padding:3px 6px;border:1px solid #DCE7DE;border-radius:7px;
+  background:#F3F5F2;color:#344238;font-size:9px;font-weight:850;white-space:nowrap;
+}
+.nd-workspace .nd-topbar>.nd-ops-head>button{
+  display:inline-flex;align-items:center;justify-content:center;min-width:0;
+  min-height:42px;padding:7px 10px;border:1px solid #D5E2D7;border-radius:10px;
+  background:#EAF2EB;color:#285B3C;font-size:11px;font-weight:850;white-space:nowrap;
+}
 .nd-workspace .nd-topbar>.nd-ops-head>[data-open-report]{grid-column:2;grid-row:1}
 .nd-workspace .nd-topbar>.nd-ops-head>[data-back]{grid-column:3;grid-row:1}
+.nd-workspace:has(.nd-topbar>.nd-ops-head) .nd-layout .ndp3 .ndp3-head{display:none!important}
 @media(min-width:768px) and (max-width:1024px){
- .nd-workspace .nd-topbar{height:auto;min-height:70px;padding-top:7px;padding-bottom:7px}
- .nd-workspace .nd-topbar>.nd-ops-head{gap:7px;padding:4px 6px}
- .nd-workspace .nd-topbar>.nd-ops-head h1{font-size:18px}
+  .nd-workspace .nd-topbar{height:auto;min-height:70px;padding-top:7px;padding-bottom:7px}
+  .nd-workspace .nd-topbar>.nd-ops-head{gap:8px;padding:4px 8px}
+  .nd-workspace .nd-topbar>.nd-ops-head h1{font-size:19px}
+  .nd-workspace .nd-topbar>.nd-ops-head p{font-size:11px}
 }
 @media(max-width:767px){
- .nd-workspace .nd-topbar:has(>.nd-ops-head){height:auto;min-height:62px;padding:6px 7px;gap:5px}
- .nd-workspace .nd-topbar>.nd-ops-head{grid-template-columns:minmax(0,1fr) auto;gap:4px;padding:2px 3px}
- .nd-workspace .nd-topbar>.nd-ops-head>div{grid-column:1;grid-row:1;gap:2px}
- .nd-workspace .nd-topbar>.nd-ops-head small{font-size:8px}
- .nd-workspace .nd-topbar>.nd-ops-head h1{font-size:14px}
- .nd-workspace .nd-topbar>.nd-ops-head p{font-size:9px}
- .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats{gap:3px;margin-top:1px}
- .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{padding:2px 4px;font-size:8px}
- .nd-workspace .nd-topbar>.nd-ops-head>[data-open-report]{display:none}
- .nd-workspace .nd-topbar>.nd-ops-head>[data-back]{grid-column:2;grid-row:1;min-height:40px;padding:6px 8px;font-size:10px}
+  .nd-workspace .nd-topbar:has(>.nd-ops-head){height:auto;min-height:64px;padding:6px 7px;gap:5px}
+  .nd-workspace .nd-topbar>.nd-ops-head{grid-template-columns:minmax(0,1fr) auto;gap:4px;padding:2px 3px}
+  .nd-workspace .nd-topbar>.nd-ops-head>div{grid-column:1;grid-row:1}
+  .nd-workspace .nd-topbar>.nd-ops-head small{font-size:8px}
+  .nd-workspace .nd-topbar>.nd-ops-head h1{font-size:14px}
+  .nd-workspace .nd-topbar>.nd-ops-head p{font-size:9px}
+  .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats{gap:3px}
+  .nd-workspace .nd-topbar>.nd-ops-head .nd-ops-stats span{padding:2px 4px;font-size:8px}
+  .nd-workspace .nd-topbar>.nd-ops-head>[data-open-report]{display:none}
+  .nd-workspace .nd-topbar>.nd-ops-head>[data-back]{grid-column:2;grid-row:1;min-height:40px;padding:6px 8px;font-size:10px}
 }
