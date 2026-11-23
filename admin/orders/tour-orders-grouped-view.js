@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.1.0
+ * Version: 1.2.0
  * Updated: 2026-11-23
  * Description: Buyer-integrated order cards, clickable product table rows and order-only operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -34,6 +34,8 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
   let editingLineId = null;
   let editingOrderId = null;
   let statusOrderId = null;
+  let expandedOrderId = null;
+  let orderFilter = 'all';
 
   const statusOptions = [
     ['nova','Нова — чека потврду'],
@@ -68,6 +70,7 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     const buyer = customerMap.get(String(order.kupac_id)) || {};
     const point = pointMap.get(String(order.punkt_id));
     const phone = order.telefon || buyer.telefon || 'Телефон није наведен';
+    const isOpen = expandedOrderId === String(order.id);
     const lineRows = lines.length ? lines.map(line => {
       const p = linePresentation(line);
       const opened = expandedLineId === String(line.id);
@@ -81,36 +84,37 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
         '<td>' + p.packageText + '</td><td class="nd-go-num">' + (p.count === null ? '—' : fmt(p.count)) + '</td>' +
         '<td class="nd-go-num">' + esc(p.totalQty) + '</td><td class="nd-go-price-cell">' + (p.lineTotal === null ? 'Цена није унета' : money(p.lineTotal)) + '</td></tr>' + detail;
     }).join('') : '<tr><td colspan="5" class="nd-go-empty">Нема ставки у поруџбини.</td></tr>';
-
     const totalKnown = order.ukupna_cena !== null && order.ukupna_cena !== undefined && order.ukupna_cena !== '' && Number.isFinite(Number(order.ukupna_cena));
     const computedLines = lines.map(line => linePresentation(line).lineTotal);
     const fallbackTotalKnown = computedLines.length > 0 && computedLines.every(value => value !== null);
     const total = totalKnown ? money(order.ukupna_cena) : (fallbackTotalKnown ? money(computedLines.reduce((sum,value)=>sum+value,0)) : 'Није обрачунато');
-
-    const editPanel = editingOrderId === String(order.id) ? '<div class="nd-go-order-editor">' +
-      '<label>Телефон купца<input type="tel" inputmode="tel" data-order-phone="' + esc(order.id) + '" value="' + esc(order.telefon || buyer.telefon || '') + '"></label>' +
-      '<label>Пункт преузимања<select data-order-point="' + esc(order.id) + '"><option value="">Без пункта</option>' + (points || []).map(item => '<option value="' + esc(item.id) + '"' + (String(order.punkt_id || '') === String(item.id) ? ' selected' : '') + '>' + esc(item.name || ('Пункт ' + item.id)) + '</option>').join('') + '</select></label>' +
-      '<div class="nd-go-inline-actions"><button type="button" class="nd-go-action-primary" data-save-order="' + esc(order.id) + '">Сачувај измене</button><button type="button" class="nd-go-action-secondary" data-cancel-order>Откажи</button></div></div>' : '';
-
-    const statusPanel = statusOrderId === String(order.id) ? '<div class="nd-go-status-editor"><label>Нови статус<select data-order-status="' + esc(order.id) + '">' + statusOptions.map(row => '<option value="' + row[0] + '"' + (String(order.status || 'nova') === row[0] ? ' selected' : '') + '>' + row[1] + '</option>').join('') + '</select></label><button type="button" class="nd-go-action-primary" data-save-status="' + esc(order.id) + '">Сачувај статус</button><button type="button" class="nd-go-action-secondary" data-cancel-status>Откажи</button></div>' : '';
-
-    return '<article class="nd-go-order-card nd-go-order-flat" data-order-card="' + esc(order.id) + '">' +
-      '<header class="nd-go-flat-head"><div class="nd-go-flat-identity"><strong>' + esc(buyer.ime_prezime || ('Купац · ' + (order.kupac_id ?? '—'))) + '</strong>' +
-      '<span class="nd-go-contact"><a href="tel:' + esc(String(phone).replace(/[^+0-9]/g,'')) + '">☎ ' + esc(phone) + '</a><span>⌖ ' + esc(point?.name || 'Без пункта') + '</span></span>' +
-      '<small>Поруџбина #' + esc(order.id) + '</small></div><span class="nd-go-status-badge">' + esc(statusLabel(order.status || 'nova')) + '</span>' +
-      (canManage ? '<button type="button" class="nd-go-edit-order-top" data-edit-order="' + esc(order.id) + '">Измени</button>' : '') + '</header>' +
-      editPanel +
+    const status = String(order.status || 'nova');
+    const editPanel = editingOrderId === String(order.id) ? '<div class="nd-go-order-editor"><label>Телефон купца<input type="tel" inputmode="tel" data-order-phone="' + esc(order.id) + '" value="' + esc(order.telefon || buyer.telefon || '') + '"></label><label>Пункт преузимања<select data-order-point="' + esc(order.id) + '"><option value="">Без пункта</option>' + (points || []).map(item => '<option value="' + esc(item.id) + '"' + (String(order.punkt_id || '') === String(item.id) ? ' selected' : '') + '>' + esc(item.name || ('Пункт ' + item.id)) + '</option>').join('') + '</select></label><div class="nd-go-inline-actions"><button type="button" class="nd-go-action-primary" data-save-order="' + esc(order.id) + '">Сачувај измене</button><button type="button" class="nd-go-action-secondary" data-cancel-order>Откажи</button></div></div>' : '';
+    const statusPanel = statusOrderId === String(order.id) ? '<div class="nd-go-status-editor"><label>Нови статус<select data-order-status="' + esc(order.id) + '">' + statusOptions.map(row => '<option value="' + row[0] + '"' + (status === row[0] ? ' selected' : '') + '>' + row[1] + '</option>').join('') + '</select></label><button type="button" class="nd-go-action-primary" data-save-status="' + esc(order.id) + '">Сачувај статус</button><button type="button" class="nd-go-action-secondary" data-cancel-status>Откажи</button></div>' : '';
+    return '<article class="nd-go-order-card nd-go-order-flat' + (isOpen ? ' is-expanded' : '') + '" data-order-card="' + esc(order.id) + '">' +
+      '<button type="button" class="nd-go-order-summary" data-toggle-order="' + esc(order.id) + '" aria-expanded="' + (isOpen ? 'true' : 'false') + '">' +
+      '<span class="nd-go-summary-main"><strong>' + esc(buyer.ime_prezime || ('Купац · ' + (order.kupac_id ?? '—'))) + '</strong><small>' + esc(phone) + ' · ' + esc(point?.name || 'Без пункта') + '</small><small>Поруџбина #' + esc(order.id) + ' · ' + lines.length + ' ставки</small></span>' +
+      '<span class="nd-go-summary-side"><span class="nd-go-status-badge" data-status="' + esc(status) + '">' + esc(statusLabel(status)) + '</span><span class="nd-go-summary-chevron" aria-hidden="true">' + (isOpen ? '⌃' : '⌄') + '</span></span></button>' +
+      (isOpen ? '<div class="nd-go-order-content">' + editPanel +
       '<div class="nd-go-table-wrap"><table class="nd-go-table"><thead><tr><th>Производ</th><th>Амбалажа</th><th>Број паковања</th><th>Укупна количина</th><th>Цена</th></tr></thead><tbody>' + lineRows + '</tbody></table></div>' +
       '<div class="nd-go-buyer-total"><span>УКУПНО ЗА НАПЛАТУ</span><strong>' + total + '</strong></div>' +
-      '<footer class="nd-go-order-actions">' +
-      (canManage ? '<button type="button" class="nd-go-action-primary" data-edit-order="' + esc(order.id) + '">Измени поруџбину</button><button type="button" class="nd-go-action-secondary" data-change-status="' + esc(order.id) + '">Промени статус</button><button type="button" class="nd-go-action-secondary" data-copy-order="' + esc(order.id) + '">Копирај поруџбину</button>' : '') +
-      '</footer>' + statusPanel + '</article>';
+      '<footer class="nd-go-order-actions">' + (canManage ? '<button type="button" class="nd-go-action-primary" data-edit-order="' + esc(order.id) + '">Измени</button><button type="button" class="nd-go-action-secondary" data-change-status="' + esc(order.id) + '">Промени статус</button><button type="button" class="nd-go-action-secondary" data-copy-order="' + esc(order.id) + '">Копирај поруџбину</button>' : '') + '</footer>' + statusPanel + '</div>' : '') + '</article>';
   }
 
   function render() {
-    rootNode.innerHTML = '<div class="nd-go-intro"><div><h2>Поруџбине</h2><p>Отворена тура · пријем и евиденција поруџбина</p></div><span class="nd-go-count">' + orders.length + ' укупно</span></div>' +
+    const sorted = [...orders].sort((a,b)=>Number(a.id)-Number(b.id));
+    const visible = sorted.filter(order => {
+      if (orderFilter === 'all') return true;
+      if (orderFilter === 'new') return ['nova','primljeno','primljena','provera'].includes(String(order.status || 'nova'));
+      if (orderFilter === 'confirmed') return ['potvrdjena','scheduled'].includes(String(order.status || ''));
+      return false;
+    });
+    const totalLines = items.filter(line => orderMap.has(String(line.porudzbina_id))).length;
+    const newCount = sorted.filter(order => ['nova','primljeno','primljena','provera'].includes(String(order.status || 'nova'))).length;
+    rootNode.innerHTML = '<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине купаца</h2><p>Преглед свих поруџбина у овој тури</p></div><div class="nd-go-metrics"><div><strong>' + orders.length + '</strong><span>Купаца</span></div><div><strong>' + totalLines + '</strong><span>Ставки</span></div><div><strong>' + newCount + '</strong><span>За проверу</span></div></div></section>' +
       (feedback ? '<div class="nd-go-feedback ' + (feedbackError ? 'nd-go-error' : '') + '" role="status">' + esc(feedback) + '</div>' : '') +
-      '<div class="nd-go-flat-list">' + [...orders].sort((a,b)=>Number(a.id)-Number(b.id)).map(orderCard).join('') + '</div>';
+      '<div class="nd-go-list-toolbar"><strong>Списак поруџбина</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="' + (orderFilter==='all'?'is-active':'') + '">Све поруџбине</button><button type="button" data-order-filter="new" class="' + (orderFilter==='new'?'is-active':'') + '">Нове</button><button type="button" data-order-filter="confirmed" class="' + (orderFilter==='confirmed'?'is-active':'') + '">Потврђене</button></div></div>' +
+      (visible.length ? '<div class="nd-go-flat-list">' + visible.map(orderCard).join('') + '</div>' : '<div class="nd-go-empty-state">Нема поруџбина у изабраном филтеру.</div>');
   }
 
   async function saveOrder(orderId) {
@@ -174,12 +178,14 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
   rootNode.addEventListener('click', async event => {
     const action=event.target.closest('button');
     if(action){
+      if(action.hasAttribute('data-toggle-order')){const id=String(action.dataset.toggleOrder);expandedOrderId=expandedOrderId===id?null:id;editingLineId=null;editingOrderId=null;statusOrderId=null;render();return;}
+      if(action.hasAttribute('data-order-filter')){orderFilter=action.dataset.orderFilter;expandedOrderId=null;render();return;}
       const id=action.dataset.editOrder||action.dataset.saveOrder||action.dataset.changeStatus||action.dataset.saveStatus||action.dataset.editLine||action.dataset.saveLine||action.dataset.copyOrder;
-      if(action.hasAttribute('data-edit-order')){editingOrderId=String(action.dataset.editOrder);render();return;}
+      if(action.hasAttribute('data-edit-order')){editingOrderId=String(action.dataset.editOrder);expandedOrderId=String(action.dataset.editOrder);render();return;}
       if(action.hasAttribute('data-save-order')){await saveOrder(action.dataset.saveOrder);return;}
-      if(action.hasAttribute('data-change-status')){statusOrderId=String(action.dataset.changeStatus);render();return;}
+      if(action.hasAttribute('data-change-status')){statusOrderId=String(action.dataset.changeStatus);expandedOrderId=String(action.dataset.changeStatus);render();return;}
       if(action.hasAttribute('data-save-status')){await saveStatus(action.dataset.saveStatus);return;}
-      if(action.hasAttribute('data-edit-line')){editingLineId=String(action.dataset.editLine);expandedLineId=String(action.dataset.editLine);render();return;}
+      if(action.hasAttribute('data-edit-line')){editingLineId=String(action.dataset.editLine);expandedLineId=String(action.dataset.editLine);expandedOrderId=String(items.find(row=>String(row.id)===String(action.dataset.editLine))?.porudzbina_id||'');render();return;}
       if(action.hasAttribute('data-save-line')){await saveLine(action.dataset.saveLine);return;}
       if(action.hasAttribute('data-cancel-line')){editingLineId=null;render();return;}
       if(action.hasAttribute('data-cancel-order')){editingOrderId=null;render();return;}
