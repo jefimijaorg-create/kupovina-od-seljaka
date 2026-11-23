@@ -1,5 +1,5 @@
 /* ==================================================
- * Version: 2.1.39
+ * Version: 2.1.40
  * Updated: 2026-11-23
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
@@ -2529,6 +2529,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 .nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input>div{
   display:grid!important;grid-template-columns:minmax(0,1fr)!important;
   width:100%!important;max-width:100%!important;min-width:0!important;
+}
 .nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input .ndp3-stage-line-meta{
   white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important;
 }
@@ -2536,7 +2537,6 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   width:100%!important;max-width:100%!important;white-space:normal!important;
 }
  .nd-workspace .ndp3 .ndp3-collect-farm-body .ndp3-stage-input>label{grid-template-columns:minmax(0,1fr) 88px!important}
-}
 
 
 /* ==================================================
@@ -3543,7 +3543,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 /* ==================================================
    ИНДИКАТОР ВЕРЗИЈЕ ADMIN-А — УЧИТАНА ВЕРЗИЈА И ПРОВЕРА РЕПОЗИТОРИЈУМА
    ================================================== */
-:root{--nd-css-version:"2.1.39"}
+:root{--nd-css-version:"2.1.40"}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator{display:grid;flex:0 0 auto;align-content:center;justify-items:start;gap:2px;min-height:42px;margin:0;padding:5px 7px;border:1px solid #BFD2C3;border-radius:9px;background:#EAF2EB;color:#285B3C;line-height:1;white-space:nowrap}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator strong{font-size:9px;font-weight:900;letter-spacing:.02em}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator small{font-size:7px;font-weight:800;color:#59685D}
