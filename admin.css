@@ -3468,7 +3468,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
 /* ==================================================
    ИНДИКАТОР ВЕРЗИЈЕ ADMIN-А — УЧИТАНА ВЕРЗИЈА И ПРОВЕРА РЕПОЗИТОРИЈУМА
    ================================================== */
-:root{--nd-css-version:"2.1.48"}
+:root{--nd-css-version:"2.1.51"}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator{display:grid;flex:0 0 auto;align-content:center;justify-items:start;gap:2px;min-height:42px;margin:0;padding:5px 7px;border:1px solid #BFD2C3;border-radius:9px;background:#EAF2EB;color:#285B3C;line-height:1;white-space:nowrap}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator strong{font-size:9px;font-weight:900;letter-spacing:.02em}
 .nd-workspace .nd-topbar .nd-brand>#ndVersionIndicator small{font-size:7px;font-weight:800;color:#59685D}
