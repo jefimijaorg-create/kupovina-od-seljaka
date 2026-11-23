@@ -3794,3 +3794,86 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
     width:auto;
   }
 }
+
+
+/* ЗАГЛАВЉЕ КУПЦА — ПОВРАТАК НА УСВОЈЕНИ СВЕТЛИ ИЗГЛЕД */
+body.nd-workspace .nd-go-order-card > .nd-go-flat-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-width:0;
+  padding:12px 14px;
+  border:0;
+  border-bottom:1px solid #D4E2D6;
+  border-radius:0;
+  background:#E5EFE6;
+  color:#344238;
+}
+body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-flat-identity{
+  display:grid;
+  flex:1 1 260px;
+  gap:5px;
+  min-width:0;
+}
+body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-flat-identity > strong{
+  display:block;
+  color:#285B3C;
+  font-size:18px;
+  font-weight:900;
+  line-height:1.2;
+  letter-spacing:0;
+  overflow-wrap:anywhere;
+}
+body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-contact{
+  display:flex;
+  align-items:center;
+  gap:8px 12px;
+  color:#344238;
+  font-size:11px;
+  font-weight:750;
+  line-height:1.35;
+}
+body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-flat-identity > small{
+  color:#68766C;
+  font-size:10px;
+  font-weight:750;
+}
+body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-status-badge{
+  min-height:28px;
+  padding:4px 9px;
+  border:1px solid #C9DCCB;
+  border-radius:7px;
+  background:#FFFFFF;
+  color:#285B3C;
+  font-size:10px;
+  font-weight:850;
+}
+body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-edit-order-top{
+  min-height:34px;
+  padding:5px 10px;
+  border:1px solid #285B3C;
+  border-radius:7px;
+  background:#285B3C;
+  color:#FFFFFF;
+  font-size:10px;
+  font-weight:800;
+  white-space:nowrap;
+}
+@media(max-width:767px){
+  body.nd-workspace .nd-go-order-card > .nd-go-flat-head{
+    align-items:flex-start;
+    gap:7px;
+    padding:11px 12px;
+  }
+  body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-flat-identity{
+    flex:1 1 100%;
+  }
+  body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-flat-identity > strong{
+    font-size:17px;
+  }
+  body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-contact{
+    gap:6px 9px;
+    font-size:10px;
+  }
+}
