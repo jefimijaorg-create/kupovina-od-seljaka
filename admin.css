@@ -3496,7 +3496,7 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
     margin:0;
     padding:18px clamp(18px,2.2vw,32px) 40px;
   }
-  body.nd-workspace>#menuBtn{display:none}
+  body.nd-workspace>.nd-topbar>#menuBtn{display:none}
   body.nd-workspace.nd-home-active{
     grid-template-columns:minmax(0,1fr);
     grid-template-rows:62px minmax(0,1fr);
