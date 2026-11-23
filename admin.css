@@ -1,7 +1,7 @@
 /* ==================================================
  * NARUČI DOMAĆE — ADMIN STYLES
- * Version: 2.1.32
- * Updated: 2026-11-22
+ * Version: 2.1.33
+ * Updated: 2026-11-23
  * Description: Refines the light financial report layout and Android readability; presentation only.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
@@ -3317,3 +3317,74 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
   .nd-workspace .nd-tour-ops>.nd-ops-head p{font-size:11px!important}
   .nd-workspace .nd-tour-ops>.nd-ops-head>button{min-height:48px!important;padding:9px 11px!important}
 }
+
+/* ADMIN HERO — КОМПАКТАН ЈЕДНОРЕДНИ HEADER ЗА ANDROID И ТАБЛЕТЕ */
+.nd-workspace .nd-topbar{
+  box-sizing:border-box;display:flex;flex-wrap:nowrap;align-items:center;
+  min-width:0;min-height:62px;height:62px;padding:7px clamp(8px,1.2vw,14px);
+  gap:6px;overflow:hidden;background:#FFFFFF!important;
+  border-bottom:1px solid #DCE4DC!important;box-shadow:0 2px 8px rgba(52,66,56,.045)!important;
+  backdrop-filter:none;
+}
+.nd-workspace .nd-topbar>*{flex-shrink:0;min-width:0}
+.nd-workspace .nd-topbar .nd-brand{display:flex;align-items:center;flex:0 1 auto;min-width:0;gap:6px;overflow:hidden}
+.nd-workspace .nd-topbar .nd-brand-mark{
+  width:36px;height:36px;flex:0 0 36px;border-radius:10px;
+  background:#EAF2EB!important;color:#285B3C!important;box-shadow:none!important;font-size:20px;
+}
+.nd-workspace .nd-topbar .nd-brand-copy{display:grid;flex:1 1 auto;min-width:0;gap:1px;overflow:hidden}
+.nd-workspace .nd-topbar .nd-brand-copy strong{
+  display:block;overflow:hidden;color:#344238!important;font-size:12px;font-weight:900;
+  line-height:1.15;letter-spacing:.025em;text-overflow:ellipsis;white-space:nowrap;
+}
+.nd-workspace .nd-topbar .nd-brand-copy small{
+  display:block;overflow:hidden;color:#68766C!important;font-size:9px;font-weight:750;
+  line-height:1.15;letter-spacing:.07em;text-overflow:ellipsis;white-space:nowrap;
+}
+.nd-workspace .nd-topbar .nd-icon-btn{
+  box-sizing:border-box;width:48px;height:48px;min-width:48px;min-height:48px;flex:0 0 48px;
+  display:inline-flex;align-items:center;justify-content:center;padding:0 6px;
+  border:1px solid #DCE4DC!important;border-radius:11px!important;
+  background:#FFFFFF!important;color:#285B3C!important;box-shadow:none!important;
+}
+.nd-workspace .nd-topbar #buildVersion{display:none!important}
+.nd-workspace .nd-topbar>.nd-build-version:not(#buildVersion){
+  display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;
+  min-height:28px;margin:0;padding:4px 7px;border:1px solid #C6D8C8;border-radius:8px;
+  background:#EAF2EB;color:#285B3C;font-size:9px;font-weight:900;line-height:1;white-space:nowrap;
+}
+@media(max-width:767px){
+  .nd-workspace .nd-topbar{min-height:62px;height:62px;padding:7px 7px;gap:4px}
+  .nd-workspace .nd-topbar>#menuBtn,.nd-workspace .nd-topbar>#refreshBtn,.nd-workspace .nd-topbar>#installAppBtn{
+    width:48px;height:48px;min-width:48px;min-height:48px;flex-basis:48px;
+  }
+  .nd-workspace .nd-topbar .nd-brand{flex:1 1 auto;gap:4px}
+  .nd-workspace .nd-topbar .nd-brand-mark{width:32px;height:32px;flex-basis:32px;border-radius:9px;font-size:18px}
+  .nd-workspace .nd-topbar .nd-brand-copy strong{font-size:10px;letter-spacing:0}
+  .nd-workspace .nd-topbar .nd-brand-copy small{display:block;font-size:8px;letter-spacing:.025em}
+  .nd-workspace .nd-topbar #installAppBtn{width:48px;min-width:48px;flex-basis:48px;overflow:hidden;font-size:0!important}
+  .nd-workspace .nd-topbar #installAppBtn::before{content:"＋";font-size:23px;line-height:1;font-weight:700}
+  .nd-workspace .nd-topbar #activeTourStatus,.nd-workspace .nd-topbar #procurementBtn,
+  .nd-workspace .nd-topbar #searchBtn,.nd-workspace .nd-topbar #notificationsBtn,
+  .nd-workspace .nd-topbar #userBtn,.nd-workspace .nd-topbar .nd-user-label{display:none!important}
+  .nd-workspace .nd-topbar>.nd-build-version:not(#buildVersion){min-height:26px;padding:4px 5px;font-size:8px}
+  .nd-workspace .nd-layout{min-height:calc(100dvh - 62px)}
+}
+@media(max-width:359px){
+  .nd-workspace .nd-topbar{gap:3px;padding-left:5px;padding-right:5px}
+  .nd-workspace .nd-topbar>#menuBtn,.nd-workspace .nd-topbar>#refreshBtn,.nd-workspace .nd-topbar>#installAppBtn{
+    width:44px;height:48px;min-width:44px;min-height:48px;flex-basis:44px;
+  }
+  .nd-workspace .nd-topbar .nd-brand-mark{width:29px;height:29px;flex-basis:29px}
+  .nd-workspace .nd-topbar .nd-brand-copy strong{font-size:9px}
+  .nd-workspace .nd-topbar .nd-brand-copy small{font-size:7px}
+  .nd-workspace .nd-topbar>.nd-build-version:not(#buildVersion){font-size:7px;padding:4px}
+}
+@media(min-width:768px) and (max-width:1024px){
+  .nd-workspace .nd-topbar{gap:5px;padding-left:9px;padding-right:9px}
+  .nd-workspace .nd-topbar .nd-brand{gap:5px}
+  .nd-workspace .nd-topbar .nd-brand-mark{width:34px;height:34px;flex-basis:34px}
+  .nd-workspace .nd-topbar .nd-brand-copy strong{font-size:11px}
+  .nd-workspace .nd-topbar .nd-brand-copy small{font-size:8px;letter-spacing:.04em}
+}
+
