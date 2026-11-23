@@ -3988,3 +3988,52 @@ body.nd-workspace .nd-go-order-card > .nd-go-flat-head .nd-go-edit-order-top{
   .nd-workspace .nd-go-order-card > .nd-go-flat-head > .nd-go-status-badge{min-height:27px}
   .nd-workspace .nd-go-order-card > .nd-go-flat-head > .nd-go-edit-order-top{min-height:32px}
 }
+
+
+/* МОДУЛ ПОРУЏБИНЕ — КОМПАКТАН ПРЕГЛЕД КУПАЦА */
+.nd-workspace .nd-go-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 12px;padding:12px 15px;border:1px solid #DCE4DC;border-radius:12px;background:#FFFFFF}
+.nd-workspace .nd-go-heading-copy{min-width:0}
+.nd-workspace .nd-go-heading-copy>span{display:block;color:#285B3C;font-size:9px;font-weight:900;letter-spacing:.08em}
+.nd-workspace .nd-go-heading-copy h2{margin:3px 0;color:#344238;font-size:20px;font-weight:900;line-height:1.2}
+.nd-workspace .nd-go-heading-copy p{margin:0;color:#68766C;font-size:11px}
+.nd-workspace .nd-go-metrics{display:flex;gap:8px;flex:0 0 auto}
+.nd-workspace .nd-go-metrics>div{display:grid;min-width:76px;gap:2px;padding:7px 10px;border:1px solid #E1E8E1;border-radius:8px;background:#F7FAF7;text-align:center}
+.nd-workspace .nd-go-metrics strong{color:#285B3C;font-size:18px;line-height:1.1}
+.nd-workspace .nd-go-metrics span{color:#68766C;font-size:9px;font-weight:750}
+.nd-workspace .nd-go-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
+.nd-workspace .nd-go-list-toolbar>strong{color:#344238;font-size:13px;font-weight:900}
+.nd-workspace .nd-go-filters{display:flex;gap:5px;flex-wrap:wrap}
+.nd-workspace .nd-go-filters button{min-height:32px;padding:5px 10px;border:1px solid #D5E0D6;border-radius:7px;background:#FFFFFF;color:#526257;font-size:10px;font-weight:800}
+.nd-workspace .nd-go-filters button.is-active{border-color:#285B3C;background:#285B3C;color:#FFFFFF}
+.nd-workspace .nd-go-flat-list{display:grid;gap:7px}
+.nd-workspace .nd-go-order-card{overflow:hidden;border:1px solid #DCE4DC;border-radius:10px;background:#FFFFFF}
+.nd-workspace .nd-go-order-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;min-height:0;padding:11px 13px;border:0;background:#FFFFFF;color:#344238;text-align:left;cursor:pointer}
+.nd-workspace .nd-go-order-summary:hover,.nd-workspace .nd-go-order-card.is-expanded .nd-go-order-summary{background:#F1F6F1}
+.nd-workspace .nd-go-summary-main{display:grid;min-width:0;gap:3px}
+.nd-workspace .nd-go-summary-main>strong{color:#285B3C;font-size:14px;font-weight:900;line-height:1.25}
+.nd-workspace .nd-go-summary-main>small{overflow-wrap:anywhere;color:#647268;font-size:10px;line-height:1.35}
+.nd-workspace .nd-go-summary-side{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.nd-workspace .nd-go-summary-chevron{color:#285B3C;font-size:19px;font-weight:800;line-height:1}
+.nd-workspace .nd-go-order-content{border-top:1px solid #DCE4DC;padding-top:7px}
+.nd-workspace .nd-go-empty-state{padding:20px;border:1px dashed #C9D8CB;border-radius:9px;background:#FFFFFF;color:#647268;text-align:center;font-size:12px}
+.nd-workspace .nd-go-order-content .nd-go-table-wrap{padding:0 10px}
+.nd-workspace .nd-go-order-content .nd-go-buyer-total{margin:7px 10px}
+.nd-workspace .nd-go-order-content .nd-go-order-actions{padding:0 10px 9px}
+@media(min-width:768px) and (max-width:1024px){
+ .nd-workspace .nd-go-workspace-head{padding:10px 12px}
+ .nd-workspace .nd-go-heading-copy h2{font-size:18px}
+ .nd-workspace .nd-go-metrics>div{min-width:68px;padding:6px 8px}
+ .nd-workspace .nd-go-summary-main>strong{font-size:13px}
+}
+@media(max-width:767px){
+ .nd-workspace .nd-go-workspace-head{align-items:stretch;flex-direction:column;gap:9px;padding:10px}
+ .nd-workspace .nd-go-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .nd-workspace .nd-go-metrics>div{min-width:0}
+ .nd-workspace .nd-go-list-toolbar{align-items:flex-start;flex-direction:column}
+ .nd-workspace .nd-go-filters{width:100%}
+ .nd-workspace .nd-go-filters button{flex:1 1 auto}
+ .nd-workspace .nd-go-order-summary{padding:10px}
+ .nd-workspace .nd-go-summary-main>strong{font-size:13px}
+ .nd-workspace .nd-go-summary-side{gap:6px}
+ .nd-workspace .nd-go-summary-side .nd-go-status-badge{max-width:115px;text-align:center}
+}
