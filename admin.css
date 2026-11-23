@@ -1,7 +1,7 @@
 /* ==================================================
- * Version: 2.1.49
+ * Version: 2.1.50
  * Updated: 2026-11-23
- * Description: Adds compact buyer-integrated order tables, clickable line details and order actions; presentation only.
+ * Description: Makes buyer order action buttons compact and secondary; presentation only.
  * Public style.css is intentionally not included or modified.
  * ================================================== */
 
@@ -3752,4 +3752,45 @@ html:has(body.nd-workspace){background:#F3F5F2!important}
  .nd-workspace .nd-go-order-editor,.nd-workspace .nd-go-status-editor{grid-template-columns:1fr}
  .nd-workspace .nd-go-order-actions>*{flex:1 1 100%}
  .nd-workspace .nd-go-buyer-total{margin:8px;padding:9px}
+}
+
+
+/* КАРТИЦЕ ПОРУЏБИНА — СКРОМНА И КОМПАКТНА ДУГМАД */
+.nd-workspace .nd-go-order-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex-wrap:wrap;
+  padding:0 12px 10px;
+}
+.nd-workspace .nd-go-order-actions .nd-go-action-primary,
+.nd-workspace .nd-go-order-actions .nd-go-action-secondary{
+  flex:0 0 auto;
+  width:auto;
+  min-width:0;
+  min-height:36px;
+  padding:5px 9px;
+  border-radius:7px;
+  font-size:10px;
+  line-height:1.2;
+  font-weight:750;
+  white-space:nowrap;
+  box-shadow:none;
+}
+.nd-workspace .nd-go-order-actions .nd-go-action-primary{
+  background:#285B3C;
+  border-color:#285B3C;
+  color:#FFFFFF;
+}
+.nd-workspace .nd-go-order-actions .nd-go-action-secondary{
+  background:#FFFFFF;
+  border-color:#C9D8CB;
+  color:#526257;
+}
+@media(max-width:767px){
+  .nd-workspace .nd-go-order-actions>*{
+    flex:0 0 auto;
+    width:auto;
+  }
 }
