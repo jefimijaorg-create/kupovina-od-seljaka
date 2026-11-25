@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.10.17
+ * Version: 4.10.18
  * Updated: 2026-11-22
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,8 +8,8 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.0.0';
-import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.4';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.0.1';
+import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.5';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.1';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities } from './procurement/procurement-allocation-actions.js?v=1.1.2';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.2';
@@ -23,7 +23,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client;
  const safeInitialStage=['request','confirm','collect'].includes(initialStage)?initialStage:'request';
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,editAllocationId:null,editAllocationDraft:{},orderDraft:{},transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:safeInitialStage,view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false,preparedMessage:'',preparedMessageFarmName:''};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,requestVariantId:null,editAllocationId:null,editAllocationDraft:{},orderDraft:{},transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:safeInitialStage,view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false,preparedMessage:'',preparedMessageFarmName:''};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -52,7 +52,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  const totalRemaining=()=>unitTotals(d=>Math.max(0,d.packages-ordered(d.productId,d.variantId)));
 
  function render(){
-  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,editAllocationRow:s.allocations.find(x=>String(x.id)===String(s.editAllocationId))||null,editAllocationDraft:s.editAllocationDraft,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f,productId:s.requestProductId,orderDraft:s.orderDraft,writable:s.tour?.status==='processing',busy:s.busy}),mountAnalyticsPanel:()=>{
+  renderProcurementStageView({s,host,tourId,client,n,f,e,key,qty,prod,variant,farm,demand,allocated,ordered,allocationsFor,totalNeeded,totalOrdered,totalRemaining,totalCollected,offer,allocation,canConfirmProcurement,canCollectProcurement,history:s.history,editAllocationRow:s.allocations.find(x=>String(x.id)===String(s.editAllocationId))||null,editAllocationDraft:s.editAllocationDraft,buildAllocationSheetHtml:()=>renderAllocationSheet({s,e,f,productId:s.requestProductId,variantId:s.requestVariantId,orderDraft:s.orderDraft,writable:s.tour?.status==='processing',busy:s.busy}),mountAnalyticsPanel:()=>{
    s.analyticsHandle?.destroy();
    const analyticsRoot=host.querySelector('[data-tour-analytics-root]');
    if(analyticsRoot)s.analyticsHandle=mountTourAnalyticsPanel({root:analyticsRoot,client,tourId,intervalMs:30000});
@@ -174,8 +174,8 @@ host.addEventListener('change',ev=>{
   const a=b.dataset.action;
   if(a==='retry-load'){initialize();return;}
   if(a==='back')return onBack?.();
-  if(a==='open-request'){s.requestProductId=b.dataset.productId||null;s.requestOpen=true;s.orderDraft=Object.fromEntries(s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId)).map(item=>[String(item.id),n(item.package_count)]));s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
-  if(a==='close-request'){s.requestOpen=false;s.requestProductId=null;s.orderDraft={};render();return;}
+  if(a==='open-request'){s.requestProductId=b.dataset.productId||null;s.requestVariantId=b.dataset.variantId||null;s.requestOpen=true;s.orderDraft=Object.fromEntries(s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId)).map(item=>[String(item.id),n(item.package_count)]));s.allocationDraft={selectedFarmIds:[],quantities:{}};render();return;}
+  if(a==='close-request'){s.requestOpen=false;s.requestProductId=null;s.requestVariantId=null;s.orderDraft={};render();return;}
   if(a==='customer-order-step'){const item=s.items.find(x=>String(x.id)===String(b.dataset.itemId));if(!item)return;const current=n(s.orderDraft[String(item.id)]??item.package_count),next=Math.max(0,Math.min(9999,current+Number(b.dataset.delta||0)));s.orderDraft={...s.orderDraft,[String(item.id)]:next};render();return;}
   if(a==='save-customer-orders'){if(s.busy)return;const rows=s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId));s.busy=true;render();try{const saved=await saveCustomerOrderQuantities({client,tourId,items:rows,draft:s.orderDraft});await load();s.orderDraft=Object.fromEntries(s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId)).map(item=>[String(item.id),n(item.package_count)]));s.allocationDraft={selectedFarmIds:[],quantities:{}};setNote(saved.updated?'Измењено је '+f(saved.updated)+' поруџбина купаца. Укупна потреба је поново обрачуната; расподела газдинствима није аутоматски мењана.':'Нема нових измена поруџбина.');}catch(err){setNote('Поруџбине нису измењене: '+(err.message||String(err)),true);}finally{s.busy=false;render();}return;}
   if(a==='edit-allocation'){const row=s.allocations.find(x=>String(x.id)===String(b.dataset.id));if(!row)return;if(row.viber_status!=='not_sent'||n(row.potvrdjeno_pakovanja)>0||n(row.preuzeto_pakovanja)>0)return setNote('Ова додела више није у фази Захтев и не може се мењати овде.',true);const rows=s.items.filter(item=>key(item.product_id,item.variant_id)===key(row.product_id,row.variant_id)).sort((x,y)=>Number(x.id)-Number(y.id));const draft={};let used=0;for(const item of rows){const current=(item.farm_allocations||[]).filter(x=>String(x.gazdinstvo_id)===String(row.gazdinstvo_id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);if(current>0){draft[String(item.id)]=current;used+=current;}}let remaining=Math.max(0,n(row.broj_pakovanja)-used);for(const item of rows){if(Object.prototype.hasOwnProperty.call(draft,String(item.id)))continue;const count=Math.min(remaining,n(item.package_count));draft[String(item.id)]=count;remaining-=count;}s.editAllocationId=String(row.id);s.editAllocationDraft=draft;render();return;}
@@ -221,7 +221,7 @@ host.addEventListener('change',ev=>{
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
-  if(a==='save-multi-allocation'){const hasUnsavedOrderEdits=s.items.some(item=>(s.requestProductId===null||String(item.product_id)===String(s.requestProductId))&&n(s.orderDraft[String(item.id)]??item.package_count)!==n(item.package_count));if(hasUnsavedOrderEdits)return setNote('Прво сачувај измене поруџбина купаца, па затим расподели нову количину газдинствима.',true);const cart=buildAllocationCart({s,productId:s.requestProductId});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid&&(s.requestProductId===null||String(x.productId)===String(s.requestProductId)))){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;s.requestProductId=null;return generateViber();}
+  if(a==='save-multi-allocation'){const hasUnsavedOrderEdits=s.items.some(item=>(s.requestProductId===null||String(item.product_id)===String(s.requestProductId))&&n(s.orderDraft[String(item.id)]??item.package_count)!==n(item.package_count));if(hasUnsavedOrderEdits)return setNote('Прво сачувај измене поруџбина купаца, па затим расподели нову количину газдинствима.',true);const cart=buildAllocationCart({s,productId:s.requestProductId,variantId:s.requestVariantId});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid&&(s.requestProductId===null||String(x.productId)===String(s.requestProductId)))){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;s.requestProductId=null;s.requestVariantId=null;return generateViber();}
  });
   let loadAttempt=0;
  async function initialize(){
