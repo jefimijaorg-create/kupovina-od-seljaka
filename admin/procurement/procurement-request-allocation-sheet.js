@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT REQUEST ALLOCATION SHEET
- * Version: 1.3.4
+ * Version: 1.3.5
  * Updated: 2026-11-20
  * Description: Shows a read-only customer order breakdown while keeping farm allocation quantities editable.
  * Scope: Existing ADMIN Workspace; existing Supabase schema only.
@@ -19,8 +19,8 @@ export function distributeRemaining({total,eligibleFarmIds,quantities={},editedF
  for(let i=at+1;i<ids.length;i++)next[String(ids[i])]=i===at+1?remaining:0;
  return next;
 }
-export function buildAllocationCart({s,productId=null}){
- const cart=[];for(const d of s.demands.filter(x=>x.valid&&(productId===null||String(x.productId)===String(productId)))){const q=s.allocationDraft.quantities[k(d.productId,d.variantId)]||{};for(const farmId of s.allocationDraft.selectedFarmIds){const eligible=s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId))&&!s.allocations.some(a=>String(a.gazdinstvo_id)===String(farmId)&&String(a.product_id)===String(d.productId)&&String(a.variant_id)===String(d.variantId)&&n(a.naruceno_pakovanja)>0);if(!eligible)continue;const count=Math.max(0,Math.floor(n(q[String(farmId)])));if(count)cart.push({productId:d.productId,variantId:d.variantId,farmId,count});}}
+export function buildAllocationCart({s,productId=null,variantId=null}){
+ const cart=[];for(const d of s.demands.filter(x=>x.valid&&(productId===null||String(x.productId)===String(productId))&&(variantId===null||String(x.variantId)===String(variantId)))){const q=s.allocationDraft.quantities[k(d.productId,d.variantId)]||{};for(const farmId of s.allocationDraft.selectedFarmIds){const eligible=s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId))&&!s.allocations.some(a=>String(a.gazdinstvo_id)===String(farmId)&&String(a.product_id)===String(d.productId)&&String(a.variant_id)===String(d.variantId)&&n(a.naruceno_pakovanja)>0);if(!eligible)continue;const count=Math.max(0,Math.floor(n(q[String(farmId)])));if(count)cart.push({productId:d.productId,variantId:d.variantId,farmId,count});}}
  return cart;
 }
 const displayUnit=value=>({'kom':'ком','kom.':'ком','kg':'кг','g':'г','l':'л','ml':'мл'}[String(value||'').toLowerCase()]||String(value||''));
@@ -45,7 +45,7 @@ const renderCustomerOrderRemainder=(items,d,orderDraft,f,e)=>{
  if(!remaining.length)return '<div class="ndp3-note">Нема преосталих паковања по појединачним поруџбинама купаца.</div>';
  return '<section class="ndp3-customer-orders"><div class="ndp3-customer-orders-head"><div><strong>Преостало по купцима</strong><small>Приказује се само количина која није додељена газдинствима</small></div><b>'+f(remaining.reduce((sum,item)=>sum+item.count,0))+' пак.</b></div><div class="ndp3-customer-orders-list">'+remaining.map(({row,count})=>'<div class="ndp3-customer-order"><div class="ndp3-customer-order-name"><strong>'+e(row.customer_name||'Купац није повезан')+'</strong><span>Поруџбина #'+e(row.porudzbina_id||'—')+'</span></div><b>'+f(count)+' паковања преостало</b></div>').join('')+'</div></section>';
 };
-export function renderAllocationSheet({s,e,f,productId=null,orderDraft={},writable=true,busy=false}){
+export function renderAllocationSheet({s,e,f,productId=null,variantId=null,orderDraft={},writable=true,busy=false}){
  const selected=s.allocationDraft.selectedFarmIds;
  const itemsFor=d=>s.items.filter(item=>String(item.product_id)===String(d.productId)&&String(item.variant_id)===String(d.variantId));
  const allocatedCount=d=>s.allocations.filter(row=>String(row.product_id)===String(d.productId)&&String(row.variant_id)===String(d.variantId)).reduce((sum,row)=>sum+Math.max(0,n(row.broj_pakovanja)),0);
@@ -53,8 +53,8 @@ export function renderAllocationSheet({s,e,f,productId=null,orderDraft={},writab
  const pendingCount=d=>Math.max(0,orderedCount(d)-allocatedCount(d));
  const hasSelectedFarmOffer=d=>!selected.length||selected.some(id=>offersFor(d).some(o=>String(o.gazdinstvo_id)===String(id)));
  const offersFor=d=>s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId));
- const checks=s.farms.filter(ff=>s.offers.some(o=>String(o.gazdinstvo_id)===String(ff.id)&&o.is_active===true&&(productId===null||String(o.product_id)===String(productId)))).map(ff=>'<label class="ndp3-farm-check"><input type="checkbox" data-allocation-farm value="'+e(ff.id)+'" '+(selected.some(id=>String(id)===String(ff.id))?'checked':'')+'><span>'+e(ff.name)+'</span></label>').join('');
- const cards=s.demands.filter(d=>d.valid&&(productId===null||String(d.productId)===String(productId))&&pendingCount(d)>0&&offersFor(d).length>0&&hasSelectedFarmOffer(d)).map(d=>{
+ const checks=s.farms.filter(ff=>s.offers.some(o=>String(o.gazdinstvo_id)===String(ff.id)&&o.is_active===true&&(productId===null||String(o.product_id)===String(productId))&&(variantId===null||String(o.variant_id)===String(variantId)))).map(ff=>'<label class="ndp3-farm-check"><input type="checkbox" data-allocation-farm value="'+e(ff.id)+'" '+(selected.some(id=>String(id)===String(ff.id))?'checked':'')+'><span>'+e(ff.name)+'</span></label>').join('');
+ const cards=s.demands.filter(d=>d.valid&&(productId===null||String(d.productId)===String(productId))&&(variantId===null||String(d.variantId)===String(variantId))&&pendingCount(d)>0&&offersFor(d).length>0&&hasSelectedFarmOffer(d)).map(d=>{
   const total=pendingCount(d),eligible=selected.filter(id=>s.offers.some(o=>String(o.gazdinstvo_id)===String(id)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId)&&o.is_active===true)),q=s.allocationDraft.quantities[k(d.productId,d.variantId)]||{},sum=eligible.reduce((a,id)=>a+n(q[String(id)]),0),p=s.products.find(x=>String(x.id)===String(d.productId)),v=s.variants.find(x=>String(x.id)===String(d.variantId)),pendingDemand={...d,packages:total};
   return '<article class="ndp3-product ndp3-allocation-product"><div class="ndp3-row"><strong>'+e(p?.name||'Производ')+' · '+e(v?.name||v?.size_label||'Паковање')+'</strong><span class="ndp3-chip"><b>'+f(total)+' паковања</b> за доделу</span></div><div class="ndp3-meta ndp3-allocation-quantity">Још није додељено: <strong>'+f(total)+' паковања</strong><small>'+f(total*n(d.packageSize))+' '+e(displayUnit(d.packageUnit))+' укупно · '+f(d.packageSize)+' '+e(displayUnit(d.packageUnit))+' по паковању</small></div>'+renderCustomerOrderList(s.items,pendingDemand,f,e)+(eligible.length?eligible.map(id=>'<label class="ndp3-allocation-field"><span>'+e(s.farms.find(ff=>String(ff.id)===String(id))?.name||'Газдинство')+'</span><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="'+f(total)+'" step="1" value="'+f(q[String(id)]||0)+'" data-allocation-qty data-product="'+e(d.productId)+'" data-variant="'+e(d.variantId)+'" data-farm-id="'+e(id)+'"></label>').join(''):'<div class="ndp3-note">Ниједно изабрано газдинство нема активну понуду за ову амбалажу.</div>')+'<div class="ndp3-allocation-total">Предвиђено за доделу: <b>'+f(sum)+' од '+f(total)+' паковања</b><span class="ndp3-allocation-unassigned">Преостало: <b>'+f(Math.max(0,total-sum))+' паковања</b></span></div></article>';
  }).join('');
