@@ -1,7 +1,7 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 3.6.0
-   Верзија: 3.6.0
+ * Version: 3.6.1
+   Верзија: 3.6.1
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
@@ -1409,3 +1409,11 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .ndp3-request-allocations summary{display:flex;align-items:center;min-height:32px;color:#285B3C;font-size:12px;font-weight:800;cursor:pointer}
 .nd-workspace .ndp3-request-total-note{color:var(--nd-muted);font-size:12px}
 @media(max-width:480px){.nd-workspace .ndp3-request-package-head{align-items:flex-start;flex-direction:column}.nd-workspace .ndp3-request-assign{width:100%;min-height:44px}.nd-workspace .ndp3-request-package-metrics{gap:5px}.nd-workspace .ndp3-request-package-metrics>div{padding:8px 7px}.nd-workspace .ndp3-request-package-metrics small{font-size:10px}.nd-workspace .ndp3-request-package-metrics b{font-size:18px}}
+
+
+/* МОДУЛ НАБАВКА — КУПЦИ ПО НАРУЧЕНОЈ АМБАЛАЖИ */
+.nd-workspace .ndp3-order-customer-breakdown{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 12px;margin:3px 0 8px;padding:9px 10px;border:1px solid #D9E3D9;border-radius:9px;background:#F8FAF7;min-width:0}
+.nd-workspace .ndp3-order-customer-breakdown>b{flex:0 0 100%;color:#344238;font-size:11px;font-weight:800}
+.nd-workspace .ndp3-order-customer-breakdown>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:column;gap:2px}
+.nd-workspace .ndp3-order-customer-breakdown>span strong{color:#344238;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.nd-workspace .ndp3-order-customer-breakdown>span small{color:#285B3C;font-size:11px;font-weight:750;overflow-wrap:anywhere}
