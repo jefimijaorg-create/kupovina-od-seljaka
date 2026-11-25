@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 3.2.0
+ * Version: 3.3.0
    Верзија: 3.2.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"3.2.0";
+  --nd-css-version:"3.3.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1079,13 +1079,15 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .ndp3-kicker{color:var(--nd-green);font-size:9px;font-weight:800;letter-spacing:.07em}
 .nd-workspace .ndp3-head h2,.nd-workspace .ndp3-head h3{margin:2px 0;color:var(--nd-ink);font-size:17px;font-weight:800;line-height:1.2}
 /* ФАЗНИ ТАБОВИ — ЈАСАН СТАТУС И БЛОКИРАН ПРЕЛАЗ БЕЗ ПРЕТХОДНЕ ПОТВРДЕ */
-.nd-workspace .ndp3-phase-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;min-width:0}
+.nd-workspace .ndp3-phase-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0}
 .nd-workspace .ndp3-view-switch{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
 .nd-workspace .ndp3-phase-tab{
-  display:flex;min-width:0;min-height:42px;align-items:center;justify-content:space-between;gap:8px;
-  padding:7px 10px;border:1px solid var(--nd-line);border-radius:8px;background:#fff;
-  color:var(--nd-muted);font-size:11px;font-weight:800;line-height:1.25;text-align:left;cursor:pointer;
+  display:flex;min-width:0;min-height:74px;align-items:center;justify-content:center;flex-direction:column;gap:5px;
+  padding:9px 10px;border:1px solid var(--nd-line);border-radius:12px;background:#fff;
+  color:var(--nd-muted);font-size:14px;font-weight:800;line-height:1.2;text-align:center;cursor:pointer;
 }
+.nd-workspace .ndp3-phase-step{display:block;color:#818B82;font-size:10px;font-weight:900;letter-spacing:.02em}
+.nd-workspace .ndp3-phase-tab strong{display:block;font-size:15px;font-weight:900}
 .nd-workspace .ndp3-phase-tab small{
   display:inline-flex;flex:0 0 auto;min-width:22px;min-height:22px;align-items:center;justify-content:center;
   padding:2px 6px;border:1px solid var(--nd-line);border-radius:6px;background:#F5F8F4;
@@ -1098,7 +1100,12 @@ body.nd-workspace select:focus-visible{
   border-style:dashed;background:#F5F6F4;color:#89938B;cursor:not-allowed;opacity:1;
 }
 .nd-workspace .ndp3-phase-tab:disabled small{background:#EEF0ED;color:#89938B;border-color:#DDE2DC}
-.nd-workspace .ndp3-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.nd-workspace .ndp3-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.nd-workspace .ndp3-kpis-reference .ndp3-kpi{min-height:94px;display:flex;flex-direction:column;justify-content:center}
+.nd-workspace .ndp3-kpis-reference .ndp3-kpi b{display:block;color:var(--nd-green);font-size:25px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.15}
+.nd-workspace .ndp3-kpis-reference .ndp3-kpi span{display:block;margin-top:5px;color:var(--nd-muted);font-size:11px;font-weight:800;line-height:1.25}
+.nd-workspace .ndp3-kpi-pending{border-color:#E8D1B1;background:#FFF9F0}
+.nd-workspace .ndp3-kpi-pending b{color:#A66A25!important}
 .nd-workspace .ndp3-kpi{min-width:0;padding:8px 10px;border:1px solid var(--nd-line);border-radius:8px;background:#fff}
 .nd-workspace .ndp3-kpi strong{display:block;color:var(--nd-green);font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
 .nd-workspace .ndp3-kpi small{display:block;color:var(--nd-muted);font-size:10px}
@@ -1188,7 +1195,7 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .ndp3-btn{min-height:32px;padding:5px 9px}
 }
 @media(max-width:767px){
-  .nd-workspace .ndp3-phase-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nd-workspace .ndp3-phase-tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}\n  .nd-workspace .ndp3-phase-tab{min-height:66px;padding:7px 4px}\n  .nd-workspace .ndp3-phase-tab strong{font-size:12px}\n  .nd-workspace .ndp3-phase-step{font-size:8px}
   .nd-workspace .ndp3-phase-tab{min-height:44px;padding:7px 8px}
   .nd-workspace .ndp3-head{align-items:flex-start;flex-direction:column;padding:10px}
   .nd-workspace .ndp3-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
