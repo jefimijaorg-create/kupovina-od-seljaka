@@ -1,8 +1,8 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.0.2
+ * Version: 2.0.3
  * Updated: 2026-11-25
- * Description: Shows customer-by-customer allocated package breakdown in confirmation and pickup phases.
+ * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
  */
 export function renderProcurementStageView(ctx){
@@ -137,8 +137,18 @@ export function renderProcurementStageView(ctx){
      const assignedPackages=allocated(d.productId,d.variantId);
      const canAssign=remaining>0&&d.allocatable===true;
      const assignButton=canAssign?'<button class="ndp3-btn primary ndp3-request-assign" type="button" data-action="open-request" data-product-id="'+e(d.productId)+'" data-variant-id="'+e(d.variantId)+'" '+(!writable||s.busy?'disabled':'')+'>+ Додели преостало '+f(remaining)+'</button>':'';
+     const orderItems=s.items.filter(item=>String(item.product_id)===String(d.productId)&&String(item.variant_id)===String(d.variantId)&&n(item.package_count)>0);
+     const orderedByCustomer=new Map();
+     for(const item of orderItems){
+      const key=String(item.porudzbina_id??'')+'|'+String(item.customer_id??item.customer_name??item.id);
+      const current=orderedByCustomer.get(key)||{name:item.customer_name||'Купац није повезан',order:item.porudzbina_id,packages:0};
+      current.packages+=n(item.package_count);orderedByCustomer.set(key,current);
+     }
+     const orderCustomerHtml=orderedByCustomer.size
+      ? '<div class="ndp3-order-customer-breakdown"><b>Купци који су наручили ову амбалажу</b>'+[...orderedByCustomer.values()].map(customer=>'<span><strong>'+e(customer.name)+'</strong><small>'+(customer.order?'Поруџбина #'+e(customer.order)+' · ':'')+f(customer.packages)+' пак. ('+e(qty(customer.packages,d))+')</small></span>').join('')+'</div>'
+      : '<div class="ndp3-order-customer-breakdown"><small>Нема ставки поруџбина за ову амбалажу.</small></div>';
      const allocationDetails=assigned.length?'<details class="ndp3-request-allocations"><summary>Доделе газдинствима · '+assigned.length+'</summary>'+assignmentHtml+'</details>':'<div class="ndp3-request-total-note">Још нема додела газдинствима.</div>';
-     return '<div class="ndp3-request-package-row"><div class="ndp3-request-package-main"><div class="ndp3-request-package-head"><b>'+e(v?.name||v?.size_label||d.packagingLabel||'Амбалажа')+'</b>'+assignButton+'</div>'+(!d.allocatable?'<small class="ndp3-note error">Амбалажа није повезана са варијантом производа. Количина је приказана, али расподела је блокирана док се веза не исправи.</small>':'')+'<small class="ndp3-request-package-meta">'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно: '+e(amountLabel(d.packages,d))+' · '+e(sourceSummary(d))+'</small><div class="ndp3-request-package-metrics"><div><small>Потребно</small><b>'+f(d.packages)+'</b></div><div><small>Додељено</small><b>'+f(assignedPackages)+'</b></div><div class="'+(remaining>0?'is-pending':'is-complete')+'"><small>Преостало</small><b>'+f(remaining)+'</b></div></div>'+allocationDetails+'</div></div>';
+     return '<div class="ndp3-request-package-row"><div class="ndp3-request-package-main"><div class="ndp3-request-package-head"><b>'+e(v?.name||v?.size_label||d.packagingLabel||'Амбалажа')+'</b>'+assignButton+'</div>'+(!d.allocatable?'<small class="ndp3-note error">Амбалажа није повезана са варијантом производа. Количина је приказана, али расподела је блокирана док се веза не исправи.</small>':'')+'<small class="ndp3-request-package-meta">'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно: '+e(amountLabel(d.packages,d))+' · '+e(sourceSummary(d))+'</small>'+orderCustomerHtml+'<div class="ndp3-request-package-metrics"><div><small>Потребно</small><b>'+f(d.packages)+'</b></div><div><small>Додељено</small><b>'+f(assignedPackages)+'</b></div><div class="'+(remaining>0?'is-pending':'is-complete')+'"><small>Преостало</small><b>'+f(remaining)+'</b></div></div>'+allocationDetails+'</div></div>';
     }).join('')+(!allocationReady?'<div class="ndp3-request-product-total">Расподела није доступна док се не повеже недостајућа амбалажа.</div>':'')+'</article>';
    }).join('')+'</section>'
     : '<div class="ndp3-stage-empty">На овој тури нема производа са исправним подацима о амбалажи.</div>';
