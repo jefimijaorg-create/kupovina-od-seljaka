@@ -1,7 +1,7 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 1.9.7
- * Updated: 2026-11-22
+ * Version: 1.9.8
+ * Updated: 2026-11-25
  * Description: Shows customer-by-customer allocated package breakdown in confirmation and pickup phases.
  * Scope: Existing ADMIN Workspace only.
  */
@@ -102,7 +102,7 @@ export function renderProcurementStageView(ctx){
   };
   const requestProductsHtml=(()=>{
    const groups=new Map();
-   for(const d of s.demands.filter(x=>x.valid && x.productId && Math.max(0,x.packages-allocated(x.productId,x.variantId))>0)){
+   for(const d of s.demands.filter(x=>x.valid && x.productId && (Math.max(0,x.packages-allocated(x.productId,x.variantId))>0 || s.allocations.some(row=>String(row.product_id)===String(x.productId)&&String(row.variant_id)===String(x.variantId)&&row.viber_status==='not_sent'&&n(row.naruceno_pakovanja)>n(row.potvrdjeno_pakovanja))))){
     const id=String(d.productId);
     if(!groups.has(id))groups.set(id,[]);
     groups.get(id).push(d);
