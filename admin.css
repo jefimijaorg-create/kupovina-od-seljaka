@@ -1105,7 +1105,7 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .ndp3-kpis-reference .ndp3-kpi b{display:block;color:var(--nd-green);font-size:25px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.15}
 .nd-workspace .ndp3-kpis-reference .ndp3-kpi span{display:block;margin-top:5px;color:var(--nd-muted);font-size:11px;font-weight:800;line-height:1.25}
 .nd-workspace .ndp3-kpi-pending{border-color:#E8D1B1;background:#FFF9F0}
-.nd-workspace .ndp3-kpi-pending b{color:#A66A25!important}
+.nd-workspace .ndp3-kpis-reference .ndp3-kpi-pending b{color:#A66A25}
 .nd-workspace .ndp3-kpi{min-width:0;padding:8px 10px;border:1px solid var(--nd-line);border-radius:8px;background:#fff}
 .nd-workspace .ndp3-kpi strong{display:block;color:var(--nd-green);font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
 .nd-workspace .ndp3-kpi small{display:block;color:var(--nd-muted);font-size:10px}
