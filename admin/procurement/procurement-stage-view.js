@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.0.0
+ * Version: 2.0.1
  * Updated: 2026-11-25
  * Description: Shows customer-by-customer allocated package breakdown in confirmation and pickup phases.
  * Scope: Existing ADMIN Workspace only.
@@ -11,7 +11,8 @@ export function renderProcurementStageView(ctx){
   if(s.disposed)return;
   const writable=s.tour?.status==='processing';
   const requestRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
-  const requestDemandCount=requestRows.length;\n  const totalPackages=selector=>f(s.demands.filter(d=>d.valid).reduce((sum,d)=>sum+selector(d),0));
+  const requestDemandCount=requestRows.length;
+  const totalPackages=selector=>f(s.demands.filter(d=>d.valid).reduce((sum,d)=>sum+selector(d),0));
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
   if(s.stage==='confirm'&&!confirmRows.length)s.stage='request';
