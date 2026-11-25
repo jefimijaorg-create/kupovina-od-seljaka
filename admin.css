@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 3.1.0
-   Верзија: 3.1.0
+ * Version: 3.2.0
+   Верзија: 3.2.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"3.1.0";
+  --nd-css-version:"3.2.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1078,14 +1078,26 @@ body.nd-workspace select:focus-visible{
 }
 .nd-workspace .ndp3-kicker{color:var(--nd-green);font-size:9px;font-weight:800;letter-spacing:.07em}
 .nd-workspace .ndp3-head h2,.nd-workspace .ndp3-head h3{margin:2px 0;color:var(--nd-ink);font-size:17px;font-weight:800;line-height:1.2}
-.nd-workspace .ndp3-phase-tabs,.nd-workspace .ndp3-view-switch{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+/* ФАЗНИ ТАБОВИ — ЈАСАН СТАТУС И БЛОКИРАН ПРЕЛАЗ БЕЗ ПРЕТХОДНЕ ПОТВРДЕ */
+.nd-workspace .ndp3-phase-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;min-width:0}
+.nd-workspace .ndp3-view-switch{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
 .nd-workspace .ndp3-phase-tab{
-  min-height:35px;padding:6px 11px;border:1px solid var(--nd-line);border-radius:7px;background:#fff;
-  color:var(--nd-muted);font-size:11px;font-weight:700;cursor:pointer;
+  display:flex;min-width:0;min-height:42px;align-items:center;justify-content:space-between;gap:8px;
+  padding:7px 10px;border:1px solid var(--nd-line);border-radius:8px;background:#fff;
+  color:var(--nd-muted);font-size:11px;font-weight:800;line-height:1.25;text-align:left;cursor:pointer;
+}
+.nd-workspace .ndp3-phase-tab small{
+  display:inline-flex;flex:0 0 auto;min-width:22px;min-height:22px;align-items:center;justify-content:center;
+  padding:2px 6px;border:1px solid var(--nd-line);border-radius:6px;background:#F5F8F4;
+  color:var(--nd-green);font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;
 }
 .nd-workspace .ndp3-phase-tab[aria-selected="true"],.nd-workspace .ndp3-phase-tab.is-active{
-  border-color:var(--nd-green);background:var(--nd-soft);color:var(--nd-green);
+  border-color:var(--nd-green);background:var(--nd-soft);color:var(--nd-green);box-shadow:inset 0 0 0 1px var(--nd-green);
 }
+.nd-workspace .ndp3-phase-tab:disabled{
+  border-style:dashed;background:#F5F6F4;color:#89938B;cursor:not-allowed;opacity:1;
+}
+.nd-workspace .ndp3-phase-tab:disabled small{background:#EEF0ED;color:#89938B;border-color:#DDE2DC}
 .nd-workspace .ndp3-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .nd-workspace .ndp3-kpi{min-width:0;padding:8px 10px;border:1px solid var(--nd-line);border-radius:8px;background:#fff}
 .nd-workspace .ndp3-kpi strong{display:block;color:var(--nd-green);font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
@@ -1176,6 +1188,8 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .ndp3-btn{min-height:32px;padding:5px 9px}
 }
 @media(max-width:767px){
+  .nd-workspace .ndp3-phase-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nd-workspace .ndp3-phase-tab{min-height:44px;padding:7px 8px}
   .nd-workspace .ndp3-head{align-items:flex-start;flex-direction:column;padding:10px}
   .nd-workspace .ndp3-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .nd-workspace .ndp3-request-products,.nd-workspace .ndp3-history-list{grid-template-columns:minmax(0,1fr)}
