@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"3.3.0";
+  --nd-css-version:"3.4.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1205,3 +1205,16 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .ndp3-customer-allocation-row{align-items:flex-start;flex-direction:column}
   .nd-workspace .ndp3-collect-farm-pending{margin-left:0}
 }
+
+/* МОДУЛ НАБАВКА — КЛИК НА ПРЕОСТАЛУ АМБАЛАЖУ ОТВАРА ТАЧНУ РАСПОДЕЛУ */
+.nd-workspace .ndp3-request-package-count{
+  display:flex;min-width:94px;min-height:54px;align-items:center;justify-content:center;flex-direction:column;gap:2px;
+  padding:7px 10px;border:1px solid #D9E5D9;border-radius:10px;background:#EDF5ED;
+  color:var(--nd-green);font:800 18px/1.1 inherit;text-align:center;cursor:pointer;
+  transition:background .12s ease,border-color .12s ease,transform .12s ease;
+}
+.nd-workspace .ndp3-request-package-count small{font-size:10px;font-weight:800;line-height:1.2}
+.nd-workspace .ndp3-request-package-count:not(:disabled):hover{border-color:var(--nd-green);background:#E2EEE3}
+.nd-workspace .ndp3-request-package-count:not(:disabled):active{transform:scale(.98)}
+.nd-workspace .ndp3-request-package-count:disabled{border-color:var(--nd-line);background:#F4F6F3;color:#89938B;cursor:not-allowed}
+@media(max-width:767px){.nd-workspace .ndp3-request-package-count{min-width:88px;min-height:48px}}
