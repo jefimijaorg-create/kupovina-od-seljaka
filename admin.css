@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 3.6.1
-   Верзија: 3.6.1
+ * Version: 3.6.2
+   Верзија: 3.6.2
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"3.6.0";
+  --nd-css-version:"3.6.2";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1417,3 +1417,29 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .ndp3-order-customer-breakdown>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:column;gap:2px}
 .nd-workspace .ndp3-order-customer-breakdown>span strong{color:#344238;font-size:12px;font-weight:800;overflow-wrap:anywhere}
 .nd-workspace .ndp3-order-customer-breakdown>span small{color:#285B3C;font-size:11px;font-weight:750;overflow-wrap:anywhere}
+
+
+/* МОДУЛ НАБАВКА — КУПЦИ СКЛОПЉЕНИ У КОМПАКТАН ПРИКАЗ */
+.nd-workspace .ndp3-order-customer-breakdown{
+  display:block;margin:5px 0 7px;padding:0;border:0;background:transparent;
+}
+.nd-workspace .ndp3-order-customer-breakdown>summary{
+  display:inline-flex;min-height:32px;align-items:center;gap:6px;padding:5px 9px;
+  border:1px solid #D9E3D9;border-radius:8px;background:#F8FAF7;color:#285B3C;
+  font-size:11px;font-weight:850;cursor:pointer;list-style:none;
+}
+.nd-workspace .ndp3-order-customer-breakdown>summary::-webkit-details-marker{display:none}
+.nd-workspace .ndp3-order-customer-breakdown[open]>summary{margin-bottom:6px;background:#EAF0EA}
+.nd-workspace .ndp3-order-customer-list{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 12px;padding:8px 10px;border:1px solid #D9E3D9;border-radius:8px;background:#F8FAF7}
+.nd-workspace .ndp3-order-customer-list>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:column;gap:2px}
+.nd-workspace .ndp3-order-customer-list>span strong{color:#344238;font-size:11px;font-weight:800;overflow-wrap:anywhere}
+.nd-workspace .ndp3-order-customer-list>span small{color:#285B3C;font-size:10px;font-weight:750;overflow-wrap:anywhere}
+
+/* МОДУЛ НАБАВКА — ОСЛОБАЂАЊЕ ГОРЊЕГ ДЕЛА ОД ЗАГЛАВЉА */
+@media(max-width:767px){
+  .nd-workspace .nd-topbar{position:relative;top:auto;flex-wrap:wrap;align-items:center}
+  .nd-workspace .nd-topbar>.nd-ops-head{flex:1 1 100%;margin:0}
+  .nd-workspace .nd-main:has(.ndp3){padding-top:14px}
+}
+/* МОДУЛ НАБАВКА — УКЛАЊАЊЕ ВЕЛИКОГ ДУПЛОГ ПОЗИВА ЗА ЦЕЛУ ТУРУ */
+.nd-workspace .ndp3-request-product-action{display:none}
