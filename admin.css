@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 3.5.0
-   Верзија: 3.5.0
+ * Version: 3.6.0
+   Верзија: 3.6.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"3.5.0";
+  --nd-css-version:"3.6.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1386,3 +1386,26 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .ndp3-request-product-action .ndp3-btn{min-height:42px}
   .nd-workspace .nd-brand-copy strong{font-size:12px}
 }
+
+/* МОДУЛ НАБАВКА — КОЛИЧИНЕ И ДОДЕЛА ПО АМБАЛАЖИ · 3.6.0 */
+.nd-workspace .ndp3-request-package-row{display:flex;flex-direction:column;gap:10px;min-width:0;padding:12px;border:1px solid var(--nd-line);border-radius:12px;background:#fff}
+.nd-workspace .ndp3-request-package-main{display:flex;min-width:0;flex-direction:column;gap:8px}
+.nd-workspace .ndp3-request-package-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.nd-workspace .ndp3-request-package-head>b{min-width:0;color:var(--nd-ink);font-size:15px;font-weight:850;overflow-wrap:anywhere}
+.nd-workspace .ndp3-request-assign{flex:0 0 auto;min-height:42px;padding:8px 12px;border:1px solid #C4D6C9;border-radius:9px;background:#285B3C;color:#fff;font-size:12px;font-weight:800;white-space:normal}
+.nd-workspace .ndp3-request-assign:disabled{opacity:.48;cursor:not-allowed}
+.nd-workspace .ndp3-request-package-meta{display:block;color:var(--nd-muted);font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.nd-workspace .ndp3-request-package-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-width:0}
+.nd-workspace .ndp3-request-package-metrics>div{display:flex;min-width:0;flex-direction:column;gap:3px;padding:9px 10px;border:1px solid #DCE4DC;border-radius:9px;background:#F3F5F2}
+.nd-workspace .ndp3-request-package-metrics small{color:#617066;font-size:11px;font-weight:700}
+.nd-workspace .ndp3-request-package-metrics b{color:#344238;font-size:20px;font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums}
+.nd-workspace .ndp3-request-package-metrics>div:nth-child(2){background:#E9F1EC;border-color:#C4D6C9}
+.nd-workspace .ndp3-request-package-metrics>div:nth-child(2) b{color:#285B3C}
+.nd-workspace .ndp3-request-package-metrics>div.is-pending{background:#FFF7EC;border-color:#F2D3A6}
+.nd-workspace .ndp3-request-package-metrics>div.is-pending small,.nd-workspace .ndp3-request-package-metrics>div.is-pending b{color:#9A5B13}
+.nd-workspace .ndp3-request-package-metrics>div.is-complete{background:#E9F1EC;border-color:#C4D6C9}
+.nd-workspace .ndp3-request-package-metrics>div.is-complete b{color:#285B3C}
+.nd-workspace .ndp3-request-allocations{border-top:1px solid var(--nd-line);padding-top:8px}
+.nd-workspace .ndp3-request-allocations summary{display:flex;align-items:center;min-height:32px;color:#285B3C;font-size:12px;font-weight:800;cursor:pointer}
+.nd-workspace .ndp3-request-total-note{color:var(--nd-muted);font-size:12px}
+@media(max-width:480px){.nd-workspace .ndp3-request-package-head{align-items:flex-start;flex-direction:column}.nd-workspace .ndp3-request-assign{width:100%;min-height:44px}.nd-workspace .ndp3-request-package-metrics{gap:5px}.nd-workspace .ndp3-request-package-metrics>div{padding:8px 7px}.nd-workspace .ndp3-request-package-metrics small{font-size:10px}.nd-workspace .ndp3-request-package-metrics b{font-size:18px}}
