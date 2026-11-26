@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.23.2
+ * Version: 4.23.3
  * Updated: 2026-11-26
  * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=3.2.2';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=3.2.3';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.7';
 import { loadProcurementHistory, markProcurementSent, markProcurementRequested, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.3';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities, saveConfirmedCustomerDistribution } from './procurement/procurement-allocation-actions.js?v=1.1.4';
@@ -210,11 +210,11 @@ async function saveField(id){
    await load();
    s.stage=stageBeforeSave==='collect'?'collect':'confirm';
    const remaining=Math.max(0,confirmed-collected);
-   const resultMessage=newlyCollected>0
+   const resultMessage=stageBeforeSave==='confirm'?'Одговор газдинства је сачуван и проверен у бази: '+farmName+' · '+productName+' · '+variantName+' — потврђено '+f(confirmed)+' од '+f(n(row.naruceno_pakovanja))+' паковања. Непотврђено: '+f(Math.max(0,n(row.naruceno_pakovanja)-confirmed))+' паковања.':newlyCollected>0
     ?'Преузимање евидентирано и проверено у бази: '+farmName+' · '+productName+' · '+variantName+' — '+f(newlyCollected)+' нових паковања. Укупно преузето: '+f(collected)+' од '+f(confirmed)+'. '+(remaining>0?'Преостало за преузимање: '+f(remaining)+' паковања.':'Сва потврђена количина је преузета.')
     :'Промена преузете количине је сачувана и проверена у бази за '+farmName+' · '+productName+' · '+variantName+'. Укупно преузето: '+f(collected)+' од '+f(confirmed)+' паковања. '+(remaining>0?'Преостало: '+f(remaining)+' паковања.':'Преузимање је завршено.');
    setNote(resultMessage);
-  }catch(err){s.stage=stageBeforeSave;setNote('Преузимање није потврђено као сачувано: '+(err.message||String(err)),true);}
+  }catch(err){s.stage=stageBeforeSave;setNote((stageBeforeSave==='confirm'?'Одговор газдинства није сачуван: ':'Преузимање није потврђено као сачувано: ')+(err.message||String(err)),true);}
   finally{s.busy=false;render();}
  }
  async function generateViber(){
