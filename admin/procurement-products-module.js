@@ -86,8 +86,8 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  function buildFarmRequestMessage(farmId,rows){
   const ff=farm(farmId),phone=String(ff?.phone||'').trim();
   const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
-  const schedule=(s.tourPoints||[]).map(point=>(point.vreme?point.vreme+' — ':'')+point.name).join('\\n');
-  const message='ПОШТОВАНИ '+(ff?.name||'')+',\\n\\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\\nДатум туре: '+date+(schedule?'\\nРаспоред пунктова и времена:\\n'+schedule:'')+'\\n\\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\\n  Потребно: '+f(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)))+' паковања ('+qty(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)),d)+')';}).join('\\n')+'\\n\\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\\n\\nКонтакт газдинства: '+phone:'');
+  const schedule=(s.tourPoints||[]).map(point=>(point.vreme?point.vreme+' — ':'')+point.name).join('\n');
+  const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)))+' паковања ('+qty(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)),d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
   return {farmId:String(farmId),farmName:ff?.name||('Газдинство #'+farmId),phone,message,rowIds:rows.map(x=>x.id)};
  }
  async function prepareAllFarmRequests(){
@@ -103,22 +103,22 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  async function prepareFarmRequest(farmId){
   const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   if(!rows.length)return setNote('Ово газдинство нема требовање које чека слање.',true);
-  const prepared=buildFarmRequestMessage(farmId,rows),phone=prepared.phone,viberPhone=phone.replace(/[^\\d+]/g,'');
+  const prepared=buildFarmRequestMessage(farmId,rows),phone=prepared.phone,viberPhone=phone.replace(/[^\d+]/g,'');
   if(!viberPhone){s.preparedMessage=prepared.message;s.preparedMessageFarmName=prepared.farmName;return setNote('За ово газдинство није уписан телефон. Порука је отворена испод и може да се копира.');}
   try{if(!navigator.clipboard?.writeText)throw new Error('Копирање није доступно.');await navigator.clipboard.writeText(prepared.message);window.location.href='viber://chat?number='+encodeURIComponent(viberPhone);setNote('Порука је копирана. Отворен је Viber разговор; пошаљи је ручно. Статус још није промењен.');}
   catch(error){s.preparedMessage=prepared.message;s.preparedMessageFarmName=prepared.farmName;setNote('Аутоматско копирање није успело. Порука је отворена испод за ручно копирање.');}
  }
  async function markFarmSent(farmId){
   if(s.busy)return;
-  if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
+  if(s.tour?.status!=='processing'){setNote('Тура није отворена за измене.',true);return false;}
   const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
-  if(!rows.length)return setNote('Нема ставки које чекају слање за ово газдинство.',true);
-  if(!window.confirm('Потврђујеш да је заиста послато заједничко требовање газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return;
+  if(!rows.length){setNote('Нема ставки које чекају слање за ово газдинство.',true);return false;}
+  if(!window.confirm('Потврђујеш да је заиста послато заједничко требовање газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return false;
   s.busy=true;render();
   try{
    await markProcurementSent({client,rowIds:rows.map(x=>x.id)});
-   await load();s.stage='confirm';setNote('Заједнички захтев је означен као стварно послат. Ставке сада чекају потврду газдинства.');
-  }catch(error){try{await load();}catch(_){}setNote('Слање није у потпуности евидентирано: '+(error.message||String(error)),true);}
+   await load();s.stage='confirm';setNote('Заједнички захтев је означен као стварно послат. Ставке сада чекају потврду газдинства.');return true;
+  }catch(error){try{await load();}catch(_){}setNote('Слање није у потпуности евидентирано: '+(error.message||String(error)),true);return false;}
   finally{s.busy=false;render();}
  }
  async function markSent(id){
@@ -260,7 +260,7 @@ host.addEventListener('change',ev=>{
     try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(s.preparedMessage);else{field.focus();field.select();if(!document.execCommand('copy'))throw new Error('Копирање није подржано.');}setNote('Порука за '+s.preparedMessageFarmName+' је копирана. Статус слања није промењен.');}
     catch(error){setNote('Копирање није успело. Означи текст у пољу и копирај га ручно.',true);}return;
    }
-   if(a==='prepare-all-farms')return prepareAllFarmRequests();\n  if(a==='bulk-open-farm'){const item=s.bulkMessages.find(x=>x.farmId===String(b.dataset.farmId));if(!item)return;const phone=item.phone.replace(/[^\\d+]/g,'');try{if(!navigator.clipboard?.writeText)throw new Error('Копирање није доступно.');await navigator.clipboard.writeText(item.message);if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);setNote('Порука за '+item.farmName+' је копирана'+(phone?' и Viber разговор је отворен.':' .')+' Статус још није промењен.');}catch(error){s.preparedMessage=item.message;s.preparedMessageFarmName=item.farmName;setNote('Порука је отворена за ручно копирање; статус није промењен.');}return;}\n  if(a==='bulk-mark-farm-sent'){s.bulkMessages=s.bulkMessages.filter(x=>x.farmId!==String(b.dataset.farmId));return markFarmSent(b.dataset.farmId);}\n  if(a==='close-bulk-messages'){s.bulkMessages=[];render();return;}\n  if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
+   if(a==='prepare-all-farms')return prepareAllFarmRequests();\n  if(a==='bulk-open-farm'){const item=s.bulkMessages.find(x=>x.farmId===String(b.dataset.farmId));if(!item)return;const phone=item.phone.replace(/[^\d+]/g,'');try{if(!navigator.clipboard?.writeText)throw new Error('Копирање није доступно.');await navigator.clipboard.writeText(item.message);if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);setNote('Порука за '+item.farmName+' је копирана'+(phone?' и Viber разговор је отворен.':' .')+' Статус још није промењен.');}catch(error){s.preparedMessage=item.message;s.preparedMessageFarmName=item.farmName;setNote('Порука је отворена за ручно копирање; статус није промењен.');}return;}\n  if(a==='bulk-mark-farm-sent'){const farmId=String(b.dataset.farmId);const ok=await markFarmSent(farmId);if(ok)s.bulkMessages=s.bulkMessages.filter(x=>x.farmId!==farmId);render();return;}\n  if(a==='close-bulk-messages'){s.bulkMessages=[];render();return;}\n  if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
