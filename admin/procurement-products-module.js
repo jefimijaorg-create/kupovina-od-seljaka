@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.4
+ * Version: 4.21.5
  * Updated: 2026-11-26
  * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,11 +8,11 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.9.8';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.9.9';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.7';
-import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.1';
+import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.2';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities, saveConfirmedCustomerDistribution } from './procurement/procurement-allocation-actions.js?v=1.1.4';
-import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.3';
+import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.4';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
