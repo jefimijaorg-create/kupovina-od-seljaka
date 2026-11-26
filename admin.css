@@ -1635,7 +1635,7 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-gop-point-head>div>span{display:block;font-size:10px;font-weight:800;letter-spacing:.05em;opacity:.85}
 .nd-workspace .nd-gop-point-head h3{margin:2px 0 0;color:#fff;font-size:21px;font-weight:900;line-height:1.2}
 .nd-workspace .nd-gop-point-head label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800}
-.nd-workspace .nd-gop-point-head input{min-height:38px;width:118px;padding:7px 9px;border:1px solid #D5E0D4;border-radius:7px;background:#fff;color:#344238;font:inherit;font-weight:800}
+.nd-workspace .nd-gop-point-head input{box-sizing:border-box;min-height:46px;width:126px;padding:8px 10px;border:1.5px solid #B8CDBB;border-radius:8px;background:#FFFFFF;color:#344238;font:inherit;font-size:15px;font-weight:900;font-variant-numeric:tabular-nums}
 .nd-workspace .nd-gop-point-head input:disabled{opacity:.65}
 .nd-workspace .nd-gop-table-wrap{width:100%;min-width:0;overflow-x:auto}
 .nd-workspace .nd-gop-table{width:100%;min-width:680px;border-collapse:collapse;color:#344238;font-size:12px}
@@ -1657,7 +1657,7 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-gop-table tfoot .nd-gop-amount{color:#285B3C;font-size:15px}
 @media(max-width:767px){.nd-workspace .nd-gop-point-head{padding:11px 12px}.nd-workspace .nd-gop-point-head h3{font-size:19px}.nd-workspace .nd-gop-table{min-width:650px}.nd-workspace .nd-gop-viber{min-height:42px}}
 
-/* МОДУЛ ПОРУЏБИНЕ — ТАБЛЕТ: ТАБЕЛА У ШИРИНИ ЕКРАНА · 5.1.3 */
+/* МОДУЛ ПОРУЏБИНЕ — ТАБЛЕТ И САТНИЦА ПУНКТА · 5.1.4 */
 .nd-workspace .nd-gop-point,
 .nd-workspace .nd-gop-point-head,
 .nd-workspace .nd-gop-table-wrap,
