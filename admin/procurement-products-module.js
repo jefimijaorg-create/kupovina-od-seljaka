@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.8
+ * Version: 4.21.9
  * Updated: 2026-11-26
  * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -12,7 +12,7 @@ import { renderProcurementStageView } from './procurement/procurement-stage-view
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.7';
 import { loadProcurementHistory, markProcurementSent, markProcurementRequested, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.3';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities, saveConfirmedCustomerDistribution } from './procurement/procurement-allocation-actions.js?v=1.1.4';
-import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.4';
+import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.5';
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const f=v=>n(v).toLocaleString('sr-RS',{maximumFractionDigits:2});
