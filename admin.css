@@ -1733,3 +1733,42 @@ body.nd-workspace select:focus-visible{
  .nd-workspace .nd-gop-table{min-width:0}
  .nd-workspace .nd-gop-table th{white-space:normal}
 }
+
+/* ПРЕГЛЕД ПОРУЏБИНА — КОМПАКТНЕ ВАРИЈАНТЕ И ДОЊИ ПРОЗОР КУПАЦА */
+.nd-workspace .ndp3-package-overview{min-width:0;margin:0 0 10px;padding:11px;border:1px solid #DCE4DC;border-radius:12px;background:#fff}
+.nd-workspace .ndp3-package-overview-head{display:flex;min-width:0;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.nd-workspace .ndp3-package-overview-head>div{min-width:0}
+.nd-workspace .ndp3-package-overview-head>div>span{color:#68766C;font-size:9px;font-weight:850;letter-spacing:.06em}
+.nd-workspace .ndp3-package-overview-head h2{margin:2px 0 0;color:#344238;font-size:16px;font-weight:850}
+.nd-workspace .ndp3-package-overview-head>small{color:#68766C;font-size:10px;text-align:right}
+.nd-workspace .ndp3-package-overview-product{min-width:0;margin-top:9px}
+.nd-workspace .ndp3-package-overview-product h3{margin:0 0 6px;color:#344238;font-size:12px;font-weight:850}
+.nd-workspace .ndp3-package-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-width:0}
+.nd-workspace .ndp3-package-overview-card{display:flex;min-width:0;min-height:104px;flex-direction:column;align-items:flex-start;gap:3px;padding:9px;border:1px solid #DCE4DC;border-radius:10px;background:#fff;color:#344238;text-align:left;cursor:pointer}
+.nd-workspace .ndp3-package-overview-card:hover{border-color:#AFC5B3;background:#FAFCFA}
+.nd-workspace .ndp3-package-overview-variant{overflow-wrap:anywhere;color:#344238;font-size:13px;font-weight:850;line-height:1.25}
+.nd-workspace .ndp3-package-overview-count{display:flex;align-items:baseline;gap:5px;margin-top:2px}
+.nd-workspace .ndp3-package-overview-count strong{color:#285B3C;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.nd-workspace .ndp3-package-overview-count small{color:#68766C;font-size:10px;font-weight:700}
+.nd-workspace .ndp3-package-overview-quantity{color:#68766C;font-size:10px}
+.nd-workspace .ndp3-package-overview-buyers{display:flex;align-items:center;gap:4px;margin-top:auto;padding-top:5px;color:#285B3C;font-size:11px;font-weight:850}
+.nd-workspace .ndp3-package-overview-buyers b{margin-left:auto;font-size:15px}
+.nd-workspace .ndp3-package-sheet-backdrop{position:fixed;z-index:120;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:0;background:rgba(28,43,32,.42)}
+.nd-workspace .ndp3-package-sheet{width:min(760px,100%);max-height:min(84dvh,760px);overflow:auto;padding:10px 16px calc(18px + env(safe-area-inset-bottom));border:1px solid #DCE4DC;border-bottom:0;border-radius:18px 18px 0 0;background:#fff;box-shadow:0 -8px 32px rgba(20,40,25,.18);color:#344238}
+.nd-workspace .ndp3-package-sheet-handle{width:38px;height:4px;margin:0 auto 12px;border-radius:4px;background:#D5DDD5}
+.nd-workspace .ndp3-package-sheet>header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nd-workspace .ndp3-package-sheet>header>div{min-width:0}
+.nd-workspace .ndp3-package-sheet>header small{color:#68766C;font-size:11px;font-weight:800}
+.nd-workspace .ndp3-package-sheet>header h2{margin:2px 0;color:#344238;font-size:20px;font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .ndp3-package-sheet-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}
+.nd-workspace .ndp3-package-sheet-stats>div{display:flex;min-width:0;flex-direction:column;gap:4px;padding:9px;border-radius:9px;background:#F3F5F2}
+.nd-workspace .ndp3-package-sheet-stats small{color:#68766C;font-size:10px}
+.nd-workspace .ndp3-package-sheet-stats strong{color:#285B3C;font-size:18px;font-weight:900;overflow-wrap:anywhere}
+.nd-workspace .ndp3-package-sheet>h3{margin:12px 0 5px;font-size:13px;font-weight:850}
+.nd-workspace .ndp3-package-sheet-customer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px solid #E8EEE8}
+.nd-workspace .ndp3-package-sheet-customer>div{display:flex;min-width:0;flex-direction:column;gap:3px}
+.nd-workspace .ndp3-package-sheet-customer strong{color:#344238;font-size:13px;font-weight:800;overflow-wrap:anywhere}
+.nd-workspace .ndp3-package-sheet-customer small{color:#68766C;font-size:10px;overflow-wrap:anywhere}
+.nd-workspace .ndp3-package-sheet-customer>b{flex:0 0 auto;color:#285B3C;font-size:14px;font-weight:900;white-space:nowrap}
+.nd-workspace .ndp3-package-sheet-note{margin:10px 0 0;color:#68766C;font-size:10px;line-height:1.4}
+@media(max-width:420px){.nd-workspace .ndp3-package-overview{padding:9px}.nd-workspace .ndp3-package-overview-grid{gap:6px}.nd-workspace .ndp3-package-overview-card{padding:8px;min-height:100px}.nd-workspace .ndp3-package-overview-variant{font-size:12px}.nd-workspace .ndp3-package-overview-count strong{font-size:22px}.nd-workspace .ndp3-package-sheet-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-workspace .ndp3-package-sheet-stats>div:last-child{grid-column:1/-1}}
