@@ -1,7 +1,7 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT MANAGEMENT PANEL
- * Version: 1.6.1
- * Updated: 2026-11-18
+ * Version: 1.6.2
+ * Updated: 2026-11-26
  * Description: Coordinates procurement workflow and delegates pure demand and allocation calculations to a dedicated module.
  * Scope: Existing ADMIN Workspace + existing Supabase client; no parallel data store.
  */
@@ -99,12 +99,16 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       const quantity = packageSize > 0
         ? fmt(count) + ' пак. × ' + fmt(packageSize) + ' ' + packageUnit + ' = ' + fmt(count * packageSize) + ' ' + packageUnit
         : fmt(count) + ' паковања';
-      return '- ' + (product?.name || 'Назив производа није доступан') + ' — ' +
-        (variant?.name || variant?.size_label || 'Варијанта') + ': ' + quantity;
+      return { product: product?.name || 'Назив производа није доступан',
+        variant: variant?.name || variant?.size_label || 'Варијанта', quantity };
     });
-    return 'Поштовани' + (farm?.name ? ' ' + farm.name : '') + ',\n\n' +
-      'Молимо вас да потврдите доступност следећих производа за туру #' + tourId + ':\n' +
-      lines.join('\n') + '\n\nМолимо да нам јавите колико паковања можете да обезбедите.\nХвала!';
+    const deliveryDate = state.tour?.datum
+      ? new Date(state.tour.datum + 'T12:00:00').toLocaleDateString('sr-RS') : '';
+    return '**НАРУЧИ ДОМАЋЕ — Требовање за туру #' + tourId + '**' +
+      (deliveryDate ? '\\nДатум испоруке: ' + deliveryDate : '') +
+      '\\n\\nПоздрав, ' + (farm?.name || 'газдинство') + '!\\n\\nТребујемо следеће:\\n\\n' +
+      lines.map((line, index) => (index + 1) + '. **' + line.product + '**\\n   • ' + line.variant + ': **' + line.quantity + '**').join('\\n\\n') +
+      '\\n\\nМолимо вас потврдите шта можете да припремите. Хвала!';
   }
 
   async function load() {
