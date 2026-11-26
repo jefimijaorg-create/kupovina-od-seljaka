@@ -153,7 +153,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       const productName = product?.name || 'Назив производа није доступан у products.name';
       html += '<article class="nd-proc-card nd-proc-product-group" data-open-product="' + esc(productId) + '" role="button" tabindex="0" aria-label="Отвори расподелу за ' + esc(productName) + '">' +
         '<header class="nd-proc-product-heading"><strong>' + esc(productName) + '</strong>' +
-        '<small>' + fmt(demands.length) + (demands.length === 1 ? ' варијанта' : ' варијанте') + '</small></header>';
+        '<small>' + fmt(demands.length) + (demands.length === 1 ? ' варијанта' : ' варијанте') + ' · отвори за доделу</small></header>';
       html += demands.map((demand) => {
         const variantRows = allocationsFor(demand.productId, demand.variantId);
         const totalActivated = variantRows.reduce((sum, row) => sum + num(row.broj_pakovanja), 0);
@@ -204,7 +204,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     const farm = farmFor(state.selectedFarmId);
     const eligible = demands.filter((demand) => demand.valid &&
       offersFor(demand.productId, demand.variantId).some((offer) => String(offer.gazdinstvo_id) === String(state.selectedFarmId)));
-    let html = '<div class="nd-proc-form-head"><label for="ndProcFarmSelect">Изабери газдинство</label>' +
+    let html = '<div class="nd-proc-form-head"><label for="ndProcFarmSelect">Додели овај производ газдинству</label>' +
       '<select id="ndProcFarmSelect" data-farm-select>' +
       offeredFarmIds.map((id) => '<option value="' + esc(id) + '" ' + (String(id) === String(state.selectedFarmId) ? 'selected' : '') + '>' +
         esc(farmFor(id)?.name || 'Газдинство #' + id) + '</option>').join('') + '</select></div>';
@@ -230,7 +230,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
         '<span><b>' + fmt(otherAssigned) + '</b><small>Додељено другим газдинствима</small></span>' +
         '<span><b>' + fmt(current) + '</b><small>Тренутно додељено овом газдинству</small></span>' +
         '<span><b>' + fmt(uncovered) + '</b><small>Преостало непокривено за туру</small></span></div>' +
-        '<div class="nd-proc-input-row"><label>Укупно паковања за ово газдинство</label><input type="number" min="0" max="' + max + '" step="1" inputmode="numeric" data-allocation-count="' + esc(draftKey) +
+        '<div class="nd-proc-input-row"><label>Колико паковања додељујеш овом газдинству?</label><input type="number" min="0" max="' + max + '" step="1" inputmode="numeric" data-allocation-count="' + esc(draftKey) +
         '" value="' + esc(draft ?? current) + '" aria-label="Укупна додељена паковања за ' + esc(product?.name || 'производ') + '"></div>' +
         '<small class="nd-proc-subline">Унеси коначну укупну количину, не количину коју додајеш. Тренутно сачувано: ' + fmt(current) +
         ' паковања. Промена се примењује тек након чувања.</small></article>';
@@ -250,7 +250,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
       '<section class="nd-proc-product-modal" role="dialog" aria-modal="true" aria-labelledby="ndProcProductModalTitle">' +
       '<header class="nd-proc-product-modal-head"><div><small>РАСПОДЕЛА ПО ГАЗДИНСТВИМА</small>' +
       '<h2 id="ndProcProductModalTitle">' + esc(product.name || 'Производ') + '</h2>' +
-      '<p>Изабери газдинство и расподели паковања по варијантама овог производа.</p></div>' +
+      '<p>Изабрано газдинство: расподели овом добављачу само варијанте које нуди. За сваку ставку унеси број паковања, па сачувај.</p></div>' +
       '<button type="button" class="nd-proc-modal-close" data-action="close-product-modal" aria-label="Затвори форму">×</button></header>' +
       '<div class="nd-proc-modal-summary"><span><b>' + fmt(needed) + '</b><small>Потребно паковања</small></span>' +
       '<span><b>' + fmt(allocated) + '</b><small>Распоређено</small></span>' +
