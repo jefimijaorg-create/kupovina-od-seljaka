@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT REQUEST ALLOCATION SHEET
- * Version: 1.3.5
+ * Version: 1.3.6
  * Updated: 2026-11-20
  * Description: Shows a read-only customer order breakdown while keeping farm allocation quantities editable.
  * Scope: Existing ADMIN Workspace; existing Supabase schema only.
@@ -27,15 +27,17 @@ const displayUnit=value=>({'kom':'ком','kom.':'ком','kg':'кг','g':'г','
 const massInGrams=(value,unit)=>{const u=String(unit||'').trim().toLowerCase().replace(/[.\s]/g,'');const size=n(value);if(['kg','кг','kilogram','kilograms'].includes(u))return size*1000;if(['g','гр','г','gram','grams'].includes(u))return size;return null;};
 const formatMass=grams=>{const g=Math.round(grams*100)/100;const kg=g/1000;return (Number.isInteger(g)?String(g):g.toLocaleString('sr-RS',{maximumFractionDigits:2}))+' г ('+kg.toLocaleString('sr-RS',{maximumFractionDigits:2})+' кг)';};
 const renderCustomerOrderList=(items,d,f,e)=>{
- const rows=items.filter(row=>String(row.product_id)===String(d.productId)&&String(row.variant_id)===String(d.variantId)).sort((a,b)=>String(a.customer_name||'').localeCompare(String(b.customer_name||''),'sr')||Number(a.id)-Number(b.id));
+ const rows=items.filter(row=>String(row.product_id)===String(d.productId)&&String(row.variant_id)===String(d.variantId)&&n(row.package_count)>0).sort((a,b)=>String(a.customer_name||'').localeCompare(String(b.customer_name||''),'sr')||Number(a.porudzbina_id||0)-Number(b.porudzbina_id||0)||Number(a.id)-Number(b.id));
  if(!rows.length)return '<section class="ndp3-customer-orders ndp3-customer-orders-empty">Нема евидентираних купаца за ову амбалажу.</section>';
  const grams=massInGrams(d.packageSize,d.packageUnit);
  const entries=rows.map(row=>{
   const assigned=(row.farm_allocations||[]).reduce((sum,share)=>sum+Math.max(0,n(share.broj_pakovanja)),0);
-  return {name:row.customer_name||'Купац није повезан',count:Math.max(0,n(row.package_count)-assigned),ordered:n(row.package_count)};
- }).filter(row=>row.count>0);
- const total=entries.reduce((sum,row)=>sum+row.count,0);
- return '<section class="ndp3-customer-orders"><div class="ndp3-customer-orders-head"><div><strong>Поруџбине купаца</strong><small>Преглед ко је наручио ову амбалажу</small></div><b>'+f(entries.length)+' купаца</b></div><div class="ndp3-customer-orders-list">'+(entries.length?entries.map(row=>'<div class="ndp3-customer-order"><div class="ndp3-customer-order-name"><strong>'+e(row.name)+'</strong><small>Извор: поруџбина купца</small></div><div class="ndp3-customer-order-qty"><b>'+f(row.count)+' паковање'+(row.count===1?'':'а')+'</b><span>'+e(grams===null?f(row.count)+' пак.':formatMass(grams*row.count))+'</span></div></div>').join(''):'<div class="ndp3-customer-orders-saved">Све поруџбине су већ распоређене.</div>')+'</div><div class="ndp3-customer-orders-total"><span>Укупно преостало за доделу</span><b>'+f(total)+' паковања'+(grams===null?'':' · '+e(formatMass(grams*total)))+'</b></div></section>';
+  const ordered=Math.max(0,n(row.package_count)),remaining=Math.max(0,ordered-assigned);
+  return {name:row.customer_name||'Купац није повезан',order:row.porudzbina_id,ordered,assigned:Math.min(ordered,assigned),remaining};
+ });
+ const orderedTotal=entries.reduce((sum,row)=>sum+row.ordered,0),assignedTotal=entries.reduce((sum,row)=>sum+row.assigned,0),remainingTotal=entries.reduce((sum,row)=>sum+row.remaining,0);
+ const quantity=count=>grams===null?f(count)+' пак.':formatMass(grams*count);
+ return '<section class="ndp3-customer-orders"><div class="ndp3-customer-orders-head"><div><strong>Купци · захтевано и распоређено</strong><small>Сваки купац остаје видљив, и када му још није додељена амбалажа</small></div><b>'+f(entries.length)+' купаца</b></div><div class="ndp3-customer-orders-list">'+entries.map(row=>'<div class="ndp3-customer-order"><div class="ndp3-customer-order-name"><strong>'+e(row.name)+'</strong><small>Поруџбина #'+e(row.order??'—')+'</small></div><div class="ndp3-customer-order-qty"><b>Наручено '+f(row.ordered)+' · додељено '+f(row.assigned)+'</b><span>Преостало '+f(row.remaining)+' пак. · '+e(quantity(row.remaining))+'</span></div></div>').join('')+'</div><div class="ndp3-customer-orders-total"><span>Укупно: '+f(orderedTotal)+' наручено · '+f(assignedTotal)+' додељено</span><b>Још за расподелу: '+f(remainingTotal)+' паковања'+(grams===null?'':' · '+e(quantity(remainingTotal)))+'</b></div></section>';
 };
 const renderCustomerOrderRemainder=(items,d,orderDraft,f,e)=>{
  const rows=items.filter(row=>String(row.product_id)===String(d.productId)&&String(row.variant_id)===String(d.variantId));
