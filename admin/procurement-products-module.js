@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.5
+ * Version: 4.21.6
  * Updated: 2026-11-26
  * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.9.9';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=3.0.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.7';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.2';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities, saveConfirmedCustomerDistribution } from './procurement/procurement-allocation-actions.js?v=1.1.4';
@@ -23,7 +23,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  if(!['admin','super_admin'].includes(core.getState?.()?.role))throw new Error('Немате дозволу за управљање набавком.');
  const client=core.client;
  const safeInitialStage=['request','confirm','collect'].includes(initialStage)?initialStage:'request';
- const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),requestOpen:false,requestProductId:null,requestVariantId:null,requestFarmFilter:null,requestFarmRemainingOnly:false,assignmentSaveMode:false,editAllocationId:null,editAllocationMode:'unsent',editAllocationDraft:{},orderDraft:{},transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:safeInitialStage,view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false,preparedMessage:'',preparedMessageFarmName:'',bulkMessages:[]};
+ const s={disposed:false,busy:false,analyticsHandle:null,preparedSentIds:new Set(),confirmFarmFilter:null,requestOpen:false,requestProductId:null,requestVariantId:null,requestFarmFilter:null,requestFarmRemainingOnly:false,assignmentSaveMode:false,editAllocationId:null,editAllocationMode:'unsent',editAllocationDraft:{},orderDraft:{},transferOpen:false,transferDraft:{sourceId:null,targetFarmId:'',packages:0},allocationDraft:{selectedFarmIds:[],quantities:{}},stage:safeInitialStage,view:'products',tour:null,items:[],products:[],variants:[],demands:[],farms:[],offers:[],allocations:[],history:[],cart:[],tab:'basket',notice:'',error:false,preparedMessage:'',preparedMessageFarmName:'',bulkMessages:[]};
  root.innerHTML='<section class="ndp3"><div class="ndp3-empty">Учитавам потребе туре…</div></section>';const host=root.querySelector('.ndp3');
  const prod=id=>s.products.find(x=>String(x.id)===String(id)),variant=id=>s.variants.find(x=>String(x.id)===String(id)),farm=id=>s.farms.find(x=>String(x.id)===String(id));
  const demand=(p,v)=>s.demands.find(x=>key(x.productId,x.variantId)===key(p,v));
@@ -191,6 +191,7 @@ host.addEventListener('toggle',ev=>{
  host.querySelectorAll('.ndp3-product-step[open]').forEach(other=>{if(other!==productCard)other.open=false;});
 },true);
 host.addEventListener('change',ev=>{
+  if(ev.target.matches('[data-confirm-farm-filter]')){s.confirmFarmFilter=ev.target.value||null;render();return;}
   if(ev.target.matches('[data-customer-order-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(9999,Math.floor(Number(ev.target.value)||0)));s.orderDraft={...s.orderDraft,[String(item.id)]:value};render();return;}
   if(ev.target.matches('[data-customer-allocation-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(n(item.package_count),Math.floor(Number(ev.target.value)||0)));s.editAllocationDraft={...s.editAllocationDraft,[String(item.id)]:value};render();return;}
   if(ev.target.matches('[data-transfer-target]')){s.transferDraft.targetFarmId=ev.target.value;render();return;}
