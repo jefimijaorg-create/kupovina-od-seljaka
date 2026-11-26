@@ -114,7 +114,7 @@ export function renderProcurementStageView(ctx){
    const activeDemand=s.demands.filter(d=>d.valid&&d.productId&&n(d.packages)>0);
    const farmHasDemand=farmId=>activeDemand.some(d=>s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId)));
    const farmRows=s.farms.filter(ff=>farmHasDemand(ff.id));
-   const remainingForFarm=farmId=>activeDemand.filter(d=>s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId))).reduce((sum,d)=>sum+Math.max(0,n(d.packages)-allocated(d.productId,d.variantId)),0);
+   const remainingForFarm=farmId=>activeDemand.filter(d=>s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId))).reduce((sum,d)=>sum+Math.max(0,n(d.packages)-allocated(d.productId,d.variantId)),0)+s.allocations.filter(row=>String(row.gazdinstvo_id)===String(farmId)&&row.naruceno!==true&&row.viber_status==='not_sent'&&!row.viber_poslato_at).reduce((sum,row)=>sum+Math.max(0,n(row.naruceno_pakovanja)-n(row.potvrdjeno_pakovanja)),0);
    const selectedFarm=farm(s.requestFarmFilter);
    const selectedOffers=d=>s.requestFarmFilter&&s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(s.requestFarmFilter)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId));
    const buyerRows=d=>{
