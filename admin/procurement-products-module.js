@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.0
+ * Version: 4.21.1
  * Updated: 2026-11-26
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -87,12 +87,12 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   const ff=farm(farmId),phone=String(ff?.phone||'').trim();
   const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
   const schedule='';
-  const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)))+' паковања ('+qty(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)),d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
+  const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(Math.max(0,n(x.naruceno_pakovanja)))+' паковања ('+qty(Math.max(0,n(x.naruceno_pakovanja)),d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
   return {farmId:String(farmId),farmName:ff?.name||('Газдинство #'+farmId),phone,message,rowIds:rows.map(x=>x.id)};
  }
  async function prepareAllFarmRequests(){
   if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
-  const pendingRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
+  const pendingRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>0);
   if(!pendingRows.length)return setNote('Нема нових или допуњених требовања која чекају слање.',true);
   const groups=new Map();for(const row of pendingRows){const id=String(row.gazdinstvo_id);if(!groups.has(id))groups.set(id,[]);groups.get(id).push(row);}
   s.bulkMessages=[...groups.entries()].map(([id,rows])=>buildFarmRequestMessage(id,rows));
@@ -101,7 +101,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   setNote('Припремљено је '+f(s.bulkMessages.length)+' заједничких Viber требовања, груписаних по газдинствима. Свака порука садржи све њихове производе, амбалажу и преостале количине.');
  }
  async function prepareFarmRequest(farmId){
-  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
+  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>0);
   if(!rows.length)return setNote('Ово газдинство нема требовање које чека слање.',true);
   const prepared=buildFarmRequestMessage(farmId,rows),phone=prepared.phone,viberPhone=phone.replace(/[^\d+]/g,'');
   if(!viberPhone){s.preparedMessage=prepared.message;s.preparedMessageFarmName=prepared.farmName;return setNote('За ово газдинство није уписан телефон. Порука је отворена испод и може да се копира.');}
@@ -111,7 +111,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  async function markFarmSent(farmId){
   if(s.busy)return;
   if(s.tour?.status!=='processing'){setNote('Тура није отворена за измене.',true);return false;}
-  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
+  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>0);
   if(!rows.length){setNote('Нема ставки које чекају слање за ово газдинство.',true);return false;}
   if(!window.confirm('Потврђујеш да је заиста послато заједничко требовање газдинству '+(farm(farmId)?.name||('#'+farmId))+'?'))return false;
   s.busy=true;render();
