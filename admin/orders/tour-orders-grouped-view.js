@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.3
+ * Version: 1.3.4
  * Updated: 2026-11-26
  * Description: Buyer-integrated order cards, clickable product table rows and order-only operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
