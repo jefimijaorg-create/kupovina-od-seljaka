@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.20.1
+ * Version: 4.20.2
  * Updated: 2026-11-26
- * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
+ * Description: Builds cumulative first farm requests and exact supplemental Viber quantities from send history.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
@@ -87,7 +87,10 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   const ff=farm(farmId),phone=String(ff?.phone||'').trim();
   const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
   const schedule=(s.tourPoints||[]).map(point=>(point.vreme?point.vreme+' — ':'')+point.name).join('\n');
-  const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)))+' паковања ('+qty(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)),d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
+  const sentQuantity=row=>{const lastSent=s.history.find(h=>String(h.allocation_id)===String(row.id)&&h.new_data?.viber_status==='sent');return lastSent?n(lastSent.new_data?.naruceno_pakovanja):0;};
+  const messageRows=rows.map(row=>{const d=demand(row.product_id,row.variant_id),count=Math.max(0,n(row.naruceno_pakovanja)-Math.max(n(row.potvrdjeno_pakovanja),sentQuantity(row)));return {row,d,count};}).filter(x=>x.count>0);
+  const hasSupplement=messageRows.some(x=>sentQuantity(x.row)>0);
+  const message='ПОШТОВАНИ '+(ff?.name||'')+',\\n\\n'+(hasSupplement?'ДОПУНСКО ТРЕБОВАЊЕ':'ТРЕБОВАЊЕ')+' ЗА ТУРУ #'+tourId+'\\nДатум туре: '+date+(schedule?'\\nРаспоред пунктова и времена:\\n'+schedule:'')+'\\n\\n'+messageRows.map(({row:x,d,count})=>'• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\\n  '+(sentQuantity(x)>0?'ДОПУНА: ':'Потребно: ')+f(count)+' паковања ('+qty(count,d)+')').join('\\n')+'\\n\\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\\n\\nКонтакт газдинства: '+phone:'');
   return {farmId:String(farmId),farmName:ff?.name||('Газдинство #'+farmId),phone,message,rowIds:rows.map(x=>x.id)};
  }
  async function prepareAllFarmRequests(){
