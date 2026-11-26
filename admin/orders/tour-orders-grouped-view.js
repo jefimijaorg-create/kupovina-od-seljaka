@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.4
+ * Version: 1.3.5
  * Updated: 2026-11-26
- * Description: Buyer-integrated order cards, clickable product table rows and order-only operations.
+ * Description: Buyer-integrated order cards with editable and confirmed-delete order actions.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
 export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, tourStops=[], canManage, onOpenOrder, onRefresh }) {
@@ -98,7 +98,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       (isOpen ? '<div class="nd-go-order-content">' + editPanel +
       '<div class="nd-go-table-wrap"><table class="nd-go-table"><thead><tr><th>Производ</th><th>Амбалажа</th><th>Број паковања</th><th>Укупна количина</th><th>Цена</th></tr></thead><tbody>' + lineRows + '</tbody></table></div>' +
       '<div class="nd-go-buyer-total"><span>УКУПНО ЗА НАПЛАТУ</span><strong>' + total + '</strong></div>' +
-      '<footer class="nd-go-order-actions">' + (canManage ? '<button type="button" class="nd-go-action-primary" data-edit-order="' + esc(order.id) + '">Измени</button><button type="button" class="nd-go-action-secondary" data-change-status="' + esc(order.id) + '">Промени статус</button><button type="button" class="nd-go-action-secondary" data-copy-order="' + esc(order.id) + '">Копирај поруџбину</button>' : '') + '</footer>' + statusPanel + '</div>' : '') + '</article>';
+      '<footer class="nd-go-order-actions">' + (canManage ? '<button type="button" class="nd-go-action-primary" data-edit-order="' + esc(order.id) + '">Измени поруџбину</button><button type="button" class="nd-go-action-secondary" data-change-status="' + esc(order.id) + '">Промени статус</button><button type="button" class="nd-go-action-secondary" data-copy-order="' + esc(order.id) + '">Копирај</button><button type="button" class="nd-go-action-danger" data-delete-order="' + esc(order.id) + '">Обриши поруџбину</button>' : '') + '</footer>' + statusPanel + '</div>' : '') + '</article>';
   }
 
   function render() {
@@ -147,6 +147,29 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       editingOrderId=null; busy=false; feedback='Подаци поруџбине #' + orderId + ' су сачувани.'; render();
       if (typeof onRefresh==='function') await onRefresh();
     } catch(error) { busy=false; feedback='Измена није сачувана: '+(error.message||String(error)); feedbackError=true; render(); }
+  }
+
+  async function deleteOrder(orderId) {
+    if (busy || !canManage) return;
+    const order=orderMap.get(String(orderId));
+    if(!order){feedback='Поруџбина није пронађена у тренутном приказу.';feedbackError=true;render();return;}
+    const buyer=customerMap.get(String(order.kupac_id))||{};
+    const lines=linesByOrder.get(String(orderId))||[];
+    const buyerName=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—'));
+    const approved=window.confirm('Обриши поруџбину #'+orderId+'?\\n\\nКупац: '+buyerName+'\\nСтавки: '+lines.length+'\\n\\nПоруџбина и њене ставке биће трајно уклоњене. Ова радња се не може опозвати.');
+    if(!approved)return;
+    busy=true;feedback='Бришем поруџбину #'+orderId+'…';feedbackError=false;render();
+    try{
+      const result=await client.from('porudzbine').delete().eq('id',orderId).select('id').maybeSingle();
+      if(result.error)throw result.error;
+      if(!result.data||String(result.data.id)!==String(orderId))throw new Error('База није потврдила брисање поруџбине.');
+      const index=orders.findIndex(row=>String(row.id)===String(orderId));if(index>=0)orders.splice(index,1);
+      for(let i=items.length-1;i>=0;i--){if(String(items[i].porudzbina_id)===String(orderId))items.splice(i,1);}
+      orderMap.delete(String(orderId));linesByOrder.delete(String(orderId));
+      expandedOrderId=null;editingOrderId=null;statusOrderId=null;expandedLineId=null;editingLineId=null;
+      busy=false;feedback='Поруџбина #'+orderId+' је обрисана.';render();
+      if(typeof onRefresh==='function')await onRefresh();
+    }catch(error){busy=false;feedback='Поруџбина није обрисана: '+(error.message||String(error));feedbackError=true;render();}
   }
 
   async function saveStatus(orderId) {
@@ -215,6 +238,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       const id=action.dataset.editOrder||action.dataset.saveOrder||action.dataset.changeStatus||action.dataset.saveStatus||action.dataset.editLine||action.dataset.saveLine||action.dataset.copyOrder;
       if(action.hasAttribute('data-edit-order')){editingOrderId=String(action.dataset.editOrder);expandedOrderId=String(action.dataset.editOrder);render();return;}
       if(action.hasAttribute('data-save-order')){await saveOrder(action.dataset.saveOrder);return;}
+      if(action.hasAttribute('data-delete-order')){await deleteOrder(action.dataset.deleteOrder);return;}
       if(action.hasAttribute('data-change-status')){statusOrderId=String(action.dataset.changeStatus);expandedOrderId=String(action.dataset.changeStatus);render();return;}
       if(action.hasAttribute('data-save-status')){await saveStatus(action.dataset.saveStatus);return;}
       if(action.hasAttribute('data-edit-line')){editingLineId=String(action.dataset.editLine);expandedLineId=String(action.dataset.editLine);expandedOrderId=String(items.find(row=>String(row.id)===String(action.dataset.editLine))?.porudzbina_id||'');render();return;}
