@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.20.9
+ * Version: 4.21.0
  * Updated: 2026-11-26
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -86,7 +86,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  function buildFarmRequestMessage(farmId,rows){
   const ff=farm(farmId),phone=String(ff?.phone||'').trim();
   const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
-  const schedule=(s.tourPoints||[]).map(point=>(point.vreme?point.vreme+' — ':'')+point.name).join('\n');
+  const schedule='';
   const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)))+' паковања ('+qty(Math.max(0,n(x.naruceno_pakovanja)-n(x.potvrdjeno_pakovanja)),d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
   return {farmId:String(farmId),farmName:ff?.name||('Газдинство #'+farmId),phone,message,rowIds:rows.map(x=>x.id)};
  }
