@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.0.2
-   Верзија: 5.0.2
+ * Version: 5.1.0
+   Верзија: 5.1.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.0.2";
+  --nd-css-version:"5.1.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1552,4 +1552,47 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .ndp3-pkr-stats .pill-stat{padding:3px 4px;font-size:9px}
   .nd-workspace .ndp3-pkr-left{grid-column:1/-1}
   .nd-workspace .nd-main:has(.ndp3){padding:5px 9px 100px}
+}
+
+/* МОДУЛ ТРЕБОВАЊЕ — ТАБЕЛА СА ФИКСНИМ КОЛОНАМА И БЕЗ МОБИЛНОГ СКРОЛА · 5.1.0 */
+.nd-workspace .ndp3-req-table-wrap{width:100%;min-width:0;max-width:100%;overflow:hidden;margin:6px 0 7px;border:1px solid #DCE4DC;border-radius:9px;background:#fff}
+.nd-workspace .ndp3-req-table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;border-spacing:0;color:#344238;font-size:11px}
+.nd-workspace .ndp3-req-table .ndp3-req-col-package{width:34%}
+.nd-workspace .ndp3-req-table .ndp3-req-col-ordered{width:14%}
+.nd-workspace .ndp3-req-table .ndp3-req-col-requested{width:14%}
+.nd-workspace .ndp3-req-table .ndp3-req-col-remaining{width:14%}
+.nd-workspace .ndp3-req-table .ndp3-req-col-action{width:24%}
+.nd-workspace .ndp3-req-table th,.nd-workspace .ndp3-req-table td{min-width:0;padding:6px 2px;border-bottom:1px solid #E5EBE4;text-align:center;vertical-align:middle;overflow-wrap:anywhere}
+.nd-workspace .ndp3-req-table th{background:#F3F5F2;color:#536257;font-size:10px;font-weight:850;line-height:1.15}
+.nd-workspace .ndp3-req-table td{font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}
+.nd-workspace .ndp3-req-table tbody tr:last-child td{border-bottom:0}
+.nd-workspace .ndp3-req-table .ndp3-req-package-name{text-align:left;padding-left:7px}
+.nd-workspace .ndp3-req-table .ndp3-req-package-name strong{display:block;color:#344238;font-size:14px;font-weight:900;line-height:1.2;overflow-wrap:anywhere}
+.nd-workspace .ndp3-req-table td.is-pending{background:#FFF7EC;color:#9A5B13}
+.nd-workspace .ndp3-req-table td.is-done{background:#E9F1EC;color:#285B3C}
+.nd-workspace .ndp3-req-action-cell{padding:3px 2px}
+.nd-workspace .ndp3-req-table-action{display:flex;width:100%;min-width:0;min-height:39px;flex-direction:column;align-items:center;justify-content:center;padding:3px 1px;border:0;border-radius:6px;background:#285B3C;color:#fff;font-size:10px;font-weight:850;line-height:1.05;white-space:normal}
+.nd-workspace .ndp3-req-table-action b{font-size:13px;font-weight:950;font-variant-numeric:tabular-nums}
+.nd-workspace .ndp3-req-table-action:disabled{opacity:.5}
+.nd-workspace .ndp3-req-table-done{display:block;color:#285B3C;font-size:17px;font-weight:950}
+.nd-workspace .ndp3-req-table-locked,.nd-workspace .ndp3-req-table-empty-action{display:block;color:#7A847B;font-size:9px;line-height:1.15;overflow-wrap:anywhere}
+@media(min-width:768px){
+ .nd-workspace .ndp3-req-table .ndp3-req-col-package{width:36%}
+ .nd-workspace .ndp3-req-table .ndp3-req-col-ordered{width:14%}
+ .nd-workspace .ndp3-req-table .ndp3-req-col-requested{width:14%}
+ .nd-workspace .ndp3-req-table .ndp3-req-col-remaining{width:14%}
+ .nd-workspace .ndp3-req-table .ndp3-req-col-action{width:22%}
+ .nd-workspace .ndp3-req-table th{font-size:11px;padding:8px 4px}
+ .nd-workspace .ndp3-req-table td{padding:8px 4px;font-size:13px}
+ .nd-workspace .ndp3-req-table .ndp3-req-package-name strong{font-size:15px}
+ .nd-workspace .ndp3-req-table-action{min-height:42px;font-size:12px}
+}
+@media(max-width:767px){
+ .nd-workspace .ndp3-req-table-wrap{overflow:hidden}
+ .nd-workspace .ndp3-req-table th{font-size:clamp(8px,2.7vw,10px);padding:5px 1px;letter-spacing:-.015em}
+ .nd-workspace .ndp3-req-table td{padding:5px 1px;font-size:11px}
+ .nd-workspace .ndp3-req-table .ndp3-req-package-name{padding-left:5px}
+ .nd-workspace .ndp3-req-table .ndp3-req-package-name strong{font-size:14px}
+ .nd-workspace .ndp3-req-table-action{min-height:38px;font-size:9px}
+ .nd-workspace .ndp3-req-table-action b{font-size:12px}
 }
