@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 3.2.4
+ * Version: 3.2.5
  * Updated: 2026-11-26
  * Description: Progressive product cards with explicit total and farm-level allocation, requisition, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -15,8 +15,7 @@ export function renderProcurementStageView(ctx){
   const totalPackages=selector=>f(s.demands.filter(d=>d.valid).reduce((sum,d)=>sum+selector(d),0));
   const awaitingRequestRows=s.allocations.filter(x=>x.naruceno!==true&&x.viber_status==='not_sent'&&!x.viber_poslato_at&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
-  const customerDistributionRows=s.allocations.filter(x=>n(x.potvrdjeno_pakovanja)>n(x.preuzeto_pakovanja));
-  const confirmStageRows=[...new Map([...awaitingRequestRows,...confirmRows,...customerDistributionRows].map(row=>[String(row.id),row])).values()];
+  const confirmStageRows=[...new Map([...awaitingRequestRows,...confirmRows].map(row=>[String(row.id),row])).values()];
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
   if(s.stage==='confirm'&&!confirmStageRows.length)s.stage='request';
   const confirmFarmRows=s.confirmFarmFilter?confirmStageRows.filter(row=>String(row.gazdinstvo_id)===String(s.confirmFarmFilter)):confirmStageRows;
@@ -215,7 +214,7 @@ export function renderProcurementStageView(ctx){
   const missingVariantCount=s.demands.filter(x=>x.valid&&!x.allocatable).length;
   const demandWarning=(invalidDemandCount||invalidSourceCount||missingVariantCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација и '+invalidSourceCount+' ставки без производа нису укључене у збирове. '+missingVariantCount+' производа имају поруџбину, али им недостаје повезана амбалажа; приказани су, али расподела је блокирана.</div>':'';
   host.innerHTML='<header class="ndp3-head"><div><div class="ndp3-kicker">НАБАВКА · ТУРА #'+e(tourId)+'</div><h1>'+e(s.tour?.naziv||'Тура')+'</h1></div><button class="ndp3-btn" data-action="back">← Назад</button></header>'+
-   '<nav class="ndp3-phase-tabs" aria-label="Три корака набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'"><span class="ndp3-phase-step">1. КОРАК</span><strong>Требовање</strong></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'" '+(!confirmStageRows.length?'disabled aria-disabled="true" title="Нема послатих требовања која чекају потврду газдинства"':'title="Изабери газдинство, исправи потврђене количине и евидентирај мањак"')+'><span class="ndp3-phase-step">2. КОРАК</span><strong>Потврда газдинства</strong></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'" '+(!collectRows.length?'disabled aria-disabled="true" title="Преузимање је могуће тек после потврде газдинства"':'title="Евиденција потврђених количина за преузимање"')+'><span class="ndp3-phase-step">3. КОРАК</span><strong>Преузето</strong></button></nav>'+
+   '<nav class="ndp3-phase-tabs" aria-label="Отворене обавезе набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'"><span class="ndp3-phase-step">1. КОРАК · '+f(requestDemandCount)+' ОБАВЕЗА</span><strong>Требовање</strong></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'" '+(!confirmStageRows.length?'disabled aria-disabled="true" title="Нема требовања која чекају потврду"':'title="Изабери газдинство и потврди количину коју прихвата"')+'><span class="ndp3-phase-step">2. КОРАК · '+f(confirmStageRows.length)+' ОБАВЕЗА</span><strong>Потврди количину</strong></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'" '+(!collectRows.length?'disabled aria-disabled="true" title="Нема потврђених количина за преузимање"':'title="Отвори количине које треба преузети"')+'><span class="ndp3-phase-step">3. КОРАК · '+f(collectRows.length)+' ОБАВЕЗА</span><strong>Преузимање</strong></button></nav>'+
    (s.stage==='request'||s.stage==='collect'||s.stage==='debt'?'':'<div class="ndp3-view-switch"><button type="button" data-view="products" aria-pressed="'+(s.view==='products')+'">По производима</button><button type="button" data-view="farms" aria-pressed="'+(s.view==='farms')+'">По газдинствима</button></div>')+
    
    packageOverviewHtml+packageSheetHtml+
