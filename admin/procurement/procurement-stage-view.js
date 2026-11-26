@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.9.0
+ * Version: 2.9.1
  * Updated: 2026-11-26
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -159,7 +159,7 @@ export function renderProcurementStageView(ctx){
     }).join('')+(!allocationReady?'<div class="ndp3-request-product-total">Расподела није доступна док се не повеже недостајућа амбалажа.</div>':'')+'</div></details>';
    }).join('')+'</section>':'<div class="ndp3-stage-step-hint"><b>1</b><strong>Изабери газдинство</strong><small>После избора приказаћу само његове производе.</small></div>')
     : farmSelectorHtml+'<div class="ndp3-stage-empty">'+(s.requestFarmFilter?'Изабрано газдинство нема производа који се траже у активној тури.':'На овој тури нема производа са исправним подацима о амбалажи.')+'</div>';
-   const demandedProductsHtml=orderedOverviewHtml+allocationStepHtml;
+   const demandedProductsHtml=allocationStepHtml;
    return demandedProductsHtml;
   })();
   const requestFarmsHtml=(()=>{
