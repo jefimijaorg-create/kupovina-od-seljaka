@@ -1,7 +1,7 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
  * Version: 5.1.0
-   Верзија: 5.1.2
+   Верзија: 5.1.3
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
@@ -1656,3 +1656,40 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-gop-table tfoot td:first-child{text-align:right}
 .nd-workspace .nd-gop-table tfoot .nd-gop-amount{color:#285B3C;font-size:15px}
 @media(max-width:767px){.nd-workspace .nd-gop-point-head{padding:11px 12px}.nd-workspace .nd-gop-point-head h3{font-size:19px}.nd-workspace .nd-gop-table{min-width:650px}.nd-workspace .nd-gop-viber{min-height:42px}}
+
+/* МОДУЛ ПОРУЏБИНЕ — ТАБЛЕТ: ТАБЕЛА У ШИРИНИ ЕКРАНА · 5.1.3 */
+.nd-workspace .nd-gop-point,
+.nd-workspace .nd-gop-point-head,
+.nd-workspace .nd-gop-table-wrap,
+.nd-workspace .nd-gop-table{box-sizing:border-box;min-width:0;max-width:100%}
+.nd-workspace .nd-gop-table-wrap{overflow-x:hidden}
+.nd-workspace .nd-gop-table{width:100%;min-width:0;table-layout:fixed}
+.nd-workspace .nd-gop-table th,
+.nd-workspace .nd-gop-table td{box-sizing:border-box;overflow-wrap:anywhere;word-break:normal}
+.nd-workspace .nd-gop-table th:nth-child(1){width:22%}
+.nd-workspace .nd-gop-table th:nth-child(2){width:34%}
+.nd-workspace .nd-gop-table th:nth-child(3){width:10%}
+.nd-workspace .nd-gop-table th:nth-child(4){width:16%}
+.nd-workspace .nd-gop-table th:nth-child(5){width:18%}
+.nd-workspace .nd-gop-table .nd-gop-customer-cell{min-width:0;padding:7px 5px}
+.nd-workspace .nd-gop-customer-cell strong{overflow-wrap:anywhere}
+.nd-workspace .nd-gop-viber{max-width:100%;padding:6px 7px;white-space:normal}
+.nd-workspace .nd-gop-line>td:first-child{min-width:0;overflow-wrap:anywhere}
+.nd-workspace .nd-gop-qty,
+.nd-workspace .nd-gop-price,
+.nd-workspace .nd-gop-amount{white-space:normal;overflow-wrap:anywhere}
+@media(min-width:768px) and (max-width:1100px){
+ .nd-workspace .nd-gop-point-head{padding:10px 12px}
+ .nd-workspace .nd-gop-point-head h3{font-size:19px}
+ .nd-workspace .nd-gop-table{font-size:11px}
+ .nd-workspace .nd-gop-table th{padding:8px 5px;font-size:10px;white-space:normal}
+ .nd-workspace .nd-gop-table td{padding:7px 5px}
+ .nd-workspace .nd-gop-customer-cell strong{font-size:12px}
+ .nd-workspace .nd-gop-viber{min-height:36px;font-size:10px}
+ .nd-workspace .nd-gop-line td small{font-size:9px}
+ .nd-workspace .nd-gop-table tfoot .nd-gop-amount{font-size:13px}
+}
+@media(max-width:767px){
+ .nd-workspace .nd-gop-table{min-width:0}
+ .nd-workspace .nd-gop-table th{white-space:normal}
+}
