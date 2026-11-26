@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.1.7
+ * Version: 5.1.8
    Верзија: 5.1.6
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.1.7";
+  --nd-css-version:"5.1.8";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1850,3 +1850,57 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .ndp3-allocation-entry>div small{font-size:11px;color:#627568;line-height:1.45}
 .nd-workspace .ndp3-allocation-entry-button{flex:0 0 auto;min-height:46px;padding:10px 16px;font-size:13px;font-weight:900;white-space:nowrap}
 @media(max-width:600px){.nd-workspace .ndp3-allocation-entry{align-items:stretch;flex-direction:column;gap:10px;padding:12px}.nd-workspace .ndp3-allocation-entry-button{width:100%;min-height:48px}}
+
+
+/* NABAVKA — CSS интеграција у ADMIN светли систем (v5.1.8) */
+.nd-workspace .nd-proc-live{width:100%;max-width:1120px;margin:0 auto;color:var(--nd-ink);font:inherit}
+.nd-workspace .nd-proc-live *{box-sizing:border-box}
+.nd-workspace .nd-proc-live .phead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 15px;padding:2px 0}
+.nd-workspace .nd-proc-live .phead>div{min-width:0}
+.nd-workspace .nd-proc-live .phead small{display:block;color:var(--nd-muted);font-size:11px;line-height:1.45}
+.nd-workspace .nd-proc-live h2{margin:4px 0;font-size:clamp(21px,3vw,28px);font-weight:850;letter-spacing:-.035em;color:var(--nd-green-dark);line-height:1.2}
+.nd-workspace .nd-proc-live .psteps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 18px}
+.nd-workspace .nd-proc-live button{cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.nd-workspace .nd-proc-live button:active{transform:translateY(1px)}
+.nd-workspace .nd-proc-live .pstep{min-width:0;min-height:66px;padding:11px 12px;border:1px solid var(--nd-line);border-radius:13px;background:var(--nd-card);color:var(--nd-ink);text-align:left;font-size:12px;font-weight:850;box-shadow:var(--nd-shadow)}
+.nd-workspace .nd-proc-live .pstep small{display:block;margin-top:4px;color:var(--nd-muted);font-size:10px;font-weight:600}
+.nd-workspace .nd-proc-live .pstep.active{border-color:var(--nd-green);background:var(--nd-green);color:#fff;box-shadow:0 4px 14px rgba(40,91,60,.18)}
+.nd-workspace .nd-proc-live .pstep.active small{color:#e2eee5}
+.nd-workspace .nd-proc-live .pstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:0 0 15px;padding:0;background:transparent}
+.nd-workspace .nd-proc-live .pstat{min-width:0;padding:13px 14px;border:1px solid var(--nd-line);border-radius:13px;background:var(--nd-card);box-shadow:var(--nd-shadow)}
+.nd-workspace .nd-proc-live .pstat b{display:block;color:var(--nd-green-dark);font-size:clamp(19px,3vw,25px);font-weight:900;line-height:1.15}
+.nd-workspace .nd-proc-live .pstat small{display:block;margin-top:5px;color:var(--nd-muted);font-size:10px;font-weight:750}
+.nd-workspace .nd-proc-live .pfarm{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}
+.nd-workspace .nd-proc-live .pfarm button{padding:8px 12px;border:1px solid var(--nd-line);border-radius:24px;background:#fff;color:var(--nd-ink);font-size:11px;font-weight:800}
+.nd-workspace .nd-proc-live .pfarm button.active{border-color:var(--nd-green);background:var(--nd-soft);color:var(--nd-green-dark)}
+.nd-workspace .nd-proc-live .pcard{margin:10px 0;overflow:hidden;border:1px solid var(--nd-line);border-radius:15px;background:var(--nd-card);box-shadow:var(--nd-shadow)}
+.nd-workspace .nd-proc-live .pcard h3{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:14px 15px;border-bottom:1px solid var(--nd-line);background:#f7f9f6;color:var(--nd-green-dark);font-size:14px;font-weight:850;line-height:1.35}
+.nd-workspace .nd-proc-live .pline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 15px;border-top:1px solid #edf1ed}
+.nd-workspace .nd-proc-live .pline:first-of-type{border-top:0}
+.nd-workspace .nd-proc-live .pline>span{min-width:0;flex:1;color:var(--nd-ink);font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.nd-workspace .nd-proc-live .pline small{display:block;margin-top:4px;color:var(--nd-muted);font-size:10px;font-weight:600;line-height:1.45}
+.nd-workspace .nd-proc-live input{width:88px;min-height:43px;padding:8px 10px;border:1px solid #cbd8cd;border-radius:10px;background:#fff;color:var(--nd-ink);font:inherit;font-size:15px;font-weight:850;text-align:center}
+.nd-workspace .nd-proc-live .pbtn{min-height:40px;padding:9px 13px;border:1px solid #c8d8cc;border-radius:10px;background:#fff;color:var(--nd-green);font-size:11px;font-weight:850;white-space:nowrap}
+.nd-workspace .nd-proc-live .pbtn.primary{border-color:var(--nd-green);background:var(--nd-green);color:#fff}
+.nd-workspace .nd-proc-live .pbtn:disabled{cursor:wait;opacity:.55}
+.nd-workspace .nd-proc-live .pempty,.nd-workspace .nd-proc-live .perror{padding:20px;border:1px solid var(--nd-line);border-radius:13px;background:var(--nd-card);color:var(--nd-muted);font-size:12px;line-height:1.55}
+.nd-workspace .nd-proc-live .perror{border-color:#f0c9c5;background:#fff5f4;color:#9c3029}
+.nd-workspace .nd-proc-live .perror p{margin:7px 0}
+.nd-workspace .nd-proc-live .nd-proc-loading{padding:18px;border:1px solid var(--nd-line);border-radius:13px;background:var(--nd-card);color:var(--nd-muted)}
+@media(max-width:700px){
+ .nd-workspace .nd-proc-live .phead{align-items:flex-start}
+ .nd-workspace .nd-proc-live .psteps{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .nd-workspace .nd-proc-live .pstep{min-height:58px;padding:10px}
+ .nd-workspace .nd-proc-live .pstats{gap:6px}
+ .nd-workspace .nd-proc-live .pstat{padding:10px 9px}
+ .nd-workspace .nd-proc-live .pstat small{font-size:9px}
+ .nd-workspace .nd-proc-live .pline{align-items:stretch;gap:8px;padding:12px}
+ .nd-workspace .nd-proc-live .pline>span{flex-basis:100%}
+ .nd-workspace .nd-proc-live .pline input{flex:1;width:auto;max-width:110px}
+ .nd-workspace .nd-proc-live .pline .pbtn{flex:1}
+}
+@media(max-width:380px){
+ .nd-workspace .nd-proc-live .pstats{grid-template-columns:1fr}
+ .nd-workspace .nd-proc-live .phead .pbtn{padding:8px 9px}
+}
+
