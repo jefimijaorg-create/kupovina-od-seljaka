@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.9.2
+ * Version: 2.9.3
  * Updated: 2026-11-26
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -148,8 +148,8 @@ export function renderProcurementStageView(ctx){
      const otherFarmPackages=Math.max(0,assignedPackages-selectedFarmPackages);
      const selectedFarmMax=Math.max(0,n(d.packages)-otherFarmPackages);
      const selectedFarmCanEdit=selectedFarmAllocation&&selectedFarmAllocation.viber_status==='not_sent'&&n(selectedFarmAllocation.potvrdjeno_pakovanja)===0&&n(selectedFarmAllocation.preuzeto_pakovanja)===0;
-     const canQuickRequest=!!s.requestFarmFilter&&leftToRequest>0&&d.allocatable===true&&(!selectedFarmAllocation||selectedFarmCanEdit);
-     const quickRequestButton=canQuickRequest?'<button class="ndp3-req-table-action" type="button" data-action="quick-request" data-farm-id="'+e(s.requestFarmFilter)+'" data-product-id="'+e(d.productId)+'" data-variant-id="'+e(d.variantId)+'" '+(!writable||s.busy?'disabled':'')+'><span>Требуј</span><b>'+f(leftToRequest)+'</b></button>':leftToRequest===0?'<span class="ndp3-req-table-done">✓</span>':selectedFarmAllocation?'<span class="ndp3-req-table-locked">Већ послато</span>':'<span class="ndp3-req-table-empty-action">—</span>';
+     const canAddRemaining=!!s.requestFarmFilter&&leftToRequest>0&&d.allocatable===true;
+     const quickRequestButton=canAddRemaining?'<button class="ndp3-req-table-action" type="button" data-action="open-request" data-product-id="'+e(d.productId)+'" data-variant-id="'+e(d.variantId)+'" '+(!writable||s.busy?'disabled':'')+'><span>Додај</span><b>'+f(leftToRequest)+'</b></button>':leftToRequest===0?'<span class="ndp3-req-table-done">✓ Све додато</span>':'<span class="ndp3-req-table-empty-action">—</span>';
      const orderItems=s.items.filter(item=>String(item.product_id)===String(d.productId)&&String(item.variant_id)===String(d.variantId)&&n(item.package_count)>0);
      const orderedByCustomer=new Map();
      for(const item of orderItems){const key=String(item.porudzbina_id??'')+'|'+String(item.customer_id??item.customer_name??item.id);const current=orderedByCustomer.get(key)||{name:item.customer_name||'Купац није повезан',order:item.porudzbina_id,packages:0};current.packages+=n(item.package_count);orderedByCustomer.set(key,current);}
