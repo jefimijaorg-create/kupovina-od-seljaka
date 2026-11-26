@@ -111,7 +111,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const fmtMoney=value=>Number.isFinite(Number(value))?Number(value).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.':'—';
     const lineAmount=line=>{if(line.cena_stavke!==null&&line.cena_stavke!==undefined&&line.cena_stavke!==''&&Number.isFinite(Number(line.cena_stavke)))return Number(line.cena_stavke);const p=linePresentation(line);return p.unitPrice!==null&&p.count!==null?p.unitPrice*p.count:null};
     const phoneFor=order=>{const buyer=customerMap.get(String(order.kupac_id))||{};return String(order.telefon||buyer.telefon||'').trim()};
-    const phoneDigits=phone=>{let digits=String(phone||'').replace(/\\D/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if(digits.startsWith('0'))digits='381'+digits.slice(1);else if(!digits.startsWith('381')&&digits.length===9)digits='381'+digits;return digits?'+'+digits:''};
+    const phoneDigits=phone=>{let digits=String(phone||'').replace(/\D/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if(digits.startsWith('0'))digits='381'+digits.slice(1);else if(!digits.startsWith('381')&&digits.length===9)digits='381'+digits;return digits?'+'+digits:''};
     const pointSections=[...grouped.entries()].map(([key,group])=>{
       const pointName=group.point?.name||'Пункт није наведен',stop=(tourStops||[]).find(row=>String(row.punkt_id)===key),time=String(stop?.vreme||'').slice(0,5);
       let pointTotal=0,pointHasUnknown=false;
