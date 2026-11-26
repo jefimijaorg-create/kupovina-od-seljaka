@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.2.0
+ * Version: 2.3.0
  * Updated: 2026-11-25
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -121,7 +121,7 @@ export function renderProcurementStageView(ctx){
     const remainingAll=items.reduce((sum,d)=>sum+Math.max(0,d.packages-allocated(d.productId,d.variantId)),0);
     const allAssigned=items.every(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId))===0);
     const allocationReady=items.every(d=>d.allocatable===true);
-    return '<article class="ndp3-request-product-card" data-product-search-name="'+e(String(p?.name||"").toLocaleLowerCase("sr"))+'"><header class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+(allAssigned?'Све потребне количине су распоређене':f(remainingAll)+' паковања преостало за расподелу')+'</div></div><span class="ndp3-chip '+(allAssigned?'green':'amber')+'">'+(allAssigned?'Распоређено':'У току')+'</span></header>'+items.map(d=>{
+    return '<details class="ndp3-request-product-card ndp3-product-step" data-product-search-name="'+e(String(p?.name||"").toLocaleLowerCase("sr"))+'"><summary class="ndp3-request-product-head"><div><strong>'+e(p?.name||'Производ')+'</strong><div class="ndp3-request-product-total">'+(allAssigned?'Све потребне количине су распоређене':f(remainingAll)+' паковања преостало за расподелу')+'</div></div><span class="ndp3-chip '+(allAssigned?'green':'amber')+'">'+(allAssigned?'Распоређено':'У току')+'</span></summary><div class="ndp3-product-variants">'+items.map(d=>{
      const remaining=Math.max(0,d.packages-allocated(d.productId,d.variantId)),v=variant(d.variantId),assigned=allocationsFor(d.productId,d.variantId).filter(row=>n(row.broj_pakovanja)>0);
      const assignmentHtml=assigned.length?'<div class="ndp3-request-allocation-list">'+assigned.map(row=>{
       const ff=farm(row.gazdinstvo_id),requested=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja),collected=n(row.preuzeto_pakovanja),sent=row.viber_status==='sent';
@@ -160,7 +160,7 @@ export function renderProcurementStageView(ctx){
       ? '<details class="ndp3-order-customer-breakdown"><summary>'+f(orderedByCustomer.size)+' купца'+(orderedByCustomer.size===1?'':'а')+' ▾</summary><div class="ndp3-order-customer-list">'+[...orderedByCustomer.values()].map(customer=>'<span><strong>'+e(customer.name)+'</strong><small>'+f(customer.packages)+' пак. ('+e(qty(customer.packages,d))+')</small></span>').join('')+'</div></details>' : '<div class="ndp3-order-customer-breakdown"><small>Нема ставки поруџбина за ову амбалажу.</small></div>';
      const allocationDetails=assigned.length?'<details class="ndp3-request-allocations"><summary>Доделе газдинствима · '+assigned.length+'</summary>'+assignmentHtml+'</details>':'<div class="ndp3-request-total-note">Још нема додела газдинствима.</div>';
      return '<div class="ndp3-request-package-row"><div class="ndp3-request-package-main"><div class="ndp3-request-package-head"><b>'+e(v?.name||v?.size_label||d.packagingLabel||'Амбалажа')+'</b>'+assignButton+'</div>'+(!d.allocatable?'<small class="ndp3-note error">Амбалажа није повезана са варијантом производа. Количина је приказана, али расподела је блокирана док се веза не исправи.</small>':'')+'<small class="ndp3-request-package-meta">'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању · Укупно: '+e(amountLabel(d.packages,d))+'</small>'+orderCustomerHtml+'<div class="ndp3-request-package-metrics"><div><small>Потребно</small><b>'+f(d.packages)+'</b></div>'+(s.requestFarmFilter?'<div><small>Овом газдинству</small><b>'+f(selectedFarmPackages)+'</b></div>':'<div><small>Додељено</small><b>'+f(assignedPackages)+'</b></div>')+'<div class="'+((s.requestFarmFilter?Math.max(0,selectedFarmMax-selectedFarmPackages):remaining)>0?'is-pending':'is-complete')+'"><small>'+(s.requestFarmFilter?'Може још':'Преостало')+'</small><b>'+f(s.requestFarmFilter?Math.max(0,selectedFarmMax-selectedFarmPackages):remaining)+'</b></div></div>'+(s.requestFarmFilter&&otherFarmPackages>0?'<div class="ndp3-farm-other-allocation">Већ додељено другим газдинствима: '+assigned.filter(row=>String(row.gazdinstvo_id)!==String(s.requestFarmFilter)).map(row=>e(farm(row.gazdinstvo_id)?.name||'Газдинство')+' — '+f(row.broj_pakovanja)+' пак.').join(' · ')+'</div>':'')+allocationDetails+'</div></div>';
-    }).join('')+(!allocationReady?'<div class="ndp3-request-product-total">Расподела није доступна док се не повеже недостајућа амбалажа.</div>':'')+'</article>';
+    }).join('')+(!allocationReady?'<div class="ndp3-request-product-total">Расподела није доступна док се не повеже недостајућа амбалажа.</div>':'')+'</div></details>';
    }).join('')+'</section>'
     : farmSelectorHtml+'<div class="ndp3-stage-empty">'+(s.requestFarmFilter?'Изабрано газдинство нема производа који се траже у активној тури.':'На овој тури нема производа са исправним подацима о амбалажи.')+'</div>';
    return demandedProductsHtml;
