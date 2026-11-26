@@ -21,7 +21,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  const groups=(arr,fn)=>{let m=new Map();arr.forEach(a=>{let k=key(a.product_id,a.variant_id);if(!m.has(k))m.set(k,{p:a.product_id,v:a.variant_id,rows:[]});m.get(k).rows.push(a)});return [...m.values()].map(g=>({...g,total:fn?g.rows.reduce((s,a)=>s+q(fn(a)),0):0}))};
  const allGroupRows=g=>rows.filter(a=>key(a.product_id,a.variant_id)===key(g.p,g.v));
  const groupRows=g=>allGroupRows(g).filter(a=>farmFilter==='all'||String(a.gazdinstvo_id)===String(farmFilter));
- const demandGroups=()=>groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina).filter(g=>farmFilter==='all'||groupRows(g).length>0);
+ const demandGroups=()=>groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina).filter(g=>farmFilter==='all'||groupRows(g).length>0||String(products.find(p=>String(p.id)===String(g.p))?.gazdinstvo_id)===String(farmFilter));
  const sums=g=>{let r=groupRows(g),all=allGroupRows(g);return {P:g.total,R:r.reduce((s,a)=>s+req(a),0),pending:r.reduce((s,a)=>s+pending(a),0),K:r.reduce((s,a)=>s+conf(a),0),U:r.reduce((s,a)=>s+picked(a),0),free:Math.max(0,g.total-all.reduce((s,a)=>s+req(a),0)),pickup:r.reduce((s,a)=>s+toPick(a),0),short:Math.max(0,g.total-all.reduce((s,a)=>s+conf(a),0))}};
  async function load(){
   let tr=await db.from('ture').select('id,naziv,status').eq('id',tourId).maybeSingle();if(tr.error)throw tr.error;if(!tr.data)throw Error('Тура није пронађена.');tour=tr.data;
@@ -65,7 +65,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   if(!gs.length)h+='<div class="ndp-empty">Нема поруџбина у овој тури.</div>';
   gs.sort((a,b)=>{let x=actionFor(a),y=actionFor(b);return (x.kind==='done'?1:0)-(y.kind==='done'?1:0)}).forEach(g=>{
    let s=sums(g),act=actionFor(g),open=expanded.has(key(g.p,g.v));
-   h+='<section class="ndp-product"><button class="ndp-product-head" style="width:100%;border:0;text-align:left;cursor:pointer" data-expand="'+esc(key(g.p,g.v))+'"><span><h3>'+esc(pName(g.p))+'</h3><small>'+esc(vName(g.v))+(farmFilter==='all'?' · Купци наручили '+fmt(s.P)+' пак.':' · Додељено газдинству '+fmt(s.R)+' пак.')+'</small></span><span class="ndp-action">'+esc(act.label)+'</span></button>';
+   h+='<section class="ndp-product"><button class="ndp-product-head" style="width:100%;border:0;text-align:left;cursor:pointer" data-expand="'+esc(key(g.p,g.v))+'"><span><h3>'+esc(pName(g.p))+'</h3><small>'+esc(vName(g.v))+(farmFilter==='all'?' · Купци наручили '+fmt(s.P)+' пак.':' · Купци наручили '+fmt(s.P)+' пак. · Додељено '+fmt(s.R)+' пак.')+'</small></span><span class="ndp-action">'+esc(act.label)+'</span></button>';
    if(open){h+='<div class="ndp-variant"><div class="ndp-vtitle"><span>'+esc(vName(g.v))+'</span><span>Слободно '+fmt(s.free)+'</span></div><div class="ndp-stages">'+[['Наручено',s.P,1,''],['Требовано',s.R,2,s.free?'warn':''],['У требов.',s.pending,3,s.pending?'wait':''],['Потврђено',s.K,4,s.short?'bad':''],['Преузето',s.U,5,s.U===s.K?'done':'']].map(x=>'<button class="ndp-stage '+x[3]+'" data-open="'+x[2]+'" data-key="'+esc(key(g.p,g.v))+'"><b>'+fmt(x[1])+'</b><small>'+x[0]+'</small></button>').join('')+'</div>';
     let active=opened.get(key(g.p,g.v));if(active)h+=panel(g,active);
     h+='<div style="display:flex;justify-content:flex-end;margin-top:9px"><button class="ndp-btn '+act.kind+'" data-stage="'+act.stage+'">'+esc(act.label)+'</button></div></div>'}
