@@ -148,6 +148,10 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     const farmOptions = '<option value="all" ' + (state.selectedFarmId === 'all' ? 'selected' : '') + '>Сва газдинства · сви производи</option>' + offeredFarmIds.map((id) => '<option value="' + esc(id) + '" ' + (String(id) === String(state.selectedFarmId) ? 'selected' : '') + '>' + esc(farmFor(id)?.name || 'Газдинство #' + id) + '</option>').join('');
     let html = '<div class="nd-proc-form-head nd-proc-main-farm-filter"><label for="ndProcMainFarmFilter">Приказ набавке по газдинству</label><select id="ndProcMainFarmFilter" data-main-farm-filter>' + farmOptions + '</select><small>Изабери „Сва газдинства“ за комплетно требовање или конкретно газдинство за његове производе и доделу.</small></div>' +
       (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '');
+    if (state.selectedFarmId !== 'all') {
+      html += '<section class="nd-proc-card"><h2>Цела тура — ставке за изабрано газдинство</h2><p>Приказане су све ставке из требовања ове туре које изабрано газдинство има у активној понуди. За сваку варијанту унеси количину паковања коју му додељујеш.</p></section>';
+      return html + renderAllocation(null);
+    }
     for (const [productId, demands] of groups) {
       const product = productFor(productId);
       const productName = product?.name || 'Назив производа није доступан у products.name';
