@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT REQUEST ALLOCATION SHEET
- * Version: 1.3.6
+ * Version: 1.3.7
  * Updated: 2026-11-20
  * Description: Shows a read-only customer order breakdown while keeping farm allocation quantities editable.
  * Scope: Existing ADMIN Workspace; existing Supabase schema only.
@@ -8,7 +8,7 @@
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const k=(p,v)=>String(p)+'::'+String(v);
 export function eligibleFarmsForVariant({farmIds,offers,allocations,productId,variantId}){
- return farmIds.filter(id=>offers.some(o=>String(o.gazdinstvo_id)===String(id)&&String(o.product_id)===String(productId)&&String(o.variant_id)===String(variantId)&&o.is_active===true)&&!allocations.some(a=>String(a.gazdinstvo_id)===String(id)&&String(a.product_id)===String(productId)&&String(a.variant_id)===String(variantId)&&n(a.naruceno_pakovanja)>0));
+ return farmIds.filter(id=>offers.some(o=>String(o.gazdinstvo_id)===String(id)&&String(o.product_id)===String(productId)&&String(o.variant_id)===String(variantId)&&o.is_active===true));
 }
 export function distributeRemaining({total,eligibleFarmIds,quantities={},editedFarmId=null}){
  const ids=[...eligibleFarmIds],next={...quantities};let remaining=Math.max(0,Math.floor(n(total)));
@@ -20,7 +20,7 @@ export function distributeRemaining({total,eligibleFarmIds,quantities={},editedF
  return next;
 }
 export function buildAllocationCart({s,productId=null,variantId=null}){
- const cart=[];for(const d of s.demands.filter(x=>x.valid&&(productId===null||String(x.productId)===String(productId))&&(variantId===null||String(x.variantId)===String(variantId)))){const q=s.allocationDraft.quantities[k(d.productId,d.variantId)]||{};for(const farmId of s.allocationDraft.selectedFarmIds){const eligible=s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId))&&!s.allocations.some(a=>String(a.gazdinstvo_id)===String(farmId)&&String(a.product_id)===String(d.productId)&&String(a.variant_id)===String(d.variantId)&&n(a.naruceno_pakovanja)>0);if(!eligible)continue;const count=Math.max(0,Math.floor(n(q[String(farmId)])));if(count)cart.push({productId:d.productId,variantId:d.variantId,farmId,count});}}
+ const cart=[];for(const d of s.demands.filter(x=>x.valid&&(productId===null||String(x.productId)===String(productId))&&(variantId===null||String(x.variantId)===String(variantId)))){const q=s.allocationDraft.quantities[k(d.productId,d.variantId)]||{};for(const farmId of s.allocationDraft.selectedFarmIds){const eligible=s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId));if(!eligible)continue;const count=Math.max(0,Math.floor(n(q[String(farmId)])));if(count)cart.push({productId:d.productId,variantId:d.variantId,farmId,count});}}
  return cart;
 }
 const displayUnit=value=>({'kom':'ком','kom.':'ком','kg':'кг','g':'г','l':'л','ml':'мл'}[String(value||'').toLowerCase()]||String(value||''));
