@@ -10,7 +10,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  const req=a=>q(a.naruceno_pakovanja)||q(a.broj_pakovanja);
  const conf=a=>Math.min(req(a),q(a.potvrdjeno_pakovanja));
  const rejected=a=>Math.min(Math.max(0,req(a)-conf(a)),q(a.odbijeno_pakovanja));
- const pending=a=>Math.max(0,req(a)-conf(a)-rejected(a));
+ const pending=a=>sent(a)?Math.max(0,req(a)-conf(a)-rejected(a)):0;
  const picked=a=>Math.min(conf(a),q(a.preuzeto_pakovanja));
  const toPick=a=>Math.max(0,conf(a)-picked(a));
  const pName=id=>products.find(x=>String(x.id)===String(id))?.name||'Производ';
