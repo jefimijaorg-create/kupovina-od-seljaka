@@ -3,7 +3,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const q=x=>Math.max(0,Number(x)||0),fmt=x=>q(x).toLocaleString('sr-RS',{maximumFractionDigits:2});
 export async function mountProcurementProductsModule({root,core,tourId,onBack,initialStage='request',initialProductId=null}){
  if(!root||!core?.client||!tourId)throw Error('Недостаје ADMIN база или ID туре.');
- root.innerHTML='<section class="nd-proc-live"><div class="ndp-empty">Учитавам поруџбине и набавку…</div></section>';\n const db=core.client;let stage=({orders:1,request:2,confirm:3,pickup:4,shortage:1})[initialStage]||2,farmFilter='all',rows=[],items=[],products=[],variants=[],farms=[],tour=null,disposed=false;
+ root.innerHTML='<section class="nd-proc-live"><div class="ndp-empty">Учитавам поруџбине и набавку…</div></section>';
+ const db=core.client;let stage=({orders:1,request:2,confirm:3,pickup:4,shortage:1})[initialStage]||2,farmFilter='all',rows=[],items=[],products=[],variants=[],farms=[],tour=null,disposed=false;
  const fail=(r,l)=>{if(r.error)throw Error(l+': '+r.error.message);return r.data||[]};
  const sent=a=>a.naruceno===true||String(a.naruceno)==='true';
  const req=a=>q(a.naruceno_pakovanja)||q(a.broj_pakovanja);
