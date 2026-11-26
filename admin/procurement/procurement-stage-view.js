@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.9.7
+ * Version: 2.9.8
  * Updated: 2026-11-26
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -200,6 +200,34 @@ export function renderProcurementStageView(ctx){
    return '<div class="ndp3-debt-summary"><article><small>УКУПНО ПРЕУЗЕТО</small><strong>'+f(totalPackages)+' паковања</strong></article><article><small>ДУГУЈЕМО ЗА ТУРУ</small><strong>'+money(totalDebt)+(missingPrices?'*':'')+'</strong></article></div>'+(missingPrices?'<div class="ndp3-note error">Пажња: '+missingPrices+' преузетих ставки нема уписану набавну цену. Приказани износ је збир познатих цена и није коначан.</div>':'')+'<section class="ndp3-debt-section"><header><h3>Преузети производи</h3><span>'+products.size+' врста</span></header>'+(productRows||'<div class="ndp3-stage-empty">Још нема евидентираних преузетих производа.</div>')+'</section><section class="ndp3-debt-section"><header><h3>Дуговање по газдинствима</h3><span>'+farms.size+' газдинстава</span></header>'+(farmRows||'<div class="ndp3-stage-empty">Нема дуговања за ову туру.</div>')+'</section><p class="ndp3-debt-foot">Обрачун: стварно преузета паковања × набавна цена по паковању. Непреузете количине нису укључене.</p>';
   })();
   const bulkMessagesHtml=Array.isArray(s.bulkMessages)&&s.bulkMessages.length?'<div class="ndp3-modal"><section class="ndp3-modal-dialog" role="dialog" aria-modal="true" aria-label="Збирно требовање за газдинства"><header class="ndp3-modal-head"><div><div class="ndp3-kicker">ЗБИРНО ТРЕБОВАЊЕ · ТУРА #'+e(tourId)+'</div><h2>Поруке за газдинства</h2></div><button class="ndp3-btn" data-action="close-bulk-messages">Затвори</button></header><p>Свако газдинство добија једну поруку са свим својим непослатим количинама. Ново допунско требовање улази у нову поруку само за преосталу количину.</p>'+s.bulkMessages.map(item=>'<article class="ndp3-stage-group"><header><strong>'+e(item.farmName)+'</strong><span class="ndp3-chip amber">'+item.rowIds.length+' ставки</span></header><textarea class="ndp3-message" readonly>'+e(item.message)+'</textarea><div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="bulk-open-farm" data-farm-id="'+e(item.farmId)+'">Копирај и отвори Viber</button><button class="ndp3-btn" data-action="bulk-mark-farm-sent" data-farm-id="'+e(item.farmId)+'">Означи послато</button></div></article>').join('')+'<div class="ndp3-actions"><button class="ndp3-btn" data-action="close-bulk-messages">Затвори</button></div></section></div>':'';
+
+  const packageOverview=(()=>{
+   if(s.stage!=='request'||s.view!=='products')return {overview:'',sheet:''};
+   const products=new Map();
+   for(const d of s.demands.filter(x=>x.valid&&n(x.packages)>0)){
+    const productId=String(d.productId),variantId=String(d.variantId),pair=key(productId,variantId),p=prod(productId),v=variant(variantId);
+    if(!products.has(productId))products.set(productId,{name:p?.name||'Производ',variants:[]});
+    const buyers=new Map();
+    for(const item of s.items.filter(x=>key(x.product_id,x.variant_id)===pair&&n(x.package_count)>0)){
+     const buyerKey=item.customer_id!==null&&item.customer_id!==undefined?'customer:'+String(item.customer_id):'order:'+String(item.porudzbina_id??item.id);
+     const buyer=buyers.get(buyerKey)||{name:item.customer_name||'Купац није повезан',packages:0,orders:new Set()};
+     buyer.packages+=n(item.package_count);if(item.porudzbina_id!==null&&item.porudzbina_id!==undefined)buyer.orders.add(String(item.porudzbina_id));buyers.set(buyerKey,buyer);
+    }
+    products.get(productId).variants.push({key:pair,productId,variantId,name:v?.name||v?.size_label||d.packagingLabel||'Амбалажа',count:n(d.packages),quantity:qty(n(d.packages),d),buyers:[...buyers.values()]});
+   }
+   const productGroups=[...products.values()].map(p=>'<section class="ndp3-package-overview-product"><h3>'+e(p.name)+'</h3><div class="ndp3-package-overview-grid">'+p.variants.map(v=>'<button type="button" class="ndp3-package-overview-card" data-package-summary-open="'+e(v.key)+'" aria-label="'+e(v.name)+', '+f(v.count)+' паковања, '+v.buyers.length+' купаца"><span class="ndp3-package-overview-variant">'+e(v.name)+'</span><span class="ndp3-package-overview-count"><strong>'+f(v.count)+'</strong><small>паковања</small></span><span class="ndp3-package-overview-quantity">'+e(v.quantity)+'</span><span class="ndp3-package-overview-buyers">'+v.buyers.length+' '+(v.buyers.length===1?'купац':v.buyers.length%10>=2&&v.buyers.length%10<=4?'купца':'купаца')+' <b>↗</b></span></button>').join('')+'</div></section>').join('');
+   const overview=productGroups?'<section class="ndp3-package-overview" aria-label="Укупно наручено по млечним производима и амбалажи"><header class="ndp3-package-overview-head"><div><span>БРЗИ ПРЕГЛЕД ПОРУЏБИНА</span><h2>Производи и амбалажа</h2></div><small>Додирни варијанту за купце</small></header>'+productGroups+'</section>':'';
+   const selected=[...products.values()].flatMap(p=>p.variants).find(v=>v.key===s.packageSummaryKey);
+   let sheet='';
+   if(selected){
+    const rows=selected.buyers.map(b=>'<article class="ndp3-package-sheet-customer"><div><strong>'+e(b.name)+'</strong><small>'+([...b.orders].sort((a,c)=>Number(a)-Number(c)).map(id=>'Поруџбина #'+e(id)).join(' · ')||'Број поруџбине није доступан')+'</small></div><b>'+f(b.packages)+' пак.</b></article>').join('');
+    sheet='<div class="ndp3-package-sheet-backdrop" data-package-summary-close><section class="ndp3-package-sheet" role="dialog" aria-modal="true" aria-label="Купци за изабрану амбалажу"><div class="ndp3-package-sheet-handle"></div><header><div><small>'+e(prod(selected.productId)?.name||'Производ')+'</small><h2>'+e(selected.name)+'</h2></div><button type="button" class="ndp3-btn" data-package-summary-close>Затвори</button></header><div class="ndp3-package-sheet-stats"><div><small>Укупно паковања</small><strong>'+f(selected.count)+'</strong></div><div><small>Купаца</small><strong>'+selected.buyers.length+'</strong></div><div><small>Укупна количина</small><strong>'+e(selected.quantity)+'</strong></div></div><h3>Купци и њихове количине</h3><div class="ndp3-package-sheet-list">'+(rows||'<p class="ndp3-stage-empty">Нема повезаних купаца за ову варијанту.</p>')+'</div><p class="ndp3-package-sheet-note">Количине су сабране из поруџбина активне туре. Пункт није приказан јер није доступан у тренутном извору података овог модула.</p></section></div>';
+   }
+   return {overview,sheet};
+  })();
+  const packageOverviewHtml=packageOverview.overview;
+  const packageSheetHtml=packageOverview.sheet;
+
   const contentRows=groupedRows();
   const phaseContent=s.stage==='debt'?debtHtml:s.stage==='history'?historyHtml():s.stage==='request'?(s.view==='farms'?requestFarmsHtml:requestProductsHtml):
    (contentRows||'<div class="ndp3-stage-empty">'+(s.stage==='confirm'?'Нема послатих требовања нити потврђених количина за расподелу купцима.':'Нема потврђених количина које чекају преузимање.')+'</div>');
@@ -211,6 +239,7 @@ export function renderProcurementStageView(ctx){
    '<nav class="ndp3-phase-tabs" aria-label="Три корака набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'"><span class="ndp3-phase-step">1. КОРАК</span><strong>Требовање</strong></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'" '+(!confirmStageRows.length?'disabled aria-disabled="true" title="Нема послатих требовања нити потврђених количина за расподелу купцима"':'title="Потврди одговор газдинства и расподели потврђену количину купцима"')+'><span class="ndp3-phase-step">2. КОРАК</span><strong>Потврда · купци</strong></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'" '+(!collectRows.length?'disabled aria-disabled="true" title="Преузимање је могуће тек после потврде газдинства"':'title="Евиденција потврђених количина за преузимање"')+'><span class="ndp3-phase-step">3. КОРАК</span><strong>Преузето</strong></button></nav>'+
    (s.stage==='collect'||s.stage==='debt'?'':'<div class="ndp3-view-switch"><button type="button" data-view="products" aria-pressed="'+(s.view==='products')+'">По производима</button><button type="button" data-view="farms" aria-pressed="'+(s.view==='farms')+'">По газдинствима</button></div>')+
    
+   packageOverviewHtml+packageSheetHtml+
    '<section class="ndp3-kpis ndp3-kpis-reference"><div class="ndp3-kpi"><b>'+totalPackages(d=>d.packages)+'</b><span>УКУПНО ПОТРЕБНО</span></div><div class="ndp3-kpi"><b>'+totalPackages(d=>allocated(d.productId,d.variantId))+'</b><span>ДОДЕЉЕНО ГАЗДИНСТВИМА</span></div><div class="ndp3-kpi ndp3-kpi-pending"><b>'+totalPackages(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId)))+'</b><span>ЈОШ НИЈЕ ДОДЕЉЕНО</span></div></section>'+
    (s.notice?'<div class="ndp3-note '+(s.error?'error':'')+'" role="status">'+e(s.notice)+'</div>':'')+(!writable?'<div class="ndp3-note">Тура није у статусу processing. Приказ је само за читање.</div>':'')+(s.stage==='request'?'<div class="ndp3-actions ndp3-global-request-actions"><button class="ndp3-btn primary" data-action="prepare-all-farms" '+(!writable||s.busy?'disabled':'')+'>ПОШАЉИ УКУПНО ТРЕБОВАЊЕ · VIBER</button><small>Једна укупна порука за свако газдинство; допуне се шаљу засебно.</small></div>':'')+demandWarning+
    '<section class="ndp3-panel"><div class="ndp3-row"><h2>'+stageTitle+'</h2><span class="ndp3-chip">'+(s.stage==='debt'?'Стварно преузето × набавна цена':s.stage==='history'?'Непроменљива евиденција':s.stage==='collect'?'Отвори газдинство за детаље':s.view==='products'?'Груписано по производима':'Груписано по газдинствима')+'</span></div>'+phaseContent+'</section>'+
@@ -222,6 +251,13 @@ export function renderProcurementStageView(ctx){
    '<div class="ndp3-foot">Подаци се читају и чувају у постојећој бази. Назив производа преузима се из евиденције производа. Укупна количина се рачуна множењем броја паковања и величине паковања.</div>';
   mountAnalyticsPanel?.();
  }
+
+ host.addEventListener('click',ev=>{
+  const open=ev.target.closest('[data-package-summary-open]');
+  if(open){s.packageSummaryKey=open.dataset.packageSummaryOpen;render();return;}
+  if(ev.target.closest('[data-package-summary-close]')){s.packageSummaryKey=null;render();return;}
+ });
+ host.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&s.packageSummaryKey){s.packageSummaryKey=null;render();}});
  render();
  return render;
 }
