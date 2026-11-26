@@ -65,8 +65,10 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  return html+'</div>'}
  function render(){
   if(disposed)return;let c=tileCounts(),ob=c.free+c.pending+c.pickup,gs=demandGroups();
+  // Плочице су филтери: при избору приказују само производе који чине ту обавезу.
+  gs=gs.filter(g=>{let z=sums(g);if(stage===2)return z.free>0;if(stage===3)return z.pending>0;if(stage===4)return z.pickup>0;if(stage===1)return z.short>0;return true;});
   let h='<div class="ndp-head"><div><small>ТУРА #'+esc(tourId)+' · '+esc(tour?.naziv||'Набавка')+'</small><h2>Набавка</h2></div><div class="ndp-count">'+(ob?'Још '+fmt(ob)+' обавеза':'✓ Све довршено')+'</div><button class="ndp-btn secondary" data-back>← Назад</button></div>';
-  h+='<div class="ndp-obligations">'+[['free','За требовање',c.free,2,'orange'],['pending','Чека потврду',c.pending,3,'blue'],['pickup','За преузимање',c.pickup,4,'orange'],['short','Мањак (купци)',c.short,1,'red']].map(x=>'<button class="ndp-tile '+x[4]+' '+(stage===x[3]?'active':'')+'" data-stage="'+x[3]+'"><b>'+fmt(x[2])+'</b><small>'+x[1]+'</small></button>').join('')+'</div>';
+  h+='<div class="ndp-obligations">'+[['free','За требовање',c.free,2,'orange'],['pending','Чека потврду',c.pending,3,'blue'],['pickup','Потврђено · за преузимање од газдинства',c.pickup,4,'orange'],['short','Мањак (купци)',c.short,1,'red']].map(x=>'<button class="ndp-tile '+x[4]+' '+(stage===x[3]?'active':'')+'" data-stage="'+x[3]+'"><b>'+fmt(x[2])+'</b><small>'+x[1]+'</small></button>').join('')+'</div>';
   h+='<div class="ndp-farms"><button class="'+(farmFilter==='all'?'active':'')+'" data-farm="all">Сва газдинства</button>'+farms.map(f=>'<button class="'+(String(farmFilter)===String(f.id)?'active':'')+'" data-farm="'+f.id+'">'+esc(f.name)+'</button>').join('')+'</div>';
   if(farmFilter!=='all')h+='<div class="ndp-empty" style="text-align:left;margin:8px 0"><b>Газдинство: '+esc(fName(farmFilter))+'</b><br><small>Овде су само ставке стварно додељене овом газдинству. Количина купаца и мањак приказују се у општем прегледу туре, не као требовање овог газдинства.</small></div>';
   if(farmFilter!=='all')h+='<div class="ndp-copy"><button class="ndp-btn secondary" data-copy-farm="'+farmFilter+'">Копирај цео списак за '+esc(fName(farmFilter))+'</button></div>';
