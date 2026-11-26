@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.0
+ * Version: 1.3.1
  * Updated: 2026-11-26
  * Description: Buyer-integrated order cards, clickable product table rows and order-only operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -102,7 +102,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   }
 
   function render() {
-    const pointOrder=new Map((tourStops||[]).map((stop,index)=>[String(stop.punkt_id),Number.isFinite(Number(stop.redosled))?Number(stop.redosled):index]));
+    const orderedStops=[...(tourStops||[])].sort((a,b)=>{const ta=String(a.vreme||'').slice(0,5),tb=String(b.vreme||'').slice(0,5),ra=Number.isFinite(Number(a.redosled))?Number(a.redosled):999999,rb=Number.isFinite(Number(b.redosled))?Number(b.redosled):999999;if(ta&&tb)return ta.localeCompare(tb)||ra-rb;if(ta)return -1;if(tb)return 1;return ra-rb});const pointOrder=new Map(orderedStops.map((stop,index)=>[String(stop.punkt_id),index]));
     const sorted=[...orders].sort((a,b)=>{const pa=pointOrder.has(String(a.punkt_id))?pointOrder.get(String(a.punkt_id)):999999,pb=pointOrder.has(String(b.punkt_id))?pointOrder.get(String(b.punkt_id)):999999;return pa-pb||Number(a.id)-Number(b.id)});
     const visible=sorted.filter(order=>orderFilter==='all'||(orderFilter==='new'?['nova','primljeno','primljena','provera'].includes(String(order.status||'nova')):['potvrdjena','scheduled'].includes(String(order.status||''))));
     const grouped=new Map();
@@ -126,7 +126,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
         const noLines='<tr>'+customerCell+'<td colspan="4" class="nd-go-empty">Нема ставки у поруџбини.</td></tr>';
         return (itemRows||noLines)+'<tr class="nd-gop-customer-total"><td colspan="4">Укупно '+esc(name)+'</td><td class="nd-gop-amount">'+(orderTotal===null?'Није обрачунато':fmtMoney(orderTotal))+'</td></tr>';
       }).join('');
-      return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div><label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'" '+(!stop?'disabled title="Сатница није евидентирана у овој тури"':'')+'></label></header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th>Купац</th><th>Производ / амбалажа</th><th>Кол.</th><th>Цена</th><th>Износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="4">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
+      return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div><label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'"></label></header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th>Купац</th><th>Производ / амбалажа</th><th>Кол.</th><th>Цена</th><th>Износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="4">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
     }).join('');
     rootNode.innerHTML='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
   }
@@ -192,10 +192,18 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   rootNode.addEventListener('change',async event=>{
     const input=event.target.closest('[data-point-time]');if(!input)return;
     const pointId=input.dataset.pointTime,stop=(tourStops||[]).find(row=>String(row.punkt_id)===String(pointId));
-    if(!stop||busy){input.value=String(stop?.vreme||'').slice(0,5);return}
-    const previous=String(stop.vreme||'').slice(0,5),value=input.value;busy=true;input.disabled=true;feedback='Чувам сатницу пункта…';feedbackError=false;
-    try{const result=await client.from('tura_punktovi').update({vreme:value||null}).eq('tura_id',tourId).eq('punkt_id',pointId).select('punkt_id,vreme').maybeSingle();if(result.error)throw result.error;if(!result.data)throw new Error('База није потврдила сатницу пункта.');stop.vreme=result.data.vreme;feedback='Сатница пункта је сачувана.';busy=false;render();if(typeof onRefresh==='function')await onRefresh()}
-    catch(error){busy=false;feedback='Сатница није сачувана: '+(error.message||String(error));feedbackError=true;input.disabled=false;input.value=previous;render()}
+    if(busy){input.value=String(stop?.vreme||'').slice(0,5);return}
+    if(!/^\\d+$/.test(String(tourId))||!/^\\d+$/.test(String(pointId))){feedback='Тура или пункт нема исправан идентификатор.';feedbackError=true;render();return}
+    const previous=String(stop?.vreme||'').slice(0,5),value=input.value;
+    if(value&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(value)){feedback='Изабери исправну сатницу.';feedbackError=true;render();return}
+    busy=true;input.disabled=true;feedback='Чувам сатницу пункта…';feedbackError=false;
+    try{
+      const result=await client.from('tura_punktovi').upsert({tura_id:Number(tourId),punkt_id:Number(pointId),redosled:stop?.redosled??null,aktivan:true,vreme:value||null},{onConflict:'tura_id,punkt_id'}).select('tura_id,punkt_id,redosled,aktivan,vreme').maybeSingle();
+      if(result.error)throw result.error;
+      if(!result.data)throw new Error('База није потврдила сатницу пункта.');
+      if(stop)Object.assign(stop,result.data);else tourStops.push(result.data);
+      feedback='Сатница пункта је сачувана.';busy=false;render();if(typeof onRefresh==='function')await onRefresh()
+    }catch(error){busy=false;feedback='Сатница није сачувана: '+(error.message||String(error));feedbackError=true;input.disabled=false;input.value=previous;render()}
   });
   rootNode.addEventListener('click', async event => {
     const action=event.target.closest('button');
