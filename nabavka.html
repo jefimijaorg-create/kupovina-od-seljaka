@@ -251,6 +251,55 @@ select:focus,input:focus{border-color:#65a778;box-shadow:0 0 0 3px rgba(73,150,9
 .purchase-status.paid{background:#e6f4e9;color:#24734a}.purchase-status.partial{background:#fff5e3;color:#946018}.purchase-status.unpaid{background:#fff0ed;color:#a83f36}
 @media(max-width:650px){.purchase-log{padding:12px}.purchase-line-row{grid-template-columns:1fr 1fr;gap:8px}.purchase-line-row label:first-child,.purchase-line-row .purchase-note{grid-column:1 / -1}.purchase-line-row .purchase-remove{grid-column:1 / -1}.purchase-meta-grid{grid-template-columns:1fr}.purchase-entry-head{align-items:flex-start}.purchase-entry-money{font-size:15px}.purchase-paid-edit{grid-template-columns:1fr}.purchase-paid-edit button{width:100%}}
 
+
+/* Набавка: јасан радни приказ на мобилном и десктопу */
+#view-procurement{min-width:0;scroll-margin-top:12px}
+#view-procurement>.head{align-items:flex-start;margin-bottom:14px}
+#view-procurement>.head h2{font-size:clamp(21px,3vw,30px);letter-spacing:-.45px}
+#view-procurement>.head .hint{max-width:38ch;line-height:1.5}
+.procurement-tabs{display:flex!important;gap:8px;flex-wrap:wrap;overflow:visible;margin:14px 0 16px;padding:0;border-bottom:1px solid #e2e9e1}
+.procurement-tabs .tab{flex:1 1 130px;min-width:0;min-height:46px;border-radius:12px 12px 0 0;border:1px solid #dce7dc;border-bottom:0;background:#f5f8f4;color:#48634e;font-size:13px;font-weight:850;white-space:normal}
+.procurement-tabs .tab.active{background:#216b42;color:#fff;border-color:#216b42;box-shadow:0 3px 0 #174d30}
+.procurement-subpanel{min-width:0;scroll-margin-top:12px}
+#view-procurement .section-intro{padding:11px 13px;border-left:3px solid #7ab184;background:#f5faf4;border-radius:0 10px 10px 0;font-size:12px;color:#526757}
+.pack-summary-row{align-items:flex-start!important;gap:12px!important}
+.pack-summary-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+.pack-summary-main>small{font-size:12px;color:#647568;line-height:1.35}
+.pack-farm-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}
+.pack-farm-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;padding:5px 8px;border-radius:8px;background:#e9f4e9;border:1px solid #d4e7d4;color:#245d38;font-size:11px;line-height:1.3}
+.pack-farm-chip b{overflow-wrap:anywhere}
+.pack-farm-chip strong{white-space:nowrap}
+.pack-farm-empty{font-size:11px;color:#8b5b16;background:#fff5e3;border:1px solid #f0dfbd;border-radius:8px;padding:5px 8px}
+.pack-unassigned{font-size:11px;color:#a33b25;font-weight:800;margin-top:2px}
+.pack-summary-quantity{flex:0 0 auto;min-width:94px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;padding:8px 10px;border-radius:11px;background:#edf5ed;color:#205d37}
+.pack-summary-quantity b{font-size:17px;white-space:nowrap}
+.pack-summary-quantity span{font-size:11px;color:#58715c;white-space:nowrap}
+#view-procurement .farm-create,#view-procurement .purchase-log{box-shadow:0 5px 18px rgba(25,54,36,.045)}
+#view-procurement input,#view-procurement select{min-width:0;max-width:100%}
+@media(max-width:600px){
+ #view-procurement{padding:12px 10px;border-radius:14px}
+ #view-procurement>.head{display:block}
+ #view-procurement>.head .hint{display:block;margin-top:5px}
+ .procurement-tabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;position:sticky;top:0;z-index:12;padding:7px 0;background:rgba(243,246,241,.97);backdrop-filter:blur(9px)}
+ .procurement-tabs .tab{flex:initial;min-height:44px;padding:8px 5px;font-size:11px;border-radius:10px;border:1px solid #dce7dc;text-align:center}
+ .procurement-tabs .tab.active{border-color:#216b42}
+ .pack-order-summary .summary-head{padding:11px}
+ .pack-order-summary .summary-head>strong{font-size:14px}
+ .pack-order-summary .summary-detail{padding:7px}
+ .pack-summary-row{padding:10px 5px!important;gap:8px!important}
+ .pack-summary-quantity{min-width:78px;padding:7px 8px}
+ .pack-summary-quantity b{font-size:15px}
+ .pack-summary-quantity span{font-size:10px}
+ .pack-farm-chip{font-size:10px;padding:5px 6px}
+ #view-procurement .farm-create{padding:12px}
+ #view-procurement .farm-create-actions{align-items:stretch;flex-direction:column}
+ #view-procurement .farm-create-actions button{width:100%;min-height:44px}
+ #view-procurement .purchase-log{padding:11px}
+ #view-procurement .purchase-log h3{font-size:15px;line-height:1.35}
+ #view-procurement .purchase-history-head{display:block}
+ #view-procurement .purchase-history-head label{display:block;margin:8px 0}
+}
+@media(min-width:900px){#view-procurement .pack-order-summary{max-width:100%}.pack-order-summary .summary-detail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}}
 </style></head><body>
 <div id="demoGate" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(13,32,21,.72);backdrop-filter:blur(7px);padding:18px;overflow:auto;align-items:center;justify-content:center">
  <form id="demoGateForm" style="width:min(100%,420px);margin:auto;background:#fff;border-radius:20px;padding:25px;box-shadow:0 20px 70px #0003;color:#173b27">
@@ -534,9 +583,9 @@ function renderNeeds(){
  });
  const all=Object.values(groups).sort((a,b)=>a.name.localeCompare(b.name,'sr'));
  const packTotals={};let missingPackLines=0;
- rows.forEach(r=>{const v=variantFor(r),count=n(r.package_count||r.broj_pakovanja),size=n(v?.package_value||r.package_size),pu=String(v?.package_unit||r.package_unit||r.jedinica_pakovanja||r.quantity_unit||r.jedinica||'').toLowerCase();if(count>0&&size>0){const product=String(r.proizvod||'Непознат производ').trim(),label=String(v?.name||v?.size_label||r.variant_name||r.velicina_pakovanja||('Паковање '+fmt(size)+' '+pu)).trim(),key=product.toLocaleLowerCase('sr')+'|'+String(size)+'|'+pu;if(!packTotals[key])packTotals[key]={product,label,count:0,quantity:0,unit:pu};packTotals[key].count+=count;packTotals[key].quantity+=count*size}else missingPackLines++});
+ rows.forEach(r=>{const v=variantFor(r),count=n(r.package_count||r.broj_pakovanja),size=n(v?.package_value||r.package_size),pu=String(v?.package_unit||r.package_unit||r.jedinica_pakovanja||r.quantity_unit||r.jedinica||'').toLowerCase();if(count>0&&size>0){const product=String(r.proizvod||'Непознат производ').trim(),label=String(v?.name||v?.size_label||r.variant_name||r.velicina_pakovanja||('Паковање '+fmt(size)+' '+pu)).trim(),key=product.toLocaleLowerCase('sr')+'|'+String(size)+'|'+pu;if(!packTotals[key])packTotals[key]={product,label,count:0,quantity:0,unit:pu,assigned:{},unassigned:0};packTotals[key].count+=count;packTotals[key].quantity+=count*size;const farmId=String(r.dodijeljeno_gazdinstvo_id||'');if(farmId)packTotals[key].assigned[farmId]=(packTotals[key].assigned[farmId]||0)+count;else packTotals[key].unassigned+=count}else missingPackLines++});
  const packList=Object.values(packTotals).sort((a,b)=>a.product.localeCompare(b.product,'sr')||a.label.localeCompare(b.label,'sr'));
- const packSummary='<section class="summary-card pack-order-summary"><div class="summary-head"><strong>СПИСАК ЗА НАРУЧИВАЊЕ — ПО ПАКОВАЊИМА</strong><div class="hint">Груписано по производу и величини паковања. Број паковања и укупна количина приказани су одвојено; различите величине се никада не спајају.</div></div><div class="summary-detail">'+(packList.length?packList.map(p=>'<div class="summary-line"><span><b>'+e(p.product)+'</b><br><small>'+e(p.label)+'</small></span><b class="pack-order-count">'+fmt(p.count)+' пак. · '+fmt(p.quantity)+' '+e(p.unit)+'</b></div>').join(''):'<div class="empty">Нема ставки са изабраним паковањем.</div>')+(missingPackLines?'<div class="summary-line missing-pack-link"><span>Ставке без потврђеног паковања</span><b>'+fmt(missingPackLines)+' ставки</b></div>':'')+'</div></section>';
+ const packSummary='<section class="summary-card pack-order-summary"><div class="summary-head"><strong>СПИСАК ЗА НАРУЧИВАЊЕ — ПО ПАКОВАЊИМА</strong><div class="hint">Груписано по производу и величини паковања. Број паковања и укупна количина приказани су одвојено; различите величине се никада не спајају.</div></div><div class="summary-detail">'+(packList.length?packList.map(p=>{const farms=Object.entries(p.assigned).sort((a,b)=>fname(a[0]).localeCompare(fname(b[0]),'sr')).map(([id,count])=>'<span class="pack-farm-chip"><b>'+e(fname(id))+'</b><strong>'+fmt(count)+' пак.</strong></span>').join('');return '<div class="summary-line pack-summary-row"><div class="pack-summary-main"><b>'+e(p.product)+'</b><small>'+e(p.label)+'</small><div class="pack-farm-list">'+(farms||'<span class="pack-farm-empty">Још није додељено газдинству</span>')+'</div>'+(p.unassigned?'<div class="pack-unassigned">Недодељено: '+fmt(p.unassigned)+' пак.</div>':'')+'</div><div class="pack-summary-quantity"><b>'+fmt(p.count)+' пак.</b><span>'+fmt(p.quantity)+' '+e(p.unit)+'</span></div></div>'}).join(''):'<div class="empty">Нема ставки са изабраним паковањем.</div>')+(missingPackLines?'<div class="summary-line missing-pack-link"><span>Ставке без потврђеног паковања</span><b>'+fmt(missingPackLines)+' ставки</b></div>':'')+'</div></section>';
  document.getElementById('needs').innerHTML=packSummary+'<div class="hint">Ово је збир свих поруџбина купаца — пре избора газдинстава. Кликни на „Коме треба“ да видиш тачно који купци траже производ и које количине.</div><div class="stats"><div class="stat"><b>'+all.length+'</b><span>различитих производа</span></div><div class="stat"><b>'+rows.length+'</b><span>ставки у поруџбинама</span></div><div class="stat"><b>'+new Set(rows.map(r=>r.porudzbina_id)).size+'</b><span>поруџбина</span></div></div><div class="summary-grid">'+all.map((g,i)=>{
    const detail=Object.values(g.packages).sort((a,b)=>a.label.localeCompare(b.label,'sr')).map(p=>'<div class="summary-line"><span>'+e(p.label)+'</span><b>'+fmt(p.count)+' пак. · '+fmt(p.quantity)+' '+e(p.unit)+'</b></div>').join('');
    const missingRows=g.rows.filter(r=>{const v=variantFor(r),count=n(r.package_count||r.broj_pakovanja),size=n(v?.package_value||r.package_size);return !(count>0&&size>0)});const unknown=g.unknownPackageQty>0?'<button type="button" class="summary-line missing-pack-link" data-missing-product="'+i+'" aria-label="Прикажи купце без изабраног паковања"><span>Количина без изабраног паковања <b>· кликни за списак купаца ('+missingRows.length+')</b></span><b>'+fmt(g.unknownPackageQty)+' '+e(g.unit)+' ↗</b></button>':'';
