@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.7
+ * Version: 4.21.8
  * Updated: 2026-11-26
  * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,9 +8,9 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=3.0.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=3.0.1';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.7';
-import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.2';
+import { loadProcurementHistory, markProcurementSent, markProcurementRequested, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.3';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities, saveConfirmedCustomerDistribution } from './procurement/procurement-allocation-actions.js?v=1.1.4';
 import { getProcurementStage, canMarkProcurementSent, canConfirmProcurement, canCollectProcurement, validateProcurementCounts, validateAllocationCount } from './procurement-workflow.js?v=1.0.4';
 
@@ -119,6 +119,22 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
    await markProcurementSent({client,rowIds:rows.map(x=>x.id)});
    await load();s.stage='confirm';setNote('Заједнички захтев је означен као стварно послат. Ставке сада чекају потврду газдинства.');return true;
   }catch(error){try{await load();}catch(_){}setNote('Слање није у потпуности евидентирано: '+(error.message||String(error)),true);return false;}
+  finally{s.busy=false;render();}
+ }
+ async function requestConfirmation(id){
+  if(s.busy)return;const row=s.allocations.find(x=>String(x.id)===String(id));if(!row)return;
+  if(row.naruceno===true)return setNote('Захтев је већ евидентиран. Ставка чека одговор газдинства.');
+  if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
+  s.busy=true;render();try{await markProcurementRequested({client,rowIds:[row.id]});await load();s.stage='confirm';setNote('Захтев за потврду је евидентиран. Газдинство још није потврдило количину; Viber порука није послата.');}
+  catch(err){try{await load();}catch(_){}setNote('Захтев није евидентиран: '+(err.message||String(err)),true);}
+  finally{s.busy=false;render();}
+ }
+ async function requestFarmConfirmation(farmId){
+  if(s.busy)return;if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
+  const rows=s.allocations.filter(x=>String(x.gazdinstvo_id)===String(farmId)&&x.naruceno!==true&&x.viber_status==='not_sent'&&!x.viber_poslato_at&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
+  if(!rows.length)return setNote('Нема нових ставки за захтев овом газдинству.',true);
+  s.busy=true;render();try{await markProcurementRequested({client,rowIds:rows.map(x=>x.id)});await load();s.stage='confirm';setNote('Захтев за потврду је евидентиран за '+(farm(farmId)?.name||'газдинство')+'. Количине чекају одговор; порука није послата.');}
+  catch(err){try{await load();}catch(_){}setNote('Захтев за газдинство није евидентиран: '+(err.message||String(err)),true);}
   finally{s.busy=false;render();}
  }
  async function markSent(id){
@@ -267,9 +283,11 @@ host.addEventListener('change',ev=>{
   if(a==='close-bulk-messages'){s.bulkMessages=[];render();return;}
   if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
+  if(a==='request-farm-confirmation')return requestFarmConfirmation(b.dataset.farmId);
+  if(a==='request-confirmation')return requestConfirmation(b.dataset.id);
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
-  if(a==='save-multi-allocation'){const hasUnsavedOrderEdits=s.items.some(item=>(s.requestProductId===null||String(item.product_id)===String(s.requestProductId))&&(s.requestVariantId===null||String(item.variant_id)===String(s.requestVariantId))&&n(s.orderDraft[String(item.id)]??item.package_count)!==n(item.package_count));if(hasUnsavedOrderEdits)return setNote('Прво сачувај измене поруџбина купаца, па затим расподели нову количину газдинствима.',true);const cart=buildAllocationCart({s,productId:s.requestProductId,variantId:s.requestVariantId});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid&&(s.requestProductId===null||String(x.productId)===String(s.requestProductId)))){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;s.requestProductId=null;s.requestVariantId=null;if(s.assignmentSaveMode){s.assignmentSaveMode=false;const saved=await saveCart();if(saved)setNote('Додела је сачувана и поново учитана. Захтев није послат нити потврђен.');return;}return generateViber();}
+  if(a==='save-multi-allocation'){const hasUnsavedOrderEdits=s.items.some(item=>(s.requestProductId===null||String(item.product_id)===String(s.requestProductId))&&(s.requestVariantId===null||String(item.variant_id)===String(s.requestVariantId))&&n(s.orderDraft[String(item.id)]??item.package_count)!==n(item.package_count));if(hasUnsavedOrderEdits)return setNote('Прво сачувај измене поруџбина купаца, па затим расподели нову количину газдинствима.',true);const cart=buildAllocationCart({s,productId:s.requestProductId,variantId:s.requestVariantId});if(!s.allocationDraft.selectedFarmIds.length)return setNote('Изабери најмање једно газдинство.',true);if(!cart.length)return setNote('Распореди бар једну количину производа.',true);for(const d of s.demands.filter(x=>x.valid&&(s.requestProductId===null||String(x.productId)===String(s.requestProductId)))){const sum=cart.filter(x=>key(x.productId,x.variantId)===key(d.productId,d.variantId)).reduce((a,x)=>a+x.count,0);if(sum>Math.max(0,d.packages-allocated(d.productId,d.variantId)))return setNote('Расподела премашује преосталу потребу.',true);}s.cart=cart;s.requestOpen=false;s.requestProductId=null;s.requestVariantId=null;if(s.assignmentSaveMode){s.assignmentSaveMode=false;const saved=await saveCart();if(saved)setNote('Додела је сачувана и поново учитана. Захтев за потврду још није евидентиран.');return;}const saved=await saveCart();if(saved){s.stage='confirm';setNote('Требовање је сачувано. У кораку „Потврда газдинства“ евидентирај да је захтев упућен.');}return;}
  });
   let loadAttempt=0;
  async function initialize(){
