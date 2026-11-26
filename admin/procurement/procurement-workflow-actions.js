@@ -1,6 +1,6 @@
 /*
  * NARUČI ДОМАЋЕ — PROCUREMENT WORKFLOW ACTIONS
- * Version: 1.1.2
+ * Version: 1.1.3
  * Updated: 2026-11-19
  * Description: Returns unconfirmed supplier quantities to demand and verifies the history-backed update.
  * Scope: Existing ADMIN Workspace, existing Supabase schema/RLS/triggers only.
@@ -17,6 +17,15 @@ export async function loadProcurementHistory({ client, tourId, limit = 300 }) {
     .limit(Math.min(1000, Math.max(1, Number(limit) || 300)));
   if (result.error) throw new Error('Историја набавке: ' + result.error.message);
   return Array.isArray(result.data) ? result.data : [];
+}
+
+export async function markProcurementRequested({ client, rowIds, requestedAt = new Date().toISOString() }) {
+  if(!client)throw new TypeError('Недостаје Supabase клијент.');
+  const ids=[...new Set((rowIds||[]).filter(Boolean))];if(!ids.length)throw new Error('Нема ставки за захтев потврде.');
+  const result=await client.from('tura_nabavka_dodele').update({naruceno:true,updated_at:requestedAt}).in('id',ids).eq('naruceno',false).eq('viber_status','not_sent').select('id,naruceno,naruceno_pakovanja,viber_status');
+  if(result.error)throw new Error(result.error.message);
+  if(!Array.isArray(result.data)||result.data.length!==ids.length||result.data.some(row=>row.naruceno!==true))throw new Error('База није потврдила евидентирање захтева за све ставке.');
+  return result.data;
 }
 
 export async function markProcurementSent({ client, rowIds, sentAt = new Date().toISOString() }) {
@@ -86,7 +95,7 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
     throw new Error('Количине морају бити цели ненегативни бројеви паковања.');
   }
   const fresh = await client.from('tura_nabavka_dodele')
-    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status')
+    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status')
     .eq('id', row.id).maybeSingle();
   if (fresh.error) throw new Error(fresh.error.message);
   if (!fresh.data) throw new Error('Требовање више није доступно. Освежи приказ.');
@@ -95,7 +104,7 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
   if (Number(confirmed) > requested) throw new Error('Потврђена количина не може бити већа од послате.');
   if (Number(collected) > Number(confirmed)) throw new Error('Преузета количина не може бити већа од потврђене.');
   if (Number(collected) < number(live.preuzeto_pakovanja)) throw new Error('Преузета количина не може бити накнадно умањена.');
-  if (live.viber_status !== 'sent' && live.viber_status !== 'replied' && !live.viber_poslato_at) throw new Error('Потврда је дозвољена тек након слања захтева газдинству.');
+  if (live.naruceno !== true && live.viber_status !== 'sent' && live.viber_status !== 'replied' && !live.viber_poslato_at) throw new Error('Потврда је дозвољена тек након евидентирања захтева газдинству.');
 
   const now = new Date().toISOString();
   const patch = {
