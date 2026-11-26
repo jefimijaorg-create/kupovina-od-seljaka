@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.9.3
+ * Version: 2.9.4
  * Updated: 2026-11-26
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -17,7 +17,7 @@ export function renderProcurementStageView(ctx){
   const collectRows=s.allocations.filter(x=>canCollectProcurement(x));
   if(s.stage==='confirm'&&!confirmRows.length)s.stage='request';
   const rows=s.stage==='confirm'?confirmRows:s.stage==='collect'?collectRows:[];
-  const groupByFarms=s.stage==='collect'||s.view==='farms';
+  const groupByFarms=s.stage==='confirm'||s.stage==='collect'||s.view==='farms';
   const transferCandidates=row=>{const ids=[...new Set(s.offers.filter(o=>o.is_active===true&&String(o.product_id)===String(row.product_id)&&String(o.variant_id)===String(row.variant_id)&&String(o.gazdinstvo_id)!==String(row.gazdinstvo_id)).map(o=>String(o.gazdinstvo_id)))];return ids.map(id=>farm(id)).filter(Boolean);};
   const sourceSummary=d=>{const totals=new Map();(d?.sourceOrders||[]).forEach(x=>{const id=x.orderId===null||x.orderId===undefined?'без броја':String(x.orderId);totals.set(id,(totals.get(id)||0)+n(x.packageCount));});return [...totals].map(([id,count])=>(id==='без броја'?'Изворна ставка':'Поруџбина #'+id)+' · '+f(count)+' пак.').join(' · ')||'Извор поруџбине није доступан';};
   const historyHtml=()=>{
@@ -38,7 +38,7 @@ export function renderProcurementStageView(ctx){
   const editCustomerRows=editAllocationRow?s.items.filter(item=>String(item.product_id)===String(editAllocationRow.product_id)&&String(item.variant_id)===String(editAllocationRow.variant_id)).sort((a,b)=>Number(a.id)-Number(b.id)):[];
   const editCustomerTotal=editCustomerRows.reduce((sum,item)=>sum+Math.max(0,n(editAllocationDraft[String(item.id)])),0);
   const amountLabel=(count,d)=>qty(count,d);
-  const stageTitle=s.stage==='request'?'Требовање':s.stage==='confirm'?'Потврда':s.stage==='collect'?'Преузимање':s.stage==='debt'?'Преузето и дуговања':'Историја промена';
+  const stageTitle=s.stage==='request'?'Требовање':s.stage==='confirm'?'Потврда газдинства':s.stage==='collect'?'Преузимање':s.stage==='debt'?'Преузето и дуговања':'Историја промена';
   const lineHtml=row=>{
    const d=demand(row.product_id,row.variant_id),p=prod(row.product_id),v=variant(row.variant_id),ff=farm(row.gazdinstvo_id);
    const requested=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja),collected=n(row.preuzeto_pakovanja);
@@ -48,7 +48,7 @@ export function renderProcurementStageView(ctx){
    let values='<span><b>'+packageLabel(visiblePending)+'</b><small>'+e(amountLabel(visiblePending,d))+'</small><small class="ndp3-value-label">'+visibleLabel+'</small></span>';
    let controls='';
    if(s.stage==='request'){
-    controls='<div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање требовања</button></div>';
+    controls='<div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="mark-sent" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Означи као послато</button></div>';
    }else if(s.stage==='confirm'){
     const initial=confirmed>0?confirmed:requested;
     controls='<div class="ndp3-stage-input"><label>Потврђена количина (паковања)<input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="'+f(requested)+'" step="1" data-field="potvrdjeno_pakovanja" data-id="'+e(row.id)+'" value="'+f(initial)+'" '+(!writable||s.busy||!canConfirmProcurement(row)?'disabled':'')+'></label><div><div class="ndp3-stage-line-meta">Преостало за потврду: <strong>'+f(Math.max(0,requested-confirmed))+' паковања</strong></div><div class="ndp3-stage-actions"><button class="ndp3-btn primary" data-action="save-field" data-id="'+e(row.id)+'" '+(!writable||s.busy||!canConfirmProcurement(row)?'disabled':'')+'>Сачувај потврду</button>'+(requested>confirmed&&transferCandidates(row).length?'<button class="ndp3-btn" data-action="open-transfer" data-id="'+e(row.id)+'" '+(!writable||s.busy?'disabled':'')+'>Пренеси непотврђено</button>':'')+'</div></div></div>';
@@ -57,13 +57,14 @@ export function renderProcurementStageView(ctx){
    }
    const lineTitle=groupByFarms?(p?.name||'Производ')+' · '+(v?.name||v?.size_label||'Паковање'):(ff?.name||'Газдинство није пронађено');
    const customerTotals=new Map();
-   for(const item of s.items.filter(x=>String(x.product_id)===String(row.product_id)&&String(x.variant_id)===String(row.variant_id))){
-    const assigned=(item.farm_allocations||[]).filter(a=>String(a.gazdinstvo_id)===String(row.gazdinstvo_id)).reduce((sum,a)=>sum+n(a.broj_pakovanja),0);
-    if(assigned<=0)continue;
-    const customerKey=String(item.customer_id??('missing:'+item.id));
-    const customer=customerTotals.get(customerKey)||{name:item.customer_name||'Купац није повезан',packages:0};customer.packages+=assigned;customerTotals.set(customerKey,customer);
+   for(const item of s.items.filter(x=>String(x.product_id)===String(row.product_id)&&String(x.variant_id)===String(row.variant_id)&&n(x.package_count)>0)){
+    const customerKey=String(item.customer_id??('missing:'+item.id))+'|'+String(item.porudzbina_id??item.id);
+    const assignedAll=(item.farm_allocations||[]).reduce((sum,a)=>sum+n(a.broj_pakovanja),0);
+    const assignedHere=(item.farm_allocations||[]).filter(a=>String(a.gazdinstvo_id)===String(row.gazdinstvo_id)).reduce((sum,a)=>sum+n(a.broj_pakovanja),0);
+    const customer=customerTotals.get(customerKey)||{name:item.customer_name||'Купац није повезан',order:item.porudzbina_id,ordered:0,assigned:0,here:0};
+    customer.ordered+=n(item.package_count);customer.assigned+=assignedAll;customer.here+=assignedHere;customerTotals.set(customerKey,customer);
    }
-   const customerBreakdown=customerTotals.size?'<div class="ndp3-customer-breakdown"><b>Купци и њихове количине</b>'+[...customerTotals.values()].map(customer=>'<span><strong>'+e(customer.name)+'</strong><small>'+f(customer.packages)+' × '+f(d?.packageSize||0)+' '+e(d?.packageUnit||'')+' ('+e(qty(customer.packages,d))+')</small></span>').join('')+'</div>':'<div class="ndp3-customer-breakdown"><small>Нема повезаних купаца за ову доделу.</small></div>';
+   const customerBreakdown='<div class="ndp3-customer-breakdown"><b>Купци · захтевано и додељено</b>'+([...customerTotals.values()].map(customer=>'<span><strong>'+e(customer.name)+' · поруџбина #'+e(customer.order??'—')+'</strong><small>Наручено '+f(customer.ordered)+' · овом газдинству '+f(customer.here)+' · укупно додељено '+f(customer.assigned)+' · још није додељено '+f(Math.max(0,customer.ordered-customer.assigned))+' пак.</small></span>').join('')||'<small>Нема ставки купаца за ову амбалажу.</small>')+'</div>';
    return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(lineTitle)+'</div><div class="ndp3-stage-line-meta">'+e(ff?.name||'Газдинство није пронађено')+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div>'+customerBreakdown+(s.stage==='collect'?'':'<div class="ndp3-stage-line-meta">Извор: '+e(sourceSummary(d))+'</div>')+'<div class="ndp3-stage-values">'+values+'</div>'+controls+'</article>';
   };
   const groupedRows=()=>{
@@ -77,7 +78,7 @@ export function renderProcurementStageView(ctx){
     const first=groupRows[0],title=groupByFarms?(farm(first.gazdinstvo_id)?.name||'Газдинство #'+first.gazdinstvo_id):(prod(first.product_id)?.name||'Производ');
     let actions='';
     if(s.stage==='request'&&s.view==='farms'){
-     actions='<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Отвори Viber и копирај требовање</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди слање требовања</button></div>';
+     actions='<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Пошаљи требовање · Viber</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(first.gazdinstvo_id)+'" '+(!writable||s.busy?'disabled':'')+'>Означи као послато</button></div>';
     }
     let body='';
     if(groupByFarms){
@@ -172,7 +173,7 @@ export function renderProcurementStageView(ctx){
      const d=demand(row.product_id,row.variant_id),p=prod(row.product_id),v=variant(row.variant_id),count=n(row.naruceno_pakovanja),confirmed=n(row.potvrdjeno_pakovanja);
      return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(p?.name||'Производ')+' · '+e(v?.name||v?.size_label||'Амбалажа')+'</div><div class="ndp3-stage-line-meta">Захтевано: <strong>'+f(count)+' паковања</strong> · Чека потврду: <strong>'+f(Math.max(0,count-confirmed))+' паковања</strong></div><div class="ndp3-stage-line-meta">'+e(amountLabel(count,d))+' · '+(d?f(d.packageSize)+' '+e(d.packageUnit)+' по паковању':'Подаци о паковању нису доступни')+'</div></article>';
     }).join('');
-    return '<section class="ndp3-stage-group"><header><strong>'+e(ff?.name||'Газдинство #'+farmId)+'</strong><span class="ndp3-chip amber">'+farmRows.length+' захтева</span></header>'+body+'<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(farmId)+'" '+(!writable||s.busy?'disabled':'')+'>Припреми Viber поруку</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(farmId)+'" '+(!writable||s.busy?'disabled':'')+'>Потврди да је захтев послат</button></div></section>';
+    return '<section class="ndp3-stage-group"><header><strong>'+e(ff?.name||'Газдинство #'+farmId)+'</strong><span class="ndp3-chip amber">'+farmRows.length+' захтева</span></header>'+body+'<div class="ndp3-stage-actions"><button class="ndp3-btn" data-action="prepare-farm" data-farm-id="'+e(farmId)+'" '+(!writable||s.busy?'disabled':'')+'>Пошаљи требовање · Viber</button><button class="ndp3-btn primary" data-action="mark-farm-sent" data-farm-id="'+e(farmId)+'" '+(!writable||s.busy?'disabled':'')+'>Означи као послато</button></div></section>';
    }).join('');
   })();
 
