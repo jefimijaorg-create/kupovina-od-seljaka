@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.5
+ * Version: 1.3.6
  * Updated: 2026-11-26
  * Description: Buyer-integrated order cards with editable and confirmed-delete order actions.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -119,7 +119,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
         const buyer=customerMap.get(String(order.kupac_id))||{},lines=linesByOrder.get(String(order.id))||[],name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—'));
         let customerTotal=0,customerUnknown=false;
         const normalized=phoneDigits(phoneFor(order)),viber=normalized?'<button type="button" class="nd-gop-viber" data-viber-phone="'+esc(normalized)+'" aria-label="Отвори Viber за '+esc(name)+'">Viber</button>':'<button type="button" class="nd-gop-viber" disabled title="Телефон купца није евидентиран">Нема броја</button>';
-        const customerCell='<td rowspan="'+Math.max(1,lines.length)+'" class="nd-gop-customer-cell"><strong>'+esc(name)+'</strong><button type="button" class="nd-gop-order-open" data-open-order="'+esc(order.id)+'">Поруџбина #'+esc(order.id)+'</button>'+viber+'</td>';
+        const customerCell='<td rowspan="'+Math.max(1,lines.length)+'" class="nd-gop-customer-cell"><strong>'+esc(name)+'</strong><button type="button" class="nd-gop-order-open" data-open-order="'+esc(order.id)+'">Поруџбина #'+esc(order.id)+'</button>'+(canManage?'<div class="nd-gop-order-actions"><button type="button" class="nd-gop-edit-order" data-open-order="'+esc(order.id)+'">Измени</button><button type="button" class="nd-gop-delete-order" data-delete-order="'+esc(order.id)+'">Обриши</button></div>':'')+viber+'</td>';
         const itemRows=lines.map((line,index)=>{const p=linePresentation(line),amount=lineAmount(line);if(amount===null)customerUnknown=true;else customerTotal+=amount;return '<tr class="nd-gop-line">'+(index===0?customerCell:'')+'<td>'+esc(p.name)+'<small>'+esc(p.packageText)+'</small></td><td class="nd-gop-qty">'+(p.count===null?'—':fmt(p.count))+'</td><td class="nd-gop-price">'+(p.unitPrice===null?'—':fmtMoney(p.unitPrice))+'</td><td class="nd-gop-amount">'+(amount===null?'Цена није унета':fmtMoney(amount))+'</td></tr>'}).join('');
         const orderTotal=order.ukupna_cena!==null&&order.ukupna_cena!==undefined&&order.ukupna_cena!==''&&Number.isFinite(Number(order.ukupna_cena))?Number(order.ukupna_cena):(customerUnknown?null:customerTotal);
         if(orderTotal===null)pointHasUnknown=true;else pointTotal+=orderTotal;
