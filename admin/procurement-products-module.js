@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.2
+ * Version: 4.21.3
  * Updated: 2026-11-26
- * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
+ * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
  */
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
