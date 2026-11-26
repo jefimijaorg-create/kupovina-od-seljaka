@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 3.2.0
+ * Version: 3.2.1
  * Updated: 2026-11-26
  * Description: Progressive product cards with explicit total and farm-level allocation, requisition, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -137,7 +137,7 @@ export function renderProcurementStageView(ctx){
      return '<article class="ndp3-stage-line"><div class="ndp3-stage-line-title">'+e(v?.name||v?.size_label||d.packagingLabel||'Амбалажа')+'</div><div class="ndp3-stage-line-meta">'+f(d.packageSize)+' '+e(d.packageUnit)+' по паковању</div><div class="ndp3-stage-values"><span><b>'+f(d.packages)+' пак.</b><small>Купци су наручили</small></span><span class="ndp3-value-assigned"><b>'+f(assignedPackages)+' пак.</b><small>Додељено укупно</small></span><span><b>'+f(requested)+' пак.</b><small>Већ требовано</small></span><span><b>'+f(remaining)+' пак.</b><small>Није додељено</small></span></div>'+(farmAllocationHtml?'<div class="ndp3-farm-allocation-breakdown"><b>Додељено по газдинствима</b><div>'+farmAllocationHtml+'</div></div>':'<div class="ndp3-farm-allocation-breakdown is-empty">Још није додељено ниједном газдинству.</div>')+'<div class="ndp3-customer-breakdown"><b>Купци и количине</b>'+(buyers.map(b=>'<span><strong>'+e(b.name)+'</strong><small>'+f(b.count)+' паковања</small></span>').join('')||'<small>Нема повезаних купаца.</small>')+'</div></article>';
     }).join('');
     const productNeeded=variants.reduce((sum,d)=>sum+n(d.packages),0),productAssigned=variants.reduce((sum,d)=>sum+allocated(d.productId,d.variantId),0),productRemaining=Math.max(0,productNeeded-productAssigned);
-    return '<details class="ndp3-request-product-card product-card" '+(productIndex===0?'open':'')+'><summary class="ndp3-request-product-head product-toggle"><div class="product-toggle-left"><h2>'+e(p?.name||'Производ')+'</h2><div class="product-sub">'+variants.length+' амбалаже · потребно '+f(productNeeded)+' · додељено '+f(productAssigned)+'</div></div><div class="product-toggle-right"><span class="'+(productRemaining?'badge-warn':'badge-ok')+'">'+(productRemaining?f(productRemaining)+' за доделу':'Све додељено')+'</span><span class="chevron" aria-hidden="true">›</span></div></summary><div class="ndp3-product-variants variants-wrap">'+lines+'</div></details>';
+    return '<details class="ndp3-request-product-card product-card ndp3-product-step" '+(productIndex===0?'open':'')+'><summary class="ndp3-request-product-head product-toggle"><div class="product-toggle-left"><h2>'+e(p?.name||'Производ')+'</h2><div class="product-sub">'+variants.length+' амбалаже · потребно '+f(productNeeded)+' · додељено '+f(productAssigned)+'</div></div><div class="product-toggle-right"><span class="'+(productRemaining?'badge-warn':'badge-ok')+'">'+(productRemaining?f(productRemaining)+' за доделу':'Све додељено')+'</span><span class="chevron" aria-hidden="true">›</span></div></summary><div class="ndp3-product-variants variants-wrap">'+lines+'</div></details>';
    }).join('');
    const totalNeeded=activeDemand.reduce((sum,d)=>sum+n(d.packages),0);
    const selectedCount=s.requestFarmFilter?remainingForFarm(s.requestFarmFilter):0;
