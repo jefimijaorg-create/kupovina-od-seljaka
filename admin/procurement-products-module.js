@@ -53,6 +53,18 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  @keyframes ndp-sheet-up{from{transform:translateY(30px);opacity:.6}to{transform:translateY(0);opacity:1}}
  @media(min-width:700px){.ndp-sheet-backdrop{align-items:center;padding:20px}.ndp-sheet{border-radius:20px;max-height:80vh}}.ndp-panel h4{margin:0 0 8px;font-size:13px}.ndp-line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.ndp-line:first-of-type{border-top:0}.ndp-line small{display:block;color:var(--muted);font-size:11px}.ndp-input{width:72px;border:1px solid #cbd8ce;border-radius:8px;padding:8px;text-align:center;font-size:16px;font-weight:900;background:white}.ndp-empty{padding:18px;text-align:center;color:var(--muted);background:white;border:1px dashed var(--line);border-radius:12px}
 
+
+ /* Три јасна бројчана показатеља на картици производа */
+ .ndp-quantity-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:8px;max-width:440px}
+ .ndp-quantity-summary>span{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #e4ebe5;border-radius:8px;background:#f6f9f6;min-width:0}
+ .ndp-quantity-summary em{font-style:normal;font-size:9px;line-height:1.2;font-weight:750;color:#6d7d72;white-space:normal}
+ .ndp-quantity-summary b{font-size:15px;line-height:1.2;color:#263b2d;font-weight:900}
+ .ndp-quantity-summary .is-free{background:#fff6e8;border-color:#f0d7b0}
+ .ndp-quantity-summary .is-free b{color:#a9610b}
+ .ndp-quantity-summary .is-zero{background:#edf5ef;border-color:#d5e5d8}
+ .ndp-quantity-summary .is-zero b{color:#285b3c}
+ @media(max-width:520px){.ndp-quantity-summary{gap:4px;margin-top:7px}.ndp-quantity-summary>span{padding:5px 6px}.ndp-quantity-summary em{font-size:8px}.ndp-quantity-summary b{font-size:14px}}
+
  /* Финално визуелно уједначавање картица производа: јасна типографија, без прегломазних елемената */
  .ndp-product{margin:8px 0;border-radius:14px;border-color:#e2e9e3;box-shadow:0 1px 2px rgba(28,55,38,.035)}
  .ndp-product-head{padding:11px 13px!important;min-height:72px;align-items:center}
@@ -106,7 +118,8 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   if(!gs.length)h+='<div class="ndp-empty">Нема ставки у изабраној фази. Производи и поруџбине у тури остају сачувани.</div>';
   gs.sort((a,b)=>{let x=actionFor(a),y=actionFor(b);return (x.kind==='done'?1:0)-(y.kind==='done'?1:0)}).forEach(g=>{
    let s=sums(g),act=actionFor(g),open=expanded.has(key(g.p,g.v));
-   h+='<section class="ndp-product"><button class="ndp-product-head" style="width:100%;border:0;text-align:left;cursor:pointer" data-expand="'+esc(key(g.p,g.v))+'"><span><h3>'+esc(pName(g.p))+'</h3><small>'+esc(vName(g.v))+(farmFilter==='all'?' · Наручено '+fmt(s.P)+' · Додељено '+fmt(s.R)+' · '+(s.R>0?'Слободно за доделу '+fmt(s.free):'Није додељено · слободно '+fmt(s.free))+' пак.':' · Наручено '+fmt(s.P)+' · Додељено '+fmt(s.R)+' · Потврђено '+fmt(s.K)+' · За преузимање '+fmt(s.pickup)+(groupRows(g).reduce((n,a)=>n+rejected(a),0)>0?' · Вишак '+fmt(groupRows(g).reduce((n,a)=>n+rejected(a),0))+' враћен у слободно':'')+' пак.')+'</small></span><span class="ndp-action">'+esc(act.label)+'</span></button>';
+    const allocatedLabel=farmFilter==='all'?'Додељено укупно':'Додељено '+fName(farmFilter);
+    h+='<section class="ndp-product"><button class="ndp-product-head" style="width:100%;border:0;text-align:left;cursor:pointer" data-expand="'+esc(key(g.p,g.v))+'"><span><h3>'+esc(pName(g.p))+'</h3><small>'+esc(vName(g.v))+'</small><span class="ndp-quantity-summary"><span><em>Наручено</em><b>'+fmt(s.P)+'</b></span><span><em>'+esc(allocatedLabel)+'</em><b>'+fmt(s.R)+'</b></span><span class="'+(s.free>0?'is-free':'is-zero')+'"><em>Слободно за доделу</em><b>'+fmt(s.free)+'</b></span></span></span><span class="ndp-action">'+esc(act.label)+'</span></button>';
    if(open){h+='<div class="ndp-sheet-backdrop" data-sheet-backdrop="'+esc(key(g.p,g.v))+'"><div class="ndp-sheet" role="dialog" aria-modal="true" aria-label="'+esc(pName(g.p)+' '+vName(g.v))+'"><div class="ndp-sheet-handle"></div><div class="ndp-sheet-top"><h3>'+esc(pName(g.p))+' · '+esc(vName(g.v))+'</h3><button class="ndp-sheet-close" data-close-sheet="'+esc(key(g.p,g.v))+'" aria-label="Затвори">×</button></div><div class="ndp-variant"><div class="ndp-vtitle"><span>Стање набавке</span><span>Слободно '+fmt(s.free)+'</span></div><div class="ndp-stages">'+[['Наручено',s.P,1,''],['Требовано',s.R,2,s.free?'warn':''],['У требов.',s.pending,3,s.pending?'wait':''],['Потврђено',s.K,4,s.short?'bad':''],['Преузето',s.U,5,s.U===s.K?'done':'']].map(x=>'<button class="ndp-stage '+x[3]+'" data-open="'+x[2]+'" data-key="'+esc(key(g.p,g.v))+'"><b>'+fmt(x[1])+'</b><small>'+x[0]+'</small></button>').join('')+'</div>';
     // Трајни преглед расподеле по газдинству: видљив одмах при отварању производа,
     // независно од тренутне фазе и филтера газдинства.
