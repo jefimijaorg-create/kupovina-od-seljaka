@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.9.8
+ * Version: 2.9.9
  * Updated: 2026-11-26
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -10,7 +10,7 @@ export function renderProcurementStageView(ctx){
  function render(){
   if(s.disposed)return;
   const writable=s.tour?.status==='processing';
-  const requestRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
+  const requestRows=s.allocations.filter(x=>x.viber_status==='not_sent'&&!x.viber_poslato_at&&n(x.naruceno_pakovanja)>n(x.potvrdjeno_pakovanja));
   const requestDemandCount=requestRows.length;
   const totalPackages=selector=>f(s.demands.filter(d=>d.valid).reduce((sum,d)=>sum+selector(d),0));
   const confirmRows=s.allocations.filter(x=>canConfirmProcurement(x));
@@ -230,13 +230,13 @@ export function renderProcurementStageView(ctx){
 
   const contentRows=groupedRows();
   const phaseContent=s.stage==='debt'?debtHtml:s.stage==='history'?historyHtml():s.stage==='request'?(s.view==='farms'?requestFarmsHtml:requestProductsHtml):
-   (contentRows||'<div class="ndp3-stage-empty">'+(s.stage==='confirm'?'Нема послатих требовања нити потврђених количина за расподелу купцима.':'Нема потврђених количина које чекају преузимање.')+'</div>');
+   (contentRows||'<div class="ndp3-stage-empty">'+(s.stage==='confirm'?'Нема требовања која чекају потврду газдинства.':'Нема потврђених количина које чекају преузимање.')+'</div>');
   const invalidDemandCount=s.demands.filter(x=>!x.valid).length;
   const invalidSourceCount=s.items.filter(x=>!x.product_id).length;
   const missingVariantCount=s.demands.filter(x=>x.valid&&!x.allocatable).length;
   const demandWarning=(invalidDemandCount||invalidSourceCount||missingVariantCount)?'<div class="ndp3-note error">Пажња: '+invalidDemandCount+' невалидних комбинација и '+invalidSourceCount+' ставки без производа нису укључене у збирове. '+missingVariantCount+' производа имају поруџбину, али им недостаје повезана амбалажа; приказани су, али расподела је блокирана.</div>':'';
   host.innerHTML='<header class="ndp3-head"><div><div class="ndp3-kicker">НАБАВКА · ТУРА #'+e(tourId)+'</div><h1>'+e(s.tour?.naziv||'Тура')+'</h1></div><button class="ndp3-btn" data-action="back">← Назад</button></header>'+
-   '<nav class="ndp3-phase-tabs" aria-label="Три корака набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'"><span class="ndp3-phase-step">1. КОРАК</span><strong>Требовање</strong></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'" '+(!confirmStageRows.length?'disabled aria-disabled="true" title="Нема послатих требовања нити потврђених количина за расподелу купцима"':'title="Потврди одговор газдинства и расподели потврђену количину купцима"')+'><span class="ndp3-phase-step">2. КОРАК</span><strong>Потврда · купци</strong></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'" '+(!collectRows.length?'disabled aria-disabled="true" title="Преузимање је могуће тек после потврде газдинства"':'title="Евиденција потврђених количина за преузимање"')+'><span class="ndp3-phase-step">3. КОРАК</span><strong>Преузето</strong></button></nav>'+
+   '<nav class="ndp3-phase-tabs" aria-label="Три корака набавке"><button class="ndp3-phase-tab" data-stage="request" aria-selected="'+(s.stage==='request')+'"><span class="ndp3-phase-step">1. КОРАК</span><strong>Требовање</strong></button><button class="ndp3-phase-tab" data-stage="confirm" aria-selected="'+(s.stage==='confirm')+'" '+(!confirmStageRows.length?'disabled aria-disabled="true" title="Нема послатих требовања која чекају потврду газдинства"':'title="Изабери газдинство, исправи потврђене количине и евидентирај мањак"')+'><span class="ndp3-phase-step">2. КОРАК</span><strong>Потврда газдинства</strong></button><button class="ndp3-phase-tab" data-stage="collect" aria-selected="'+(s.stage==='collect')+'" '+(!collectRows.length?'disabled aria-disabled="true" title="Преузимање је могуће тек после потврде газдинства"':'title="Евиденција потврђених количина за преузимање"')+'><span class="ndp3-phase-step">3. КОРАК</span><strong>Преузето</strong></button></nav>'+
    (s.stage==='collect'||s.stage==='debt'?'':'<div class="ndp3-view-switch"><button type="button" data-view="products" aria-pressed="'+(s.view==='products')+'">По производима</button><button type="button" data-view="farms" aria-pressed="'+(s.view==='farms')+'">По газдинствима</button></div>')+
    
    packageOverviewHtml+packageSheetHtml+
