@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.8.0
+ * Version: 2.8.1
  * Updated: 2026-11-25
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -104,26 +104,6 @@ export function renderProcurementStageView(ctx){
   const requestProductsHtml=(()=>{
    const groups=new Map();
    const activeDemand=s.demands.filter(x=>x.valid&&x.productId&&n(x.packages)>0);
-   const orderedOverviewHtml=(()=>{
-    if(!activeDemand.length)return '<section class="ndp3-order-overview"><header><strong>ШТА ЈЕ НАРУЧЕНО</strong><b>0 пак.</b></header><p>Нема наручених производа у активној тури.</p></section>';
-    const products=new Map();
-    for(const d of activeDemand){const id=String(d.productId);if(!products.has(id))products.set(id,[]);products.get(id).push(d);}
-    const totalPackages=activeDemand.reduce((sum,d)=>sum+n(d.packages),0);
-    return '<section class="ndp3-order-overview"><header><strong>ШТА ЈЕ НАРУЧЕНО</strong><b>'+f(totalPackages)+' пак.</b></header><div class="ndp3-order-overview-list">'+[...products.entries()].map(([productId,lines])=>{
-     const product=prod(productId);
-     const productTotal=lines.reduce((sum,d)=>sum+n(d.packages),0);
-     return '<article class="ndp3-order-overview-product"><div class="ndp3-order-overview-product-head"><strong>'+e(product?.name||'Производ')+'</strong><b>'+f(productTotal)+' пак.</b></div>'+lines.map(d=>{
-      const v=variant(d.variantId),orderedCustomers=new Map();
-      for(const item of s.items.filter(item=>String(item.product_id)===String(d.productId)&&String(item.variant_id)===String(d.variantId)&&n(item.package_count)>0)){
-       const customerKey=String(item.customer_id??item.customer_name??item.id);
-       const customer=orderedCustomers.get(customerKey)||{name:item.customer_name||'Купац није повезан',packages:0};
-       customer.packages+=n(item.package_count);orderedCustomers.set(customerKey,customer);
-      }
-      const customers=orderedCustomers.size?'<details class="ndp3-order-overview-buyers"><summary>'+f(orderedCustomers.size)+' купца · види списак</summary><div>'+[...orderedCustomers.values()].map(customer=>'<span><strong>'+e(customer.name)+'</strong><small>'+f(customer.packages)+' пак. · '+e(amountLabel(customer.packages,d))+'</small></span>').join('')+'</div></details>':'';
-      return '<div class="ndp3-order-overview-variant"><div><strong>'+e(v?.name||v?.size_label||d.packagingLabel||'Амбалажа')+'</strong><small>'+f(d.packageSize)+' '+e(d.packageUnit)+' · '+e(amountLabel(d.packages,d))+'</small></div><b>'+f(d.packages)+' пак.</b>'+customers+'</div>';
-     }).join('')+'</article>';
-    }).join('')+'</div></section>';
-   })();
    const farmOffersForDemand=farmId=>activeDemand.some(d=>s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId)));
    const farmAssignedCount=farmId=>s.allocations.filter(row=>String(row.gazdinstvo_id)===String(farmId)).reduce((sum,row)=>sum+n(row.broj_pakovanja),0);
    const farmRemainingCount=farmId=>activeDemand.filter(d=>s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId))).reduce((sum,d)=>sum+Math.max(0,n(d.packages-allocated(d.productId,d.variantId))),0);
@@ -136,7 +116,7 @@ export function renderProcurementStageView(ctx){
     groups.get(id).push(d);
    }
    const allocationStepHtml=groups.size
-    ? farmSelectorHtml+(s.requestFarmFilter?'<div class="ndp3-product-search-wrap"><input class="ndp3-product-search" type="search" inputmode="search" autocomplete="off" placeholder="Пронађи производ…" aria-label="Претражи производе" data-product-search></div><div class="ndp3-request-intro">Приказани су производи из активне понуде изабраног газдинства, са постојећим доделама и преосталим количинама.</div><div class="ndp3-request-product-action"><button class="ndp3-btn primary" type="button" data-action="open-request" '+(!writable||s.busy?'disabled':'')+'>Отвори требовање за целу туру</button></div><section class="ndp3-request-products">'+[...groups.entries()].map(([productId,items])=>{
+    ? farmSelectorHtml+(s.requestFarmFilter?'<div class="ndp3-product-search-wrap"><input class="ndp3-product-search" type="search" inputmode="search" autocomplete="off" placeholder="Пронађи производ…" aria-label="Претражи производе" data-product-search></div><div class="ndp3-request-intro">Приказани су производи из активне понуде изабраног газдинства, са постојећим доделама и преосталим количинама.</div><section class="ndp3-request-products">'+[...groups.entries()].map(([productId,items])=>{
     const p=prod(productId);
     const remainingAll=items.reduce((sum,d)=>sum+Math.max(0,d.packages-ordered(d.productId,d.variantId)),0);
     const allAssigned=items.every(d=>Math.max(0,d.packages-allocated(d.productId,d.variantId))===0);
