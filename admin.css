@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.1.1";
+  --nd-css-version:"5.1.2";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -846,6 +846,19 @@ body.nd-workspace select:focus-visible{
   color:#fff;
 }
 .nd-workspace .nd-go-action-primary:hover{background:var(--nd-green-dark)}
+.nd-workspace .nd-go-action-danger{
+  min-height:34px;
+  padding:6px 10px;
+  border:1px solid #E8A04A;
+  border-radius:7px;
+  background:#FFF7EC;
+  color:#80501E;
+  font-size:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+.nd-workspace .nd-go-action-danger:hover{background:#FBE8CE}
+.nd-workspace .nd-go-action-danger:disabled{opacity:.55;cursor:not-allowed}
 .nd-workspace .nd-go-order-editor,
 .nd-workspace .nd-go-status-editor{
   display:flex;
