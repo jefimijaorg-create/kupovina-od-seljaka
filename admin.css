@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 4.2.0
-   Верзија: 4.2.0
+ * Version: 4.3.0
+   Верзија: 4.3.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"4.2.0";
+  --nd-css-version:"4.3.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1571,3 +1571,27 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-list{display:none}
 .nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-top{margin:0}
 .nd-workspace .ndp3-farm-change{min-height:34px;padding:5px 9px;border:1px solid #C4D6C9;border-radius:8px;background:#E9F1EC;color:#285B3C;font-size:11px;font-weight:850;white-space:nowrap}
+
+
+/* МОДУЛ НАБАВКА — СТАЛНИ ПРЕГЛЕД СВЕГА НАРУЧЕНОГ · 4.3.0 */
+.nd-workspace .ndp3-order-overview{width:100%;min-width:0;margin:0 0 10px;padding:9px 10px;border:1px solid #C4D6C9;border-radius:10px;background:#fff;color:#344238}
+.nd-workspace .ndp3-order-overview>header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 6px;border-bottom:1px solid #DCE4DC}
+.nd-workspace .ndp3-order-overview>header strong{font-size:12px;font-weight:900;color:#285B3C}
+.nd-workspace .ndp3-order-overview>header b{font-size:12px;font-weight:900;white-space:nowrap}
+.nd-workspace .ndp3-order-overview>p{margin:6px 0 0;color:#617066;font-size:11px}
+.nd-workspace .ndp3-order-overview-list{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.nd-workspace .ndp3-order-overview-product{min-width:0;padding:5px 0;border-bottom:1px solid #E5EBE4}
+.nd-workspace .ndp3-order-overview-product:last-child{border-bottom:0;padding-bottom:0}
+.nd-workspace .ndp3-order-overview-product-head{display:flex;justify-content:space-between;align-items:baseline;gap:7px}
+.nd-workspace .ndp3-order-overview-product-head strong{font-size:12px;font-weight:850}
+.nd-workspace .ndp3-order-overview-product-head b{font-size:11px;color:#285B3C;white-space:nowrap}
+.nd-workspace .ndp3-order-overview-variant{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 8px;padding:4px 0 2px 8px}
+.nd-workspace .ndp3-order-overview-variant>div:first-child{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px;min-width:0}
+.nd-workspace .ndp3-order-overview-variant>div:first-child strong{font-size:11px;font-weight:750}
+.nd-workspace .ndp3-order-overview-variant>div:first-child small{font-size:10px;color:#617066}
+.nd-workspace .ndp3-order-overview-variant>b{font-size:11px;font-weight:900;color:#344238;white-space:nowrap}
+.nd-workspace .ndp3-order-overview-buyers{grid-column:1/-1;margin:1px 0 0}
+.nd-workspace .ndp3-order-overview-buyers>summary{width:max-content;max-width:100%;font-size:10px;color:#285B3C;font-weight:750;cursor:pointer}
+.nd-workspace .ndp3-order-overview-buyers>div{display:flex;flex-wrap:wrap;gap:4px 12px;padding:4px 0 2px}
+.nd-workspace .ndp3-order-overview-buyers>div>span{display:flex;gap:4px;align-items:baseline;font-size:10px}
+.nd-workspace .ndp3-order-overview-buyers>div>span small{color:#617066}
