@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.0.0
-   Верзија: 5.0.0
+ * Version: 5.0.1
+   Верзија: 5.0.1
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.0.0";
+  --nd-css-version:"5.0.1";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1491,3 +1491,7 @@ body.nd-workspace select:focus-visible{
  .nd-workspace .ndp3-request-assign.btn-assign{min-height:32px;padding:5px 7px;font-size:10px}
  .nd-workspace .ndp3-order-overview{padding:8px;margin-bottom:8px}
 }
+
+/* МОДУЛ НАБАВКА — ФИЛТРИРАНИ РЕДОВИ СЕ ЗАИСТА СКЛАЊАЈУ · 5.0.1 */
+.nd-workspace .ndp3-farm-picker-item[hidden],
+.nd-workspace .ndp3-request-product-card[hidden]{display:none}
