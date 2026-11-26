@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.0.1
-   Верзија: 5.0.1
+ * Version: 5.0.2
+   Верзија: 5.0.2
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.0.1";
+  --nd-css-version:"5.0.2";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1495,3 +1495,61 @@ body.nd-workspace select:focus-visible{
 /* МОДУЛ НАБАВКА — ФИЛТРИРАНИ РЕДОВИ СЕ ЗАИСТА СКЛАЊАЈУ · 5.0.1 */
 .nd-workspace .ndp3-farm-picker-item[hidden],
 .nd-workspace .ndp3-request-product-card[hidden]{display:none}
+
+
+/* МОДУЛ НАБАВКА — ЈАСНИ ЗБИРОВИ P / R−K / K И ЗАХТЕВ P−R · 5.0.2 */
+.nd-workspace .ndp3-pkr-stats{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px;
+  margin:6px 0 2px;
+}
+.nd-workspace .ndp3-pkr-stats .pill-stat{
+  display:flex;
+  min-width:0;
+  min-height:23px;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:3px 5px;
+  border:1px solid #DCE4DC;
+  border-radius:6px;
+  background:#F3F5F2;
+  color:#344238;
+  font-size:10px;
+  line-height:1.15;
+}
+.nd-workspace .ndp3-pkr-stats .pill-stat small{
+  display:inline;
+  margin:0;
+  color:inherit;
+  font-size:9px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.nd-workspace .ndp3-pkr-stats .pill-stat b{
+  color:inherit;
+  font-size:11px;
+  font-weight:900;
+  font-variant-numeric:tabular-nums;
+}
+.nd-workspace .ndp3-pkr-stats .pill-stat.missing{
+  border-color:#F2D3A6;
+  background:#FFF7EC;
+  color:#9A5B13;
+}
+.nd-workspace .ndp3-pkr-stats .pill-stat.this-farm{
+  border-color:#C4D6C9;
+  background:#E9F1EC;
+  color:#285B3C;
+}
+.nd-workspace .ndp3-pkr-left{grid-column:1/-1;justify-content:space-between!important}
+.nd-workspace .ndp3-request-product-head .badge-warn{font-size:10px}
+.nd-workspace .ndp3-request-product-head .badge-ok{font-size:10px}
+.nd-workspace .nd-main:has(.ndp3){padding-top:7px;padding-bottom:100px}
+@media(max-width:767px){
+  .nd-workspace .ndp3-pkr-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
+  .nd-workspace .ndp3-pkr-stats .pill-stat{padding:3px 4px;font-size:9px}
+  .nd-workspace .ndp3-pkr-left{grid-column:1/-1}
+  .nd-workspace .nd-main:has(.ndp3){padding:5px 9px 100px}
+}
