@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.15.0
+ * Version: 4.16.0
  * Updated: 2026-11-22
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.5.0';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.7.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.5';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.1';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities } from './procurement/procurement-allocation-actions.js?v=1.1.2';
@@ -161,6 +161,11 @@ host.addEventListener('input',ev=>{
   host.querySelectorAll('[data-product-search-name]').forEach(card=>{card.hidden=!!q&&!String(card.dataset.productSearchName||'').includes(q);});
  }
 });
+host.addEventListener('toggle',ev=>{
+ const productCard=ev.target;
+ if(!productCard.matches?.('.ndp3-product-step[open]'))return;
+ host.querySelectorAll('.ndp3-product-step[open]').forEach(other=>{if(other!==productCard)other.open=false;});
+},true);
 host.addEventListener('change',ev=>{
   if(ev.target.matches('[data-customer-order-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(9999,Math.floor(Number(ev.target.value)||0)));s.orderDraft={...s.orderDraft,[String(item.id)]:value};render();return;}
   if(ev.target.matches('[data-customer-allocation-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(n(item.package_count),Math.floor(Number(ev.target.value)||0)));s.editAllocationDraft={...s.editAllocationDraft,[String(item.id)]:value};render();return;}
