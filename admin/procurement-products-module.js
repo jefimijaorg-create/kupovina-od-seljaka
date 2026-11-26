@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.11.0
+ * Version: 4.12.0
  * Updated: 2026-11-22
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -150,6 +150,17 @@ async function saveField(id){
   try{const copied=!!navigator.clipboard?.writeText;if(copied)await navigator.clipboard.writeText(text);s.stage='request';setNote(copied?'Расподела је сачувана, а поруке су копиране груписано по газдинствима. Пошаљи их засебно; статус слања није аутоматски промењен.':'Расподела је сачувана. Копирање није доступно; статус слања није промењен.',false);}
   catch(err){setNote('Додела је сачувана, али припрема поруке није успела: '+(err.message||String(err)),true);}
  }
+host.addEventListener('input',ev=>{
+ if(ev.target.matches('[data-farm-search]')){
+  const q=String(ev.target.value||'').trim().toLocaleLowerCase('sr');
+  host.querySelectorAll('[data-farm-filter][data-farm-name]').forEach(row=>{row.hidden=!!q&&!String(row.dataset.farmName||'').includes(q);});
+  return;
+ }
+ if(ev.target.matches('[data-product-search]')){
+  const q=String(ev.target.value||'').trim().toLocaleLowerCase('sr');
+  host.querySelectorAll('[data-product-search-name]').forEach(card=>{card.hidden=!!q&&!String(card.dataset.productSearchName||'').includes(q);});
+ }
+});
 host.addEventListener('change',ev=>{
   if(ev.target.matches('[data-customer-order-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(9999,Math.floor(Number(ev.target.value)||0)));s.orderDraft={...s.orderDraft,[String(item.id)]:value};render();return;}
   if(ev.target.matches('[data-customer-allocation-count]')){const item=s.items.find(x=>String(x.id)===String(ev.target.dataset.itemId));if(!item)return;const value=Math.max(0,Math.min(n(item.package_count),Math.floor(Number(ev.target.value)||0)));s.editAllocationDraft={...s.editAllocationDraft,[String(item.id)]:value};render();return;}
