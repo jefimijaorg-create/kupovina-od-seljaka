@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 4.3.0
-   Верзија: 4.3.0
+ * Version: 5.0.0
+   Верзија: 5.0.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"4.3.0";
+  --nd-css-version:"5.0.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1387,211 +1387,107 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .nd-brand-copy strong{font-size:12px}
 }
 
-/* МОДУЛ НАБАВКА — ЈЕДИНСТВЕН СТИЛ ТРЕБОВАЊА, АМБАЛАЖЕ И ГАЗДИНСТВА · 3.8.0 */
-.nd-workspace .ndp3-request-package-row{display:flex;flex-direction:column;gap:8px;min-width:0;margin-top:8px;padding:10px 0;border:0;border-top:1px solid #E5EBE4;border-radius:0;background:transparent}
-.nd-workspace .ndp3-request-package-main{display:flex;min-width:0;flex-direction:column;gap:7px}
-.nd-workspace .ndp3-request-package-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
-.nd-workspace .ndp3-request-package-head>b{min-width:0;color:#344238;font-size:14px;font-weight:800;overflow-wrap:anywhere}
-.nd-workspace .ndp3-request-package-meta{display:block;color:#617066;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
-.nd-workspace .ndp3-request-package-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
-.nd-workspace .ndp3-request-package-metrics>div{display:flex;min-width:0;flex-direction:column;gap:3px;padding:7px 9px;border:1px solid #DCE4DC;border-radius:8px;background:#F3F5F2}
-.nd-workspace .ndp3-request-package-metrics small{color:#617066;font-size:10px;font-weight:700;line-height:1.25}
-.nd-workspace .ndp3-request-package-metrics b{color:#344238;font-size:18px;font-weight:850;line-height:1.1;font-variant-numeric:tabular-nums}
-.nd-workspace .ndp3-request-package-metrics>div:nth-child(2){background:#E9F1EC;border-color:#C4D6C9}
-.nd-workspace .ndp3-request-package-metrics>div:nth-child(2) b{color:#285B3C}
-.nd-workspace .ndp3-request-package-metrics>div.is-pending{background:#FFF7EC;border-color:#F2D3A6}
-.nd-workspace .ndp3-request-package-metrics>div.is-pending small,.nd-workspace .ndp3-request-package-metrics>div.is-pending b{color:#9A5B13}
-.nd-workspace .ndp3-request-package-metrics>div.is-complete{background:#E9F1EC;border-color:#C4D6C9}
-.nd-workspace .ndp3-request-package-metrics>div.is-complete b{color:#285B3C}
-.nd-workspace .ndp3-request-assign{flex:0 0 auto;min-height:40px;padding:7px 11px;border:1px solid #285B3C;border-radius:8px;background:#285B3C;color:#fff;font-size:12px;font-weight:800;white-space:normal}
-.nd-workspace .ndp3-request-assign:disabled{opacity:.45;cursor:not-allowed}
-.nd-workspace .ndp3-request-allocations{margin-top:3px;border-top:1px solid #E5EBE4;padding-top:5px}
-.nd-workspace .ndp3-request-allocations summary{display:flex;align-items:center;min-height:34px;color:#285B3C;font-size:11px;font-weight:800;cursor:pointer}
-.nd-workspace .ndp3-request-allocation-list{display:flex;flex-direction:column;gap:6px;margin-top:5px}
-.nd-workspace .ndp3-request-allocation{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px;border:1px solid #DCE4DC;border-radius:9px;background:#F8FAF7}
-.nd-workspace .ndp3-request-allocation>div{min-width:0;flex:1 1 200px}
-.nd-workspace .ndp3-request-allocation>div>strong{color:#344238;font-size:12px;font-weight:800}
-.nd-workspace .ndp3-request-allocation>div>small{display:block;margin-top:3px;color:#617066;font-size:10px;line-height:1.35}
-.nd-workspace .ndp3-customer-breakdown{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px 9px;margin-top:5px;padding:0;border:0;background:transparent}
-.nd-workspace .ndp3-customer-breakdown>b{flex:0 0 100%;color:#617066;font-size:10px;font-weight:750}
-.nd-workspace .ndp3-customer-breakdown>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:row;align-items:baseline;gap:4px}
-.nd-workspace .ndp3-customer-breakdown>span strong{color:#344238;font-size:10px;font-weight:750;overflow-wrap:anywhere}
-.nd-workspace .ndp3-customer-breakdown>span small{color:#285B3C;font-size:10px;font-weight:800;overflow-wrap:anywhere}
-.nd-workspace .ndp3-order-customer-breakdown{display:block;margin:4px 0 5px;padding:0;border:0;background:transparent}
-.nd-workspace .ndp3-order-customer-breakdown>summary{display:inline-flex;min-height:30px;align-items:center;gap:5px;padding:4px 8px;border:1px solid #DCE4DC;border-radius:7px;background:#F8FAF7;color:#285B3C;font-size:10px;font-weight:800;cursor:pointer;list-style:none}
-.nd-workspace .ndp3-order-customer-breakdown>summary::-webkit-details-marker{display:none}
-.nd-workspace .ndp3-order-customer-breakdown[open]>summary{margin-bottom:5px;background:#E9F1EC}
-.nd-workspace .ndp3-order-customer-list{display:flex;flex-wrap:wrap;gap:5px 10px;padding:7px 8px;border:1px solid #DCE4DC;border-radius:8px;background:#F8FAF7}
-.nd-workspace .ndp3-order-customer-list>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:column;gap:2px}
-.nd-workspace .ndp3-order-customer-list>span strong{color:#344238;font-size:10px;font-weight:750}
-.nd-workspace .ndp3-order-customer-list>span small{color:#285B3C;font-size:10px;font-weight:750}
-.nd-workspace .ndp3-request-intro{display:none}
-.nd-workspace .ndp3-request-product-action{display:none}
-.nd-workspace .ndp3-request-product-card{min-width:0;padding:11px 12px;border:1px solid #DCE4DC;border-radius:11px;background:#fff}
-.nd-workspace .ndp3-request-product-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:7px;border-bottom:1px solid #E5EBE4}
-.nd-workspace .ndp3-request-product-head strong{color:#344238;font-size:15px;font-weight:850}
-.nd-workspace .ndp3-request-product-total{color:#617066;font-size:10px;line-height:1.35}
-.nd-workspace .ndp3-farm-picker{margin:6px 0 10px;padding:9px 10px;border:1px solid #DCE4DC;border-radius:11px;background:#fff}
-.nd-workspace .ndp3-farm-picker-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
-.nd-workspace .ndp3-farm-picker-top>div{display:flex;flex-direction:row;align-items:baseline;gap:7px;min-width:0}
-.nd-workspace .ndp3-farm-picker-top strong{color:#344238;font-size:13px;font-weight:850}
-.nd-workspace .ndp3-farm-picker-top small,.nd-workspace .ndp3-farm-picker-count{color:#617066;font-size:10px;font-weight:700}
-.nd-workspace .ndp3-farm-search{width:100%;min-height:40px;padding:7px 10px;border:1px solid #DCE4DC;border-radius:8px;background:#F3F5F2;color:#344238;font-size:14px}
-.nd-workspace .ndp3-farm-picker-filters{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
-.nd-workspace .ndp3-farm-picker-filters button{min-height:31px;padding:4px 9px;border:1px solid #DCE4DC;border-radius:7px;background:#fff;color:#344238;font-size:10px;font-weight:800}
-.nd-workspace .ndp3-farm-picker-filters button[aria-pressed="true"]{border-color:#285B3C;background:#E9F1EC;color:#285B3C}
-.nd-workspace .ndp3-farm-picker-list{display:flex;max-height:145px;flex-direction:column;gap:4px;overflow-y:auto;overscroll-behavior:contain;padding:1px 3px 1px 0}
-.nd-workspace .ndp3-farm-picker-item{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:43px;padding:6px 8px;border:1px solid #E1E7E0;border-radius:8px;background:#fff;text-align:left;color:#344238}
-.nd-workspace .ndp3-farm-picker-item>span{display:flex;min-width:0;flex-direction:column;gap:2px}
-.nd-workspace .ndp3-farm-picker-item strong{overflow-wrap:anywhere;font-size:11px;font-weight:800}
-.nd-workspace .ndp3-farm-picker-item small{color:#617066;font-size:9px}
-.nd-workspace .ndp3-farm-picker-item>b{flex:0 0 auto;color:#285B3C;font-size:10px;font-weight:850;text-align:right}
-.nd-workspace .ndp3-farm-picker-item.is-selected{border:2px solid #285B3C;background:#E9F1EC;padding:5px 7px}
-.nd-workspace .ndp3-farm-picker-item[hidden]{display:none}
+
+/* МОДУЛ НАБАВКА — ПРЕУЗЕТ РЕФЕРЕНТНИ ДИЗАЈН „ПО ГАЗДИНСТВУ“ · 5.0.0
+   Задржани су стварни подаци, поруџбине и постојеће акције ADMIN система. */
+
+/* 1. Избор газдинства — компактни чипови као у приложеном HTML-у */
+.nd-workspace .ndp3-farm-picker.farm-selector-box{background:#fff;border:1.5px solid #285B3C;border-radius:13px;padding:10px;margin:0 0 12px;color:#344238}
+.nd-workspace .ndp3-farm-picker-top{display:flex;align-items:center;flex-wrap:wrap;gap:5px 8px;margin-bottom:7px}
+.nd-workspace .ndp3-farm-picker-top .farm-selector-label{flex:1 0 100%;display:block;margin:0;color:#285B3C;font-size:10px;font-weight:850;letter-spacing:.03em}
+.nd-workspace .ndp3-farm-picker-top>strong{min-width:0;flex:1;font-size:14px;font-weight:900;color:#344238}
+.nd-workspace .ndp3-farm-picker-count{font-size:10px;font-weight:850;color:#285B3C;white-space:nowrap}
+.nd-workspace .ndp3-farm-change{min-height:30px;padding:4px 9px;border:1px solid #C4D6C9;border-radius:8px;background:#E9F1EC;color:#285B3C;font-size:11px;font-weight:850}
+.nd-workspace .ndp3-farm-search{width:100%;height:36px;margin:0 0 6px;padding:0 10px;border:1px solid #DCE4DC;border-radius:9px;background:#F3F5F2;color:#344238;font-size:13px}
+.nd-workspace .ndp3-farm-picker-filters{display:flex;gap:5px;margin:0 0 7px}
+.nd-workspace .ndp3-farm-picker-filters button{min-height:27px;padding:3px 8px;border:1px solid #DCE4DC;border-radius:8px;background:#fff;color:#617066;font-size:10px;font-weight:800}
+.nd-workspace .ndp3-farm-picker-filters button[aria-pressed="true"]{border-color:#C4D6C9;background:#E9F1EC;color:#285B3C}
+.nd-workspace .ndp3-farm-picker-list.farm-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:138px;overflow:auto}
+.nd-workspace .ndp3-farm-picker-item.farm-chip{display:inline-flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;max-width:100%;min-height:38px;padding:7px 9px;border:1px solid #DCE4DC;border-radius:9px;background:#F3F5F2;color:#344238;font-size:12px;font-weight:850;white-space:normal;text-align:left}
+.nd-workspace .ndp3-farm-picker-item.farm-chip>span:first-child{min-width:0}
+.nd-workspace .ndp3-farm-picker-item.farm-chip .chip-count{flex:0 0 auto;padding:1px 5px;border-radius:99px;background:rgba(0,0,0,.07);font-size:10px;font-weight:850}
+.nd-workspace .ndp3-farm-picker-item.farm-chip.active{background:#285B3C;border-color:#285B3C;color:#fff}
+.nd-workspace .ndp3-farm-picker-item.farm-chip.active .chip-count{background:rgba(255,255,255,.2);color:#fff}
 .nd-workspace .ndp3-farm-picker-empty{padding:8px;color:#617066;font-size:11px}
-.nd-workspace .ndp3-farm-other-allocation{margin-top:5px;padding:6px 8px;border:0;border-left:3px solid #E8A04A;border-radius:0;background:#FFF7EC;color:#9A5B13;font-size:10px;line-height:1.4}
-.nd-workspace .ndp3-farm-assignment-locked{display:inline-flex;align-items:center;min-height:32px;padding:4px 8px;border:1px solid #DCE4DC;border-radius:7px;background:#F3F5F2;color:#617066;font-size:10px;font-weight:750}
-.nd-workspace .nd-main:has(.ndp3){padding-bottom:105px}
-@media(min-width:768px) and (max-width:1100px){.nd-workspace .ndp3-request-products{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:767px){.nd-workspace .ndp3{gap:9px;padding-bottom:105px}.nd-workspace .ndp3-request-product-card{padding:10px}.nd-workspace .ndp3-request-package-metrics{gap:5px}.nd-workspace .ndp3-request-package-metrics>div{padding:7px 6px}.nd-workspace .ndp3-request-package-metrics small{font-size:9px}.nd-workspace .ndp3-request-package-metrics b{font-size:17px}.nd-workspace .ndp3-request-assign{min-height:42px;padding:6px 9px}.nd-workspace .ndp3-farm-picker-list{max-height:135px}.nd-workspace .ndp3-farm-picker-item{min-height:43px}}
 
-/* МОДУЛ НАБАВКА — БРЗ ИЗБОР И ДОДЕЛА ПРОИЗВОДА · 3.9.0 */
-.nd-workspace .ndp3-product-search-wrap{margin:5px 0 9px}
-.nd-workspace .ndp3-product-search{width:100%;min-height:42px;padding:8px 11px;border:1px solid #C4D6C9;border-radius:9px;background:#fff;color:#344238;font-size:15px;font-weight:600}
-.nd-workspace .ndp3-product-search::placeholder{color:#617066;font-weight:400}
-.nd-workspace .ndp3-request-product-card[hidden]{display:none}
-.nd-workspace .ndp3-request-product-card{padding:9px 11px;border-radius:10px}
-.nd-workspace .ndp3-request-product-head{padding-bottom:5px}
-.nd-workspace .ndp3-request-product-head strong{font-size:14px}
-.nd-workspace .ndp3-request-product-total{font-size:10px}
-.nd-workspace .ndp3-request-package-row{gap:5px;margin-top:5px;padding:7px 0}
-.nd-workspace .ndp3-request-package-main{gap:5px}
-.nd-workspace .ndp3-request-package-head{align-items:center}
-.nd-workspace .ndp3-request-package-head>b{font-size:13px}
-.nd-workspace .ndp3-request-package-meta{font-size:10px}
-.nd-workspace .ndp3-request-package-metrics{gap:0;border:1px solid #E1E7E0;border-radius:7px;overflow:hidden;background:#F8FAF7}
-.nd-workspace .ndp3-request-package-metrics>div{flex-direction:row;align-items:baseline;justify-content:space-between;gap:5px;padding:5px 7px;border:0;border-radius:0;background:transparent}
-.nd-workspace .ndp3-request-package-metrics>div+div{border-left:1px solid #E1E7E0}
-.nd-workspace .ndp3-request-package-metrics small{font-size:9px;font-weight:650}
-.nd-workspace .ndp3-request-package-metrics b{font-size:14px;font-weight:850}
-.nd-workspace .ndp3-request-package-metrics>div:nth-child(2){background:#E9F1EC}
-.nd-workspace .ndp3-request-package-metrics>div.is-pending{background:#FFF7EC}
-.nd-workspace .ndp3-request-assign{min-height:36px;padding:5px 10px;border-radius:7px;font-size:11px;white-space:nowrap}
-.nd-workspace .ndp3-farm-picker{padding:8px 9px;margin:5px 0 8px}
-.nd-workspace .ndp3-farm-picker-top>div{gap:4px;flex-wrap:wrap}
-.nd-workspace .ndp3-farm-picker-top small{font-size:10px}
-.nd-workspace .ndp3-farm-search{min-height:39px;font-size:14px}
-.nd-workspace .ndp3-farm-picker-filters button{min-height:30px;font-size:10px}
-.nd-workspace .ndp3-farm-picker-list{max-height:118px}
-.nd-workspace .ndp3-farm-picker-item{min-height:39px;padding:5px 7px}
-.nd-workspace .ndp3-farm-picker-item strong{font-size:11px}
-.nd-workspace .ndp3-farm-picker-item small{font-size:9px}
-.nd-workspace .ndp3-farm-picker-item>b{font-size:10px}
-.nd-workspace .ndp3-request-allocation{padding:6px 7px}
-.nd-workspace .ndp3-customer-breakdown{margin-top:3px}
-@media(max-width:767px){.nd-workspace .ndp3-request-package-head{flex-direction:row;align-items:center}.nd-workspace .ndp3-request-package-metrics>div{padding:5px 5px}.nd-workspace .ndp3-request-package-metrics small{font-size:9px}.nd-workspace .ndp3-request-package-metrics b{font-size:13px}.nd-workspace .ndp3-request-assign{min-height:40px}.nd-workspace .ndp3-farm-picker-list{max-height:110px}}
+/* 2. Производи — једна отворена картица у исто време */
+.nd-workspace .ndp3-request-products{display:flex;flex-direction:column;gap:7px}
+.nd-workspace .ndp3-request-product-card.product-card{display:block;min-width:0;margin:0;border:1px solid #DCE4DC;border-radius:13px;background:#fff;box-shadow:0 1px 4px rgba(52,66,56,.04);overflow:hidden}
+.nd-workspace .ndp3-request-product-card.product-card[open]{border-color:#285B3C}
+.nd-workspace .ndp3-request-product-head.product-toggle{display:flex;align-items:center;justify-content:space-between;gap:9px;width:100%;min-height:54px;margin:0;padding:10px 12px;border:0;background:#fff;color:#344238;text-align:left;cursor:pointer;list-style:none}
+.nd-workspace .ndp3-request-product-head.product-toggle::-webkit-details-marker{display:none}
+.nd-workspace .ndp3-request-product-head .product-toggle-left{min-width:0;flex:1}
+.nd-workspace .ndp3-request-product-head h2{margin:0;color:#344238;font-size:15px;font-weight:950;line-height:1.25}
+.nd-workspace .ndp3-request-product-head .product-sub{margin-top:3px;color:#617066;font-size:10px;font-weight:750}
+.nd-workspace .ndp3-request-product-head .product-toggle-right{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.nd-workspace .ndp3-request-product-head .badge-warn,.nd-workspace .ndp3-request-product-head .badge-ok{padding:3px 7px;border-radius:20px;font-size:10px;font-weight:850;white-space:nowrap}
+.nd-workspace .ndp3-request-product-head .badge-warn{border:1px solid #F2D3A6;background:#FFF7EC;color:#9A5B13}
+.nd-workspace .ndp3-request-product-head .badge-ok{border:1px solid #C4D6C9;background:#E9F1EC;color:#285B3C}
+.nd-workspace .ndp3-request-product-head .chevron{width:16px;color:#285B3C;font-size:17px;font-weight:900;text-align:center}
+.nd-workspace .ndp3-request-product-card[open] .chevron{transform:rotate(90deg)}
+.nd-workspace .ndp3-product-variants.variants-wrap{padding:0 9px 9px;border-top:1px solid #DCE4DC;background:#F9FBF9}
 
+/* 3. Амбалажа — компактни редови, купци и доделе се отварају по потреби */
+.nd-workspace .ndp3-request-package-row.pack-block{display:block;min-width:0;margin-top:7px;padding:8px 9px;border:1px solid #DCE4DC;border-radius:11px;background:#fff}
+.nd-workspace .ndp3-request-package-main.pack-top{display:block;min-width:0}
+.nd-workspace .ndp3-request-package-head.pack-title-wrap{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:7px;min-width:0;margin:0 0 4px}
+.nd-workspace .ndp3-request-package-head .pack-title{min-width:0;color:#344238;font-size:13px;font-weight:900;line-height:1.25}
+.nd-workspace .ndp3-request-assign.btn-assign{flex:0 0 auto;min-height:34px;height:auto;max-width:100%;padding:6px 9px;border:0;border-radius:8px;background:#285B3C;color:#fff;font-size:11px;font-weight:850;white-space:nowrap}
+.nd-workspace .ndp3-request-assign.btn-assign:disabled{opacity:.5}
+.nd-workspace .ndp3-request-package-meta{display:block;margin:3px 0 5px;color:#617066;font-size:10px;font-weight:700}
+.nd-workspace .ndp3-request-package-metrics.pack-strip{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:5px 0 2px}
+.nd-workspace .ndp3-request-package-metrics .pill-stat{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid #DCE4DC;border-radius:6px;background:#F3F5F2;color:#344238;font-size:10px;font-weight:800;white-space:nowrap}
+.nd-workspace .ndp3-request-package-metrics .pill-stat small{font-size:9px;font-weight:750}
+.nd-workspace .ndp3-request-package-metrics .pill-stat b{font-size:11px;font-weight:950}
+.nd-workspace .ndp3-request-package-metrics .pill-stat.this-farm{border-color:#C4D6C9;background:#E9F1EC;color:#285B3C}
+.nd-workspace .ndp3-request-package-metrics .pill-stat.missing{border-color:#F2D3A6;background:#FFF7EC;color:#9A5B13}
+.nd-workspace .ndp3-order-customer-breakdown.buyers-details,.nd-workspace .ndp3-request-allocations.allocations-details{margin:5px 0 0}
+.nd-workspace .ndp3-order-customer-breakdown.buyers-details>summary,.nd-workspace .ndp3-request-allocations.allocations-details>summary{width:max-content;max-width:100%;padding:2px 0;color:#285B3C;font-size:10px;font-weight:850;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.nd-workspace .ndp3-order-customer-breakdown .ndp3-order-customer-list{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;padding:5px 7px;border:1px solid #DCE4DC;border-radius:8px;background:#F3F5F2}
+.nd-workspace .ndp3-order-customer-list>span{display:flex;flex-wrap:wrap;gap:3px;align-items:baseline;font-size:10px}
+.nd-workspace .ndp3-order-customer-list>span small{color:#617066}
+.nd-workspace .ndp3-request-allocations .ndp3-request-allocation-list{margin-top:4px}
+.nd-workspace .ndp3-farm-other-allocation{margin-top:4px;color:#617066;font-size:10px;font-weight:650}
 
-/* МОДУЛ НАБАВКА — ПРОИЗВОДИ У КОМПАКТНОЈ МРЕЖИ · 4.0.0 */
-.nd-workspace .ndp3-request-products{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  align-items:start;
-  gap:8px;
-}
-.nd-workspace .ndp3-request-product-card{
-  min-width:0;
-  padding:8px;
-  border-radius:9px;
-}
-.nd-workspace .ndp3-request-product-head{
-  align-items:flex-start;
-  gap:5px;
-  margin-bottom:4px;
-}
-.nd-workspace .ndp3-request-product-head strong{
-  font-size:13px;
-  line-height:1.2;
-}
-.nd-workspace .ndp3-request-product-head .ndp3-chip{
-  flex:0 0 auto;
-  padding:3px 6px;
-  font-size:9px;
-}
-.nd-workspace .ndp3-request-product-total{font-size:9px;line-height:1.25}
-.nd-workspace .ndp3-request-package-row{padding:5px 0;margin-top:3px;gap:4px}
-.nd-workspace .ndp3-request-package-main{gap:3px}
-.nd-workspace .ndp3-request-package-head>b{font-size:12px}
-.nd-workspace .ndp3-request-package-meta{font-size:9px}
-.nd-workspace .ndp3-request-package-metrics>div{padding:4px 4px}
-.nd-workspace .ndp3-request-package-metrics small{font-size:8px}
-.nd-workspace .ndp3-request-package-metrics b{font-size:12px}
-.nd-workspace .ndp3-request-assign{min-height:34px;padding:4px 7px;font-size:10px}
-.nd-workspace .ndp3-request-allocations summary{min-height:29px;font-size:10px}
-.nd-workspace .ndp3-request-allocation{padding:5px}
-.nd-workspace .ndp3-request-allocation>div>strong{font-size:10px}
-.nd-workspace .ndp3-request-allocation>div>small{font-size:9px}
-.nd-workspace .ndp3-customer-breakdown>span strong,
-.nd-workspace .ndp3-customer-breakdown>span small{font-size:9px}
-@media(min-width:768px) and (max-width:1100px){
-  .nd-workspace .ndp3-request-products{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+/* 4. Пун преглед поруџбине остаје изнад избора газдинства */
+.nd-workspace .ndp3-order-overview{width:100%;min-width:0;margin:0 0 9px;padding:9px 10px;border:1.5px solid #C4D6C9;border-radius:13px;background:#fff;color:#344238}
+.nd-workspace .ndp3-order-overview>header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 6px;border-bottom:1px solid #DCE4DC}
+.nd-workspace .ndp3-order-overview>header strong{font-size:11px;font-weight:900;color:#285B3C}
+.nd-workspace .ndp3-order-overview>header b{font-size:11px;font-weight:900;white-space:nowrap}
+.nd-workspace .ndp3-order-overview-list{display:flex;flex-direction:column;gap:4px;margin-top:5px}
+.nd-workspace .ndp3-order-overview-product{min-width:0;padding:4px 0;border-bottom:1px solid #E5EBE4}
+.nd-workspace .ndp3-order-overview-product:last-child{border-bottom:0;padding-bottom:0}
+.nd-workspace .ndp3-order-overview-product-head{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.nd-workspace .ndp3-order-overview-product-head strong{font-size:11px;font-weight:850}
+.nd-workspace .ndp3-order-overview-product-head b{font-size:10px;color:#285B3C;white-space:nowrap}
+.nd-workspace .ndp3-order-overview-variant{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 7px;padding:3px 0 2px 7px}
+.nd-workspace .ndp3-order-overview-variant>div:first-child{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px;min-width:0}
+.nd-workspace .ndp3-order-overview-variant>div:first-child strong{font-size:10px;font-weight:750}
+.nd-workspace .ndp3-order-overview-variant>div:first-child small{font-size:9px;color:#617066}
+.nd-workspace .ndp3-order-overview-variant>b{font-size:10px;font-weight:900;color:#344238;white-space:nowrap}
+.nd-workspace .ndp3-order-overview-buyers{grid-column:1/-1;margin:1px 0 0}
+.nd-workspace .ndp3-order-overview-buyers>summary{width:max-content;max-width:100%;font-size:9px;color:#285B3C;font-weight:750;cursor:pointer}
+.nd-workspace .ndp3-order-overview-buyers>div{display:flex;flex-wrap:wrap;gap:3px 10px;padding:3px 0 1px}
+.nd-workspace .ndp3-order-overview-buyers>div>span{display:flex;gap:3px;align-items:baseline;font-size:9px}
+.nd-workspace .ndp3-order-overview-buyers>div>span small{color:#617066}
+
+/* 5. Претрага и прилагођавање теренском екрану */
+.nd-workspace .ndp3-product-search-wrap{margin:0 0 7px}
+.nd-workspace .ndp3-product-search{width:100%;height:36px;padding:0 10px;border:1px solid #DCE4DC;border-radius:9px;background:#fff;color:#344238;font-size:12px}
+.nd-workspace .ndp3-request-intro{margin:2px 1px 7px;color:#617066;font-size:10px;font-weight:700}
+.nd-workspace .ndp3-request-product-action{margin:0 0 7px}
+.nd-workspace .ndp3-request-product-action .ndp3-btn{min-height:34px;padding:6px 10px;font-size:11px}
+@media(min-width:768px){
+ .nd-workspace .ndp3-farm-picker-list.farm-chips{max-height:110px}
 }
 @media(max-width:767px){
-  .nd-workspace .ndp3-request-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-  .nd-workspace .ndp3-request-product-card{padding:7px}
-  .nd-workspace .ndp3-request-product-head{flex-direction:column}
-  .nd-workspace .ndp3-request-package-metrics{grid-template-columns:1fr}
-  .nd-workspace .ndp3-request-package-metrics>div+div{border-left:0;border-top:1px solid #E1E7E0}
+ .nd-workspace .ndp3-farm-picker.farm-selector-box{padding:8px;margin-bottom:9px}
+ .nd-workspace .ndp3-farm-picker-item.farm-chip{min-height:36px;padding:6px 8px;font-size:11px}
+ .nd-workspace .ndp3-request-product-head.product-toggle{min-height:49px;padding:8px 9px}
+ .nd-workspace .ndp3-request-product-head h2{font-size:14px}
+ .nd-workspace .ndp3-request-product-head .badge-warn,.nd-workspace .ndp3-request-product-head .badge-ok{font-size:9px;padding:3px 5px}
+ .nd-workspace .ndp3-request-package-row.pack-block{padding:7px}
+ .nd-workspace .ndp3-request-package-head.pack-title-wrap{align-items:flex-start}
+ .nd-workspace .ndp3-request-assign.btn-assign{min-height:32px;padding:5px 7px;font-size:10px}
+ .nd-workspace .ndp3-order-overview{padding:8px;margin-bottom:8px}
 }
-@media(max-width:430px){
-  .nd-workspace .ndp3-request-products{grid-template-columns:minmax(0,1fr)}
-  .nd-workspace .ndp3-request-package-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .nd-workspace .ndp3-request-package-metrics>div+div{border-top:0;border-left:1px solid #E1E7E0}
-}
-
-/* МОДУЛ НАБАВКА — СТЕПЕНАСТИ ИЗБОР ГАЗДИНСТВА, ПРОИЗВОДА И АМБАЛАЖЕ · 4.1.0 */
-.nd-workspace .ndp3-product-step{display:block;cursor:default}
-.nd-workspace .ndp3-product-step>.ndp3-request-product-head{display:flex;list-style:none;cursor:pointer;align-items:center;padding:7px 0;margin:0;border:0}
-.nd-workspace .ndp3-product-step>.ndp3-request-product-head::-webkit-details-marker{display:none}
-.nd-workspace .ndp3-product-step>.ndp3-request-product-head:after{content:"＋";flex:0 0 auto;margin-left:5px;color:#285B3C;font-size:17px;font-weight:900}
-.nd-workspace .ndp3-product-step[open]>.ndp3-request-product-head:after{content:"−"}
-.nd-workspace .ndp3-product-step>.ndp3-request-product-head>div{min-width:0;flex:1}
-.nd-workspace .ndp3-product-step>.ndp3-request-product-head .ndp3-chip{display:none}
-.nd-workspace .ndp3-product-variants{padding:2px 0 5px;border-top:1px solid #E5EBE4}
-.nd-workspace .ndp3-product-variants .ndp3-request-package-row:first-child{margin-top:0}
-.nd-workspace .ndp3-stage-step-hint{display:flex;align-items:center;gap:9px;margin:8px 0;padding:12px;border:1px dashed #C4D6C9;border-radius:10px;background:#F8FAF7;color:#344238}
-.nd-workspace .ndp3-stage-step-hint>b{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:50%;background:#E9F1EC;color:#285B3C;font-size:13px}
-.nd-workspace .ndp3-stage-step-hint>strong{font-size:13px}
-.nd-workspace .ndp3-stage-step-hint>small{color:#617066;font-size:11px}
-@media(max-width:767px){.nd-workspace .ndp3-product-step>.ndp3-request-product-head{padding:6px 0}.nd-workspace .ndp3-product-step>.ndp3-request-product-head>div{flex:1}.nd-workspace .ndp3-stage-step-hint{align-items:flex-start;flex-wrap:wrap}.nd-workspace .ndp3-stage-step-hint>small{flex-basis:100%;margin-left:37px}}
-
-/* МОДУЛ НАБАВКА — ИЗАБРАНО ГАЗДИНСТВО ОСТАЈЕ У ЗАГЛАВЉУ · 4.2.0 */
-.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-search,
-.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-filters,
-.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-list{display:none}
-.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-top{margin:0}
-.nd-workspace .ndp3-farm-change{min-height:34px;padding:5px 9px;border:1px solid #C4D6C9;border-radius:8px;background:#E9F1EC;color:#285B3C;font-size:11px;font-weight:850;white-space:nowrap}
-
-
-/* МОДУЛ НАБАВКА — СТАЛНИ ПРЕГЛЕД СВЕГА НАРУЧЕНОГ · 4.3.0 */
-.nd-workspace .ndp3-order-overview{width:100%;min-width:0;margin:0 0 10px;padding:9px 10px;border:1px solid #C4D6C9;border-radius:10px;background:#fff;color:#344238}
-.nd-workspace .ndp3-order-overview>header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 6px;border-bottom:1px solid #DCE4DC}
-.nd-workspace .ndp3-order-overview>header strong{font-size:12px;font-weight:900;color:#285B3C}
-.nd-workspace .ndp3-order-overview>header b{font-size:12px;font-weight:900;white-space:nowrap}
-.nd-workspace .ndp3-order-overview>p{margin:6px 0 0;color:#617066;font-size:11px}
-.nd-workspace .ndp3-order-overview-list{display:flex;flex-direction:column;gap:5px;margin-top:6px}
-.nd-workspace .ndp3-order-overview-product{min-width:0;padding:5px 0;border-bottom:1px solid #E5EBE4}
-.nd-workspace .ndp3-order-overview-product:last-child{border-bottom:0;padding-bottom:0}
-.nd-workspace .ndp3-order-overview-product-head{display:flex;justify-content:space-between;align-items:baseline;gap:7px}
-.nd-workspace .ndp3-order-overview-product-head strong{font-size:12px;font-weight:850}
-.nd-workspace .ndp3-order-overview-product-head b{font-size:11px;color:#285B3C;white-space:nowrap}
-.nd-workspace .ndp3-order-overview-variant{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 8px;padding:4px 0 2px 8px}
-.nd-workspace .ndp3-order-overview-variant>div:first-child{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px;min-width:0}
-.nd-workspace .ndp3-order-overview-variant>div:first-child strong{font-size:11px;font-weight:750}
-.nd-workspace .ndp3-order-overview-variant>div:first-child small{font-size:10px;color:#617066}
-.nd-workspace .ndp3-order-overview-variant>b{font-size:11px;font-weight:900;color:#344238;white-space:nowrap}
-.nd-workspace .ndp3-order-overview-buyers{grid-column:1/-1;margin:1px 0 0}
-.nd-workspace .ndp3-order-overview-buyers>summary{width:max-content;max-width:100%;font-size:10px;color:#285B3C;font-weight:750;cursor:pointer}
-.nd-workspace .ndp3-order-overview-buyers>div{display:flex;flex-wrap:wrap;gap:4px 12px;padding:4px 0 2px}
-.nd-workspace .ndp3-order-overview-buyers>div>span{display:flex;gap:4px;align-items:baseline;font-size:10px}
-.nd-workspace .ndp3-order-overview-buyers>div>span small{color:#617066}
