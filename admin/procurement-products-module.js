@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.20.2
+ * Version: 4.20.3
  * Updated: 2026-11-26
  * Description: Builds cumulative first farm requests and exact supplemental Viber quantities from send history.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -97,11 +97,11 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
     'Датум туре: '+date,
     ...(schedule?['Распоред пунктова и времена:',schedule]:[]),
     '',
-    ...messageRows.map(({row:x,d,count})=>'• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\\n  '+(sentQuantity(x)>0?'ДОПУНА: ':'Потребно: ')+f(count)+' паковања ('+qty(count,d)+')'),
+    ...messageRows.map(({row:x,d,count})=>'• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  '+(sentQuantity(x)>0?'ДОПУНА: ':'Потребно: ')+f(count)+' паковања ('+qty(count,d)+')'),
     '',
     'Молимо вас да потврдите колико паковања можете да припремите. Хвала!',
     ...(phone?['','Контакт газдинства: '+phone]:[])
-  ].join('\\n');
+  ].join('\n');
   return {farmId:String(farmId),farmName:ff?.name||('Газдинство #'+farmId),phone,message,rowIds:rows.map(x=>x.id)};
  }
  async function prepareAllFarmRequests(){
