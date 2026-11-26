@@ -1,13 +1,13 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT WORKFLOW
- * Version: 1.0.4
+ * Version: 1.0.5
  * Updated: 2026-11-18
  * Description: Pure validation and transition rules driven by requested, confirmed and collected quantities; technical allocation counts are not business statuses.
  * Scope: Existing ADMIN Workspace only. No schema, trigger, RLS, or legacy changes.
  */
 export const PROCUREMENT_STAGES = Object.freeze({ UNASSIGNED:'unassigned', ASSIGNED:'assigned', SENT:'sent', CONFIRMED:'confirmed', COLLECTED:'collected' });
 const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
-const wasSent = row => row?.viber_status === 'sent' || row?.viber_status === 'replied' || !!row?.viber_poslato_at;
+const wasSent = row => row?.naruceno === true || row?.viber_status === 'sent' || row?.viber_status === 'replied' || !!row?.viber_poslato_at;
 const wholeNonNegative = value => Number.isInteger(Number(value)) && Number(value) >= 0;
 export function getProcurementStage(row) {
  if (!row || number(row.naruceno_pakovanja) <= 0) return PROCUREMENT_STAGES.UNASSIGNED;
