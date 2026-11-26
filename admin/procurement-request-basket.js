@@ -62,7 +62,8 @@ export function renderProcurementRequestBasket({
           packageLabel + ': ' + quantityLabel
       };
     });
-    const deliveryDate = tourDate ? new Date(tourDate + 'T12:00:00').toLocaleDateString('sr-RS') : '';\n    const message = '**НАРУЧИ ДОМАЋЕ — Требовање за туру #' + tourId + '**' +\n      (deliveryDate ? '\\nДатум испоруке: ' + deliveryDate : '') +\n      '\\n\\nПоздрав, ' + (farm?.name || 'газдинство') + '!\\n\\nТребујемо следеће:\\n\\n' +\n      messageLines.map((line, index) => (index + 1) + '. **' + line.productName + '**\\n   • ' + line.variantName + ': **' + line.quantityLabel + '**').join('\\n\\n') +\n      '\\n\\nМолимо вас потврдите шта можете да припремите. Хвала!';
+    const deliveryDate = tourDate ? new Date(tourDate + 'T12:00:00').toLocaleDateString('sr-RS') : '';
+    const message = '**НАРУЧИ ДОМАЋЕ — Требовање за туру #' + tourId + '**' +\n      (deliveryDate ? '\nДатум испоруке: ' + deliveryDate : '') +\n      '\n\nПоздрав, ' + (farm?.name || 'газдинство') + '!\n\nТребујемо следеће:\n\n' +\n      messageLines.map((line, index) => (index + 1) + '. **' + line.productName + '**\n   • ' + line.variantName + ': **' + line.quantityLabel + '**').join('\n\n') +\n      '\n\nМолимо вас потврдите шта можете да припремите. Хвала!';
     const phone = String(farm?.phone || '').replace(/[^\d+]/g, '');
     const itemsHtml = messageLines.map((line) =>
       '<li>' + esc(line.productName) + ' · ' + esc(line.variantName) +
