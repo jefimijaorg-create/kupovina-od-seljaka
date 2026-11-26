@@ -167,7 +167,9 @@ host.addEventListener('change',ev=>{
   }
  });
  host.addEventListener('click',async ev=>{
-  const b=ev.target.closest('[data-action],[data-tab],[data-stage],[data-view]');if(!b)return;
+  const b=ev.target.closest('[data-action],[data-tab],[data-stage],[data-view],[data-farm-filter],[data-farm-remaining]');if(!b)return;
+  if(b.hasAttribute('data-farm-filter')){s.requestFarmFilter=b.dataset.farmFilter||null;render();return;}
+  if(b.hasAttribute('data-farm-remaining')){s.requestFarmRemainingOnly=!s.requestFarmRemainingOnly;render();return;}
   if(b.dataset.stage){s.stage=b.dataset.stage;render();return;}
   if(b.dataset.view){s.view=b.dataset.view;render();return;}
   if(b.dataset.tab){s.tab=b.dataset.tab;render();return;}
