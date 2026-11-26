@@ -1,11 +1,11 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.2.0
- * Updated: 2026-11-23
+ * Version: 1.3.0
+ * Updated: 2026-11-26
  * Description: Buyer-integrated order cards, clickable product table rows and order-only operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
-export function mountTourOrdersGroupedView({ root, client, orders, items, customers, points, products, canManage, onOpenOrder, onRefresh }) {
+export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, tourStops=[], canManage, onOpenOrder, onRefresh }) {
   if (!root || !client?.from || !Array.isArray(orders) || !Array.isArray(items)) {
     throw new TypeError('Недостају подаци или потврђени ADMIN Supabase клијент.');
   }
@@ -102,19 +102,33 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
   }
 
   function render() {
-    const sorted = [...orders].sort((a,b)=>Number(a.id)-Number(b.id));
-    const visible = sorted.filter(order => {
-      if (orderFilter === 'all') return true;
-      if (orderFilter === 'new') return ['nova','primljeno','primljena','provera'].includes(String(order.status || 'nova'));
-      if (orderFilter === 'confirmed') return ['potvrdjena','scheduled'].includes(String(order.status || ''));
-      return false;
-    });
-    const totalLines = items.filter(line => orderMap.has(String(line.porudzbina_id))).length;
-    const newCount = sorted.filter(order => ['nova','primljeno','primljena','provera'].includes(String(order.status || 'nova'))).length;
-    rootNode.innerHTML = '<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине купаца</h2><p>Преглед свих поруџбина у овој тури</p></div><div class="nd-go-metrics"><div><strong>' + orders.length + '</strong><span>Купаца</span></div><div><strong>' + totalLines + '</strong><span>Ставки</span></div><div><strong>' + newCount + '</strong><span>За проверу</span></div></div></section>' +
-      (feedback ? '<div class="nd-go-feedback ' + (feedbackError ? 'nd-go-error' : '') + '" role="status">' + esc(feedback) + '</div>' : '') +
-      '<div class="nd-go-list-toolbar"><strong>Списак поруџбина</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="' + (orderFilter==='all'?'is-active':'') + '">Све поруџбине</button><button type="button" data-order-filter="new" class="' + (orderFilter==='new'?'is-active':'') + '">Нове</button><button type="button" data-order-filter="confirmed" class="' + (orderFilter==='confirmed'?'is-active':'') + '">Потврђене</button></div></div>' +
-      (visible.length ? '<div class="nd-go-flat-list">' + visible.map(orderCard).join('') + '</div>' : '<div class="nd-go-empty-state">Нема поруџбина у изабраном филтеру.</div>');
+    const pointOrder=new Map((tourStops||[]).map((stop,index)=>[String(stop.punkt_id),Number.isFinite(Number(stop.redosled))?Number(stop.redosled):index]));
+    const sorted=[...orders].sort((a,b)=>{const pa=pointOrder.has(String(a.punkt_id))?pointOrder.get(String(a.punkt_id)):999999,pb=pointOrder.has(String(b.punkt_id))?pointOrder.get(String(b.punkt_id)):999999;return pa-pb||Number(a.id)-Number(b.id)});
+    const visible=sorted.filter(order=>orderFilter==='all'||(orderFilter==='new'?['nova','primljeno','primljena','provera'].includes(String(order.status||'nova')):['potvrdjena','scheduled'].includes(String(order.status||''))));
+    const grouped=new Map();
+    visible.forEach(order=>{const key=String(order.punkt_id??'unassigned');if(!grouped.has(key))grouped.set(key,{point:pointMap.get(key)||null,orders:[]});grouped.get(key).orders.push(order)});
+    const totalLines=items.filter(line=>orderMap.has(String(line.porudzbina_id))).length,newCount=sorted.filter(order=>['nova','primljeno','primljena','provera'].includes(String(order.status||'nova'))).length;
+    const fmtMoney=value=>Number.isFinite(Number(value))?Number(value).toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.':'—';
+    const lineAmount=line=>{if(line.cena_stavke!==null&&line.cena_stavke!==undefined&&line.cena_stavke!==''&&Number.isFinite(Number(line.cena_stavke)))return Number(line.cena_stavke);const p=linePresentation(line);return p.unitPrice!==null&&p.count!==null?p.unitPrice*p.count:null};
+    const phoneFor=order=>{const buyer=customerMap.get(String(order.kupac_id))||{};return String(order.telefon||buyer.telefon||'').trim()};
+    const phoneDigits=phone=>{let digits=String(phone||'').replace(/\\D/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if(digits.startsWith('0'))digits='381'+digits.slice(1);else if(!digits.startsWith('381')&&digits.length===9)digits='381'+digits;return digits?'+'+digits:''};
+    const pointSections=[...grouped.entries()].map(([key,group])=>{
+      const pointName=group.point?.name||'Пункт није наведен',stop=(tourStops||[]).find(row=>String(row.punkt_id)===key),time=String(stop?.vreme||'').slice(0,5);
+      let pointTotal=0,pointHasUnknown=false;
+      const tableRows=group.orders.map(order=>{
+        const buyer=customerMap.get(String(order.kupac_id))||{},lines=linesByOrder.get(String(order.id))||[],name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—'));
+        let customerTotal=0,customerUnknown=false;
+        const normalized=phoneDigits(phoneFor(order)),viber=normalized?'<button type="button" class="nd-gop-viber" data-viber-phone="'+esc(normalized)+'" aria-label="Отвори Viber за '+esc(name)+'">Viber</button>':'<button type="button" class="nd-gop-viber" disabled title="Телефон купца није евидентиран">Нема броја</button>';
+        const customerCell='<td rowspan="'+Math.max(1,lines.length)+'" class="nd-gop-customer-cell"><strong>'+esc(name)+'</strong><button type="button" class="nd-gop-order-open" data-open-order="'+esc(order.id)+'">Поруџбина #'+esc(order.id)+'</button>'+viber+'</td>';
+        const itemRows=lines.map((line,index)=>{const p=linePresentation(line),amount=lineAmount(line);if(amount===null)customerUnknown=true;else customerTotal+=amount;return '<tr class="nd-gop-line">'+(index===0?customerCell:'')+'<td>'+esc(p.name)+'<small>'+esc(p.packageText)+'</small></td><td class="nd-gop-qty">'+(p.count===null?'—':fmt(p.count))+'</td><td class="nd-gop-price">'+(p.unitPrice===null?'—':fmtMoney(p.unitPrice))+'</td><td class="nd-gop-amount">'+(amount===null?'Цена није унета':fmtMoney(amount))+'</td></tr>'}).join('');
+        const orderTotal=order.ukupna_cena!==null&&order.ukupna_cena!==undefined&&order.ukupna_cena!==''&&Number.isFinite(Number(order.ukupna_cena))?Number(order.ukupna_cena):(customerUnknown?null:customerTotal);
+        if(orderTotal===null)pointHasUnknown=true;else pointTotal+=orderTotal;
+        const noLines='<tr>'+customerCell+'<td colspan="4" class="nd-go-empty">Нема ставки у поруџбини.</td></tr>';
+        return (itemRows||noLines)+'<tr class="nd-gop-customer-total"><td colspan="4">Укупно '+esc(name)+'</td><td class="nd-gop-amount">'+(orderTotal===null?'Није обрачунато':fmtMoney(orderTotal))+'</td></tr>';
+      }).join('');
+      return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div><label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'" '+(!stop?'disabled title="Сатница није евидентирана у овој тури"':'')+'></label></header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th>Купац</th><th>Производ / амбалажа</th><th>Кол.</th><th>Цена</th><th>Износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="4">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
+    }).join('');
+    rootNode.innerHTML='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
   }
 
   async function saveOrder(orderId) {
@@ -175,9 +189,19 @@ export function mountTourOrdersGroupedView({ root, client, orders, items, custom
     editingOrderId=String(orderId);render();
   }
 
+  rootNode.addEventListener('change',async event=>{
+    const input=event.target.closest('[data-point-time]');if(!input)return;
+    const pointId=input.dataset.pointTime,stop=(tourStops||[]).find(row=>String(row.punkt_id)===String(pointId));
+    if(!stop||busy){input.value=String(stop?.vreme||'').slice(0,5);return}
+    const previous=String(stop.vreme||'').slice(0,5),value=input.value;busy=true;input.disabled=true;feedback='Чувам сатницу пункта…';feedbackError=false;
+    try{const result=await client.from('tura_punktovi').update({vreme:value||null}).eq('tura_id',tourId).eq('punkt_id',pointId).select('punkt_id,vreme').maybeSingle();if(result.error)throw result.error;if(!result.data)throw new Error('База није потврдила сатницу пункта.');stop.vreme=result.data.vreme;feedback='Сатница пункта је сачувана.';busy=false;render();if(typeof onRefresh==='function')await onRefresh()}
+    catch(error){busy=false;feedback='Сатница није сачувана: '+(error.message||String(error));feedbackError=true;input.disabled=false;input.value=previous;render()}
+  });
   rootNode.addEventListener('click', async event => {
     const action=event.target.closest('button');
     if(action){
+      if(action.hasAttribute('data-viber-phone')){const phone=action.dataset.viberPhone;if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
+      if(action.hasAttribute('data-open-order')){if(typeof onOpenOrder==='function')await onOpenOrder(action.dataset.openOrder);return;}
       if(action.hasAttribute('data-toggle-order')){const id=String(action.dataset.toggleOrder);expandedOrderId=expandedOrderId===id?null:id;editingLineId=null;editingOrderId=null;statusOrderId=null;render();return;}
       if(action.hasAttribute('data-order-filter')){orderFilter=action.dataset.orderFilter;expandedOrderId=null;render();return;}
       const id=action.dataset.editOrder||action.dataset.saveOrder||action.dataset.changeStatus||action.dataset.saveStatus||action.dataset.editLine||action.dataset.saveLine||action.dataset.copyOrder;
