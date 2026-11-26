@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.9.4
+ * Version: 2.9.5
  * Updated: 2026-11-26
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
