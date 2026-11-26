@@ -193,7 +193,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const input=event.target.closest('[data-point-time]');if(!input)return;
     const pointId=input.dataset.pointTime,stop=(tourStops||[]).find(row=>String(row.punkt_id)===String(pointId));
     if(busy){input.value=String(stop?.vreme||'').slice(0,5);return}
-    if(!/^\\d+$/.test(String(tourId))||!/^\\d+$/.test(String(pointId))){feedback='Тура или пункт нема исправан идентификатор.';feedbackError=true;render();return}
+    if(!/^\d+$/.test(String(tourId))||!/^\d+$/.test(String(pointId))){feedback='Тура или пункт нема исправан идентификатор.';feedbackError=true;render();return}
     const previous=String(stop?.vreme||'').slice(0,5),value=input.value;
     if(value&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(value)){feedback='Изабери исправну сатницу.';feedbackError=true;render();return}
     busy=true;input.disabled=true;feedback='Чувам сатницу пункта…';feedbackError=false;
