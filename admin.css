@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 3.8.0
+ * Version: 3.9.0
    Верзија: 3.8.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"3.8.0";
+  --nd-css-version:"3.9.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1454,3 +1454,39 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-main:has(.ndp3){padding-bottom:105px}
 @media(min-width:768px) and (max-width:1100px){.nd-workspace .ndp3-request-products{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:767px){.nd-workspace .ndp3{gap:9px;padding-bottom:105px}.nd-workspace .ndp3-request-product-card{padding:10px}.nd-workspace .ndp3-request-package-metrics{gap:5px}.nd-workspace .ndp3-request-package-metrics>div{padding:7px 6px}.nd-workspace .ndp3-request-package-metrics small{font-size:9px}.nd-workspace .ndp3-request-package-metrics b{font-size:17px}.nd-workspace .ndp3-request-assign{min-height:42px;padding:6px 9px}.nd-workspace .ndp3-farm-picker-list{max-height:135px}.nd-workspace .ndp3-farm-picker-item{min-height:43px}}
+
+/* МОДУЛ НАБАВКА — БРЗ ИЗБОР И ДОДЕЛА ПРОИЗВОДА · 3.9.0 */
+.nd-workspace .ndp3-product-search-wrap{margin:5px 0 9px}
+.nd-workspace .ndp3-product-search{width:100%;min-height:42px;padding:8px 11px;border:1px solid #C4D6C9;border-radius:9px;background:#fff;color:#344238;font-size:15px;font-weight:600}
+.nd-workspace .ndp3-product-search::placeholder{color:#617066;font-weight:400}
+.nd-workspace .ndp3-request-product-card[hidden]{display:none}
+.nd-workspace .ndp3-request-product-card{padding:9px 11px;border-radius:10px}
+.nd-workspace .ndp3-request-product-head{padding-bottom:5px}
+.nd-workspace .ndp3-request-product-head strong{font-size:14px}
+.nd-workspace .ndp3-request-product-total{font-size:10px}
+.nd-workspace .ndp3-request-package-row{gap:5px;margin-top:5px;padding:7px 0}
+.nd-workspace .ndp3-request-package-main{gap:5px}
+.nd-workspace .ndp3-request-package-head{align-items:center}
+.nd-workspace .ndp3-request-package-head>b{font-size:13px}
+.nd-workspace .ndp3-request-package-meta{font-size:10px}
+.nd-workspace .ndp3-request-package-metrics{gap:0;border:1px solid #E1E7E0;border-radius:7px;overflow:hidden;background:#F8FAF7}
+.nd-workspace .ndp3-request-package-metrics>div{flex-direction:row;align-items:baseline;justify-content:space-between;gap:5px;padding:5px 7px;border:0;border-radius:0;background:transparent}
+.nd-workspace .ndp3-request-package-metrics>div+div{border-left:1px solid #E1E7E0}
+.nd-workspace .ndp3-request-package-metrics small{font-size:9px;font-weight:650}
+.nd-workspace .ndp3-request-package-metrics b{font-size:14px;font-weight:850}
+.nd-workspace .ndp3-request-package-metrics>div:nth-child(2){background:#E9F1EC}
+.nd-workspace .ndp3-request-package-metrics>div.is-pending{background:#FFF7EC}
+.nd-workspace .ndp3-request-assign{min-height:36px;padding:5px 10px;border-radius:7px;font-size:11px;white-space:nowrap}
+.nd-workspace .ndp3-farm-picker{padding:8px 9px;margin:5px 0 8px}
+.nd-workspace .ndp3-farm-picker-top>div{gap:4px;flex-wrap:wrap}
+.nd-workspace .ndp3-farm-picker-top small{font-size:10px}
+.nd-workspace .ndp3-farm-search{min-height:39px;font-size:14px}
+.nd-workspace .ndp3-farm-picker-filters button{min-height:30px;font-size:10px}
+.nd-workspace .ndp3-farm-picker-list{max-height:118px}
+.nd-workspace .ndp3-farm-picker-item{min-height:39px;padding:5px 7px}
+.nd-workspace .ndp3-farm-picker-item strong{font-size:11px}
+.nd-workspace .ndp3-farm-picker-item small{font-size:9px}
+.nd-workspace .ndp3-farm-picker-item>b{font-size:10px}
+.nd-workspace .ndp3-request-allocation{padding:6px 7px}
+.nd-workspace .ndp3-customer-breakdown{margin-top:3px}
+@media(max-width:767px){.nd-workspace .ndp3-request-package-head{flex-direction:row;align-items:center}.nd-workspace .ndp3-request-package-metrics>div{padding:5px 5px}.nd-workspace .ndp3-request-package-metrics small{font-size:9px}.nd-workspace .ndp3-request-package-metrics b{font-size:13px}.nd-workspace .ndp3-request-assign{min-height:40px}.nd-workspace .ndp3-farm-picker-list{max-height:110px}}
