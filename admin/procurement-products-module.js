@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.1
+ * Version: 4.21.2
  * Updated: 2026-11-26
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -87,7 +87,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   const ff=farm(farmId),phone=String(ff?.phone||'').trim();
   const date=s.tour?.datum?new Date(s.tour.datum+'T12:00:00').toLocaleDateString('sr-RS'):'датум није наведен';
   const schedule='';
-  const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);return '• '+(prod(x.product_id)?.name||'Производ')+' — '+(variant(x.variant_id)?.name||variant(x.variant_id)?.size_label||'Паковање')+'\n  Потребно: '+f(Math.max(0,n(x.naruceno_pakovanja)))+' паковања ('+qty(Math.max(0,n(x.naruceno_pakovanja)),d)+')';}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
+  const message='ПОШТОВАНИ '+(ff?.name||'')+',\n\nТРЕБОВАЊЕ ЗА ТУРУ #'+tourId+'\nДатум туре: '+date+(schedule?'\nРаспоред пунктова и времена:\n'+schedule:'')+'\n\n'+rows.map(x=>{const d=demand(x.product_id,x.variant_id);const count=Math.max(0,n(x.naruceno_pakovanja)),v=variant(x.variant_id),label=v?.name||v?.size_label||'Паковање',size=v?.package_value,unit=v?.package_unit;const total=qty(count,d);const packWord=count===1?'паковање':(count%10>=2&&count%10<=4&&!(count%100>=12&&count%100<=14)?'паковања':'паковања');return '• '+(prod(x.product_id)?.name||'Производ')+'\n  Амбалажа: '+label+'\n  Наручено: '+f(count)+' '+packWord+'\n  Укупно: '+total;}).join('\n')+'\n\nМолимо вас да потврдите колико паковања можете да припремите. Хвала!'+(phone?'\n\nКонтакт газдинства: '+phone:'');
   return {farmId:String(farmId),farmName:ff?.name||('Газдинство #'+farmId),phone,message,rowIds:rows.map(x=>x.id)};
  }
  async function prepareAllFarmRequests(){
