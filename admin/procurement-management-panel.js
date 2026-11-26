@@ -42,7 +42,7 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
   const client = adminCore.client;
   const state = {
     tour: null, items: [], invalidSourceRows: 0, products: [], variants: [], offers: [], farms: [],
-    allocations: [], demands: [], tab: 'products', selectedFarmId: '', selectedProductId: null,
+    allocations: [], demands: [], tab: 'products', selectedFarmId: 'all', selectedProductId: null,
     allocationDraft: {}, trackingDraft: {}, busy: false, disposed: false, token: 0,
     notice: '', noticeType: 'success',
     diagnostic: {
@@ -128,8 +128,8 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
 
     if (token !== state.token || state.disposed) return;
     const offeredFarmIds = uniq(relevantOffers.map((offer) => offer.gazdinstvo_id));
-    state.selectedFarmId = offeredFarmIds.some((id) => String(id) === String(state.selectedFarmId))
-      ? state.selectedFarmId : (offeredFarmIds[0] ?? '');
+    state.selectedFarmId = state.selectedFarmId === 'all' || offeredFarmIds.some((id) => String(id) === String(state.selectedFarmId))
+      ? state.selectedFarmId : (offeredFarmIds[0] ?? 'all');
     render();
   }
 
@@ -137,14 +137,17 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     if (!state.demands.length) return '<div class="nd-proc-empty">За ову туру нису пронађене ставке са product_id и variant_id.</div>' +
       (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '');
     const groups = new Map();
-    for (const demand of state.demands) {
+    const visibleDemands = state.selectedFarmId === 'all' ? state.demands : state.demands.filter((demand) =>
+      offersFor(demand.productId, demand.variantId).some((offer) => String(offer.gazdinstvo_id) === String(state.selectedFarmId)));
+    for (const demand of visibleDemands) {
       const key = String(demand.productId);
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(demand);
     }
-    let html = state.invalidSourceRows
-      ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>'
-      : '';
+    const offeredFarmIds = uniq(state.offers.filter((offer) => state.demands.some((demand) => String(demand.productId) === String(offer.product_id) && String(demand.variantId) === String(offer.variant_id))).map((offer) => offer.gazdinstvo_id));
+    const farmOptions = '<option value="all" ' + (state.selectedFarmId === 'all' ? 'selected' : '') + '>Сва газдинства · сви производи</option>' + offeredFarmIds.map((id) => '<option value="' + esc(id) + '" ' + (String(id) === String(state.selectedFarmId) ? 'selected' : '') + '>' + esc(farmFor(id)?.name || 'Газдинство #' + id) + '</option>').join('');
+    let html = '<div class="nd-proc-form-head nd-proc-main-farm-filter"><label for="ndProcMainFarmFilter">Приказ набавке по газдинству</label><select id="ndProcMainFarmFilter" data-main-farm-filter>' + farmOptions + '</select><small>Изабери „Сва газдинства“ за комплетно требовање или конкретно газдинство за његове производе и доделу.</small></div>' +
+      (state.invalidSourceRows ? '<div class="nd-proc-warning">' + fmt(state.invalidSourceRows) + ' ставки нема product_id или variant_id и зато није укључено у набавку.</div>' : '');
     for (const [productId, demands] of groups) {
       const product = productFor(productId);
       const productName = product?.name || 'Назив производа није доступан у products.name';
@@ -568,6 +571,12 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
 
   shell.addEventListener('input', handleInput);
   shell.addEventListener('change', (event) => {
+    if (event.target.matches('[data-main-farm-filter]')) {
+      state.selectedFarmId = event.target.value;
+      state.allocationDraft = {};
+      render();
+      return;
+    }
     if (event.target.matches('[data-farm-select]')) {
       state.selectedFarmId = event.target.value;
       state.allocationDraft = {};
