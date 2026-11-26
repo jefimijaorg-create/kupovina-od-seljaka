@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.6
+ * Version: 4.21.7
  * Updated: 2026-11-26
  * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -157,7 +157,7 @@ async function saveField(id){
   try{
    await saveProcurementTracking({client,row,confirmed,collected});
    await load();
-   s.stage=stageBeforeSave==='collect'?'collect':(confirmed>collected?'collect':'confirm');
+   s.stage=stageBeforeSave==='collect'?'collect':'confirm';
    const remaining=Math.max(0,confirmed-collected);
    const resultMessage=newlyCollected>0
     ?'Преузимање евидентирано и проверено у бази: '+farmName+' · '+productName+' · '+variantName+' — '+f(newlyCollected)+' нових паковања. Укупно преузето: '+f(collected)+' од '+f(confirmed)+'. '+(remaining>0?'Преостало за преузимање: '+f(remaining)+' паковања.':'Сва потврђена количина је преузета.')
