@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT ALLOCATION ACTIONS
- * Version: 1.1.3
+ * Version: 1.1.4
  * Updated: 2026-11-19
  * Description: Validates and persists procurement allocation carts and safely edits unsent allocation quantities.
  * Scope: Existing ADMIN Workspace; existing Supabase tables and RLS only. No schema changes.
@@ -19,11 +19,11 @@ export async function saveProcurementAllocationCart({client,tourId,cart,demands,
   const demand=demandFor(item.productId,item.variantId),offer=offerFor(item.productId,item.variantId,item.farmId),old=allocationFor(item.productId,item.variantId,item.farmId),count=Number(item.count);
   if(!demand?.valid||!offer)throw new Error('Понуда или подаци о паковању нису важећи. Освежи податке.');
   if(!Number.isInteger(count)||count<1)throw new Error('Количина мора бити позитиван цео број паковања.');
-  if(old&&(old.viber_status==='sent'||old.viber_status==='replied'||n(old.potvrdjeno_pakovanja)>0||n(old.preuzeto_pakovanja)>0))throw new Error('Ова ставка је већ послата или је у каснијој фази и не може се поново захтевати.');
+  if(old&&n(old.preuzeto_pakovanja)>0)throw new Error('За већ преузету ставку није могуће додавати ново требовање.');
   const requested=n(old?.naruceno_pakovanja)+count,k=key(item.productId,item.variantId);
   if(!groups.has(k))groups.set(k,{demand:demand.packages,added:0,replace:0,productId:item.productId,variantId:item.variantId});
   const group=groups.get(k);group.added+=count;group.replace+=n(old?.broj_pakovanja);
-  payloads.push({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(item.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(offer.purchase_price),naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:new Date().toISOString()});
+  payloads.push({tura_id:Number(tourId),product_id:item.productId,variant_id:item.variantId,gazdinstvo_id:Number(item.farmId),broj_pakovanja:requested,naruceno_pakovanja:requested,nabavna_cena:n(offer.purchase_price),naruceno:false,potvrdjeno_pakovanja:n(old?.potvrdjeno_pakovanja),preuzeto_pakovanja:n(old?.preuzeto_pakovanja),viber_status:'not_sent',updated_at:new Date().toISOString()});
  }
  for(const group of groups.values()){
   const already=Math.max(0,allocations.filter(row=>key(row.product_id,row.variant_id)===key(group.productId,group.variantId)).reduce((sum,row)=>sum+n(row.broj_pakovanja),0)-group.replace);
@@ -35,7 +35,7 @@ export async function saveProcurementAllocationCart({client,tourId,cart,demands,
   for(const payload of payloads){
    const old=allocationFor(payload.product_id,payload.variant_id,payload.gazdinstvo_id);
    if(old){
-    const patch={broj_pakovanja:payload.broj_pakovanja,naruceno_pakovanja:payload.naruceno_pakovanja,nabavna_cena:payload.nabavna_cena,naruceno:false,potvrdjeno_pakovanja:0,preuzeto_pakovanja:0,viber_status:'not_sent',updated_at:payload.updated_at};
+    const patch={broj_pakovanja:payload.broj_pakovanja,naruceno_pakovanja:payload.naruceno_pakovanja,nabavna_cena:payload.nabavna_cena,naruceno:false,potvrdjeno_pakovanja:payload.potvrdjeno_pakovanja,preuzeto_pakovanja:payload.preuzeto_pakovanja,viber_status:'not_sent',updated_at:payload.updated_at};
     const result=await client.from('tura_nabavka_dodele').update(patch).eq('id',old.id).select('id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja').maybeSingle();
     if(result.error)throw new Error(result.error.message);
     if(!result.data)throw new Error('Постојећа евиденција није ажурирана.');
