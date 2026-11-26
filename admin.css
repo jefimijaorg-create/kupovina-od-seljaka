@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
  * Version: 5.1.0
-   Верзија: 5.1.0
+   Верзија: 5.1.1
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.1.0";
+  --nd-css-version:"5.1.1";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1595,4 +1595,36 @@ body.nd-workspace select:focus-visible{
  .nd-workspace .ndp3-req-table .ndp3-req-package-name strong{font-size:14px}
  .nd-workspace .ndp3-req-table-action{min-height:38px;font-size:9px}
  .nd-workspace .ndp3-req-table-action b{font-size:12px}
+}
+
+/* МОДУЛ НАБАВКА — КОМПАКТАН ИЗБОР ГАЗДИНСТВА И ЧИТЉИВА АМБАЛАЖА · 5.1.1 */
+.nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected .ndp3-farm-search,
+.nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected .ndp3-farm-picker-filters,
+.nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected .ndp3-farm-picker-list{display:none}
+.nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected{padding:8px 10px;margin-bottom:7px}
+.nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected .ndp3-farm-picker-top{margin:0}
+.nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected .farm-selector-label{display:none}
+.nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected .ndp3-farm-picker-top>strong{font-size:14px;line-height:1.2}
+.nd-workspace .ndp3-product-search-wrap{margin-bottom:4px}
+.nd-workspace .ndp3-product-search{height:32px}
+.nd-workspace .ndp3-request-intro{display:none}
+.nd-workspace .ndp3-request-product-head.product-toggle{min-height:44px;padding:7px 10px}
+.nd-workspace .ndp3-request-product-head h2{font-size:17px;line-height:1.15}
+.nd-workspace .ndp3-request-product-head .product-sub{margin-top:2px;font-size:10px}
+.nd-workspace .ndp3-product-variants.variants-wrap{padding:0 7px 7px}
+.nd-workspace .ndp3-request-package-row.pack-block{margin-top:5px;padding:6px 7px;border-radius:9px}
+.nd-workspace .ndp3-request-package-meta{margin:2px 0 5px;color:#344238;font-size:14px;font-weight:900;line-height:1.2}
+.nd-workspace .ndp3-req-table-wrap{margin:4px 0 5px}
+.nd-workspace .ndp3-req-table th{padding-top:5px;padding-bottom:5px}
+.nd-workspace .ndp3-req-table td{padding-top:5px;padding-bottom:5px}
+.nd-workspace .ndp3-req-table .ndp3-req-package-name strong{font-size:15px;line-height:1.15}
+.nd-workspace .ndp3-req-table-action{min-height:35px}
+@media(max-width:767px){
+ .nd-workspace .ndp3-farm-picker.farm-selector-box.is-selected{padding:7px 9px;margin-bottom:6px}
+ .nd-workspace .ndp3-request-product-head.product-toggle{min-height:42px;padding:6px 8px}
+ .nd-workspace .ndp3-request-product-head h2{font-size:16px}
+ .nd-workspace .ndp3-request-package-meta{font-size:14px}
+ .nd-workspace .ndp3-request-package-row.pack-block{padding:5px 6px}
+ .nd-workspace .ndp3-req-table th{padding-top:4px;padding-bottom:4px}
+ .nd-workspace .ndp3-req-table td{padding-top:4px;padding-bottom:4px}
 }
