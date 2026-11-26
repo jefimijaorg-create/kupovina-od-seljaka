@@ -1,6 +1,6 @@
 /*
  * NARUČI ДОМАЋЕ — PROCUREMENT WORKFLOW ACTIONS
- * Version: 1.1.1
+ * Version: 1.1.2
  * Updated: 2026-11-19
  * Description: Returns unconfirmed supplier quantities to demand and verifies the history-backed update.
  * Scope: Existing ADMIN Workspace, existing Supabase schema/RLS/triggers only.
@@ -55,7 +55,7 @@ export async function transferUnconfirmedProcurement({ client, sourceRow, target
   }
 
   const targetRead = await client.from('tura_nabavka_dodele')
-    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status')
+    .select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status,viber_poslato_at')
     .eq('id', result.target_allocation_id)
     .maybeSingle();
   if (targetRead.error) throw new Error('Пренос је извршен, али провера циљне расподеле није успела: ' + targetRead.error.message);
@@ -95,7 +95,7 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
   if (Number(confirmed) > requested) throw new Error('Потврђена количина не може бити већа од послате.');
   if (Number(collected) > Number(confirmed)) throw new Error('Преузета количина не може бити већа од потврђене.');
   if (Number(collected) < number(live.preuzeto_pakovanja)) throw new Error('Преузета количина не може бити накнадно умањена.');
-  if (live.viber_status !== 'sent' && live.viber_status !== 'replied') throw new Error('Потврда је дозвољена тек након слања захтева газдинству.');
+  if (live.viber_status !== 'sent' && live.viber_status !== 'replied' && !live.viber_poslato_at) throw new Error('Потврда је дозвољена тек након слања захтева газдинству.');
 
   const now = new Date().toISOString();
   const patch = {
@@ -103,12 +103,8 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
     preuzeto_pakovanja: Number(collected),
     updated_at: now
   };
-  // Option 1: the quantity the farm cannot confirm returns to Требовање.
-  // The history trigger stores the complete before/after allocation snapshots.
-  if (Number(confirmed) < requested) {
-    patch.broj_pakovanja = Number(confirmed);
-    patch.naruceno_pakovanja = Number(confirmed);
-  }
+  // Keep the original requisition intact. Its shortfall remains visible
+  // until the operator explicitly transfers it to another farm.
   if (Number(confirmed) !== number(live.potvrdjeno_pakovanja)) patch.potvrdjeno_at = Number(confirmed) ? now : null;
   const result = await client.from('tura_nabavka_dodele')
     .update(patch)
@@ -121,8 +117,8 @@ export async function saveProcurementTracking({ client, row, confirmed, collecte
   if (!result.data ||
       number(result.data.potvrdjeno_pakovanja) !== Number(confirmed) ||
       number(result.data.preuzeto_pakovanja) !== Number(collected) ||
-      number(result.data.naruceno_pakovanja) !== Math.min(requested, Number(confirmed)) ||
-      number(result.data.broj_pakovanja) !== (Number(confirmed) < requested ? Number(confirmed) : number(live.broj_pakovanja))) {
+      number(result.data.naruceno_pakovanja) !== requested ||
+      number(result.data.broj_pakovanja) !== number(live.broj_pakovanja)) {
     throw new Error('База није потврдила упис потврде и враћање непотврђеног остатка у Требовање. Освежи приказ и провери историју.');
   }
   return result.data;
