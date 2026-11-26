@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.21.9
+ * Version: 4.22.0
  * Updated: 2026-11-26
  * Description: Uses the approved farm requisition message format and confirms saved pickup quantities.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=3.0.1';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=3.1.0';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.7';
 import { loadProcurementHistory, markProcurementSent, markProcurementRequested, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.3';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities, saveConfirmedCustomerDistribution } from './procurement/procurement-allocation-actions.js?v=1.1.4';
@@ -107,6 +107,41 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   if(!viberPhone){s.preparedMessage=prepared.message;s.preparedMessageFarmName=prepared.farmName;return setNote('За ово газдинство није уписан телефон. Порука је отворена испод и може да се копира.');}
   try{if(!navigator.clipboard?.writeText)throw new Error('Копирање није доступно.');await navigator.clipboard.writeText(prepared.message);window.location.href='viber://chat?number='+encodeURIComponent(viberPhone);setNote('Порука је копирана. Отворен је Viber разговор; пошаљи је ручно. Статус још није промењен.');}
   catch(error){s.preparedMessage=prepared.message;s.preparedMessageFarmName=prepared.farmName;setNote('Аутоматско копирање није успело. Порука је отворена испод за ручно копирање.');}
+ }
+ async function submitFarmRequisition(farmId){
+  if(s.busy)return;
+  if(s.tour?.status!=='processing')return setNote('Тура није отворена за измене.',true);
+  const ff=farm(farmId);
+  if(!ff)return setNote('Изабрано газдинство није доступно.',true);
+  const cart=[],alreadyPending=[];
+  for(const d of s.demands.filter(x=>x.valid&&x.allocatable&&n(x.packages)>0)){
+   const hasOffer=s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===String(farmId)&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId));
+   if(!hasOffer)continue;
+   const current=allocation(d.productId,d.variantId,farmId);
+   if(current){
+    if(current.naruceno!==true&&current.viber_status==='not_sent'&&!current.viber_poslato_at&&n(current.naruceno_pakovanja)>n(current.potvrdjeno_pakovanja))alreadyPending.push(current.id);
+    continue;
+   }
+   const remaining=Math.max(0,n(d.packages)-allocated(d.productId,d.variantId));
+   if(remaining>0)cart.push({productId:d.productId,variantId:d.variantId,farmId,count:remaining});
+  }
+  if(!cart.length&&!alreadyPending.length)return setNote('За ово газдинство нема преостале количине за ново требовање.',true);
+  s.busy=true;render();
+  try{
+   if(cart.length){
+    await saveProcurementAllocationCart({client,tourId,cart,demands:s.demands,offers:s.offers,allocations:s.allocations,validateAllocationCount});
+    await load();
+   }
+   const pendingRows=s.allocations.filter(row=>String(row.gazdinstvo_id)===String(farmId)&&row.naruceno!==true&&row.viber_status==='not_sent'&&!row.viber_poslato_at&&n(row.naruceno_pakovanja)>n(row.potvrdjeno_pakovanja));
+   const rowIds=[...new Set([...alreadyPending,...pendingRows.map(row=>row.id)])];
+   if(rowIds.length)await markProcurementRequested({client,rowIds});
+   await load();
+   s.stage='confirm';
+   setNote('Требовање за '+(ff.name||'газдинство')+' је евидентирано. Исти списак је сада у „Потврда газдинства“ и чека одговор. Није симулирано Viber слање.');
+  }catch(error){
+   try{await load();}catch(_){}
+   setNote('Требовање није у потпуности евидентирано: '+(error.message||String(error))+' Провери таб „Потврда газдинства“ пре поновног покушаја.',true);
+  }finally{s.busy=false;render();}
  }
  async function markFarmSent(farmId){
   if(s.busy)return;
@@ -234,6 +269,7 @@ host.addEventListener('change',ev=>{
   if(a==='retry-load'){initialize();return;}
   if(a==='back')return onBack?.();
   if(a==='quick-request')return quickRequest({farmId:b.dataset.farmId,productId:b.dataset.productId,variantId:b.dataset.variantId});
+  if(a==='submit-farm-requisition')return submitFarmRequisition(b.dataset.farmId);
   if(a==='open-request'){s.requestProductId=b.dataset.productId||null;s.requestVariantId=b.dataset.variantId||null;s.requestOpen=true;s.assignmentSaveMode=!!b.dataset.farmId;s.orderDraft=Object.fromEntries(s.items.filter(item=>s.requestProductId===null||String(item.product_id)===String(s.requestProductId)).map(item=>[String(item.id),n(item.package_count)]));s.allocationDraft={selectedFarmIds:[],quantities:{}};if(b.dataset.farmId){const farmId=String(b.dataset.farmId);s.allocationDraft.selectedFarmIds=[farmId];for(const d of s.demands.filter(x=>x.valid&&(s.requestProductId===null||String(x.productId)===String(s.requestProductId))&&(s.requestVariantId===null||String(x.variantId)===String(s.requestVariantId)))){const hasOffer=s.offers.some(o=>o.is_active===true&&String(o.gazdinstvo_id)===farmId&&String(o.product_id)===String(d.productId)&&String(o.variant_id)===String(d.variantId));if(hasOffer)s.allocationDraft.quantities[key(d.productId,d.variantId)]={[farmId]:Math.max(0,n(d.packages)-allocated(d.productId,d.variantId))};}}render();return;}
   if(a==='close-request'){s.requestOpen=false;s.requestProductId=null;s.requestVariantId=null;s.assignmentSaveMode=false;s.orderDraft={};render();return;}
   if(a==='customer-order-step'){const item=s.items.find(x=>String(x.id)===String(b.dataset.itemId));if(!item)return;const current=n(s.orderDraft[String(item.id)]??item.package_count),next=Math.max(0,Math.min(9999,current+Number(b.dataset.delta||0)));s.orderDraft={...s.orderDraft,[String(item.id)]:next};render();return;}
