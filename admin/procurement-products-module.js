@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — OPERATIVNA NABAVKA
- * Version: 4.20.6
+ * Version: 4.20.7
  * Updated: 2026-11-26
  * Description: Confirms saved pickup quantities with farm and product details, and keeps the pickup phase selected after saving.
  * Scope: Existing ADMIN Workspace; SECURITY INVOKER RPC runs under existing authenticated RLS and trigger protections.
@@ -8,7 +8,7 @@
 import { loadProcurementData } from './data/admin-repository.js?v=1.0.8';
 import { buildProcurementDemands, buildProcurementPackagingSummary } from './procurement/procurement-calculations.js?v=1.3.1';
 import { mountTourAnalyticsPanel } from './tour-analytics-engine.js?v=1.0.1';
-import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.9.8';
+import { renderProcurementStageView } from './procurement/procurement-stage-view.js?v=2.9.6';
 import { renderAllocationSheet, buildAllocationCart, distributeRemaining } from './procurement/procurement-request-allocation-sheet.js?v=1.3.7';
 import { loadProcurementHistory, markProcurementSent, saveProcurementTracking, transferUnconfirmedProcurement } from './procurement/procurement-workflow-actions.js?v=1.1.1';
 import { saveProcurementAllocationCart, saveCustomerFarmAllocation, saveCustomerOrderQuantities, saveConfirmedCustomerDistribution } from './procurement/procurement-allocation-actions.js?v=1.1.4';
@@ -260,11 +260,7 @@ host.addEventListener('change',ev=>{
     try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(s.preparedMessage);else{field.focus();field.select();if(!document.execCommand('copy'))throw new Error('Копирање није подржано.');}setNote('Порука за '+s.preparedMessageFarmName+' је копирана. Статус слања није промењен.');}
     catch(error){setNote('Копирање није успело. Означи текст у пољу и копирај га ручно.',true);}return;
    }
-   if(a==='prepare-all-farms')return prepareAllFarmRequests();
-  if(a==='bulk-open-farm'){const item=s.bulkMessages.find(x=>x.farmId===String(b.dataset.farmId));if(!item)return;const phone=item.phone.replace(/[^\d+]/g,'');try{if(!navigator.clipboard?.writeText)throw new Error('Копирање није доступно.');await navigator.clipboard.writeText(item.message);if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);setNote('Порука за '+item.farmName+' је копирана'+(phone?' и Viber разговор је отворен.':' .')+' Статус још није промењен.');}catch(error){s.preparedMessage=item.message;s.preparedMessageFarmName=item.farmName;setNote('Порука је отворена за ручно копирање; статус није промењен.');}return;}
-  if(a==='bulk-mark-farm-sent'){const farmId=String(b.dataset.farmId);const ok=await markFarmSent(farmId);if(ok)s.bulkMessages=s.bulkMessages.filter(x=>x.farmId!==farmId);render();return;}
-  if(a==='close-bulk-messages'){s.bulkMessages=[];render();return;}
-  if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
+   if(a==='prepare-all-farms')return prepareAllFarmRequests();\n  if(a==='bulk-open-farm'){const item=s.bulkMessages.find(x=>x.farmId===String(b.dataset.farmId));if(!item)return;const phone=item.phone.replace(/[^\d+]/g,'');try{if(!navigator.clipboard?.writeText)throw new Error('Копирање није доступно.');await navigator.clipboard.writeText(item.message);if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);setNote('Порука за '+item.farmName+' је копирана'+(phone?' и Viber разговор је отворен.':' .')+' Статус још није промењен.');}catch(error){s.preparedMessage=item.message;s.preparedMessageFarmName=item.farmName;setNote('Порука је отворена за ручно копирање; статус није промењен.');}return;}\n  if(a==='bulk-mark-farm-sent'){const farmId=String(b.dataset.farmId);const ok=await markFarmSent(farmId);if(ok)s.bulkMessages=s.bulkMessages.filter(x=>x.farmId!==farmId);render();return;}\n  if(a==='close-bulk-messages'){s.bulkMessages=[];render();return;}\n  if(a==='prepare-farm')return prepareFarmRequest(b.dataset.farmId);
   if(a==='mark-farm-sent')return markFarmSent(b.dataset.farmId);
   if(a==='save-field')return saveField(b.dataset.id);
   if(a==='mark-sent')return markSent(b.dataset.id);
