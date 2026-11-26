@@ -221,7 +221,7 @@ export function renderProcurementStageView(ctx){
    let sheet='';
    if(selected){
     const rows=selected.buyers.map(b=>'<article class="ndp3-package-sheet-customer"><div><strong>'+e(b.name)+'</strong><small>'+([...b.orders].sort((a,c)=>Number(a)-Number(c)).map(id=>'Поруџбина #'+e(id)).join(' · ')||'Број поруџбине није доступан')+'</small></div><b>'+f(b.packages)+' пак.</b></article>').join('');
-    sheet='<div class="ndp3-package-sheet-backdrop" data-package-summary-close><section class="ndp3-package-sheet" role="dialog" aria-modal="true" aria-label="Купци за изабрану амбалажу"><div class="ndp3-package-sheet-handle"></div><header><div><small>'+e(prod(selected.productId)?.name||'Производ')+'</small><h2>'+e(selected.name)+'</h2></div><button type="button" class="ndp3-btn" data-package-summary-close>Затвори</button></header><div class="ndp3-package-sheet-stats"><div><small>Укупно паковања</small><strong>'+f(selected.count)+'</strong></div><div><small>Купаца</small><strong>'+selected.buyers.length+'</strong></div><div><small>Укупна количина</small><strong>'+e(selected.quantity)+'</strong></div></div><h3>Купци и њихове количине</h3><div class="ndp3-package-sheet-list">'+(rows||'<p class="ndp3-stage-empty">Нема повезаних купаца за ову варијанту.</p>')+'</div><p class="ndp3-package-sheet-note">Количине су сабране из поруџбина активне туре. Пункт није приказан јер није доступан у тренутном извору података овог модула.</p></section></div>';
+    sheet='<div class="ndp3-package-sheet-backdrop"><section class="ndp3-package-sheet" role="dialog" aria-modal="true" aria-label="Купци за изабрану амбалажу"><div class="ndp3-package-sheet-handle"></div><header><div><small>'+e(prod(selected.productId)?.name||'Производ')+'</small><h2>'+e(selected.name)+'</h2></div><button type="button" class="ndp3-btn" data-package-summary-close>Затвори</button></header><div class="ndp3-package-sheet-stats"><div><small>Укупно паковања</small><strong>'+f(selected.count)+'</strong></div><div><small>Купаца</small><strong>'+selected.buyers.length+'</strong></div><div><small>Укупна количина</small><strong>'+e(selected.quantity)+'</strong></div></div><h3>Купци и њихове количине</h3><div class="ndp3-package-sheet-list">'+(rows||'<p class="ndp3-stage-empty">Нема повезаних купаца за ову варијанту.</p>')+'</div><p class="ndp3-package-sheet-note">Количине су сабране из поруџбина активне туре. Пункт није приказан јер није доступан у тренутном извору података овог модула.</p></section></div>';
    }
    return {overview,sheet};
   })();
@@ -255,7 +255,7 @@ export function renderProcurementStageView(ctx){
  host.addEventListener('click',ev=>{
   const open=ev.target.closest('[data-package-summary-open]');
   if(open){s.packageSummaryKey=open.dataset.packageSummaryOpen;render();return;}
-  if(ev.target.closest('[data-package-summary-close]')){s.packageSummaryKey=null;render();return;}
+  if(ev.target.closest('button[data-package-summary-close]')||ev.target.classList.contains('ndp3-package-sheet-backdrop')){s.packageSummaryKey=null;render();return;}
  });
  host.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&s.packageSummaryKey){s.packageSummaryKey=null;render();}});
  render();
