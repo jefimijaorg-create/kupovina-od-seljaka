@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 4.0.0
-   Верзија: 4.0.0
+ * Version: 4.1.0
+   Верзија: 4.1.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"4.0.0";
+  --nd-css-version:"4.1.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1548,3 +1548,19 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .ndp3-request-package-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
   .nd-workspace .ndp3-request-package-metrics>div+div{border-top:0;border-left:1px solid #E1E7E0}
 }
+
+/* МОДУЛ НАБАВКА — СТЕПЕНАСТИ ИЗБОР ГАЗДИНСТВА, ПРОИЗВОДА И АМБАЛАЖЕ · 4.1.0 */
+.nd-workspace .ndp3-product-step{display:block;cursor:default}
+.nd-workspace .ndp3-product-step>.ndp3-request-product-head{display:flex;list-style:none;cursor:pointer;align-items:center;padding:7px 0;margin:0;border:0}
+.nd-workspace .ndp3-product-step>.ndp3-request-product-head::-webkit-details-marker{display:none}
+.nd-workspace .ndp3-product-step>.ndp3-request-product-head:after{content:"＋";flex:0 0 auto;margin-left:5px;color:#285B3C;font-size:17px;font-weight:900}
+.nd-workspace .ndp3-product-step[open]>.ndp3-request-product-head:after{content:"−"}
+.nd-workspace .ndp3-product-step>.ndp3-request-product-head>div{min-width:0;flex:1}
+.nd-workspace .ndp3-product-step>.ndp3-request-product-head .ndp3-chip{display:none}
+.nd-workspace .ndp3-product-variants{padding:2px 0 5px;border-top:1px solid #E5EBE4}
+.nd-workspace .ndp3-product-variants .ndp3-request-package-row:first-child{margin-top:0}
+.nd-workspace .ndp3-stage-step-hint{display:flex;align-items:center;gap:9px;margin:8px 0;padding:12px;border:1px dashed #C4D6C9;border-radius:10px;background:#F8FAF7;color:#344238}
+.nd-workspace .ndp3-stage-step-hint>b{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:50%;background:#E9F1EC;color:#285B3C;font-size:13px}
+.nd-workspace .ndp3-stage-step-hint>strong{font-size:13px}
+.nd-workspace .ndp3-stage-step-hint>small{color:#617066;font-size:11px}
+@media(max-width:767px){.nd-workspace .ndp3-product-step>.ndp3-request-product-head{padding:6px 0}.nd-workspace .ndp3-product-step>.ndp3-request-product-head>div{flex:1}.nd-workspace .ndp3-stage-step-hint{align-items:flex-start;flex-wrap:wrap}.nd-workspace .ndp3-stage-step-hint>small{flex-basis:100%;margin-left:37px}}
