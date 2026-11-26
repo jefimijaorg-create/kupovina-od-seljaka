@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 2.7.1
+ * Version: 2.7.2
  * Updated: 2026-11-25
  * Description: Shows ordered customers per package variant, plus allocation, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -168,7 +168,7 @@ export function renderProcurementStageView(ctx){
      const selectedFarmMax=Math.max(0,n(d.packages)-otherFarmPackages);
      const selectedFarmCanEdit=selectedFarmAllocation&&selectedFarmAllocation.viber_status==='not_sent'&&n(selectedFarmAllocation.potvrdjeno_pakovanja)===0&&n(selectedFarmAllocation.preuzeto_pakovanja)===0;
      const canAssign=remaining>0&&d.allocatable===true;
-     const assignButton=s.requestFarmFilter?(selectedFarmAllocation?(selectedFarmCanEdit?'<button class="ndp3-btn primary ndp3-request-assign btn-assign" type="button" data-action="edit-allocation" data-id="'+e(selectedFarmAllocation.id)+'" '+(!writable||s.busy?'disabled':'')+'>Уреди доделу · '+f(selectedFarmPackages)+' пак.</button>':'<span class="ndp3-farm-assignment-locked">Додељено '+f(selectedFarmPackages)+' пак. · '+e(selectedFarmAllocation.viber_status==='sent'?'Чека потврду':'Потврђено / преузимање')+'</span>'):(selectedFarmMax>0&&d.allocatable?'<button class="ndp3-btn primary ndp3-request-assign" type="button" data-action="open-request" data-farm-id="'+e(s.requestFarmFilter)+'" data-product-id="'+e(d.productId)+'" data-variant-id="'+e(d.variantId)+'" '+(!writable||s.busy?'disabled':'')+'>+ Додај '+f(Math.min(remaining,selectedFarmMax))+'</button>':'')):(canAssign?'<button class="ndp3-btn primary ndp3-request-assign" type="button" data-action="open-request" data-product-id="'+e(d.productId)+'" data-variant-id="'+e(d.variantId)+'" '+(!writable||s.busy?'disabled':'')+'>+ Додај '+f(remaining)+'</button>':'');
+     const assignButton=s.requestFarmFilter?(selectedFarmAllocation?(selectedFarmCanEdit?'<button class="ndp3-btn primary ndp3-request-assign btn-assign" type="button" data-action="edit-allocation" data-id="'+e(selectedFarmAllocation.id)+'" '+(!writable||s.busy?'disabled':'')+'>Уреди доделу · '+f(selectedFarmPackages)+' пак.</button>':'<span class="ndp3-farm-assignment-locked">Додељено '+f(selectedFarmPackages)+' пак. · '+e(selectedFarmAllocation.viber_status==='sent'?'Чека потврду':'Потврђено / преузимање')+'</span>'):(selectedFarmMax>0&&d.allocatable?'<button class="ndp3-btn primary ndp3-request-assign btn-assign" type="button" data-action="open-request" data-farm-id="'+e(s.requestFarmFilter)+'" data-product-id="'+e(d.productId)+'" data-variant-id="'+e(d.variantId)+'" '+(!writable||s.busy?'disabled':'')+'>+ Додај '+f(Math.min(remaining,selectedFarmMax))+'</button>':'')):(canAssign?'<button class="ndp3-btn primary ndp3-request-assign btn-assign" type="button" data-action="open-request" data-product-id="'+e(d.productId)+'" data-variant-id="'+e(d.variantId)+'" '+(!writable||s.busy?'disabled':'')+'>+ Додај '+f(remaining)+'</button>':'');
      const orderItems=s.items.filter(item=>String(item.product_id)===String(d.productId)&&String(item.variant_id)===String(d.variantId)&&n(item.package_count)>0);
      const orderedByCustomer=new Map();
      for(const item of orderItems){
