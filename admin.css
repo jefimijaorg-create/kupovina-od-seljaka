@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 3.7.0
+ * Version: 3.8.0
    Верзија: 3.6.2
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"3.6.2";
+  --nd-css-version:"3.8.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1387,62 +1387,70 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .nd-brand-copy strong{font-size:12px}
 }
 
-/* МОДУЛ НАБАВКА — КОЛИЧИНЕ И ДОДЕЛА ПО АМБАЛАЖИ · 3.6.0 */
-.nd-workspace .ndp3-request-package-row{display:flex;flex-direction:column;gap:10px;min-width:0;padding:12px;border:1px solid var(--nd-line);border-radius:12px;background:#fff}
-.nd-workspace .ndp3-request-package-main{display:flex;min-width:0;flex-direction:column;gap:8px}
-.nd-workspace .ndp3-request-package-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
-.nd-workspace .ndp3-request-package-head>b{min-width:0;color:var(--nd-ink);font-size:15px;font-weight:850;overflow-wrap:anywhere}
-.nd-workspace .ndp3-request-assign{flex:0 0 auto;min-height:42px;padding:8px 12px;border:1px solid #C4D6C9;border-radius:9px;background:#285B3C;color:#fff;font-size:12px;font-weight:800;white-space:normal}
-.nd-workspace .ndp3-request-assign:disabled{opacity:.48;cursor:not-allowed}
-.nd-workspace .ndp3-request-package-meta{display:block;color:var(--nd-muted);font-size:11px;line-height:1.4;overflow-wrap:anywhere}
-.nd-workspace .ndp3-request-package-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-width:0}
-.nd-workspace .ndp3-request-package-metrics>div{display:flex;min-width:0;flex-direction:column;gap:3px;padding:9px 10px;border:1px solid #DCE4DC;border-radius:9px;background:#F3F5F2}
-.nd-workspace .ndp3-request-package-metrics small{color:#617066;font-size:11px;font-weight:700}
-.nd-workspace .ndp3-request-package-metrics b{color:#344238;font-size:20px;font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums}
+/* МОДУЛ НАБАВКА — ЈЕДИНСТВЕН СТИЛ ТРЕБОВАЊА, АМБАЛАЖЕ И ГАЗДИНСТВА · 3.8.0 */
+.nd-workspace .ndp3-request-package-row{display:flex;flex-direction:column;gap:8px;min-width:0;margin-top:8px;padding:10px 0;border:0;border-top:1px solid #E5EBE4;border-radius:0;background:transparent}
+.nd-workspace .ndp3-request-package-main{display:flex;min-width:0;flex-direction:column;gap:7px}
+.nd-workspace .ndp3-request-package-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.nd-workspace .ndp3-request-package-head>b{min-width:0;color:#344238;font-size:14px;font-weight:800;overflow-wrap:anywhere}
+.nd-workspace .ndp3-request-package-meta{display:block;color:#617066;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+.nd-workspace .ndp3-request-package-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
+.nd-workspace .ndp3-request-package-metrics>div{display:flex;min-width:0;flex-direction:column;gap:3px;padding:7px 9px;border:1px solid #DCE4DC;border-radius:8px;background:#F3F5F2}
+.nd-workspace .ndp3-request-package-metrics small{color:#617066;font-size:10px;font-weight:700;line-height:1.25}
+.nd-workspace .ndp3-request-package-metrics b{color:#344238;font-size:18px;font-weight:850;line-height:1.1;font-variant-numeric:tabular-nums}
 .nd-workspace .ndp3-request-package-metrics>div:nth-child(2){background:#E9F1EC;border-color:#C4D6C9}
 .nd-workspace .ndp3-request-package-metrics>div:nth-child(2) b{color:#285B3C}
 .nd-workspace .ndp3-request-package-metrics>div.is-pending{background:#FFF7EC;border-color:#F2D3A6}
 .nd-workspace .ndp3-request-package-metrics>div.is-pending small,.nd-workspace .ndp3-request-package-metrics>div.is-pending b{color:#9A5B13}
 .nd-workspace .ndp3-request-package-metrics>div.is-complete{background:#E9F1EC;border-color:#C4D6C9}
 .nd-workspace .ndp3-request-package-metrics>div.is-complete b{color:#285B3C}
-.nd-workspace .ndp3-request-allocations{border-top:1px solid var(--nd-line);padding-top:8px}
-.nd-workspace .ndp3-request-allocations summary{display:flex;align-items:center;min-height:32px;color:#285B3C;font-size:12px;font-weight:800;cursor:pointer}
-.nd-workspace .ndp3-request-total-note{color:var(--nd-muted);font-size:12px}
-@media(max-width:480px){.nd-workspace .ndp3-request-package-head{align-items:flex-start;flex-direction:column}.nd-workspace .ndp3-request-assign{width:100%;min-height:44px}.nd-workspace .ndp3-request-package-metrics{gap:5px}.nd-workspace .ndp3-request-package-metrics>div{padding:8px 7px}.nd-workspace .ndp3-request-package-metrics small{font-size:10px}.nd-workspace .ndp3-request-package-metrics b{font-size:18px}}
-
-
-/* МОДУЛ НАБАВКА — КУПЦИ ПО НАРУЧЕНОЈ АМБАЛАЖИ */
-.nd-workspace .ndp3-order-customer-breakdown{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 12px;margin:3px 0 8px;padding:9px 10px;border:1px solid #D9E3D9;border-radius:9px;background:#F8FAF7;min-width:0}
-.nd-workspace .ndp3-order-customer-breakdown>b{flex:0 0 100%;color:#344238;font-size:11px;font-weight:800}
-.nd-workspace .ndp3-order-customer-breakdown>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:column;gap:2px}
-.nd-workspace .ndp3-order-customer-breakdown>span strong{color:#344238;font-size:12px;font-weight:800;overflow-wrap:anywhere}
-.nd-workspace .ndp3-order-customer-breakdown>span small{color:#285B3C;font-size:11px;font-weight:750;overflow-wrap:anywhere}
-
-
-/* МОДУЛ НАБАВКА — КУПЦИ СКЛОПЉЕНИ У КОМПАКТАН ПРИКАЗ */
-.nd-workspace .ndp3-order-customer-breakdown{
-  display:block;margin:5px 0 7px;padding:0;border:0;background:transparent;
-}
-.nd-workspace .ndp3-order-customer-breakdown>summary{
-  display:inline-flex;min-height:32px;align-items:center;gap:6px;padding:5px 9px;
-  border:1px solid #D9E3D9;border-radius:8px;background:#F8FAF7;color:#285B3C;
-  font-size:11px;font-weight:850;cursor:pointer;list-style:none;
-}
+.nd-workspace .ndp3-request-assign{flex:0 0 auto;min-height:40px;padding:7px 11px;border:1px solid #285B3C;border-radius:8px;background:#285B3C;color:#fff;font-size:12px;font-weight:800;white-space:normal}
+.nd-workspace .ndp3-request-assign:disabled{opacity:.45;cursor:not-allowed}
+.nd-workspace .ndp3-request-allocations{margin-top:3px;border-top:1px solid #E5EBE4;padding-top:5px}
+.nd-workspace .ndp3-request-allocations summary{display:flex;align-items:center;min-height:34px;color:#285B3C;font-size:11px;font-weight:800;cursor:pointer}
+.nd-workspace .ndp3-request-allocation-list{display:flex;flex-direction:column;gap:6px;margin-top:5px}
+.nd-workspace .ndp3-request-allocation{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px;border:1px solid #DCE4DC;border-radius:9px;background:#F8FAF7}
+.nd-workspace .ndp3-request-allocation>div{min-width:0;flex:1 1 200px}
+.nd-workspace .ndp3-request-allocation>div>strong{color:#344238;font-size:12px;font-weight:800}
+.nd-workspace .ndp3-request-allocation>div>small{display:block;margin-top:3px;color:#617066;font-size:10px;line-height:1.35}
+.nd-workspace .ndp3-customer-breakdown{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px 9px;margin-top:5px;padding:0;border:0;background:transparent}
+.nd-workspace .ndp3-customer-breakdown>b{flex:0 0 100%;color:#617066;font-size:10px;font-weight:750}
+.nd-workspace .ndp3-customer-breakdown>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:row;align-items:baseline;gap:4px}
+.nd-workspace .ndp3-customer-breakdown>span strong{color:#344238;font-size:10px;font-weight:750;overflow-wrap:anywhere}
+.nd-workspace .ndp3-customer-breakdown>span small{color:#285B3C;font-size:10px;font-weight:800;overflow-wrap:anywhere}
+.nd-workspace .ndp3-order-customer-breakdown{display:block;margin:4px 0 5px;padding:0;border:0;background:transparent}
+.nd-workspace .ndp3-order-customer-breakdown>summary{display:inline-flex;min-height:30px;align-items:center;gap:5px;padding:4px 8px;border:1px solid #DCE4DC;border-radius:7px;background:#F8FAF7;color:#285B3C;font-size:10px;font-weight:800;cursor:pointer;list-style:none}
 .nd-workspace .ndp3-order-customer-breakdown>summary::-webkit-details-marker{display:none}
-.nd-workspace .ndp3-order-customer-breakdown[open]>summary{margin-bottom:6px;background:#EAF0EA}
-.nd-workspace .ndp3-order-customer-list{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 12px;padding:8px 10px;border:1px solid #D9E3D9;border-radius:8px;background:#F8FAF7}
+.nd-workspace .ndp3-order-customer-breakdown[open]>summary{margin-bottom:5px;background:#E9F1EC}
+.nd-workspace .ndp3-order-customer-list{display:flex;flex-wrap:wrap;gap:5px 10px;padding:7px 8px;border:1px solid #DCE4DC;border-radius:8px;background:#F8FAF7}
 .nd-workspace .ndp3-order-customer-list>span{display:flex;min-width:0;flex:0 1 auto;flex-direction:column;gap:2px}
-.nd-workspace .ndp3-order-customer-list>span strong{color:#344238;font-size:11px;font-weight:800;overflow-wrap:anywhere}
-.nd-workspace .ndp3-order-customer-list>span small{color:#285B3C;font-size:10px;font-weight:750;overflow-wrap:anywhere}
-
-/* МОДУЛ НАБАВКА — ОСЛОБАЂАЊЕ ГОРЊЕГ ДЕЛА ОД ЗАГЛАВЉА */
-@media(max-width:767px){
-  .nd-workspace .nd-topbar{position:relative;top:auto;flex-wrap:wrap;align-items:center}
-  .nd-workspace .nd-topbar>.nd-ops-head{flex:1 1 100%;margin:0}
-  .nd-workspace .nd-main:has(.ndp3){padding-top:14px}
-}
-/* МОДУЛ НАБАВКА — УКЛАЊАЊЕ ВЕЛИКОГ ДУПЛОГ ПОЗИВА ЗА ЦЕЛУ ТУРУ */
+.nd-workspace .ndp3-order-customer-list>span strong{color:#344238;font-size:10px;font-weight:750}
+.nd-workspace .ndp3-order-customer-list>span small{color:#285B3C;font-size:10px;font-weight:750}
+.nd-workspace .ndp3-request-intro{display:none}
 .nd-workspace .ndp3-request-product-action{display:none}
-
-/* МОДУЛ НАБАВКА — ИЗБОР ГАЗДИНСТВА И ДОДЕЛА ПО ПОНУДИ · 3.7.0 */
-.nd-workspace .ndp3-farm-picker{margin:8px 0 12px;padding:10px;border:1px solid #DCE4DC;border-radius:14px;background:#fff}.nd-workspace .ndp3-farm-picker-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.nd-workspace .ndp3-farm-picker-top>div{display:flex;flex-direction:column;gap:2px}.nd-workspace .ndp3-farm-picker-top strong{color:#344238;font-size:14px;font-weight:850}.nd-workspace .ndp3-farm-picker-top small,.nd-workspace .ndp3-farm-picker-count{color:#617066;font-size:11px;font-weight:700}.nd-workspace .ndp3-farm-search{width:100%;min-height:42px;padding:8px 11px;border:1px solid #DCE4DC;border-radius:9px;background:#F3F5F2;color:#344238;font-size:14px}.nd-workspace .ndp3-farm-picker-filters{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}.nd-workspace .ndp3-farm-picker-filters button{min-height:34px;padding:5px 10px;border:1px solid #DCE4DC;border-radius:8px;background:#fff;color:#344238;font-size:11px;font-weight:800}.nd-workspace .ndp3-farm-picker-filters button[aria-pressed="true"]{border-color:#285B3C;background:#E9F1EC;color:#285B3C}.nd-workspace .ndp3-farm-picker-list{display:flex;max-height:190px;flex-direction:column;gap:5px;overflow-y:auto;overscroll-behavior:contain;padding:1px 3px 1px 0}.nd-workspace .ndp3-farm-picker-item{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:7px 9px;border:1px solid #DCE4DC;border-radius:9px;background:#fff;text-align:left;color:#344238}.nd-workspace .ndp3-farm-picker-item>span{display:flex;min-width:0;flex-direction:column;gap:2px}.nd-workspace .ndp3-farm-picker-item strong{overflow-wrap:anywhere;font-size:12px;font-weight:800}.nd-workspace .ndp3-farm-picker-item small{color:#617066;font-size:10px}.nd-workspace .ndp3-farm-picker-item>b{flex:0 0 auto;color:#285B3C;font-size:11px;font-weight:850;text-align:right}.nd-workspace .ndp3-farm-picker-item.is-selected{border:2px solid #285B3C;background:#E9F1EC;padding:6px 8px}.nd-workspace .ndp3-farm-picker-item[hidden]{display:none}.nd-workspace .ndp3-farm-picker-empty{padding:10px;color:#617066;font-size:12px}.nd-workspace .ndp3-farm-other-allocation{padding:7px 9px;border:1px solid #DCE4DC;border-radius:8px;background:#F3F5F2;color:#617066;font-size:11px;line-height:1.45}.nd-workspace .ndp3-farm-assignment-locked{display:inline-flex;align-items:center;min-height:34px;padding:5px 9px;border:1px solid #DCE4DC;border-radius:8px;background:#F3F5F2;color:#617066;font-size:11px;font-weight:750}@media(max-width:767px){.nd-workspace .ndp3-farm-picker{padding:9px}.nd-workspace .ndp3-farm-picker-list{max-height:165px}.nd-workspace .ndp3-farm-picker-item{min-height:48px}}
+.nd-workspace .ndp3-request-product-card{min-width:0;padding:11px 12px;border:1px solid #DCE4DC;border-radius:11px;background:#fff}
+.nd-workspace .ndp3-request-product-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:7px;border-bottom:1px solid #E5EBE4}
+.nd-workspace .ndp3-request-product-head strong{color:#344238;font-size:15px;font-weight:850}
+.nd-workspace .ndp3-request-product-total{color:#617066;font-size:10px;line-height:1.35}
+.nd-workspace .ndp3-farm-picker{margin:6px 0 10px;padding:9px 10px;border:1px solid #DCE4DC;border-radius:11px;background:#fff}
+.nd-workspace .ndp3-farm-picker-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.nd-workspace .ndp3-farm-picker-top>div{display:flex;flex-direction:row;align-items:baseline;gap:7px;min-width:0}
+.nd-workspace .ndp3-farm-picker-top strong{color:#344238;font-size:13px;font-weight:850}
+.nd-workspace .ndp3-farm-picker-top small,.nd-workspace .ndp3-farm-picker-count{color:#617066;font-size:10px;font-weight:700}
+.nd-workspace .ndp3-farm-search{width:100%;min-height:40px;padding:7px 10px;border:1px solid #DCE4DC;border-radius:8px;background:#F3F5F2;color:#344238;font-size:14px}
+.nd-workspace .ndp3-farm-picker-filters{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.nd-workspace .ndp3-farm-picker-filters button{min-height:31px;padding:4px 9px;border:1px solid #DCE4DC;border-radius:7px;background:#fff;color:#344238;font-size:10px;font-weight:800}
+.nd-workspace .ndp3-farm-picker-filters button[aria-pressed="true"]{border-color:#285B3C;background:#E9F1EC;color:#285B3C}
+.nd-workspace .ndp3-farm-picker-list{display:flex;max-height:145px;flex-direction:column;gap:4px;overflow-y:auto;overscroll-behavior:contain;padding:1px 3px 1px 0}
+.nd-workspace .ndp3-farm-picker-item{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:43px;padding:6px 8px;border:1px solid #E1E7E0;border-radius:8px;background:#fff;text-align:left;color:#344238}
+.nd-workspace .ndp3-farm-picker-item>span{display:flex;min-width:0;flex-direction:column;gap:2px}
+.nd-workspace .ndp3-farm-picker-item strong{overflow-wrap:anywhere;font-size:11px;font-weight:800}
+.nd-workspace .ndp3-farm-picker-item small{color:#617066;font-size:9px}
+.nd-workspace .ndp3-farm-picker-item>b{flex:0 0 auto;color:#285B3C;font-size:10px;font-weight:850;text-align:right}
+.nd-workspace .ndp3-farm-picker-item.is-selected{border:2px solid #285B3C;background:#E9F1EC;padding:5px 7px}
+.nd-workspace .ndp3-farm-picker-item[hidden]{display:none}
+.nd-workspace .ndp3-farm-picker-empty{padding:8px;color:#617066;font-size:11px}
+.nd-workspace .ndp3-farm-other-allocation{margin-top:5px;padding:6px 8px;border:0;border-left:3px solid #E8A04A;border-radius:0;background:#FFF7EC;color:#9A5B13;font-size:10px;line-height:1.4}
+.nd-workspace .ndp3-farm-assignment-locked{display:inline-flex;align-items:center;min-height:32px;padding:4px 8px;border:1px solid #DCE4DC;border-radius:7px;background:#F3F5F2;color:#617066;font-size:10px;font-weight:750}
+.nd-workspace .nd-main:has(.ndp3){padding-bottom:105px}
+@media(min-width:768px) and (max-width:1100px){.nd-workspace .ndp3-request-products{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:767px){.nd-workspace .ndp3{gap:9px;padding-bottom:105px}.nd-workspace .ndp3-request-product-card{padding:10px}.nd-workspace .ndp3-request-package-metrics{gap:5px}.nd-workspace .ndp3-request-package-metrics>div{padding:7px 6px}.nd-workspace .ndp3-request-package-metrics small{font-size:9px}.nd-workspace .ndp3-request-package-metrics b{font-size:17px}.nd-workspace .ndp3-request-assign{min-height:42px;padding:6px 9px}.nd-workspace .ndp3-farm-picker-list{max-height:135px}.nd-workspace .ndp3-farm-picker-item{min-height:43px}}
