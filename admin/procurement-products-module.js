@@ -21,7 +21,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  const groups=(arr,fn)=>{let m=new Map();arr.forEach(a=>{let k=key(a.product_id,a.variant_id);if(!m.has(k))m.set(k,{p:a.product_id,v:a.variant_id,rows:[]});m.get(k).rows.push(a)});return [...m.values()].map(g=>({...g,total:fn?g.rows.reduce((s,a)=>s+q(fn(a)),0):0}))};
  const allGroupRows=g=>rows.filter(a=>key(a.product_id,a.variant_id)===key(g.p,g.v));
  const groupRows=g=>allGroupRows(g).filter(a=>farmFilter==='all'||String(a.gazdinstvo_id)===String(farmFilter));
- const demandGroups=()=>groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina).filter(g=>farmFilter==='all'||String(products.find(p=>String(p.id)===String(g.p))?.gazdinstvo_id)===String(farmFilter));
+ const demandGroups=()=>groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina).filter(g=>farmFilter==='all'||groupRows(g).length>0);
  const sums=g=>{let r=groupRows(g),all=allGroupRows(g);return {P:g.total,R:r.reduce((s,a)=>s+req(a),0),pending:r.reduce((s,a)=>s+pending(a),0),K:r.reduce((s,a)=>s+conf(a),0),U:r.reduce((s,a)=>s+picked(a),0),free:Math.max(0,g.total-all.reduce((s,a)=>s+req(a),0)),pickup:r.reduce((s,a)=>s+toPick(a),0),short:Math.max(0,g.total-all.reduce((s,a)=>s+conf(a),0))}};
  async function load(){
   let tr=await db.from('ture').select('id,naziv,status').eq('id',tourId).maybeSingle();if(tr.error)throw tr.error;if(!tr.data)throw Error('Тура није пронађена.');tour=tr.data;
