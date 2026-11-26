@@ -1,6 +1,6 @@
 /*
  * NARUČИ ДОМАЋЕ — PROCUREMENT STAGE VIEW
- * Version: 3.2.1
+ * Version: 3.2.2
  * Updated: 2026-11-26
  * Description: Progressive product cards with explicit total and farm-level allocation, requisition, confirmation and pickup.
  * Scope: Existing ADMIN Workspace only.
@@ -142,7 +142,7 @@ export function renderProcurementStageView(ctx){
    const totalNeeded=activeDemand.reduce((sum,d)=>sum+n(d.packages),0);
    const selectedCount=s.requestFarmFilter?remainingForFarm(s.requestFarmFilter):0;
    const action=selectedFarm?'<div class="ndp3-stage-actions ndp3-farm-request-submit"><button class="ndp3-btn primary" data-action="submit-farm-requisition" data-farm-id="'+e(selectedFarm.id)+'" '+(!writable||s.busy||selectedCount<=0?'disabled':'')+'>Упути требовање · '+f(selectedCount)+' пак.</button></div>':'<div class="ndp3-stage-empty">Изабери газдинство. Систем ће сам издвојити све производе и количине које оно може да обезбеди.</div>';
-   return '<div class="ndp3-request-intro">Списак је аутоматски сабран из поруџбина купаца. Не уносиш количине ручно.</div>'+farmPicker+'<section class="ndp3-request-products">'+(list||'<div class="ndp3-stage-empty">Нема производа за требовање у овој тури.</div>')+'</section><div class="ndp3-request-intro">Укупно потребно: <strong>'+f(totalNeeded)+' паковања</strong>. Захтев се формира само за изабрано газдинство и његову активну понуду.</div>'+action;
+   return '<div class="ndp3-allocation-entry"><div><strong>Прво додели производе газдинствима</strong><small>Изабери газдинства и упиши колико паковања сваког производа добијају. Додела се чува у бази.</small></div><button type="button" class="ndp3-btn primary ndp3-allocation-entry-button" data-action="open-request" '+(!writable||s.busy||!activeDemand.length?'disabled':'')+'>Додели производе</button></div><div class="ndp3-request-intro">Списак је аутоматски сабран из поруџбина купаца. Не уносиш поруџбине поново.</div>'+farmPicker+'<section class="ndp3-request-products">'+(list||'<div class="ndp3-stage-empty">Нема производа за требовање у овој тури.</div>')+'</section><div class="ndp3-request-intro">Укупно потребно: <strong>'+f(totalNeeded)+' паковања</strong>. Захтев се формира само за изабрано газдинство и његову активну понуду.</div>'+action;
   })();
   const requestFarmsHtml=(()=>{
    const groups=new Map();
