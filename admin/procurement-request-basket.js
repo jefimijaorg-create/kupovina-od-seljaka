@@ -1,14 +1,14 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT REQUEST BASKET
- * Version: 1.0.1
- * Updated: 2026-11-18
+ * Version: 1.0.2
+ * Updated: 2026-11-26
  * Description: Builds the tour-wide producer master list and isolated per-farm Viber specifications.
  * Scope: Read-only presentation over existing procurement allocations; no database schema changes.
  */
 
 export function renderProcurementRequestBasket({
   allocations = [], farms = [], products = [], variants = [], demands = [],
-  tourId, esc, fmt, fmtDateTime, busy = false
+  tourId, tourDate = null, esc, fmt, fmtDateTime, busy = false
 }) {
   const num = (value) => {
     const parsed = Number(value);
@@ -62,10 +62,7 @@ export function renderProcurementRequestBasket({
           packageLabel + ': ' + quantityLabel
       };
     });
-    const message = 'Поштовани' + (farm?.name ? ' ' + farm.name : '') + ',\n\n' +
-      'Молимо вас да потврдите доступност следећих производа за туру #' + tourId + ':\n' +
-      messageLines.map((line) => line.message).join('\n') +
-      '\n\nМолимо да нам јавите колико паковања можете да обезбедите.\nХвала!';
+    const deliveryDate = tourDate ? new Date(tourDate + 'T12:00:00').toLocaleDateString('sr-RS') : '';\n    const message = '**НАРУЧИ ДОМАЋЕ — Требовање за туру #' + tourId + '**' +\n      (deliveryDate ? '\\nДатум испоруке: ' + deliveryDate : '') +\n      '\\n\\nПоздрав, ' + (farm?.name || 'газдинство') + '!\\n\\nТребујемо следеће:\\n\\n' +\n      messageLines.map((line, index) => (index + 1) + '. **' + line.productName + '**\\n   • ' + line.variantName + ': **' + line.quantityLabel + '**').join('\\n\\n') +\n      '\\n\\nМолимо вас потврдите шта можете да припремите. Хвала!';
     const phone = String(farm?.phone || '').replace(/[^\d+]/g, '');
     const itemsHtml = messageLines.map((line) =>
       '<li>' + esc(line.productName) + ' · ' + esc(line.variantName) +
