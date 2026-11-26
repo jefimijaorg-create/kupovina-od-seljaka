@@ -1904,3 +1904,6 @@ body.nd-workspace select:focus-visible{
  .nd-workspace .nd-proc-live .phead .pbtn{padding:8px 9px}
 }
 
+
+/* Procurement: sent status and supplier rejection action */
+.pstatus-sent{display:inline-flex;align-items:center;padding:8px 11px;border:1px solid #b9d9c2;border-radius:999px;background:#edf8ef;color:#246b3a;font-size:11px;font-weight:900;white-space:nowrap}.pbtn-reject{border-color:#f0c4c4;background:#fff5f5;color:#b42318}
