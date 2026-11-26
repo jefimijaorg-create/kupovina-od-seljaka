@@ -105,10 +105,10 @@ export async function mountProcurementManagement({ root, core, tourId, onBack, i
     const deliveryDate = state.tour?.datum
       ? new Date(state.tour.datum + 'T12:00:00').toLocaleDateString('sr-RS') : '';
     return '**НАРУЧИ ДОМАЋЕ — Требовање за туру #' + tourId + '**' +
-      (deliveryDate ? '\\nДатум испоруке: ' + deliveryDate : '') +
-      '\\n\\nПоздрав, ' + (farm?.name || 'газдинство') + '!\\n\\nТребујемо следеће:\\n\\n' +
-      lines.map((line, index) => (index + 1) + '. **' + line.product + '**\\n   • ' + line.variant + ': **' + line.quantity + '**').join('\\n\\n') +
-      '\\n\\nМолимо вас потврдите шта можете да припремите. Хвала!';
+      (deliveryDate ? '\nДатум испоруке: ' + deliveryDate : '') +
+      '\n\nПоздрав, ' + (farm?.name || 'газдинство') + '!\n\nТребујемо следеће:\n\n' +
+      lines.map((line, index) => (index + 1) + '. **' + line.product + '**\n   • ' + line.variant + ': **' + line.quantity + '**').join('\n\n') +
+      '\n\nМолимо вас потврдите шта можете да припремите. Хвала!';
   }
 
   async function load() {
