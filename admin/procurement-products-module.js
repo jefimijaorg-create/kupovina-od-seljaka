@@ -97,7 +97,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  function render(){
   if(disposed)return;let c=tileCounts(),ob=c.free+c.pending+c.pickup,gs=demandGroups();
   // Плочице су филтери: при избору приказују само производе који чине ту обавезу.
-  gs=gs.filter(g=>{let z=sums(g);if(stage===2)return z.P>0&&(z.free>0||z.R>0);if(stage===3)return z.pending>0;if(stage===4)return z.pickup>0;if(stage===1)return z.short>0;return true;});
+  gs=gs.filter(g=>{let z=sums(g);if(stage===2)return z.P>0&&z.free>0;if(stage===3)return z.pending>0;if(stage===4)return z.pickup>0;if(stage===1)return z.short>0;return true;});
   let h='<div class="ndp-head"><div><small>ТУРА #'+esc(tourId)+' · '+esc(tour?.naziv||'Набавка')+'</small><h2>Набавка</h2></div><div class="ndp-count">'+(ob?'Још '+fmt(ob)+' обавеза':'✓ Све довршено')+'</div><button class="ndp-btn secondary" data-back>← Назад</button></div>';
   h+='<div class="ndp-obligations">'+[['free','Додели газдинству',c.free,2,'orange'],['pending','Чека одговор газдинства',c.pending,3,'blue'],['pickup','Потврђено · преузми од газдинства',c.pickup,4,'orange'],['short','Није додељено газдинству',c.short,1,'red']].map(x=>'<button class="ndp-tile '+x[4]+' '+(stage===x[3]?'active':'')+'" data-stage="'+x[3]+'"><b>'+fmt(x[2])+'</b><small>'+x[1]+'</small></button>').join('')+'</div>';
   h+='<div class="ndp-farms"><button class="'+(farmFilter==='all'?'active':'')+'" data-farm="all">Сва газдинства</button>'+farms.map(f=>'<button class="'+(String(farmFilter)===String(f.id)?'active':'')+'" data-farm="'+f.id+'">'+esc(f.name)+'</button>').join('')+'</div>';
