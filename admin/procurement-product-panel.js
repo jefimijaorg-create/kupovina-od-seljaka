@@ -31,6 +31,44 @@ async function markFarmSent(fId,button){let rows=A().filter(a=>String(a.gazdinst
 async function confirm(id,value,button){let a=A().find(x=>String(x.id)===String(id));if(!a)return;let q=req(a);if(!Number.isInteger(value)||value<0||value>q){say('Унеси цео број од 0 до '+q+'.',true);return}let shortage=q-value;if(!confirm('Газдинство потврђује '+value+' од '+q+' паковања.'+(shortage?'\\nМањак '+shortage+' се ослобађа за ново требовање.':'')+'\\nСачувати?'))return;button.disabled=true;try{let row=await patch(id,{broj_pakovanja:value,potvrdjeno_pakovanja:value,preuzeto_pakovanja:Math.min(pick(a),value),naruceno:true},{broj_pakovanja:value,potvrdjeno_pakovanja:value,naruceno:true});render();say('Потврда сачувана и проверена у бази.'+(shortage?' Ослобођено за ново требовање: '+shortage+'.':''))}catch(e){say('Потврда није сачувана: '+e.message,true)}finally{button.disabled=false}}
 async function picked(id,value,button){let a=A().find(x=>String(x.id)===String(id));if(!a)return;let q=conf(a);if(!Number.isInteger(value)||value<0||value>q){say('Преузимање мора бити од 0 до '+q+'.',true);return}button.disabled=true;try{await patch(id,{preuzeto_pakovanja:value},{preuzeto_pakovanja:value});render();say('Преузимање сачувано у бази.')}catch(e){say('Није сачувано: '+e.message,true)}finally{button.disabled=false}}
 root()?.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.dataset.stage){stage=Number(b.dataset.stage);render()}else if(b.dataset.orderDetails){detailsOpen[b.dataset.orderDetails]=!detailsOpen[b.dataset.orderDetails];render()}else if(b.dataset.copyFarm){copyFarmRequest(b.dataset.copyFarm)}else if(b.dataset.markFarm){markFarmSent(b.dataset.markFarm,b)}else if(b.dataset.farm!==undefined){filterFarm=b.dataset.farm;render()}else if(b.dataset.sent){let a=A().find(x=>String(x.id)===String(b.dataset.sent));if(!a)return;if(sent(a)){say('Овај захтев је већ означен као послат.');return}if(!confirm('Означити као послато газдинству '+farmname(a.gazdinstvo_id)+'?'))return;patch(a.id,{naruceno:true},{naruceno:true}).then(()=>{render();say('Захтев је означен као послат; сада је доступан у фази потврде.')}).catch(x=>say(x.message,true))}else if(b.dataset.confirmAll){confirm(b.dataset.confirmAll,Number(b.dataset.max),b)}else if(b.dataset.confirmSave){confirm(b.dataset.confirmSave,Number(document.querySelector('[data-confirm-input="'+b.dataset.confirmSave+'"]')?.value),b)}else if(b.dataset.pickAll){picked(b.dataset.pickAll,Number(b.dataset.max),b)}else if(b.dataset.pickSave){picked(b.dataset.pickSave,Number(document.querySelector('[data-pick-input="'+b.dataset.pickSave+'"]')?.value),b)}else if(b.dataset.ndOpenProduct){openProcurementProductPanel(b.dataset.ndOpenProduct)}else if(b.dataset.openAllocation){let first=D()[0];if(first)openProcurementProductPanel(first.productId);else say('Нема поруџбина за расподелу.',true)}});
+
+/* Важна раздвојница: слање захтева НЕ значи да је газдинство већ потврдило количину. */
+window.confirmProcurementOrder=async function(){
+ if(typeof tourCanEditProcurement==='function'&&!tourCanEditProcurement()){say('Захтев се може сачувати само док је тура у реализацији.',true);return}
+ if(procurementSavingConfirmed)return;
+ let rows;try{rows=procurementValidateDraft()}catch(e){say(e.message,true);return}
+ const chosen=rows.map(x=>({...x,count:Number(document.getElementById('proc-confirm-'+x.key)?.value)}));
+ if(chosen.some(x=>!Number.isInteger(x.count)||x.count<0)){say('Количина захтева мора бити цео број 0 или већи.',true);return}
+ if(!confirm('Сачувати послате захтеве за '+chosen.length+' расподела?\\n\\nГаздинство још није потврдило количине. Потврда се уноси у следећем кораку.'))return;
+ procurementSavingConfirmed=true;
+ try{
+  for(const x of chosen){
+   const existing=(tourAllocations||[]).find(a=>String(a.tura_id)===String(tourId)&&String(a.product_id)===String(x.productId)&&String(a.variant_id)===String(x.variantId)&&String(a.gazdinstvo_id)===String(x.farmId));
+   const oldConfirmed=existing?Math.min(n(existing.potvrdjeno_pakovanja),x.count):0;
+   const payload={broj_pakovanja:x.count,nabavna_cena:Number(x.offer.purchase_price),naruceno:true,potvrdjeno_pakovanja:oldConfirmed,preuzeto_pakovanja:existing?Math.min(n(existing.preuzeto_pakovanja),oldConfirmed):0,updated_at:new Date().toISOString()};
+   let result;
+   if(existing)result=await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(existing.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
+   else result=await api('tura_nabavka_dodele',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({...payload,tura_id:Number(tourId),product_id:x.productId,variant_id:x.variantId,gazdinstvo_id:Number(x.farmId)})});
+   if(!Array.isArray(result)||!result.some(a=>String(a.product_id)===String(x.productId)&&String(a.variant_id)===String(x.variantId)&&String(a.gazdinstvo_id)===String(x.farmId)&&a.naruceno===true&&n(a.broj_pakovanja)===x.count))throw Error('База није потврдила захтев за '+x.productName+' · '+x.variantName+'.');
+  }
+  tourAllocations=await api('tura_nabavka_dodele?select=*&tura_id=eq.'+encodeURIComponent(tourId)+'&order=id.asc');
+  if(!Array.isArray(tourAllocations))throw Error('Поновно учитавање требовања није успело.');
+  procurementDraftLines=[];stage=3;filterFarm='all';
+  if(typeof renderSupplierAllocationSummary==='function')renderSupplierAllocationSummary();
+  render();if(typeof closeProcurementAllocation==='function')closeProcurementAllocation();
+  say('Захтеви су сачувани у бази као послати. Газдинства још треба да потврде количине.');
+ }catch(e){say('Захтев није у потпуности сачуван: '+(e.message||String(e)),true)}
+ finally{procurementSavingConfirmed=false}
+};
+const oldModalRender=window.renderProcurementOrderModal;
+if(typeof oldModalRender==='function')window.renderProcurementOrderModal=function(){
+ oldModalRender();
+ if(procurementDraftStage==='confirm'){
+  const body=document.getElementById('supplier-sheet-content');
+  if(body){body.querySelectorAll('.proc-order-product-title p').forEach(p=>p.textContent='Ово су количине које шаљеш газдинству. Оне још нису потврђене; одговор уноси у кораку „Потврда“.');body.querySelectorAll('.proc-order-actions button').forEach(b=>b.textContent='Сачувај послате захтеве →')}
+ }
+};
+
 window.renderProcurement=render;
 document.addEventListener('DOMContentLoaded',()=>{stage=A().some(a=>sent(a)&&pend(a)>0)?3:2;render()},{once:true});
 })();
