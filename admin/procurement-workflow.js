@@ -1,23 +1,24 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT WORKFLOW
- * Version: 1.0.3
+ * Version: 1.0.4
  * Updated: 2026-11-18
  * Description: Pure validation and transition rules driven by requested, confirmed and collected quantities; technical allocation counts are not business statuses.
  * Scope: Existing ADMIN Workspace only. No schema, trigger, RLS, or legacy changes.
  */
 export const PROCUREMENT_STAGES = Object.freeze({ UNASSIGNED:'unassigned', ASSIGNED:'assigned', SENT:'sent', CONFIRMED:'confirmed', COLLECTED:'collected' });
 const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+const wasSent = row => row?.viber_status === 'sent' || row?.viber_status === 'replied' || !!row?.viber_poslato_at;
 const wholeNonNegative = value => Number.isInteger(Number(value)) && Number(value) >= 0;
 export function getProcurementStage(row) {
  if (!row || number(row.naruceno_pakovanja) <= 0) return PROCUREMENT_STAGES.UNASSIGNED;
  if (number(row.preuzeto_pakovanja) > 0) return PROCUREMENT_STAGES.COLLECTED;
  if (number(row.potvrdjeno_pakovanja) > 0) return PROCUREMENT_STAGES.CONFIRMED;
- if ((row.viber_status === 'sent' || row.viber_status === 'replied') && number(row.naruceno_pakovanja) > 0) return PROCUREMENT_STAGES.SENT;
+ if (wasSent(row) && number(row.naruceno_pakovanja) > 0) return PROCUREMENT_STAGES.SENT;
  return PROCUREMENT_STAGES.ASSIGNED;
 }
 export function getProcurementStageLabel(stage) { return ({unassigned:'У припреми',assigned:'Додељено',sent:'Послато',confirmed:'Потврђено',collected:'Преузето'})[stage] || 'Непознат статус'; }
-export function canMarkProcurementSent(row) { return getProcurementStage(row) === PROCUREMENT_STAGES.ASSIGNED && number(row.naruceno_pakovanja) > 0; }
-export function canConfirmProcurement(row) { const stage=getProcurementStage(row); return (row.viber_status === 'sent' || row.viber_status === 'replied') && [PROCUREMENT_STAGES.SENT,PROCUREMENT_STAGES.CONFIRMED,PROCUREMENT_STAGES.COLLECTED].includes(stage) && number(row.potvrdjeno_pakovanja) < number(row.naruceno_pakovanja); }
+export function canMarkProcurementSent(row) { return !row?.viber_poslato_at && getProcurementStage(row) === PROCUREMENT_STAGES.ASSIGNED && number(row.naruceno_pakovanja) > 0; }
+export function canConfirmProcurement(row) { const stage=getProcurementStage(row); return wasSent(row) && [PROCUREMENT_STAGES.SENT,PROCUREMENT_STAGES.CONFIRMED,PROCUREMENT_STAGES.COLLECTED].includes(stage) && number(row.potvrdjeno_pakovanja) < number(row.naruceno_pakovanja); }
 export function canCollectProcurement(row) { const stage=getProcurementStage(row); return [PROCUREMENT_STAGES.CONFIRMED,PROCUREMENT_STAGES.COLLECTED].includes(stage) && number(row.preuzeto_pakovanja) < number(row.potvrdjeno_pakovanja); }
 export function validateProcurementCounts(row, {confirmed,collected} = {}) {
  if (!wholeNonNegative(confirmed) || !wholeNonNegative(collected)) return {valid:false,error:'Количине морају бити цели ненегативни бројеви паковања.'};
