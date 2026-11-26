@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — PROCUREMENT ALLOCATION ACTIONS
- * Version: 1.1.2
+ * Version: 1.1.3
  * Updated: 2026-11-19
  * Description: Validates and persists procurement allocation carts and safely edits unsent allocation quantities.
  * Scope: Existing ADMIN Workspace; existing Supabase tables and RLS only. No schema changes.
@@ -209,4 +209,67 @@ export async function updateUnsentProcurementAllocation({client,row,packages,dem
  if(!result.data)throw new Error('Додела није измењена. Можда је у међувремену послата или потврђена. Освежи податке.');
  if(n(result.data.broj_pakovanja)!==count||n(result.data.naruceno_pakovanja)!==count)throw new Error('База није потврдила нову количину.');
  return result.data;
+}
+
+
+/* Расподела потврђене количине по купцима. Не мења захтев/потврду газдинства. */
+export async function saveConfirmedCustomerDistribution({client,tourId,row,items,draft}={}){
+ if(!client||!tourId||!row||!Array.isArray(items)||!items.length)throw new Error('Недостају подаци за расподелу потврђене количине.');
+ const tour=await client.from('ture').select('status').eq('id',tourId).maybeSingle();
+ if(tour.error)throw new Error(tour.error.message);
+ if(tour.data?.status!=='processing')throw new Error('Расподела је дозвољена само на тури у обради.');
+ const currentResult=await client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,naruceno_pakovanja,potvrdjeno_pakovanja,preuzeto_pakovanja,viber_status').eq('id',row.id).maybeSingle();
+ if(currentResult.error)throw new Error(currentResult.error.message);
+ const current=currentResult.data;
+ if(!current||String(current.tura_id)!==String(tourId)||n(current.potvrdjeno_pakovanja)<=0||n(current.preuzeto_pakovanja)>0)throw new Error('За ову доделу још нема потврђене количине или је преузимање већ почело.');
+ const itemIds=items.map(item=>item.id);
+ const freshResult=await client.from('stavke_porudzbine').select('id,package_count,product_id,variant_id,tura_id').in('id',itemIds).eq('tura_id',tourId);
+ if(freshResult.error)throw new Error(freshResult.error.message);
+ const fresh=freshResult.data||[];
+ if(fresh.length!==itemIds.length||fresh.some(item=>String(item.product_id)!==String(current.product_id)||String(item.variant_id)!==String(current.variant_id)))throw new Error('Поруџбине купаца више не одговарају потврђеном производу и амбалажи.');
+ const sharesResult=await client.from('tura_stavke_raspodela').select('id,stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja,created_at,updated_at').in('stavka_porudzbine_id',itemIds);
+ if(sharesResult.error)throw new Error(sharesResult.error.message);
+ const existing=sharesResult.data||[],values=new Map();let total=0;
+ for(const item of fresh){
+  const count=Number(draft?.[String(item.id)]??0),ordered=n(item.package_count);
+  if(!Number.isInteger(count)||count<0||count>ordered)throw new Error('Количина купца мора бити цео број од 0 до наручене количине.');
+  const other=existing.filter(x=>String(x.stavka_porudzbine_id)===String(item.id)&&String(x.gazdinstvo_id)!==String(current.gazdinstvo_id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
+  if(other+count>ordered)throw new Error('Расподела купцу премашује наручену количину после других газдинстава.');
+  values.set(String(item.id),count);total+=count;
+ }
+ if(total>n(current.potvrdjeno_pakovanja))throw new Error('Купцима је додељено више паковања него што је газдинство потврдило ('+n(current.potvrdjeno_pakovanja)+').');
+ if(total<1)throw new Error('Расподели најмање једно потврђено паковање купцима.');
+ const updated=[],inserted=[],deleted=[];
+ try{
+  for(const item of fresh){
+   const itemId=String(item.id),count=values.get(itemId),oldRows=existing.filter(x=>String(x.stavka_porudzbine_id)===itemId&&String(x.gazdinstvo_id)===String(current.gazdinstvo_id));
+   if(count>0){
+    if(oldRows.length){
+     const [first,...duplicates]=oldRows;
+     const result=await client.from('tura_stavke_raspodela').update({broj_pakovanja:count,updated_at:new Date().toISOString()}).eq('id',first.id).select('id').maybeSingle();
+     if(result.error||!result.data)throw new Error(result.error?.message||'Расподела купца није ажурирана.');
+     updated.push(first);
+     for(const duplicate of duplicates){const removed=await client.from('tura_stavke_raspodela').delete().eq('id',duplicate.id);if(removed.error)throw new Error(removed.error.message);deleted.push(duplicate);}
+    }else{
+     const result=await client.from('tura_stavke_raspodela').insert({stavka_porudzbine_id:item.id,gazdinstvo_id:current.gazdinstvo_id,broj_pakovanja:count}).select('id').single();
+     if(result.error||!result.data)throw new Error(result.error?.message||'Расподела купца није сачувана.');
+     inserted.push(result.data.id);
+    }
+   }else for(const old of oldRows){const removed=await client.from('tura_stavke_raspodela').delete().eq('id',old.id);if(removed.error)throw new Error(removed.error.message);deleted.push(old);}
+  }
+  const verify=await client.from('tura_stavke_raspodela').select('stavka_porudzbine_id,gazdinstvo_id,broj_pakovanja').in('stavka_porudzbine_id',itemIds);
+  if(verify.error)throw new Error(verify.error.message);
+  for(const item of fresh){
+   const actual=(verify.data||[]).filter(x=>String(x.stavka_porudzbine_id)===String(item.id)&&String(x.gazdinstvo_id)===String(current.gazdinstvo_id)).reduce((sum,x)=>sum+n(x.broj_pakovanja),0);
+   if(actual!==values.get(String(item.id)))throw new Error('База није потврдила расподелу за купца #'+item.id+'.');
+  }
+  return {total,confirmed:n(current.potvrdjeno_pakovanja),remaining:Math.max(0,n(current.potvrdjeno_pakovanja)-total)};
+ }catch(error){
+  const rollback=[];
+  for(const id of inserted){const result=await client.from('tura_stavke_raspodela').delete().eq('id',id);if(result.error)rollback.push(result.error.message);}
+  for(const old of updated){const result=await client.from('tura_stavke_raspodela').update({broj_pakovanja:old.broj_pakovanja,updated_at:old.updated_at}).eq('id',old.id);if(result.error)rollback.push(result.error.message);}
+  for(const old of deleted){const result=await client.from('tura_stavke_raspodela').insert({stavka_porudzbine_id:old.stavka_porudzbine_id,gazdinstvo_id:old.gazdinstvo_id,broj_pakovanja:old.broj_pakovanja,created_at:old.created_at,updated_at:old.updated_at});if(result.error)rollback.push(result.error.message);}
+  if(rollback.length)throw new Error((error.message||String(error))+' Враћање расподеле није потпуно: '+rollback.join('; '));
+  throw error;
+ }
 }
