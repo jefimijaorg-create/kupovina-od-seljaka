@@ -18,9 +18,10 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  const fName=id=>farms.find(x=>String(x.id)===String(id))?.name||'Газдинство #'+id;
  const key=(p,v)=>String(p)+'|'+String(v);
  const groups=(arr,fn)=>{let m=new Map();arr.forEach(a=>{let k=key(a.product_id,a.variant_id);if(!m.has(k))m.set(k,{p:a.product_id,v:a.variant_id,rows:[]});m.get(k).rows.push(a)});return [...m.values()].map(g=>({...g,total:fn?g.rows.reduce((s,a)=>s+q(fn(a)),0):0}))};
- const groupRows=g=>rows.filter(a=>key(a.product_id,a.variant_id)===key(g.p,g.v)&&(farmFilter==='all'||String(a.gazdinstvo_id)===String(farmFilter)));
- const demandGroups=()=>groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina).filter(g=>farmFilter==='all'||groupRows(g).length>0);
- const sums=g=>{let r=groupRows(g);return {P:g.total,R:r.reduce((s,a)=>s+req(a),0),pending:r.reduce((s,a)=>s+pending(a),0),K:r.reduce((s,a)=>s+conf(a),0),U:r.reduce((s,a)=>s+picked(a),0),free:Math.max(0,g.total-r.reduce((s,a)=>s+req(a),0)),pickup:r.reduce((s,a)=>s+toPick(a),0),short:Math.max(0,g.total-r.reduce((s,a)=>s+conf(a),0))}};
+ const allGroupRows=g=>rows.filter(a=>key(a.product_id,a.variant_id)===key(g.p,g.v));
+ const groupRows=g=>allGroupRows(g).filter(a=>farmFilter==='all'||String(a.gazdinstvo_id)===String(farmFilter));
+ const demandGroups=()=>groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina).filter(g=>farmFilter==='all'||String(products.find(p=>String(p.id)===String(g.p))?.gazdinstvo_id)===String(farmFilter));
+ const sums=g=>{let r=groupRows(g),all=allGroupRows(g);return {P:g.total,R:r.reduce((s,a)=>s+req(a),0),pending:r.reduce((s,a)=>s+pending(a),0),K:r.reduce((s,a)=>s+conf(a),0),U:r.reduce((s,a)=>s+picked(a),0),free:Math.max(0,g.total-all.reduce((s,a)=>s+req(a),0)),pickup:r.reduce((s,a)=>s+toPick(a),0),short:Math.max(0,g.total-all.reduce((s,a)=>s+conf(a),0))}};
  async function load(){
   let tr=await db.from('ture').select('id,naziv,status').eq('id',tourId).maybeSingle();if(tr.error)throw tr.error;if(!tr.data)throw Error('Тура није пронађена.');tour=tr.data;
   items=fail(await db.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,package_count,broj_pakovanja,package_size,package_unit,recipient_name,proizvod,kolicina,jedinica,gazdinstvo_id').eq('tura_id',tourId),'Поруџбине');
@@ -44,7 +45,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  `;
  let style=document.createElement('style');style.dataset.ndProcUx='1';style.textContent=css;document.head.appendChild(style);
  let expanded=new Set(),opened=new Map(),inputs=new Map(),events=new AbortController();
- const tileCounts=()=>{let gs=demandGroups();return {free:gs.reduce((s,g)=>s+sums(g).free,0),pending:rows.reduce((s,a)=>s+pending(a),0),pickup:rows.reduce((s,a)=>s+toPick(a),0),short:gs.reduce((s,g)=>s+sums(g).short,0)}};
+ const tileCounts=()=>{let gs=groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina);return {free:gs.reduce((s,g)=>s+Math.max(0,g.total-allGroupRows(g).reduce((n,a)=>n+req(a),0)),0),pending:rows.reduce((s,a)=>s+pending(a),0),pickup:rows.reduce((s,a)=>s+toPick(a),0),short:gs.reduce((s,g)=>s+Math.max(0,g.total-allGroupRows(g).reduce((n,a)=>n+conf(a),0)),0)}};
  function actionFor(g){let s=sums(g);if(s.free>0)return {label:'Требуј још '+fmt(s.free)+' →',stage:2,kind:'orange'};if(s.pending>0)return {label:'Чека потврду '+fmt(s.pending)+' →',stage:3,kind:'blue'};if(s.pickup>0)return {label:'Преузми још '+fmt(s.pickup)+' →',stage:4,kind:'orange'};if(s.short>0)return {label:'Мањак код купаца '+fmt(s.short)+' →',stage:1,kind:'red'};return {label:'✓ Готово',stage:5,kind:'done'}}
  function panel(g,step){let a=groupRows(g).filter(x=>farmFilter==='all'||String(x.gazdinstvo_id)===String(farmFilter));let html='<div class="ndp-panel"><h4>'+['','Купци · Наручено','Требовање · Расподела','У требовању · Потврда','Потврђено · Преузимање','Преузето · Историја'][step]+'</h4>';
  if(step===1){let buyers=items.filter(x=>key(x.product_id,x.variant_id)===key(g.p,g.v));html+=buyers.map(x=>'<div class="ndp-line"><span>Купац '+esc(x.recipient_name||('поруџбина #'+x.porudzbina_id))+'<small>Поруџбина #'+esc(x.porudzbina_id||'—')+'</small></span><b>'+fmt(x.package_count??x.broj_pakovanja??x.kolicina)+' пак.</b></div>').join('')||'<small>Нема детаља купаца у овим ставкама.</small>'}
