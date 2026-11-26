@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 4.1.0
-   Верзија: 4.1.0
+ * Version: 4.2.0
+   Верзија: 4.2.0
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"4.1.0";
+  --nd-css-version:"4.2.0";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1564,3 +1564,10 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .ndp3-stage-step-hint>strong{font-size:13px}
 .nd-workspace .ndp3-stage-step-hint>small{color:#617066;font-size:11px}
 @media(max-width:767px){.nd-workspace .ndp3-product-step>.ndp3-request-product-head{padding:6px 0}.nd-workspace .ndp3-product-step>.ndp3-request-product-head>div{flex:1}.nd-workspace .ndp3-stage-step-hint{align-items:flex-start;flex-wrap:wrap}.nd-workspace .ndp3-stage-step-hint>small{flex-basis:100%;margin-left:37px}}
+
+/* МОДУЛ НАБАВКА — ИЗАБРАНО ГАЗДИНСТВО ОСТАЈЕ У ЗАГЛАВЉУ · 4.2.0 */
+.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-search,
+.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-filters,
+.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-list{display:none}
+.nd-workspace .ndp3-farm-picker:has(.ndp3-farm-picker-item.is-selected) .ndp3-farm-picker-top{margin:0}
+.nd-workspace .ndp3-farm-change{min-height:34px;padding:5px 9px;border:1px solid #C4D6C9;border-radius:8px;background:#E9F1EC;color:#285B3C;font-size:11px;font-weight:850;white-space:nowrap}
