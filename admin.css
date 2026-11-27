@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.2.6
-   Верзија: 5.1.6
+ * Version: 5.3.1
+   Верзија: 5.3.1
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.2.6";
+  --nd-css-version:"5.3.1";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2666,3 +2666,66 @@ body.nd-workspace select:focus-visible{
  .nd-workspace .ndp-sheet-backdrop .ndp-panel-tabs button{font-size:11px!important;padding:5px 3px!important}
 }
 @media(max-height:650px){.nd-workspace .ndp-sheet-backdrop>.ndp-sidepanel{height:calc(100dvh - env(safe-area-inset-top) - 4px)!important}}
+
+
+/* МОДУЛ НАБАВКА — КОМПАКТАН ПРИКАЗ КОЛИЧИНА У АМБАЛАЖИ */
+.nd-workspace .ndp-sheet-backdrop .ndp-packline{
+  gap:5px;
+  padding:5px 7px;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-packdesc{
+  gap:2px;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-packdesc>b{
+  font-size:11px;
+  line-height:1.2;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-customer-demand{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
+  min-width:0;
+  line-height:1.15;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-customer-demand>small{
+  display:inline-flex;
+  align-items:center;
+  margin:0;
+  padding:2px 5px;
+  border:1px solid #DCE4DC;
+  border-radius:5px;
+  background:#F3F5F2;
+  color:#68766C;
+  font-size:8px;
+  font-weight:800;
+  line-height:1.2;
+  letter-spacing:.015em;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-customer-demand>strong{
+  display:inline;
+  margin:0;
+  color:#344238;
+  font-size:10px;
+  font-weight:850;
+  line-height:1.2;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-customer-demand>em{
+  display:inline-flex;
+  align-items:center;
+  margin:0;
+  padding:2px 5px;
+  border:1px solid #B7D8C6;
+  border-radius:5px;
+  background:#E6F2EC;
+  color:#285B3C;
+  font-size:9px;
+  font-style:normal;
+  font-weight:900;
+  line-height:1.2;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-pack-farms{
+  max-width:100%;
+  font-size:9px;
+  line-height:1.25;
+}
