@@ -1,10 +1,10 @@
 /* ADMIN Nabavka · UX rekonstrukcija u postojećem modulu, sa postojećom Supabase šemom */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q=x=>Math.max(0,Number(x)||0),fmt=x=>q(x).toLocaleString('sr-RS',{maximumFractionDigits:2});
-export async function mountProcurementProductsModule({root,core,tourId,onBack,initialStage='request',initialProductId=null}){
+export async function mountProcurementProductsModule({root,core,tourId,onBack,initialStage='all',initialProductId=null}){
  if(!root||!core?.client||!tourId)throw Error('Недостаје ADMIN база или ID туре.');
  root.innerHTML='<section class="nd-proc-live"><div class="ndp-empty">Учитавам поруџбине и набавку…</div></section>';
- const db=core.client;let stage=({orders:1,request:2,confirm:3,pickup:4,shortage:1})[initialStage]||2,farmFilter='all',rows=[],items=[],orders=[],customers=[],products=[],variants=[],farms=[],tour=null,disposed=false;
+ const db=core.client;let stage=({all:0,orders:1,request:2,confirm:3,pickup:4,shortage:1})[initialStage]??0,farmFilter='all',rows=[],items=[],orders=[],customers=[],products=[],variants=[],farms=[],tour=null,disposed=false;
  const fail=(r,l)=>{if(r.error)throw Error(l+': '+r.error.message);return r.data||[]};
  const sent=a=>a.viber_status==='sent'||Boolean(a.viber_poslato_at);
  const req=a=>q(a.naruceno_pakovanja)||q(a.broj_pakovanja);
@@ -170,7 +170,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  function render(){
   if(disposed)return;
   const c=tileCounts(),ob=c.free+c.pending+c.pickup;
-  let gs=demandGroups().filter(g=>{let z=sums(g);if(stage===2)return z.P>0&&z.free>0;if(stage===3)return z.pending>0;if(stage===4)return z.pickup>0; if(stage===1)return z.short>0;return true});
+  let gs=demandGroups().filter(g=>{let z=sums(g);if(stage===0)return true;if(stage===2)return z.P>0&&z.free>0;if(stage===3)return z.pending>0;if(stage===4)return z.pickup>0;if(stage===1)return z.short>0;return true});
   const farmIds=[...new Set([...rows.map(x=>x.gazdinstvo_id),...products.map(x=>x.gazdinstvo_id)].filter(Boolean).map(String))];
   const activeFarms=farms.filter(f=>farmIds.includes(String(f.id)));
   const currentSelectedKey=selectedKey;
