@@ -22,6 +22,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  const allGroupRows=g=>rows.filter(a=>key(a.product_id,a.variant_id)===key(g.p,g.v));
  const groupRows=g=>allGroupRows(g).filter(a=>farmFilter==='all'||String(a.gazdinstvo_id)===String(farmFilter));
  const demandGroups=()=>{const m=new Map(groups(items,a=>a.package_count??a.broj_pakovanja??a.kolicina).map(g=>[key(g.p,g.v),g]));return [...m.values()].filter(g=>farmFilter==='all'||allGroupRows(g).some(a=>String(a.gazdinstvo_id)===String(farmFilter))||items.some(a=>key(a.product_id,a.variant_id)===key(g.p,g.v)&&String(a.gazdinstvo_id)===String(farmFilter)))};
+ const measure=(g,count)=>{const v=variants.find(x=>String(x.id)===String(g.v)),sample=allGroupRows(g)[0]||items.find(x=>key(x.product_id,x.variant_id)===key(g.p,g.v))||{};const n=Number(v?.package_value??sample.package_size??0),unit=String(v?.package_unit??sample.package_unit??v?.unit??sample.jedinica??'').toLowerCase();if(!n||!unit)return '';const u=unit.includes('l')?'l':unit.includes('kg')?'kg':unit.includes('g')?'g':unit.includes('kom')?'kom':unit;return fmt(count*n)+' '+u;};
  const sums=g=>{let r=groupRows(g),all=allGroupRows(g);return {P:g.total,R:r.reduce((s,a)=>s+req(a),0),pending:r.reduce((s,a)=>s+waitingFarm(a),0),K:r.reduce((s,a)=>s+conf(a),0),U:r.reduce((s,a)=>s+picked(a),0),free:Math.max(0,g.total-all.reduce((s,a)=>s+req(a),0)),pickup:r.reduce((s,a)=>s+toPick(a),0),short:Math.max(0,g.total-all.reduce((s,a)=>s+picked(a),0))}};
  async function load(){
   let tr=await db.from('ture').select('id,naziv,status').eq('id',tourId).maybeSingle();if(tr.error)throw tr.error;if(!tr.data)throw Error('Тура није пронађена.');tour=tr.data;
@@ -214,13 +215,6 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   // Не бирај аутоматски прво паковање: панел се приказује тек после клика корисника.
   let selected=currentSelectedKey?demandGroups().find(g=>key(g.p,g.v)===currentSelectedKey):null;
   if(currentSelectedKey&&!selected){selectedKey=null;mobilePanelOpen=false;}
-  const measure=(g,count)=>{
-   const v=variants.find(x=>String(x.id)===String(g.v)),sample=allGroupRows(g)[0]||items.find(x=>key(x.product_id,x.variant_id)===key(g.p,g.v))||{};
-   const n=Number(v?.package_value??sample.package_size??0),unit=String(v?.package_unit??sample.package_unit??v?.unit??sample.jedinica??'').toLowerCase();
-   if(!n||!unit)return '';
-   const u=unit.includes('l')?'l':unit.includes('kg')?'kg':unit.includes('g')?'g':unit.includes('kom')?'kom':unit;
-   return fmt(count*n)+' '+u;
-  };
   const statusRows=g=>allGroupRows(g).filter(a=>farmFilter==='all'||String(a.gazdinstvo_id)===String(farmFilter));
   const header='<div class="ndp-tabletbar"><div class="ndp-brand"><b>NARUČI DOMAĆE</b><span>ТУРА #'+esc(tourId)+' · '+esc(tour?.naziv||'Недеља')+'</span></div><div class="ndp-module-tabs"><span>Porudžbine</span><span>Proizvodi</span><b>Nabavka</b><span>Dostava</span><span>Dugovanja</span></div><div class="ndp-top-actions"><button class="ndp-btn secondary" data-copy-all>📋 Viber spisak</button><button class="ndp-btn secondary" data-back>← Nazad</button></div></div>';
   let h=header+'<div class="ndp-toolbar"><div class="ndp-all-products-tab"><button class="ndp-all-products-button '+(stage===0?'active':'')+'" data-all-products>▦ СВИ ПРОИЗВОДИ <span>Преглед целе туре</span></button></div><div class="ndp-obligations">'+[['free','За доделу',c.free,2,'orange'],['pickup','За преузимање',c.pickup,4,'green']].map(x=>'<button class="ndp-tile '+x[4]+' '+(stage===x[3]?'active':'')+'" data-stage="'+x[3]+'"><b>'+fmt(x[2])+'</b><small>'+x[1]+'</small></button>').join('')+'</div>';
