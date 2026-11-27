@@ -712,7 +712,7 @@ function renderPickup(){
   const size=n(v?.package_value)||1,u=String(v?.package_unit||v?.unit||p?.unit||'ком').toLowerCase();
   const label=v?.name||v?.size_label||'Паковање '+fmt(size)+' '+u;
   const g=ensure(a.gazdinstvo_id,a.product_id,a.variant_id,p?.name||'Производ',label,size,u,a.nabavna_cena);
-  g.plannedAlloc+=n(a.broj_pakovanja);g.allocationIds.push(a.id);
+  g.plannedAlloc+=n(a.potvrdjeno_pakovanja);g.allocationIds.push(a.id);
   allocationKeys.add([String(a.gazdinstvo_id),String(a.product_id||''),String(a.variant_id||'')].join('|'));
   const splits=Array.isArray(a.raspodela_kupcima)?a.raspodela_kupcima:[];
   splits.forEach(x=>{const r=rows.find(z=>String(z.id)===String(x.stavka_id));if(r&&!g.rs.some(z=>String(z.id)===String(r.id)))g.rs.push(r)});
@@ -753,16 +753,29 @@ function renderPickup(){
   try{
    if(evs.length){await api('nabavka_evidencija?id=eq.'+encodeURIComponent(evs[0].id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(payload)});for(const x of evs.slice(1))await api('nabavka_evidencija?id=eq.'+encodeURIComponent(x.id),{method:'DELETE',headers:{Prefer:'return=minimal'}})}
    else await api('nabavka_evidencija',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(payload)});
-   // Синхронизуј стварно преузету количину са ставкама купаца како би достава приказала само робу која је стигла.
+   // Преузимање је примарно на додели газдинства; количина на ставци купца је само изведени приказ за постојећу Доставу.
    let remainingPackages=count;
-   const sortedRows=g.rs.slice().sort((a,b)=>n(a.id)-n(b.id));
-   for(const r of sortedRows){
-    const rowPackages=n(r.package_count||r.broj_pakovanja)||(g.size?q(r)/g.size:0);
-    const takePackages=Math.max(0,Math.min(rowPackages,remainingPackages));
-    remainingPackages=Math.max(0,remainingPackages-takePackages);
-    const takeQuantity=Math.min(q(r),takePackages*g.size);
-    const status=takePackages>=rowPackages?'preuzeto':takePackages>0?'delimicno_preuzeto':'nije_preuzeto';
-    await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:takeQuantity,status_stavke:status})});
+   const pickedByAllocation=new Map();
+   for(const allocationId of g.allocationIds){
+    const allocation=allocations.find(a=>String(a.id)===String(allocationId));if(!allocation)continue;
+    const confirmed=Math.max(0,n(allocation.potvrdjeno_pakovanja));
+    const take=Math.max(0,Math.min(confirmed,remainingPackages));
+    remainingPackages=Math.max(0,remainingPackages-take);
+    pickedByAllocation.set(String(allocation.id),take);
+    await api('tura_nabavka_dodele?id=eq.'+encodeURIComponent(allocation.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeto_pakovanja:take,updated_at:new Date().toISOString()})});
+   }
+   const pickedByCustomer=new Map();
+   allocations.filter(a=>String(a.tura_id)===tourId&&String(a.product_id||'')===String(g.productId||'')&&String(a.variant_id||'')===String(g.variantId||'')).forEach(allocation=>{
+    let left=Math.max(0,pickedByAllocation.has(String(allocation.id))?pickedByAllocation.get(String(allocation.id)):n(allocation.preuzeto_pakovanja));
+    (Array.isArray(allocation.raspodela_kupcima)?allocation.raspodela_kupcima:[]).forEach(split=>{
+     const packs=Math.max(0,Math.min(n(split.broj_pakovanja),left));left=Math.max(0,left-packs);
+     if(packs)pickedByCustomer.set(String(split.stavka_id),(pickedByCustomer.get(String(split.stavka_id))||0)+packs*g.size);
+    });
+   });
+   for(const r of rows.filter(r=>String(productFor(r)?.id||r.product_id||'')===String(g.productId||'')&&String(variantFor(r)?.id||r.variant_id||'')===String(g.variantId||''))){
+    const picked=Math.min(q(r),Math.max(0,pickedByCustomer.get(String(r.id))||0));
+    const status=picked>=q(r)&&q(r)>0?'preuzeto':picked>0?'delimicno_preuzeto':'nije_preuzeto';
+    await api('stavke_porudzbine?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:picked,status_stavke:status})});
    }
    await reload();setProcurementTab('pickup');
   }catch(err){alert('Преузимање није сачувано у целини: '+(err?.message||String(err)))}finally{btn.disabled=false;btn.textContent='Сачувај преузимање'}
