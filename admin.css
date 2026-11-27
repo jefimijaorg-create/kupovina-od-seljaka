@@ -2396,3 +2396,102 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{width:56px;min-width:56px}
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{width:76px;min-width:76px;padding:0 3px}
 }
+
+
+/* ПОРУЏБИНЕ — СТАВКЕ КАО ХРОНОЛОШКИ РАЧУН · v5.2.3 */
+.nd-workspace .nd-gop-customer-toolbar-row>td{
+  padding:9px 10px!important;border-bottom:1px solid #DCE4DC;background:#F7FAF7;
+}
+.nd-workspace .nd-gop-customer-toolbar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:8px 12px;min-width:0;width:100%;
+}
+.nd-workspace .nd-gop-customer-identity{
+  display:flex;flex:1 1 125px;flex-direction:column;gap:3px;min-width:0;
+}
+.nd-workspace .nd-gop-customer-identity strong{
+  color:#344238;font-size:15px;font-weight:900;line-height:1.2;overflow-wrap:anywhere;
+}
+.nd-workspace .nd-gop-customer-identity small{
+  color:#68766C;font-size:11px;font-weight:750;
+}
+.nd-workspace .nd-gop-customer-toolbar .nd-gop-order-actions{
+  display:flex;flex:0 1 auto;align-items:center;justify-content:flex-end;flex-wrap:wrap;
+  gap:5px;margin:0!important;padding:0!important;
+}
+.nd-workspace .nd-gop-customer-toolbar .nd-gop-order-actions button,
+.nd-workspace .nd-gop-customer-toolbar .nd-gop-viber{
+  display:inline-flex;align-items:center;justify-content:center;min-height:32px;
+  padding:5px 9px;border:1px solid #C9D8CC;border-radius:7px;background:#fff;
+  color:#285B3C;font-size:11px;font-weight:850;line-height:1.15;white-space:nowrap;
+}
+.nd-workspace .nd-gop-customer-toolbar .nd-gop-delete-order{
+  border-color:#E8C8C1!important;background:#FFF7F5!important;color:#A43D2E!important;
+}
+.nd-workspace .nd-gop-customer-toolbar .nd-gop-viber{
+  border-color:#C3D9C8;background:#EAF3E9;color:#285B3C;
+}
+.nd-workspace .nd-gop-table .nd-gop-line>td{
+  padding:8px 7px;border-bottom:1px solid #DCE4DC;vertical-align:middle;
+}
+.nd-workspace .nd-gop-table .nd-gop-line:last-of-type>td{border-bottom:1px solid #DCE4DC}
+.nd-workspace .nd-gop-product-line{
+  display:flex;align-items:flex-start;gap:7px;min-width:0;
+}
+.nd-workspace .nd-gop-line-number{
+  flex:0 0 auto;color:#68766C;font-size:11px;font-weight:900;
+  font-variant-numeric:tabular-nums;
+}
+.nd-workspace .nd-gop-product-line>div{
+  display:flex;flex-direction:column;gap:3px;min-width:0;
+}
+.nd-workspace .nd-gop-product-line strong{
+  color:#344238;font-size:13px;font-weight:850;line-height:1.25;overflow-wrap:anywhere;
+}
+.nd-workspace .nd-gop-product-line small{
+  color:#68766C;font-size:10.5px;font-weight:700;line-height:1.2;
+}
+.nd-workspace .nd-gop-table .nd-gop-qty{
+  white-space:normal;font-size:12px;font-weight:850;line-height:1.3;
+  font-variant-numeric:tabular-nums;
+}
+.nd-workspace .nd-gop-table .nd-gop-qty strong,
+.nd-workspace .nd-gop-table .nd-gop-qty small{display:block}
+.nd-workspace .nd-gop-table .nd-gop-qty small{
+  margin-top:3px;color:#68766C;font-size:10px;font-weight:750;
+}
+.nd-workspace .nd-gop-table .nd-gop-price-line{
+  display:table-cell;white-space:normal;font-size:11px;line-height:1.3;
+  font-variant-numeric:tabular-nums;
+}
+.nd-workspace .nd-gop-table .nd-gop-price-line span,
+.nd-workspace .nd-gop-table .nd-gop-price-line strong{
+  display:block;overflow-wrap:anywhere;
+}
+.nd-workspace .nd-gop-table .nd-gop-price-line span{
+  color:#68766C;font-size:10px;font-weight:750;
+}
+.nd-workspace .nd-gop-table .nd-gop-price-line strong{
+  margin-top:3px;color:#285B3C;font-size:12px;font-weight:900;
+}
+.nd-workspace .nd-gop-table .nd-gop-customer-total td{
+  padding:8px 7px;border-bottom:2px solid #C8D9CC;background:#F7FAF7;
+  color:#344238;font-size:11px;font-weight:850;
+}
+.nd-workspace .nd-gop-table .nd-gop-customer-total .nd-gop-amount{
+  color:#285B3C;font-size:13px;font-weight:900;text-align:right;
+}
+.nd-workspace .nd-gop-table thead th{
+  color:#526357;font-size:10px;font-weight:900;line-height:1.2;
+}
+@media(max-width:767px){
+  .nd-workspace .nd-gop-customer-toolbar-row>td{padding:8px 6px!important}
+  .nd-workspace .nd-gop-customer-toolbar{gap:7px}
+  .nd-workspace .nd-gop-customer-identity{flex-basis:100%}
+  .nd-workspace .nd-gop-customer-toolbar .nd-gop-order-actions{justify-content:flex-start}
+  .nd-workspace .nd-gop-customer-toolbar .nd-gop-order-actions button,
+  .nd-workspace .nd-gop-customer-toolbar .nd-gop-viber{min-height:34px;padding:6px 8px}
+  .nd-workspace .nd-gop-table .nd-gop-line>td{padding:8px 5px}
+  .nd-workspace .nd-gop-product-line strong{font-size:12px}
+  .nd-workspace .nd-gop-table .nd-gop-price-line strong{font-size:11px}
+}
