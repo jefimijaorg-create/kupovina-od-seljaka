@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.1.8
+ * Version: 5.1.9
    Верзија: 5.1.6
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.1.8";
+  --nd-css-version:"5.1.9";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -1907,3 +1907,107 @@ body.nd-workspace select:focus-visible{
 
 /* Procurement: sent status and supplier rejection action */
 .pstatus-sent{display:inline-flex;align-items:center;padding:8px 11px;border:1px solid #b9d9c2;border-radius:999px;background:#edf8ef;color:#246b3a;font-size:11px;font-weight:900;white-space:nowrap}.pbtn-reject{border-color:#f0c4c4;background:#fff5f5;color:#b42318}
+
+
+/* НАБАВКА — КОМПАКТНЕ КАРТИЦЕ v5.1.9 */
+/* Обавезе и контролне коцкице: густ распоред, без губитка читљивости */
+.nd-workspace .nd-proc-live .pstep,
+.nd-workspace .nd-proc-live .pstat,
+.nd-workspace .ndp3-kpis-reference .ndp3-kpi{
+  min-height:54px;
+  height:54px;
+  padding:6px 4px;
+  border-radius:10px;
+}
+.nd-workspace .nd-proc-live .pstep{font-size:11.5px;line-height:1.2}
+.nd-workspace .nd-proc-live .pstep small,
+.nd-workspace .ndp3-kpis-reference .ndp3-kpi span,
+.nd-workspace .nd-work-todo-card span{
+  font-size:10px;
+  line-height:1.2;
+}
+.nd-workspace .nd-proc-live .pstep small{margin-top:3px}
+.nd-workspace .nd-proc-live .pstat b,
+.nd-workspace .ndp3-kpis-reference .ndp3-kpi b,
+.nd-workspace .nd-work-kpi-val{
+  font-size:17px;
+  font-weight:900;
+  line-height:1.1;
+}
+.nd-workspace .nd-proc-live .pstat small{margin-top:3px;font-size:10px}
+
+/* Газдинства: компактни чипови, уз јасно активно стање */
+.nd-workspace .nd-proc-live .pfarm{gap:8px;margin-bottom:10px}
+.nd-workspace .nd-proc-live .pfarm button,
+.nd-workspace .ndp3-farm-picker-item.farm-chip{
+  min-height:32px;
+  height:32px;
+  padding:0 12px;
+  border-radius:9px;
+  font-size:12.5px;
+  line-height:1.2;
+}
+.nd-workspace .ndp3-farm-picker-item.farm-chip .chip-count{padding:0 5px;font-size:10px}
+
+/* Производи и амбалажа: један стил, мање унутрашњег празног простора */
+.nd-workspace .nd-proc-live .pcard,
+.nd-workspace .ndp3-request-product-card.product-card{
+  margin:0 0 8px;
+  border-radius:12px;
+}
+.nd-workspace .nd-proc-live .pcard h3,
+.nd-workspace .ndp3-request-product-head.product-toggle{
+  min-height:52px;
+  padding:9px 11px;
+  font-size:16px;
+}
+.nd-workspace .ndp3-request-product-head h2,
+.nd-workspace .nd-work-product-group-title{font-size:16px;font-weight:850}
+.nd-workspace .nd-work-product-group{padding:10px 11px;border-radius:14px}
+.nd-workspace .nd-work-product-group-sum{
+  padding:3px 9px;
+  font-size:15px;
+  font-weight:900;
+}
+
+/* Пет корака количине и информативне вредности */
+.nd-workspace .ndp3-stage-values{gap:6px}
+.nd-workspace .ndp3-stage-values>span{padding:6px 7px}
+.nd-workspace .ndp3-stage-values>span b,
+.nd-workspace .nd-work-kpi-val{font-size:16px;font-weight:900}
+.nd-workspace .ndp3-stage-values>span small,
+.nd-workspace .nd-work-kpi-lbl{font-size:9.5px;line-height:1.25}
+.nd-workspace .nd-work-kpi-sub{font-size:11.5px;font-weight:800}
+
+/* Радње у реду: компактне, али главна дугмад остају удобна за додир */
+.nd-workspace .nd-proc-live .pbtn,
+.nd-workspace .nd-work-next-action-pill{
+  min-height:32px;
+  height:32px;
+  padding:0 10px;
+  font-size:11.5px;
+}
+.nd-workspace .nd-proc-live .pbtn.primary,
+.nd-workspace .ndp3-farm-request-submit .ndp3-btn{
+  min-height:48px;
+  height:auto;
+  padding:10px 13px;
+  font-size:12px;
+}
+
+/* Уједначен размак: 8px између функционалних картица */
+.nd-workspace .nd-proc-live .psteps{gap:8px;margin:10px 0 12px}
+.nd-workspace .nd-proc-live .pstats{gap:8px;margin-bottom:10px}
+.nd-workspace .ndp3-request-products{gap:8px}
+.nd-workspace .ndp3-kpis-reference{gap:8px}
+@media(max-width:767px){
+  .nd-workspace .nd-proc-live .pstats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .nd-workspace .nd-proc-live .pstat{height:54px;padding:6px 4px}
+  .nd-workspace .nd-proc-live .pstat b{font-size:17px}
+  .nd-workspace .ndp3-kpis-reference .ndp3-kpi{height:54px;min-height:54px;padding:6px 4px}
+  .nd-workspace .ndp3-stage-values>span{min-height:50px}
+}
+@media(max-width:380px){
+  .nd-workspace .nd-proc-live .pstats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .nd-workspace .nd-proc-live .pstat small{font-size:9px}
+}
