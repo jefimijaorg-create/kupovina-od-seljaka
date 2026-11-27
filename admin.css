@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.3.2
+ * Version: 5.3.3
    Верзија: 5.3.1
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.3.1";
+  --nd-css-version:"5.3.3";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2749,3 +2749,65 @@ body.nd-workspace select:focus-visible{
 .ndp-sheet-farm-product> b{display:block;font-size:14px;color:#1B4332;margin-bottom:5px}
 .ndp-sheet-farm-product .ndp-panel{border:0;padding:5px 0;background:#fff}
 @media(max-width:900px){.ndp-sheet{width:min(100%,760px);max-height:88dvh}.ndp-sheet-context-head h3{font-size:17px}.ndp-sheet-actions .ndp-btn{min-height:46px}}
+
+
+/* TABLET TYPOGRAFIJA И BOTTOM SHEET — v5.3.3
+   Tablet je glavni radni prikaz: veći tekst, čvrst raspored i Bottom Sheet bez rasipanja prostora. */
+@media (min-width:768px) and (max-width:1100px){
+  .nd-workspace body,
+  body.nd-workspace{font-size:15px;line-height:1.42}
+  .nd-workspace .nd-main{padding:12px 16px 26px}
+  .nd-workspace .nd-tour-entry-heading h1{font-size:27px}
+  .nd-workspace .nd-tour-entry-heading p{font-size:14px}
+  .nd-workspace .nd-tour-item{min-height:70px;padding:12px 14px}
+  .nd-workspace .nd-tour-copy strong{font-size:16px}
+  .nd-workspace .nd-tour-copy small{font-size:12px}
+  .nd-workspace .nd-go-summary-main strong{font-size:15px}
+  .nd-workspace .nd-go-summary-main small{font-size:12px}
+  .nd-workspace .nd-proc-live .phead small{font-size:13px}
+  .nd-workspace .nd-proc-live h2{font-size:25px}
+  .nd-workspace .nd-proc-live .pstep{min-height:62px;height:auto;padding:10px 12px;font-size:14px}
+  .nd-workspace .nd-proc-live .pstep small{font-size:12px}
+  .nd-workspace .nd-proc-live .pstat{min-height:76px;height:auto;padding:11px 12px}
+  .nd-workspace .nd-proc-live .pstat b{font-size:23px}
+  .nd-workspace .nd-proc-live .pstat small{font-size:12px}
+  .nd-workspace .nd-proc-live .pfarm button,
+  .nd-workspace .ndp3-farm-picker-item.farm-chip{min-height:42px;height:auto;padding:8px 12px;font-size:14px}
+  .nd-workspace .ndp3-request-product-head.product-toggle{min-height:62px;padding:13px 15px}
+  .nd-workspace .ndp3-request-product-head h2,
+  .nd-workspace .nd-work-product-group-title{font-size:19px}
+  .nd-workspace .ndp3-request-product-head .product-sub{font-size:12px}
+  .nd-workspace .ndp3-request-package-head .pack-title{font-size:16px}
+  .nd-workspace .ndp3-request-package-meta{font-size:12px}
+  .nd-workspace .ndp3-request-package-metrics .pill-stat{font-size:12px;padding:5px 8px}
+  .nd-workspace .ndp3-request-package-metrics .pill-stat b{font-size:14px}
+  .nd-workspace .ndp3-stage-values>span{min-height:60px;padding:10px}
+  .nd-workspace .ndp3-stage-values>span b{font-size:18px}
+  .nd-workspace .ndp3-stage-values>span small{font-size:12px}
+  .nd-workspace .ndp3-request-assign.btn-assign{min-height:44px;padding:9px 13px;font-size:13px}
+  .nd-workspace .ndp3-farm-request-submit{bottom:12px;margin-top:12px;padding:12px}
+  .nd-workspace .ndp3-farm-request-submit .ndp3-btn{min-height:52px;font-size:15px}
+  .nd-workspace .ndp3-package-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .nd-workspace .ndp3-package-overview-card{min-height:120px;padding:12px}
+  .nd-workspace .ndp3-package-overview-variant{font-size:16px}
+  .nd-workspace .ndp3-package-overview-count strong{font-size:28px}
+  .nd-workspace .ndp3-package-sheet-backdrop{align-items:flex-end;padding:0 12px}
+  .nd-workspace .ndp3-package-sheet{width:min(820px,100%);max-height:78dvh;padding:12px 20px calc(16px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}
+  .nd-workspace .ndp3-package-sheet>header h2{font-size:24px}
+  .nd-workspace .ndp3-package-sheet-stats strong{font-size:21px}
+  .nd-workspace .ndp3-package-sheet-customer strong{font-size:15px}
+  .nd-workspace .ndp3-package-sheet-customer>b{font-size:17px}
+  .nd-workspace .nd-proc-live .pline>span{font-size:15px}
+  .nd-workspace .nd-proc-live .pline small{font-size:12px}
+  .nd-workspace .nd-proc-live input{min-height:48px;font-size:18px}
+  .nd-workspace .nd-proc-live .pbtn{min-height:44px;font-size:13px}
+}
+@media (max-width:767px){
+  body.nd-workspace{font-size:14px}
+  .nd-workspace .nd-proc-live .pstep{font-size:12px}
+  .nd-workspace .nd-proc-live .pstat small{font-size:10px}
+  .nd-workspace .ndp3-request-product-head h2{font-size:15px}
+  .nd-workspace .ndp3-request-package-head .pack-title{font-size:14px}
+  .nd-workspace .ndp3-package-sheet{max-height:86dvh}
+  .nd-workspace .ndp3-package-sheet>header h2{font-size:20px}
+}
