@@ -108,14 +108,14 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
 .ndp-farm-demand-summary{display:flex;flex-direction:column;gap:7px;padding:12px;margin:8px 0;background:#E6F2EC;border:2px solid #1B4332;border-radius:12px;color:#163D2A}.ndp-farm-demand-summary>b{font-size:16px;font-weight:950}.ndp-farm-demand-summary>span{font-size:12px;font-weight:800}.ndp-farm-demand-summary>div{display:flex;flex-direction:column;gap:4px;font-size:13px}.ndp-farm-demand-summary>em{font-style:normal;font-size:19px;font-weight:950;color:#A9610B;background:#FFF3D4;padding:8px;border-radius:8px}
 .ndp-packline-wrap{display:flex;align-items:stretch;gap:7px;margin:7px 0}.ndp-packline-wrap .ndp-packline{flex:1;min-width:0;margin:0}.ndp-select-next{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid #c9d8cd;border-radius:10px;background:#f7faf7;color:#315b42;font-size:10px;font-weight:850;padding:5px}.ndp-select-next b{font-size:22px;line-height:1}.ndp-select-next.selected{background:#1b4332;color:white;border-color:#1b4332}.ndp-batchbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin:8px 0;background:#e6f2ec;border:1px solid #a7cbb5;border-radius:12px;position:sticky;top:4px;z-index:8}.ndp-batchbar b{font-size:13px}.ndp-batch-next{background:#1b4332;color:#fff;border:0;border-radius:9px;padding:10px 14px;font-weight:900}.ndp-batch-panel{padding:13px;background:#f7faf7;border:1px solid #d8e5da;border-radius:12px}.ndp-batch-panel h3{margin:0 0 8px;font-size:17px}.ndp-batch-item{padding:9px 0;border-bottom:1px solid #e0e9e2;font-size:13px}.ndp-batch-panel label{display:block;font-size:12px;font-weight:800;margin:12px 0 5px}.ndp-batch-panel select{width:100%;padding:10px;border:1px solid #c9d8cd;border-radius:8px;background:white}.ndp-batch-run{width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#1b4332;color:white;font-weight:900}@media(max-width:520px){.ndp-select-next{flex-basis:52px}.ndp-select-next span{font-size:9px}.ndp-batchbar{padding:8px}.ndp-batch-next{padding:9px 11px}}
  /* Купчеву тражену количину издвајамо од набавке газдинства */
- .ndp-customer-demand{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;padding:8px 7px;margin:3px 0;border:2px solid #1B4332;border-radius:11px;background:#E6F2EC;width:100%;}
- .ndp-customer-demand small{font-size:11px!important;font-weight:950!important;letter-spacing:.035em;color:#1B4332!important;}
- .ndp-customer-demand strong{font-size:clamp(21px,3vw,29px);line-height:1.05;font-weight:1000;color:#123D28;white-space:nowrap;}
- .ndp-customer-demand em{font-style:normal;font-size:15px;font-weight:900;color:#315B42;}
- .ndp-packdesc{align-items:stretch}
- .ndp-packdesc>b{font-size:16px!important;text-align:center;background:#fff;border-radius:7px;padding:5px;}
+ .ndp-customer-demand{display:inline-flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:5px;padding:3px 7px;margin:2px 0;border:1px solid #cbded0;border-radius:7px;background:#edf5ef;width:auto;max-width:100%;text-align:left;}
+ .ndp-customer-demand small{font-size:9px!important;font-weight:800!important;letter-spacing:0;color:#526358!important;white-space:normal;}
+ .ndp-customer-demand strong{font-size:12px;line-height:1.15;font-weight:900;color:#1B4332;white-space:normal;}
+ .ndp-customer-demand em{font-style:normal;font-size:10px;font-weight:750;color:#526358;}
+ .ndp-packdesc{align-items:flex-start}
+ .ndp-packdesc>b{font-size:14px!important;text-align:left;background:#fff;border-radius:6px;padding:4px 6px;}
  .ndp-pack-farms{width:100%;}
- @media(max-width:650px){.ndp-customer-demand{padding:9px 5px}.ndp-customer-demand strong{font-size:25px}.ndp-customer-demand em{font-size:14px}}
+ @media(max-width:650px){.ndp-customer-demand{padding:3px 6px;gap:4px}.ndp-customer-demand strong{font-size:12px}.ndp-customer-demand em{font-size:10px}}
 
  /* Три јасна бројчана показатеља на картици производа */
  .ndp-quantity-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:8px;max-width:440px}
