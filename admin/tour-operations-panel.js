@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.32
+ * Version: 1.5.33
  * Updated: 2026-11-26
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -369,7 +369,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             totalLines++;
             const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
             const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
-            const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size);
+            const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size||variant?.package_value);
             const available=Math.min(ordered,picked),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
             const deliveredPackages=Number.isFinite(size)&&size>0?deliveredBase/size:0;
             const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
@@ -397,7 +397,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
             return '<div class="nd-ops-delivery-item'+(deliveryDeficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
               esc(product?.name||'Производ није доступан')+'</strong>'+itemStatusHtml+'</div>'+
-              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong><span class="nd-ops-delivery-package">'+packageMeasureLabel(ordered,size,item.package_unit)+'</span><span class="nd-ops-delivery-unit-price">'+money(salePricePerPackage(item))+' / пак.</span>'+(deliveryDeficitPackages>0?'<span class="nd-ops-delivery-deficit">'+(checked?'Предато мање · ':'Недостаје ')+packageCountLabel(deliveryDeficitPackages)+' пак. ('+packageAmountLabel(deliveryDeficitPackages,size,item.package_unit)+')</span>':'')+'</div>'+
+              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong><span class="nd-ops-delivery-package">'+packageMeasureLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+'</span><span class="nd-ops-delivery-unit-price">'+money(salePricePerPackage(item))+' / пак.</span>'+(deliveryDeficitPackages>0?'<span class="nd-ops-delivery-deficit">'+(checked?'Предато мање · ':'Недостаје ')+packageCountLabel(deliveryDeficitPackages)+' пак. ('+packageAmountLabel(deliveryDeficitPackages,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span>':'')+'</div>'+
               '<div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>КОМАДА</small></label>'+
               '<button type="button" class="nd-ops-delivery-quick'+(checked?' is-complete':'')+'" data-confirm-delivery="'+esc(item.id)+'" '+(editable?'':'disabled')+'>'+(checked?'✓ Готово':'Потврди')+'</button></div></div>'+
