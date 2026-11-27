@@ -65,6 +65,25 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  @media(max-width:900px){.ndp-split{grid-template-columns:minmax(0,1fr)}.ndp-mobile-close{display:block;flex:0 0 auto}.ndp-sidepanel{position:fixed;z-index:10001;left:0;right:0;bottom:0;top:auto;max-height:78dvh;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px #0002;padding:14px;display:none}.ndp-sidepanel.is-open{display:block}.ndp-products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
  @media(max-width:650px){.ndp-products-grid{grid-template-columns:1fr}.ndp-tabletbar{height:auto;min-height:48px;flex-wrap:wrap;padding:7px 10px}.ndp-module-tabs{order:3;width:100%}.ndp-toolbar{top:48px}.ndp-obligations{grid-template-columns:repeat(2,minmax(0,1fr))}.ndp-farmsbar{align-items:flex-start;flex-direction:column}.ndp-farm-phone-visible{max-width:100%;flex-wrap:wrap;border-radius:12px}.ndp-top-actions .ndp-btn{font-size:9px}.ndp-pack-badges .st-pill{white-space:normal;text-align:right}}
 
+ /* Legibility: packaging and order amounts are the primary reading targets */
+ .ndp-packline{align-items:flex-start;gap:10px;padding:10px 11px;min-height:78px}
+ .ndp-packdesc{gap:5px;flex:1 1 42%;min-width:125px}
+ .ndp-packdesc b{font-size:15px;line-height:1.25;font-weight:900;color:#132218}
+ .ndp-packdesc small{font-size:12px;line-height:1.35;color:#405348}
+ .ndp-packdesc small:first-of-type{font-size:13px;font-weight:800;color:#1B4332}
+ .ndp-pack-farms{font-size:11px!important;color:#526358!important}
+ .ndp-pack-badges{flex:1 1 48%;min-width:125px;align-items:stretch;gap:5px}
+ .ndp-pack-badges .st-pill{font-size:12px;font-weight:900;padding:6px 9px;border-radius:8px;text-align:left;white-space:normal;line-height:1.25}
+ .ndp-pack-badges .st-ordered{background:#DCFCE7;color:#166534;border:1px solid #86d49d}
+ .ndp-pack-badges .st-unordered{background:#FEF3C7;color:#92400E;border:1px solid #f0ca72}
+ .ndp-pack-badges .st-done{background:#E6F2EC;color:#1B4332;border:1px solid #B7D8C6}
+ .ndp-pack-badges .st-short{background:#FEE2E2;color:#991B1B;border:1px solid #f2aaaa}
+ .ndp-pack-badges small{font-size:11px;font-weight:750;line-height:1.35;text-align:left;color:#405348}
+ .ndp-product-cardhead strong{font-size:16px}
+ .ndp-product-total{font-size:13px;padding:5px 9px}
+ @media(min-width:768px) and (max-width:1280px){.ndp-packline{flex-wrap:wrap}.ndp-packdesc,.ndp-pack-badges{flex-basis:100%}.ndp-pack-badges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ndp-pack-badges small{grid-column:1/-1}}
+ @media(max-width:650px){.ndp-packline{gap:8px}.ndp-packdesc,.ndp-pack-badges{min-width:0}.ndp-packdesc b{font-size:15px}.ndp-pack-badges .st-pill{font-size:12px}}
+
  .ndp-products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
  .ndp-products-grid>.ndp-product{margin:0;min-width:0}
  .ndp-farm-contact{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;margin:8px 0;border:1px solid var(--line);border-radius:14px;background:#fff}
