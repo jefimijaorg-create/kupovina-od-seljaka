@@ -2300,7 +2300,7 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{
   color:#657268;font-size:10.5px;font-weight:700;line-height:1.25;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-deficit{
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{display:flex;flex-direction:column;gap:5px;margin:8px 0;padding:9px 10px;background:#f3f6f4;border:1px solid #dce7df;border-radius:9px;font-size:12px;color:#33443a;line-height:1.4}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare b{font-weight:850}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-deficit{display:block;align-self:stretch;margin-top:3px;background:#fff0eb;border-color:#efc2b3;color:#a13d2d;font-size:11px}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-picked{display:block;align-self:stretch;margin-top:3px;padding:6px 8px;border-radius:7px;background:#e7f6eb;color:#20633a;font-weight:850}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-deficit{
   display:inline-flex;align-self:flex-start;padding:4px 7px;border:1px solid #f0d3a9;
   border-radius:6px;background:#fff5e8;color:#8a4d0b;font-size:10px;font-weight:850;line-height:1.25;
 }
