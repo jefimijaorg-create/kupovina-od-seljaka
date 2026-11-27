@@ -32,7 +32,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   products=ids.length?fail(await db.from('products').select('id,name,gazdinstvo_id,producer_name,purchase_price').in('id',ids),'Производи'):[];
   variants=vids.length?fail(await db.from('product_variants').select('id,product_id,name,size_label,package_value,package_unit,unit').in('id',vids),'Амбалажа'):[];
   fids=[...new Set([...fids,...products.map(x=>x.gazdinstvo_id)].filter(Boolean))];
-  farms=fids.length?fail(await db.from('gazdinstva').select('id,name,is_active').in('id',fids),'Газдинства'):[];
+  farms=fids.length?fail(await db.from('gazdinstva').select('id,name,phone,is_active').in('id',fids),'Газдинства'):[];
  }
  const css=`
  .nd-proc-live{--ink:#20312a;--muted:#718078;--line:#e1e9e2;--bg:#f4f7f4;--green:#285b3c;--orange:#e99a36;--blue:#377fbd;--red:#d94b4b;font:14px/1.4 system-ui,-apple-system,sans-serif;color:var(--ink);max-width:1050px;margin:auto;padding:8px 10px 90px}
@@ -113,7 +113,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   let h='<div class="ndp-head"><div><small>ТУРА #'+esc(tourId)+' · '+esc(tour?.naziv||'Набавка')+'</small><h2>Набавка</h2></div><div class="ndp-count">'+(ob?'Још '+fmt(ob)+' обавеза':'✓ Све довршено')+'</div><button class="ndp-btn secondary" data-back>← Назад</button></div>';
   h+='<div class="ndp-obligations">'+[['free','За доделу газдинству',c.free,2,'orange'],['pending','Чека одговор газдинства',c.pending,3,'blue'],['pickup','Потврђено за преузимање',c.pickup,4,'orange'],['short','Недостаје за купце',c.short,1,'red']].map(x=>'<button class="ndp-tile '+x[4]+' '+(stage===x[3]?'active':'')+'" data-stage="'+x[3]+'"><b>'+fmt(x[2])+'</b><small>'+x[1]+'</small></button>').join('')+'</div>';
   h+='<div class="ndp-farms"><button class="'+(farmFilter==='all'?'active':'')+'" data-farm="all">Сва газдинства</button>'+farms.map(f=>'<button class="'+(String(farmFilter)===String(f.id)?'active':'')+'" data-farm="'+f.id+'">'+esc(f.name)+'</button>').join('')+'</div>';
-  if(farmFilter!=='all')h+='<div class="ndp-empty" style="text-align:left;margin:8px 0"><b>Газдинство: '+esc(fName(farmFilter))+'</b><br><small>Овде су само ставке стварно додељене овом газдинству. Количина купаца и мањак приказују се у општем прегледу туре, не као требовање овог газдинства.</small></div>';
+  if(farmFilter!=='all'){let farm=farms.find(f=>String(f.id)===String(farmFilter));h+='<div class="ndp-empty" style="text-align:left;margin:8px 0"><b>Газдинство: '+esc(fName(farmFilter))+'</b><br><small>Телефон: '+(farm?.phone?'<a href="tel:'+esc(farm.phone)+'" style="color:var(--green);font-weight:900;text-decoration:none">'+esc(farm.phone)+'</a>':'није унет у базу')+'</small><br><small>Овде су само ставке стварно додељене овом газдинству. Количина купаца и мањак приказују се у општем прегледу туре, не као требовање овог газдинства.</small></div>'}
   if(farmFilter!=='all')h+='<div class="ndp-copy"><button class="ndp-btn secondary" data-copy-farm="'+farmFilter+'">Копирај цео списак за '+esc(fName(farmFilter))+'</button></div>';
   if(!gs.length)h+='<div class="ndp-empty">Нема ставки у изабраној фази. Производи и поруџбине у тури остају сачувани.</div>';
   gs.sort((a,b)=>{let x=actionFor(a),y=actionFor(b);return (x.kind==='done'?1:0)-(y.kind==='done'?1:0)}).forEach(g=>{
