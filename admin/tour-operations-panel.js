@@ -378,7 +378,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const deficitPackages=Math.max(0,ordered-picked),deliveryDeficitPackages=Math.max(0,ordered-(checked?deliveredPackages:available));
             if(checked)checkedLines++;if(dataIssue)hasIssue=true;
             const sale=lineSaleValue(item);if(sale===null)customerOrderedKnown=false;else customerOrdered+=sale;
-            const billablePackages=checked?deliveredPackages:0;
+            const billablePackages=checked?deliveredPackages:available;
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
             const status=checked?'✓ Готово':dataIssue?'Провери податке':
@@ -486,8 +486,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           let sum=0,customerKnown=true;
           for(const line of group.lines){
             const input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]');
-            const size=Number(line.item.package_size),packages=line.item.stavka_cekirana===true?
-              (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1):0;
+            const size=Number(line.item.package_size),input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]'),packages=line.item.stavka_cekirana===true?
+              (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1):input?Number(input.value):line.availablePackages;
             if(line.hasDataIssue||!Number.isFinite(packages)||packages<0){customerKnown=false;continue}
             if(line.item.stavka_cekirana===true&&packages>0){const price=salePricePerPackage(line.item);if(price===null)customerKnown=false;else sum+=packages*price}
           }
