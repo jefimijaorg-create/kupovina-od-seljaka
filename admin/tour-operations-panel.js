@@ -644,7 +644,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         const line=group?.lines.find(row=>String(row.item.id)===String(itemId));
         const card=button.closest('.nd-ops-delivery-customer'),feedback=card?.querySelector('[data-delivery-feedback]');
         const input=card?.querySelector('[data-delivery-qty="'+itemId+'"]');
-        if(!line||!input)return;\n        if(line.item.status_izdavanja==='nepreuzeto'||line.item.status_stavke==='upitno'){if(feedback)feedback.textContent='Ова ставка је означена као НЕПРЕУЗЕТО / УПИТНО и не може да се потврди у достави.';return;}
+        if(!line||!input)return;
+        if(line.item.status_izdavanja==='nepreuzeto'||line.item.status_stavke==='upitno'){if(feedback)feedback.textContent='Ова ставка је означена као НЕПРЕУЗЕТО / УПИТНО и не може да се потврди у достави.';return;}
         const packages=Number(input.value);
         try{
           if(line.hasDataIssue)throw new Error('Постоји неусаглашеност у расподели. Ставка није потврђена.');
