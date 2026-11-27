@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.30
+ * Version: 1.5.31
  * Updated: 2026-11-26
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -276,7 +276,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const packageCountLabel=count=>Number(count||0).toLocaleString('sr-RS',{maximumFractionDigits:3})+' пак.';
       const packageAmountLabel=(count,size,unit)=>{const amount=Number(count)*Number(size);return Number.isFinite(amount)?amount.toLocaleString('sr-RS',{maximumFractionDigits:3})+' '+esc(unit||''):'—'};
       const packageMeasureLabel=(count,size,unit)=>{const n=Number(count),s=Number(size),total=n*s,u=esc(unit||'');return Number.isFinite(n)&&Number.isFinite(s)&&s>0?n.toLocaleString('sr-RS',{maximumFractionDigits:3})+' × '+s.toLocaleString('sr-RS',{maximumFractionDigits:3})+' '+u+' (укупно '+total.toLocaleString('sr-RS',{maximumFractionDigits:3})+' '+u+')':packageCountLabel(n)};
-      const phoneDisplay=value=>{const raw=String(value||''),digits=raw.replace(/\\D/g,'');if(digits.startsWith('381')&&digits.length===12)return '+381 '+digits.slice(3,5)+' '+digits.slice(5,8)+' '+digits.slice(8);if(digits.startsWith('0')&&digits.length===10)return digits.slice(0,3)+' '+digits.slice(3,6)+' '+digits.slice(6);return raw};
+      const phoneDisplay=value=>{const raw=String(value||''),digits=raw.replace(/\D/g,'');if(digits.startsWith('381')&&digits.length===12)return '+381 '+digits.slice(3,5)+' '+digits.slice(5,8)+' '+digits.slice(8);if(digits.startsWith('0')&&digits.length===10)return digits.slice(0,3)+' '+digits.slice(3,6)+' '+digits.slice(6);return raw};
       const itemById=new Map(state.items.map(item=>[String(item.id),item]));
       const pickupByItem=new Map(),invalidItemIds=new Set(),invalidProductPairs=new Set();
       const productPair=row=>String(row.product_id??'')+'::'+String(row.variant_id??'');
@@ -378,7 +378,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const deficitPackages=Math.max(0,ordered-picked);
             if(checked)checkedLines++;if(dataIssue)hasIssue=true;
             const sale=lineSaleValue(item);if(sale===null)customerOrderedKnown=false;else customerOrdered+=sale;
-            const billablePackages=checked?deliveredPackages:available;
+            const billablePackages=checked?deliveredPackages:0;
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
             const status=checked?'✓ Готово':dataIssue?'Провери податке':
@@ -406,7 +406,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           }).join('');
           const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
           return '<div class="nd-ops-delivery-order"><div class="nd-ops-delivery-order-head"><strong>Поруџбина #'+esc(order.id)+
-            '</strong><span>'+orderItems.length+' ставки</span></div>'+
+            '</strong><span>'+orderItems.length+' '+(orderItems.length===1?'ставка':orderItems.length>=2&&orderItems.length<=4?'ставке':'ставки')+'</span></div>'+
             (order.adresa_dostave?'<small>Адреса: '+esc(order.adresa_dostave)+'</small>':'')+
             '<div class="nd-ops-delivery-items">'+(rows||'<small>Нема ставки у поруџбини.</small>')+'</div>'+
             '</div>';
