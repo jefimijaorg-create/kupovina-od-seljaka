@@ -752,6 +752,7 @@ function renderManifest(){
    const orderTotal=orderRows.reduce((sum,r)=>sum+manifestUnitPrice(r)*(view==='delivered'?n(r.isporucena_kolicina):Math.max(0,n(r.preuzeta_kolicina)-n(r.isporucena_kolicina))),0);
    const items=orderRows.map(r=>{
     const ordered=q(r),picked=Math.max(0,Math.min(ordered,n(r.preuzeta_kolicina))),missing=Math.max(0,ordered-picked),unitPrice=manifestUnitPrice(r),deliveredQty=n(r.isporucena_kolicina),remaining=Math.max(0,picked-deliveredQty),v=variantFor(r);
+    if(ordered===0)return '<div class="item delivery-item-cancelled" style="border:1px solid var(--line);border-radius:12px;padding:12px;margin:9px 0;background:#f5f5f5"><div class="itemtop"><div><div class="productname">'+e(r.proizvod)+'</div><div class="status order-status-cancelled">ОТКАЗАНА (0 ком · 0 дин.)</div></div><div class="qty">0 дин.</div></div></div>';
     const size=n(v?.package_value||r.package_size||r.velicina_pakovanja),packUnit=String(v?.package_unit||r.package_unit||r.quantity_unit||r.jedinica||unit(r)||'ком').toLowerCase(),packCount=n(r.package_count||r.broj_pakovanja)||(size?ordered/size:1);
     const packText=fmt(packCount)+'×'+(size?fmt(size)+' '+packUnit:fmt(ordered)+' '+unit(r));
     const pickedText=size?fmt(picked/size)+' пак. ('+fmt(picked)+' '+unit(r)+')':fmt(picked)+' '+unit(r);
