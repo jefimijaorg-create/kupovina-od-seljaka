@@ -435,7 +435,7 @@ const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 let tour,tours=[{id:68,naziv:'Субота — план доставе 24.10.2026.',datum:'2026-10-24',status:'open'},{id:69,naziv:'Недеља — план доставе 25.10.2026.',datum:'2026-10-25',status:'scheduled'},{id:67,naziv:'TEST TURA — ПРОВЕРА СИСТЕМА',datum:'2026-10-25',status:'open'},{id:66,naziv:'Недеља — план доставе 18.10.2026.',datum:'2026-10-18',status:'closed'},{id:64,naziv:'Недеља — план доставе 11.10.2026.',datum:'2026-10-11',status:'open'}],rows=[],fs=[],ps=[],variants=[],payouts=[],orderMeta=[],pointMeta=[],customerMeta=[],masterCustomers=[],orderView='buyer',routeStops=[],offers=[],allocations=[],purchaseEvidence=[],selectedProcurementKey=null,selectedNeedProduct='';
 const closedNeedPackages=new Set(),openProcCustomerAllocations=new Set(),needPackageOrder=[];let openMissingPackages=false,openGlobalProcCustomer=false;
 const openOrderPoints=new Set(),openOrderCustomers=new Set(),openPointTimes=new Set();
-const farm=id=>fs.find(x=>String(x.id)===String(id)),fname=id=>farm(id)?.name||'Није додељено',q=r=>n(r.kolicina||r.total_quantity),unit=r=>r.jedinica||r.quantity_unit||'';
+const farm=id=>fs.find(x=>String(x.id)===String(id)),fname=id=>farm(id)?.name||'Није додељено',q=r=>n(r.kolicina_za_isporuku??r.kolicina??r.total_quantity),unit=r=>r.jedinica||r.quantity_unit||'';
 const productFor=r=>ps.find(p=>r.product_id&&String(p.id)===String(r.product_id))||ps.find(p=>String(p.name).toLowerCase().trim()===String(r.proizvod).toLowerCase().trim());const variantFor=r=>variants.find(v=>r.variant_id&&String(v.id)===String(r.variant_id));const price=r=>{const x=n(r.nabavna_cena);if(x)return x;return n(productFor(r)?.purchase_price)};const salePrice=r=>{const u=n(r.unit_price);if(u)return u;const p=n(productFor(r)?.price);if(p)return p;const total=n(r.cena_stavke),qty=n(r.kolicina||r.total_quantity);return qty?total/qty:0};
 const pack=r=>{const manual=String(r.package_info||r.velicina_pakovanja||'').trim();if(manual)return manual;const v=variantFor(r),c=n(r.package_count||r.broj_pakovanja),s=n(v?.package_value||r.package_size),label=v?.name||v?.size_label||r.variant_name||'паковање',u=v?.package_unit||r.package_unit||unit(r)||'л';return v&&c&&s?c+' × '+label+' = '+fmt(c*s)+' '+u:q(r)+' '+unit(r)};
 const state=r=>{if(!r.dodijeljeno_gazdinstvo_id)return['Није додељено','bad'];if(n(r.preuzeta_kolicina)>=q(r))return['Преузето','ok'];if(n(r.preuzeta_kolicina)>0)return['Делимично','warn'];return['Није преузето','warn']};
@@ -730,7 +730,7 @@ async function saveDeliverer(id){const input=document.querySelector('[data-deliv
 function renderManifest(){
  const manifestUnitPrice=r=>{const v=variantFor(r),packageSize=n(v?.package_value||r.package_size||r.velicina_pakovanja);return salePrice(r)/(packageSize>0?packageSize:1)};
  const stopOrder=new Map(routeStops.slice().sort((a,b)=>{const at=String(a.vreme||'').slice(0,5),bt=String(b.vreme||'').slice(0,5);if(at&&bt)return at.localeCompare(bt)||n(a.redosled)-n(b.redosled);if(at)return -1;if(bt)return 1;return n(a.redosled)-n(b.redosled)||n(a.punkt_id)-n(b.punkt_id)}).map((s,i)=>[String(s.punkt_id),{i,time:s.vreme||''}]));
- const allOrders=orderGroups().filter(o=>o.rs.length).sort((a,b)=>{const pa=stopOrder.get(String(a.m?.punkt_id))||{i:9999},pb=stopOrder.get(String(b.m?.punkt_id))||{i:9999};return pa.i-pb.i||String(a.id).localeCompare(String(b.id),undefined,{numeric:true})});
+ const allOrders=orderGroups().filter(o=>o.rs.some(r=>q(r)>0)).sort((a,b)=>{const pa=stopOrder.get(String(a.m?.punkt_id))||{i:9999},pb=stopOrder.get(String(b.m?.punkt_id))||{i:9999};return pa.i-pb.i||String(a.id).localeCompare(String(b.id),undefined,{numeric:true})});
  const isComplete=o=>{const ready=o.rs.filter(r=>n(r.preuzeta_kolicina)>0);return ready.length>0&&ready.every(r=>n(r.isporucena_kolicina)>=n(r.preuzeta_kolicina))};
  const view=window.manifestView==='delivered'?'delivered':'pending';
  const pending=allOrders.filter(o=>!isComplete(o));
@@ -782,7 +782,7 @@ function renderManifest(){
   if(!Number.isFinite(count)||count<0||picked>ordered||picked<n(row.isporucena_kolicina)){alert('Uneta količina nije ispravna.');input.value=String(size? n(row.preuzeta_kolicina)/size:n(row.preuzeta_kolicina));return}
   input.disabled=true;
   try{
-   await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:picked,kolicina_za_isporuku:null,status_stavke:picked<=0?'nije_preuzeto':picked>=ordered?'preuzeto':'delimicno_preuzeto'})});
+   await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({preuzeta_kolicina:picked,status_stavke:picked<=0?'nije_preuzeto':picked>=ordered?'preuzeto':'delimicno_preuzeto'})});
    row.preuzeta_kolicina=picked;
    const total=document.getElementById('manifest-picked-total-'+id),amount=document.getElementById('manifest-picked-amount-'+id);
    if(total)total.textContent=fmt(picked)+' '+unit(row);
@@ -834,7 +834,7 @@ function renderManifest(){
    for(const item of valid){
     const row=item.row,picked=n(row.preuzeta_kolicina),delivered=n(row.isporucena_kolicina),qty=Math.max(0,picked-delivered),remaining=qty;
     if(!Number.isFinite(qty)||qty<=0||qty>remaining)throw new Error('Количина за ставку „'+row.proizvod+'“ више није доступна за предају.');
-    await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({isporucena_kolicina:delivered+qty,stavka_cekirana:false,kolicina_za_isporuku:null})});
+    await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({isporucena_kolicina:delivered+qty,stavka_cekirana:false})});
     saved++;
    }
    await reload();show('manifest');window.manifestView='pending';renderManifest();
