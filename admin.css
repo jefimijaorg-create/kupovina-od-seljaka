@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.1.9
+ * Version: 5.2.6
    Верзија: 5.1.6
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.1.9";
+  --nd-css-version:"5.2.6";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2510,3 +2510,13 @@ body.nd-workspace select:focus-visible{
 .proc-sheet button,.proc-sheet input,.proc-sheet select{touch-action:manipulation}
 @media(max-width:767px){.proc-sheet{width:100%;height:min(94dvh,940px);max-height:calc(100dvh - env(safe-area-inset-top) - 4px);border-radius:18px 18px 0 0;padding-left:12px;padding-right:12px}.proc-sheet-header small{max-width:calc(100vw - 105px)}.proc-sheet .proc-detail{padding:10px 2px calc(18px + env(safe-area-inset-bottom))}}
 @media(min-width:768px){.proc-sheet-backdrop{align-items:center;padding:12px}.proc-sheet{height:min(88dvh,900px);border-radius:20px}}
+
+/* NABAVKA · zbir pakovanja i merne količine · v5.2.6 */
+.nd-workspace .nd-proc-live .ndp-obligations .ndp-tile{min-height:54px;height:54px;padding:5px 3px;border-radius:9px}
+.nd-workspace .nd-proc-live .ndp-obligations .ndp-tile b{font-size:16px;line-height:1.1;font-weight:900}
+.nd-workspace .nd-proc-live .ndp-obligations .ndp-tile small{font-size:9.5px;line-height:1.2;font-weight:700}
+.nd-workspace .nd-proc-live .ndp-obligations .ndp-kpi-measure{display:block;font-size:11.5px;line-height:1.15;font-weight:800}
+.nd-workspace .nd-proc-live .ndp-product-cardhead strong{font-size:16px;font-weight:850}
+.nd-workspace .nd-proc-live .ndp-product-total{padding:3px 9px;font-size:15px;font-weight:900}
+.nd-workspace .nd-proc-live .ndp-farms button{min-height:32px;height:32px;padding:0 12px;border-radius:9px;font-size:12.5px}
+.nd-workspace .nd-proc-live .ndp-input-measure{display:block;margin-top:5px;color:var(--nd-green);font-size:11.5px;font-weight:800}
