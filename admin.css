@@ -2599,3 +2599,70 @@ body.nd-workspace select:focus-visible{
  .proc-reference-stats>div{padding:4px 2px}
  .proc-reference-stats b{font-size:16px}
 }
+
+
+/* ADMIN WORKSPACE — НАБАВКА: BOTTOM SHEET ПО КОРИСНИЧКОМ РЕФЕРЕНТУ · v5.3.0 */
+.nd-workspace .ndp-sheet-backdrop{
+ position:fixed;inset:0;z-index:10040;display:flex;align-items:flex-end;justify-content:center;
+ padding-top:env(safe-area-inset-top);background:rgba(18,28,22,.55);
+ backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);overflow:hidden;
+}
+.nd-workspace .ndp-sheet-backdrop.is-open{display:flex}
+.nd-workspace .ndp-sheet-backdrop>.ndp-sidepanel{
+ position:relative!important;inset:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+ z-index:10041!important;display:flex!important;flex-direction:column!important;
+ width:100%!important;max-width:620px!important;height:min(88dvh,860px)!important;
+ max-height:calc(100dvh - env(safe-area-inset-top) - 4px)!important;min-height:0!important;
+ overflow:hidden!important;overflow-x:hidden!important;overscroll-behavior:contain;
+ padding:10px 16px calc(10px + env(safe-area-inset-bottom))!important;
+ border:0!important;border-radius:22px 22px 0 0!important;background:#fff!important;
+ box-shadow:0 -12px 36px rgba(0,0,0,.24)!important;color:#1a241e!important;
+ transform:none!important;animation:ndp-reference-sheet-up .22s cubic-bezier(.16,1,.3,1);
+}
+.nd-workspace .ndp-sheet-backdrop>.ndp-sidepanel:before{
+ content:"";display:block;flex:0 0 5px;width:42px;height:5px;border-radius:999px;
+ background:#cbd6cd;margin:0 auto 10px!important;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-selected-head{
+ position:relative!important;top:auto!important;z-index:2;flex:0 0 auto;
+ display:flex!important;align-items:flex-start!important;gap:10px;
+ padding:6px 0 12px!important;margin:0!important;border-bottom:1px solid #d6e0d6!important;background:#fff!important;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-selected-head>div{flex:1;min-width:0}
+.nd-workspace .ndp-sheet-backdrop .ndp-selected-head>div>small{
+ display:inline-flex;background:#e8f3ec;color:#1f4e35;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:800;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-selected-head h3{margin:5px 0 3px!important;font-size:17px!important;line-height:1.25;color:#1a241e!important}
+.nd-workspace .ndp-sheet-backdrop .ndp-selected-head span{font-size:12px!important;color:#58685e!important}
+.nd-workspace .ndp-sheet-backdrop .ndp-selected-head>b{flex:0 0 auto;max-width:130px;padding:8px 10px!important;border:1px solid #b5d1bf;border-radius:10px!important;background:#e8f3ec!important;color:#1f4e35!important;font-size:12px!important;line-height:1.3;text-align:right}
+.nd-workspace .ndp-sheet-backdrop .ndp-mobile-close{
+ flex:0 0 38px!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;
+ display:flex!important;align-items:center;justify-content:center;border:1px solid #d6e0d6!important;
+ border-radius:10px!important;background:#f7faf7!important;color:#1a241e!important;font-size:20px!important;
+ cursor:pointer;touch-action:manipulation;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-panel-tabs{
+ flex:0 0 auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:6px!important;margin:10px 0!important;padding:4px!important;border:1px solid #d6e0d6!important;border-radius:11px!important;background:#f7faf7!important;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-panel-tabs button{
+ min-height:42px!important;padding:6px 8px!important;border:1px solid transparent!important;border-radius:9px!important;
+ background:transparent!important;color:#58685e!important;font-size:12px!important;font-weight:850!important;line-height:1.2;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-panel-tabs button.active{
+ border-color:#b5d1bf!important;background:#e8f3ec!important;color:#1f4e35!important;box-shadow:none!important;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-panel{
+ flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;
+ overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px!important;margin:0!important;
+ border:1px solid #d6e0d6!important;border-radius:13px!important;background:#f7faf7!important;
+}
+.nd-workspace .ndp-sheet-backdrop .ndp-panel h4{margin:0 0 10px!important;font-size:14px!important;color:#1f4e35!important}
+.nd-workspace .ndp-sheet-backdrop .ndp-batch-panel{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px;border:1px solid #d6e0d6;border-radius:13px;background:#f7faf7}
+@keyframes ndp-reference-sheet-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@media(max-width:767px){
+ .nd-workspace .ndp-sheet-backdrop>.ndp-sidepanel{max-width:100%!important;height:min(88dvh,860px)!important;padding-left:12px!important;padding-right:12px!important;border-radius:22px 22px 0 0!important}
+ .nd-workspace .ndp-sheet-backdrop .ndp-selected-head>b{max-width:110px;font-size:11px!important}
+ .nd-workspace .ndp-sheet-backdrop .ndp-panel-tabs button{font-size:11px!important;padding:5px 3px!important}
+}
+@media(max-height:650px){.nd-workspace .ndp-sheet-backdrop>.ndp-sidepanel{height:calc(100dvh - env(safe-area-inset-top) - 4px)!important}}
