@@ -422,7 +422,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           '<small class="nd-ops-delivery-order-refs">'+orders.map(order=>'#'+esc(order.id)).join(' · ')+'</small>'+
           '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
           orderHtml+
-          '<div class="nd-ops-delivery-customer-footer"><div class="nd-ops-delivery-bill"><strong>ЗА НАПЛАТУ ОД КУПЦА:</strong><b data-customer-charge>'+money(customerChargeKnown?customerCharge:null)+'</b></div></div>'+
+          '<div class="nd-ops-delivery-customer-footer"><div class="nd-ops-delivery-bill"><strong>ЗА НАПЛАТУ ОД КУПЦА:</strong><b data-customer-charge>'+(excludedLines===totalLines&&totalLines>0?'НЕ ОБРАЧУНАВА СЕ':money(customerChargeKnown?customerCharge:null))+'</b></div></div>'+
           (canReadProducts&&state.tour.status==='processing'?
             '<small class="nd-ops-delivery-feedback" data-delivery-feedback aria-live="polite">Потврђуј ставке појединачно — сваки додир чува стварно предату количину.</small>':
             '<small>Потврда је доступна само у тури која је у обради и за овлашћену ADMIN улогу.</small>')+
@@ -467,6 +467,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       updateDeliveryAmounts=()=>{
         let total=0,known=true;
         for(const item of state.items){
+          if(item.status_izdavanja==='nepreuzeto'||item.status_stavke==='upitno')continue;
           const input=shell.querySelector('[data-delivery-qty="'+item.id+'"]'),size=Number(item.package_size);
           let packages=0,invalid=false;
           if(input){
@@ -486,13 +487,14 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           if(!group)continue;
           let sum=0,customerKnown=true;
           for(const line of group.lines){
+            if(line.isUnavailable)continue;
             const input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]');
             const size=Number(line.item.package_size),packages=line.item.stavka_cekirana===true?
               (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1):input?Number(input.value):line.availablePackages;
             if(line.hasDataIssue||!Number.isFinite(packages)||packages<0){if(line.hasDataIssue)customerKnown=false;continue}
             if(line.item.stavka_cekirana===true&&packages>0){const price=salePricePerPackage(line.item);if(price===null)customerKnown=false;else sum+=packages*price}
           }
-          const node=card.querySelector('[data-customer-charge]');if(node)node.textContent=group.lines.length>0&&group.lines.every(line=>line.item.status_izdavanja==='nepreuzeto'||line.item.status_stavke==='upitno')?'НЕ ОБРАЧУНАВА СЕ':money(customerKnown?sum:null);
+          const node=card.querySelector('[data-customer-charge]');if(node)node.textContent=group.lines.length>0&&group.lines.every(line=>line.isUnavailable)?'НЕ ОБРАЧУНАВА СЕ':money(customerKnown?sum:null);
         }
       };
       body=summary+'<div class="nd-ops-delivery-overview"><strong>'+remainingPoints.length+' преосталих пунктова</strong><span>'+pointWork.filter(row=>row.remaining.length===0).length+' завршених</span></div>'+(pointSections||'')+(unassignedSection||'')+
