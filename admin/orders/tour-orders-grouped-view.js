@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.6
+ * Version: 1.3.7
  * Updated: 2026-11-26
  * Description: Buyer-integrated order cards with editable and confirmed-delete order actions.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -65,8 +65,19 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     return { name, packageText, count: Number.isFinite(count) ? count : null, totalQty, unitPrice: Number.isFinite(unitPrice) ? unitPrice : productPrice, lineTotal: displayTotal, packageOk, product };
   }
 
+  function chronologicalLines(source) {
+    return [...(source||[])].map((line,index)=>({line,index})).sort((a,b)=>{
+      const ta=Date.parse(a.line.created_at||a.line.createdAt||a.line.inserted_at||'');
+      const tb=Date.parse(b.line.created_at||b.line.createdAt||b.line.inserted_at||'');
+      if(Number.isFinite(ta)&&Number.isFinite(tb)&&ta!==tb)return ta-tb;
+      const ia=Number(a.line.id),ib=Number(b.line.id);
+      if(Number.isFinite(ia)&&Number.isFinite(ib)&&ia!==ib)return ia-ib;
+      return a.index-b.index;
+    }).map(entry=>entry.line);
+  }
+
   function orderCard(order) {
-    const lines = linesByOrder.get(String(order.id)) || [];
+    const lines = chronologicalLines(linesByOrder.get(String(order.id)) || []);
     const buyer = customerMap.get(String(order.kupac_id)) || {};
     const point = pointMap.get(String(order.punkt_id));
     const phone = order.telefon || buyer.telefon || 'Телефон није наведен';
@@ -116,17 +127,17 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       const pointName=group.point?.name||'Пункт није наведен',stop=(tourStops||[]).find(row=>String(row.punkt_id)===key),time=String(stop?.vreme||'').slice(0,5);
       let pointTotal=0,pointHasUnknown=false;
       const tableRows=group.orders.map(order=>{
-        const buyer=customerMap.get(String(order.kupac_id))||{},lines=linesByOrder.get(String(order.id))||[],name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—'));
+        const buyer=customerMap.get(String(order.kupac_id))||{},lines=chronologicalLines(linesByOrder.get(String(order.id))||[]),name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—'));
         let customerTotal=0,customerUnknown=false;
         const normalized=phoneDigits(phoneFor(order)),viber=normalized?'<button type="button" class="nd-gop-viber" data-viber-phone="'+esc(normalized)+'" aria-label="Отвори Viber за '+esc(name)+'">Viber</button>':'<button type="button" class="nd-gop-viber" disabled title="Телефон купца није евидентиран">Нема броја</button>';
-        const customerCell='<td rowspan="'+Math.max(1,lines.length)+'" class="nd-gop-customer-cell"><strong>'+esc(name)+'</strong><button type="button" class="nd-gop-order-open" data-open-order="'+esc(order.id)+'">Поруџбина #'+esc(order.id)+'</button>'+(canManage?'<div class="nd-gop-order-actions"><button type="button" class="nd-gop-edit-order" data-open-order="'+esc(order.id)+'">Измени</button><button type="button" class="nd-gop-delete-order" data-delete-order="'+esc(order.id)+'">Обриши</button></div>':'')+viber+'</td>';
-        const itemRows=lines.map((line,index)=>{const p=linePresentation(line),amount=lineAmount(line);if(amount===null)customerUnknown=true;else customerTotal+=amount;return '<tr class="nd-gop-line">'+(index===0?customerCell:'')+'<td>'+esc(p.name)+'<small>'+esc(p.packageText)+'</small></td><td class="nd-gop-qty">'+(p.count===null?'—':fmt(p.count))+'</td><td class="nd-gop-price">'+(p.unitPrice===null?'—':fmtMoney(p.unitPrice))+'</td><td class="nd-gop-amount">'+(amount===null?'Цена није унета':fmtMoney(amount))+'</td></tr>'}).join('');
+        const customerCell='<tr class="nd-gop-customer-toolbar-row"><td colspan="5"><div class="nd-gop-customer-toolbar"><div class="nd-gop-customer-identity"><strong>'+esc(name)+'</strong><small>Поруџбина #'+esc(order.id)+'</small></div><div class="nd-gop-order-actions"><button type="button" class="nd-gop-order-open" data-open-order="'+esc(order.id)+'">Отвори</button>'+(canManage?'<button type="button" class="nd-gop-edit-order" data-open-order="'+esc(order.id)+'">Измени</button><button type="button" class="nd-gop-delete-order" data-delete-order="'+esc(order.id)+'">Обриши</button>':'')+viber+'</div></div></td></tr>';
+        const itemRows=lines.map((line,index)=>{const p=linePresentation(line),amount=lineAmount(line);if(amount===null)customerUnknown=true;else customerTotal+=amount;return '<tr class="nd-gop-line"><td colspan="2"><div class="nd-gop-product-line"><span class="nd-gop-line-number">'+(index+1)+'.</span><div><strong>'+esc(p.name)+'</strong><small>'+esc(p.packageText)+'</small></div></div></td><td class="nd-gop-qty"><strong>'+(p.count===null?'—':fmt(p.count)+' ком')+'</strong><small>('+esc(p.totalQty)+')</small></td><td colspan="2" class="nd-gop-price-line"><span>'+(p.unitPrice===null?'—':fmtMoney(p.unitPrice)+' / пак.')+'</span><strong>→ '+(amount===null?'Цена није унета':fmtMoney(amount))+'</strong></td></tr>'}).join('');
         const orderTotal=order.ukupna_cena!==null&&order.ukupna_cena!==undefined&&order.ukupna_cena!==''&&Number.isFinite(Number(order.ukupna_cena))?Number(order.ukupna_cena):(customerUnknown?null:customerTotal);
         if(orderTotal===null)pointHasUnknown=true;else pointTotal+=orderTotal;
-        const noLines='<tr>'+customerCell+'<td colspan="4" class="nd-go-empty">Нема ставки у поруџбини.</td></tr>';
-        return (itemRows||noLines)+'<tr class="nd-gop-customer-total"><td colspan="4">Укупно '+esc(name)+'</td><td class="nd-gop-amount">'+(orderTotal===null?'Није обрачунато':fmtMoney(orderTotal))+'</td></tr>';
+        const noLines=customerCell+'<tr><td colspan="5" class="nd-go-empty">Нема ставки у поруџбини.</td></tr>';
+        return customerCell+(itemRows||'<tr><td colspan="5" class="nd-go-empty">Нема ставки у поруџбини.</td></tr>')+'<tr class="nd-gop-customer-total"><td colspan="3">Укупно за '+esc(name)+'</td><td colspan="2" class="nd-gop-amount">'+(orderTotal===null?'Није обрачунато':fmtMoney(orderTotal))+'</td></tr>';
       }).join('');
-      const validPointId=/^\d+$/.test(String(key))&&group.point&&String(group.point.id)===String(key);return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div>'+(validPointId?'<label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'"></label>':'<span class="nd-gop-time-unavailable">Време — пункт није повезан</span>')+'</header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th>Купац</th><th>Производ / амбалажа</th><th>Кол.</th><th>Цена</th><th>Износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="4">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
+      const validPointId=/^\d+$/.test(String(key))&&group.point&&String(group.point.id)===String(key);return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div>'+(validPointId?'<label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'"></label>':'<span class="nd-gop-time-unavailable">Време — пункт није повезан</span>')+'</header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th colspan="2">Артикал / амбалажа</th><th>Количина</th><th colspan="2">Цена по пак. → износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="3">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td colspan="2" class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
     }).join('');
     rootNode.innerHTML='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
   }
