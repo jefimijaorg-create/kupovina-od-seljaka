@@ -345,8 +345,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           if(Number.isFinite(size)&&size>0)packages=Number(item.isporucena_kolicina)/size;else invalid=true;
         }else if(order?.dostava_obradjena!==true){
           const pickup=(pickupByItem.get(String(item.id))||[]).reduce((sum,row)=>sum+row.quantity,0);
-          const ordered=Math.max(0,Number(item.package_count)||0);
-          packages=Math.min(ordered,pickup);
+          const ordered=Math.max(0,Number(item.package_count)||0),requested=Number.isFinite(Number(item.kolicina_za_isporuku))&&item.kolicina_za_isporuku!==null&&item.kolicina_za_isporuku!==''&&Number.isFinite(size)&&size>0?Math.max(0,Number(item.kolicina_za_isporuku)/size):ordered;
+          packages=Math.min(ordered,pickup,requested);
           if(invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||pickup>ordered+0.000001)invalid=true;
         }
         if(invalid){chargeKnown=false;continue}
@@ -370,7 +370,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
             const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
             const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size||variant?.package_value);
-            const available=Math.min(ordered,picked),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
+            const requestedPackages=Number.isFinite(Number(item.kolicina_za_isporuku))&&item.kolicina_za_isporuku!==null&&item.kolicina_za_isporuku!==''&&Number.isFinite(size)&&size>0?Math.max(0,Number(item.kolicina_za_isporuku)/size):ordered,available=Math.min(ordered,picked,requestedPackages),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
             const deliveredPackages=Number.isFinite(size)&&size>0?deliveredBase/size:0;
             const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
               picked>ordered+0.000001||deliveredPackages>available+0.000001||!Number.isFinite(size)||size<=0;
