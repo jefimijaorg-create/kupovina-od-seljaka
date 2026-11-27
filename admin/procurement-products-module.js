@@ -33,7 +33,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   variants=fail(await db.from('product_variants').select('id,product_id,name,size_label,package_value,package_unit,unit').order('product_id'),'Амбалажа');
   farms=fail(await db.from('gazdinstva').select('id,name,phone,is_active').order('name'),'Газдинства');
  }
- const css=`
+ let css=`
  .nd-proc-live{--ink:#20312a;--muted:#718078;--line:#e1e9e2;--bg:#f4f7f4;--green:#285b3c;--orange:#e99a36;--blue:#377fbd;--red:#d94b4b;font:14px/1.4 system-ui,-apple-system,sans-serif;color:var(--ink);max-width:1050px;margin:auto;padding:8px 10px 90px}
  .nd-proc-live *{box-sizing:border-box}.ndp-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 2px 12px}.ndp-head small{font-size:10px;color:var(--green);font-weight:900;letter-spacing:.05em}.ndp-head h2{font-size:21px;margin:2px 0;font-weight:900}.ndp-count{background:#e8f1eb;color:var(--green);padding:8px 11px;border-radius:12px;font-weight:900;white-space:nowrap}
  .ndp-obligations{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:5px 0 12px}.ndp-tile{border:1px solid var(--line);border-radius:12px;background:white;padding:10px 8px;text-align:left;cursor:pointer;min-width:0}.ndp-tile b{display:block;font-size:20px}.ndp-tile small{display:block;font-size:10px;font-weight:800;line-height:1.25}.ndp-tile.active{outline:2px solid currentColor}.ndp-tile.orange{color:#a9610b;background:#fff7eb;border-color:#f1d4a9}.ndp-tile.blue{color:#246da8;background:#eff7ff;border-color:#c9e1f5}.ndp-tile.red{color:#bd3434;background:#fff1f1;border-color:#f3cccc}
