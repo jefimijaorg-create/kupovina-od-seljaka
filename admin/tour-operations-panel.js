@@ -486,7 +486,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           let sum=0,customerKnown=true;
           for(const line of group.lines){
             const input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]');
-            const size=Number(line.item.package_size),input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]'),packages=line.item.stavka_cekirana===true?
+            const size=Number(line.item.package_size),packages=line.item.stavka_cekirana===true?
               (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1):input?Number(input.value):line.availablePackages;
             if(line.hasDataIssue||!Number.isFinite(packages)||packages<0){customerKnown=false;continue}
             if(line.item.stavka_cekirana===true&&packages>0){const price=salePricePerPackage(line.item);if(price===null)customerKnown=false;else sum+=packages*price}
