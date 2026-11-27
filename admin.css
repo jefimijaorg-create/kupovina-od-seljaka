@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.3.1
+ * Version: 5.3.2
    Верзија: 5.3.1
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -2729,3 +2729,23 @@ body.nd-workspace select:focus-visible{
   font-size:9px;
   line-height:1.25;
 }
+
+
+/* МОДУЛ НАБАВКА — ОДВОЈЕНИ BOTTOM SHEET ПРИКАЗИ */
+.ndp-sheet-context-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 2px 12px;border-bottom:1px solid #D5DFD5;margin-bottom:10px}
+.ndp-sheet-context-head>div{min-width:0;flex:1}
+.ndp-sheet-context-head small{display:block;font-size:10px;font-weight:950;letter-spacing:.04em;color:#285B3C}
+.ndp-sheet-context-head h3{margin:3px 0;font-size:19px;line-height:1.2;font-weight:950;color:#132218}
+.ndp-sheet-context-head span{font-size:12px;color:#526358}
+.ndp-sheet-actions{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 10px}
+.ndp-sheet-actions .ndp-btn{min-height:42px;flex:1 1 145px}
+.ndp-sheet-farm-choices{display:grid;gap:8px}
+.ndp-sheet-farm-choice{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;border:1px solid #D5DFD5;border-radius:12px;background:#fff;padding:12px;color:#132218;min-height:64px}
+.ndp-sheet-farm-choice span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ndp-sheet-farm-choice b{font-size:14px;font-weight:900}
+.ndp-sheet-farm-choice small{font-size:11px;color:#526358}
+.ndp-sheet-farm-choice strong{font-size:12px;color:#285B3C;text-align:right}
+.ndp-sheet-farm-product{background:#fff;border:1px solid #D5DFD5;border-radius:12px;padding:10px;margin:0 0 8px}
+.ndp-sheet-farm-product> b{display:block;font-size:14px;color:#1B4332;margin-bottom:5px}
+.ndp-sheet-farm-product .ndp-panel{border:0;padding:5px 0;background:#fff}
+@media(max-width:900px){.ndp-sheet{width:min(100%,760px);max-height:88dvh}.ndp-sheet-context-head h3{font-size:17px}.ndp-sheet-actions .ndp-btn{min-height:46px}}
