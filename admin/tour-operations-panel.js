@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.31
+ * Version: 1.5.32
  * Updated: 2026-11-26
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -375,7 +375,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
               picked>ordered+0.000001||deliveredPackages>available+0.000001||!Number.isFinite(size)||size<=0;
             const checked=item.stavka_cekirana===true;
-            const deficitPackages=Math.max(0,ordered-picked);
+            const deficitPackages=Math.max(0,ordered-picked),deliveryDeficitPackages=Math.max(0,ordered-(checked?deliveredPackages:available));
             if(checked)checkedLines++;if(dataIssue)hasIssue=true;
             const sale=lineSaleValue(item);if(sale===null)customerOrderedKnown=false;else customerOrdered+=sale;
             const billablePackages=checked?deliveredPackages:0;
@@ -395,9 +395,9 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue&&!checked;
             descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue});
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
-            return '<div class="nd-ops-delivery-item'+(deficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
+            return '<div class="nd-ops-delivery-item'+(deliveryDeficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
               esc(product?.name||'Производ није доступан')+'</strong>'+itemStatusHtml+'</div>'+
-              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong><span class="nd-ops-delivery-package">'+packageMeasureLabel(ordered,size,item.package_unit)+'</span><span class="nd-ops-delivery-unit-price">'+money(salePricePerPackage(item))+' / пак.</span>'+(deficitPackages>0?'<span class="nd-ops-delivery-deficit">Недостаје '+packageCountLabel(deficitPackages)+' пак. ('+packageAmountLabel(deficitPackages,size,item.package_unit)+')</span>':'')+'</div>'+
+              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong><span class="nd-ops-delivery-package">'+packageMeasureLabel(ordered,size,item.package_unit)+'</span><span class="nd-ops-delivery-unit-price">'+money(salePricePerPackage(item))+' / пак.</span>'+(deliveryDeficitPackages>0?'<span class="nd-ops-delivery-deficit">'+(checked?'Предато мање · ':'Недостаје ')+packageCountLabel(deliveryDeficitPackages)+' пак. ('+packageAmountLabel(deliveryDeficitPackages,size,item.package_unit)+')</span>':'')+'</div>'+
               '<div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>КОМАДА</small></label>'+
               '<button type="button" class="nd-ops-delivery-quick'+(checked?' is-complete':'')+'" data-confirm-delivery="'+esc(item.id)+'" '+(editable?'':'disabled')+'>'+(checked?'✓ Готово':'Потврди')+'</button></div></div>'+
