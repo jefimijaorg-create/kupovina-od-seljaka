@@ -106,6 +106,16 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
  @media(min-width:700px){.ndp-sheet-backdrop{align-items:center;padding:20px}.ndp-sheet{border-radius:20px;max-height:80vh}}.ndp-panel h4{margin:0 0 8px;font-size:13px}.ndp-line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.ndp-line:first-of-type{border-top:0}.ndp-line small{display:block;color:var(--muted);font-size:11px}.ndp-input{width:72px;border:1px solid #cbd8ce;border-radius:8px;padding:8px;text-align:center;font-size:16px;font-weight:900;background:white}.ndp-empty{padding:18px;text-align:center;color:var(--muted);background:white;border:1px dashed var(--line);border-radius:12px}
 
 
+ /* Купчеву тражену количину издвајамо од набавке газдинства */
+ .ndp-customer-demand{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;padding:8px 7px;margin:3px 0;border:2px solid #1B4332;border-radius:11px;background:#E6F2EC;width:100%;}
+ .ndp-customer-demand small{font-size:11px!important;font-weight:950!important;letter-spacing:.035em;color:#1B4332!important;}
+ .ndp-customer-demand strong{font-size:clamp(21px,3vw,29px);line-height:1.05;font-weight:1000;color:#123D28;white-space:nowrap;}
+ .ndp-customer-demand em{font-style:normal;font-size:15px;font-weight:900;color:#315B42;}
+ .ndp-packdesc{align-items:stretch}
+ .ndp-packdesc>b{font-size:16px!important;text-align:center;background:#fff;border-radius:7px;padding:5px;}
+ .ndp-pack-farms{width:100%;}
+ @media(max-width:650px){.ndp-customer-demand{padding:9px 5px}.ndp-customer-demand strong{font-size:25px}.ndp-customer-demand em{font-size:14px}}
+
  /* Три јасна бројчана показатеља на картици производа */
  .ndp-quantity-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:8px;max-width:440px}
  .ndp-quantity-summary>span{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #e4ebe5;border-radius:8px;background:#f6f9f6;min-width:0}
@@ -191,7 +201,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
    h+='<article class="ndp-product-card"><header class="ndp-product-cardhead"><strong>'+esc(pg?.name||pName(pid))+'</strong><span class="ndp-product-total">'+esc(totalMeasure||fmt(orderedTotal)+' пак.')+'</span></header>';
    pGroups.sort((a,b)=>{let va=variants.find(v=>String(v.id)===String(a.v)),vb=variants.find(v=>String(v.id)===String(b.v));return Number(vb?.package_value||0)-Number(va?.package_value||0)}).forEach(g=>{
     const keyg=key(g.p,g.v),r=statusRows(g),assigned=r.reduce((n,a)=>n+req(a),0),sentQty=r.filter(sent).reduce((n,a)=>n+req(a),0),unordered=Math.max(0,g.total-sentQty),confirmed=r.reduce((n,a)=>n+conf(a),0),pickedQty=r.reduce((n,a)=>n+picked(a),0),calc=measure(g,g.total),isSelected=keyg===window.__ndpSelectedKey;
-    h+='<button class="ndp-packline '+(isSelected?'selected':'')+'" data-select-pack="'+esc(keyg)+'"><span class="ndp-packdesc"><b>'+esc(vName(g.v))+'</b><small>'+fmt(g.total)+' пак.'+(calc?' · '+esc(calc):'')+'</small><small class="ndp-pack-farms">'+r.filter(a=>req(a)>0).map(a=>esc(fName(a.gazdinstvo_id))+': '+fmt(req(a))+' (потв. '+fmt(conf(a))+')').join(' · ')+'</small></span><span class="ndp-pack-badges"><em class="st-pill st-ordered">Поручено '+fmt(sentQty)+(measure(g,sentQty)?' ('+esc(measure(g,sentQty))+')':'')+'</em><em class="st-pill '+(unordered?'st-unordered':'st-done')+'">'+(unordered?'Непоручено '+fmt(unordered)+(measure(g,unordered)?' ('+esc(measure(g,unordered))+')':''):'✓ Све поручено')+'</em><small>Додељено '+fmt(assigned)+' · потв. '+fmt(confirmed)+' · преузето '+fmt(pickedQty)+'</small></span></button>';
+    h+='<button class="ndp-packline '+(isSelected?'selected':'')+'" data-select-pack="'+esc(keyg)+'"><span class="ndp-packdesc"><b>'+esc(vName(g.v))+'</b><span class="ndp-customer-demand"><small>НАРУЧЕНО ОД КУПАЦА</small><strong>'+fmt(g.total)+' ПАКОВАЊА</strong><em>'+(calc?'УКУПНО '+esc(calc):'')+'</em></span><small class="ndp-pack-farms">'+r.filter(a=>req(a)>0).map(a=>esc(fName(a.gazdinstvo_id))+': '+fmt(req(a))+' пак. (потв. '+fmt(conf(a))+')').join(' · ')+'</small></span><span class="ndp-pack-badges"><em class="st-pill st-ordered">ПОРУЧЕНО ОД ГАЗДИНСТВА: '+fmt(sentQty)+(measure(g,sentQty)?' ('+esc(measure(g,sentQty))+')':'')+'</em><em class="st-pill '+(unordered?'st-unordered':'st-done')+'">'+(unordered?'Непоручено газдинству '+fmt(unordered)+(measure(g,unordered)?' ('+esc(measure(g,unordered))+')':''):'✓ Све поручено газдинству')+'</em><small>Додељено '+fmt(assigned)+' · потв. '+fmt(confirmed)+' · преузето '+fmt(pickedQty)+'</small></span></button>';
    });
    h+='</article>';
   });
