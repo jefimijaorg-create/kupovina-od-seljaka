@@ -165,9 +165,9 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
   const farmIds=[...new Set([...rows.map(x=>x.gazdinstvo_id),...products.map(x=>x.gazdinstvo_id)].filter(Boolean).map(String))];
   const activeFarms=farms.filter(f=>farmIds.includes(String(f.id)));
   const selectedKey=window.__ndpSelectedKey||null;
+  // Не бирај аутоматски прво паковање: панел се приказује тек после клика корисника.
   let selected=selectedKey?demandGroups().find(g=>key(g.p,g.v)===selectedKey):null;
-  if(!selected&&gs.length)selected=gs[0];
-  if(selected)window.__ndpSelectedKey=key(selected.p,selected.v);
+  if(selectedKey&&!selected){window.__ndpSelectedKey=null;}
   const measure=(g,count)=>{
    const v=variants.find(x=>String(x.id)===String(g.v)),sample=allGroupRows(g)[0]||items.find(x=>key(x.product_id,x.variant_id)===key(g.p,g.v))||{};
    const n=Number(v?.package_value??sample.package_size??0),unit=String(v?.package_unit??sample.package_unit??v?.unit??sample.jedinica??'').toLowerCase();
@@ -202,7 +202,7 @@ export async function mountProcurementProductsModule({root,core,tourId,onBack,in
    h+=panel(selected,step);
   }else h+='<div class="ndp-empty">Изабери производ и паковање са леве стране.</div>';
   h+='</aside></div>';
-  root.querySelector('.nd-proc-live').innerHTML=h;let mobilePanel=root.querySelector('.ndp-sidepanel');if(mobilePanel&&window.matchMedia('(max-width:900px)').matches&&selected)mobilePanel.classList.add('is-open');
+  root.querySelector('.nd-proc-live').innerHTML=h;let mobilePanel=root.querySelector('.ndp-sidepanel');if(mobilePanel&&window.matchMedia('(max-width:900px)').matches&&selected&&selectedKey)mobilePanel.classList.add('is-open');
  }
   async function saveRow(id,patch,verify){let r=await db.from('tura_nabavka_dodele').update({...patch,updated_at:new Date().toISOString()}).eq('id',id).select('*').maybeSingle();if(r.error)throw r.error;if(!r.data||Object.entries(verify).some(([k,v])=>String(r.data[k])!==String(v)))throw Error('База није потврдила измену.');rows=rows.map(a=>String(a.id)===String(id)?r.data:a)}
  async function copyFarm(id){let a=rows.filter(x=>String(x.gazdinstvo_id)===String(id)&&req(x)>0);let msg='Захтев за набавку · тура '+tourId+'\n'+fName(id)+'\n\n'+a.map(x=>pName(x.product_id)+' · '+vName(x.variant_id)+': '+fmt(req(x))+' пак.').join('\n')+'\n\nМолим потврду количина.';try{await navigator.clipboard.writeText(msg);alert('Списак је копиран. Пошаљи га газдинству.')}catch{alert(msg)}}
