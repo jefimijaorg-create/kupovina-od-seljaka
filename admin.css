@@ -2219,9 +2219,9 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item-head{
   display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:0 0 4px;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item-head strong{display:none}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare b{font-weight:850}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-deficit{display:block;grid-column:1/-1;align-self:stretch;margin:0;background:#fff0eb;border-color:#efc2b3;color:#a13d2d;font-size:10.5px}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-picked{display:block;grid-column:1/-1;align-self:stretch;margin:0;padding:5px 7px;border:1px solid #b9d9c2;border-radius:6px;background:#e7f6eb;color:#20633a;font-weight:850;font-size:10.5px}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-deficit{
-  display:inline-flex;align-self:flex-start;padding:4px 7px;border:1px solid #f0d3a9;
-  border-radius:6px;background:#fff5e8;color:#8a4d0b;font-size:10px;font-weight:850;line-height:1.25;
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item-head strong{display:none}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare b{font-weight:850}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-deficit{display:block;grid-column:1/-1;align-self:start;margin:1px 0 0;padding:3px 6px;background:#fff7eb;border:1px solid #ead8b9;border-radius:5px;color:#76521f;font-size:10px;font-weight:750;line-height:1.25}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-picked{display:block;grid-column:1/-1;align-self:stretch;margin:0;padding:5px 7px;border:1px solid #b9d9c2;border-radius:6px;background:#e7f6eb;color:#20633a;font-weight:850;font-size:10.5px}.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-deficit{
+  display:inline-flex;align-self:flex-start;padding:3px 6px;border:1px solid #ead8b9;
+  border-radius:5px;background:#fff7eb;color:#76521f;font-size:10px;font-weight:750;line-height:1.25;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick.is-complete{
   border-color:#285b3c;background:#e7f1e7;color:#285b3c;
@@ -2801,16 +2801,21 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered,
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package {
   display: block;
-  padding: 3px 6px;
+  padding: 4px 6px;
   border: 1px solid #dce5dc;
   border-radius: 6px;
   background: #f1f5f1;
   color: #344238;
-  font-size: 10.5px;
-  font-weight: 800;
-  line-height: 1.15;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.2;
   text-align: center;
   overflow-wrap: anywhere;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered {
+  background: #ffffff;
+  border-color: #b8cbb9;
+  color: #203b2b;
 }
 
 /* 3. КОЛОНА (ДЕСНО): КОЛИЧИНА + ПОТВРДИ ГОРЕ, ЦЕНА + ИЗНОС ДОЛЕ */
@@ -2987,7 +2992,7 @@ body.nd-workspace select:focus-visible{
   flex-direction:column;
   align-items:flex-start;
   justify-content:center;
-  gap:2px;
+  gap:5px;
   min-width:0;
   padding:7px 8px;
   border:1px solid #DCE4DC;
@@ -3003,16 +3008,17 @@ body.nd-workspace select:focus-visible{
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals small{
   color:#68766C;
-  font-size:9px;
+  font-size:10px;
   font-weight:850;
-  line-height:1.2;
+  line-height:1.25;
   letter-spacing:.015em;
+  overflow-wrap:anywhere;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals strong{
   color:#344238;
-  font-size:13px;
+  font-size:15px;
   font-weight:900;
-  line-height:1.2;
+  line-height:1.25;
   overflow-wrap:anywhere;
   font-variant-numeric:tabular-nums;
 }
