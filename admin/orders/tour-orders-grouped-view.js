@@ -1,11 +1,11 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.22
+ * Version: 1.3.23
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
-export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, variants=[], procurementAllocations=[], tourStops=[], canManage, onOpenOrder, onRefresh }) {
+export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, variants=[], procurementAllocations=[], tourStops=[], deferredDeliveries=[], availableTours=[], canManage, onOpenOrder, onRefresh }) {
   if (!root || !client?.from || !Array.isArray(orders) || !Array.isArray(items)) {
     throw new TypeError('Недостају подаци или потврђени ADMIN Supabase клијент.');
   }
@@ -39,6 +39,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   let orderFilter = 'all';
   let selectedShortagePair = null;
   let activeOrdersView = 'orders';
+  let deferredView = null;
   let shortageSavedLineId = null;
 
   const statusOptions = [
@@ -234,7 +235,12 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     }).join('');
 const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
     const toolbarIndex=orderContent.indexOf('<div class="nd-go-list-toolbar">'),orderHeading=toolbarIndex>=0?orderContent.slice(0,toolbarIndex):'',orderBody=toolbarIndex>=0?orderContent.slice(toolbarIndex):orderContent;
-    rootNode.innerHTML=orderHeading+shortageTabsHtml()+(activeOrdersView==='shortages'?shortageSummaryHtml():orderBody)+shortageResolutionHtml();
+    rootNode.innerHTML=orderHeading+shortageTabsHtml()+(activeOrdersView==='shortages'?shortageSummaryHtml():activeOrdersView==='deferred'?'<div data-deferred-deliveries-root></div>':orderBody)+shortageResolutionHtml();
+    if(activeOrdersView==='deferred'){
+      if(deferredView){deferredView.destroy();deferredView=null;}
+      const target=rootNode.querySelector('[data-deferred-deliveries-root]');
+      import('./deferred-deliveries-view.js?v=1.0.0').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
+    }
 
   }
 
@@ -363,7 +369,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     if(action){
       if(action.hasAttribute('data-viber-phone')){const phone=action.dataset.viberPhone;if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
       if(action.hasAttribute('data-close-shortage-modal')){selectedShortagePair=null;render();return;}
-      if(action.hasAttribute('data-shortage-view')){activeOrdersView=action.dataset.shortageView==='shortages'?'shortages':'orders';selectedShortagePair=null;render();return;}
+      if(action.hasAttribute('data-shortage-view')){activeOrdersView=['shortages','deferred'].includes(action.dataset.shortageView)?action.dataset.shortageView:'orders';selectedShortagePair=null;render();return;}
       if(action.hasAttribute('data-open-shortage-pair')){selectedShortagePair=String(action.dataset.openShortagePair);render();return;}
       
       if(action.hasAttribute('data-shortage-step')){const input=rootNode.querySelector('[data-effective-count="'+CSS.escape(String(action.dataset.shortageLine))+'"]'),line=items.find(row=>String(row.id)===String(action.dataset.shortageLine));if(input&&line){const max=Math.max(0,Number(line.package_count)||0),next=Math.max(0,Math.min(max,Math.round(Number(input.value||0)+Number(action.dataset.shortageStep))));input.value=String(next);}return;}
