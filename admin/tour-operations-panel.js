@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.59
+ * Version: 1.5.60
  * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
@@ -31,6 +31,34 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   }));
   root.innerHTML = '<section class="nd-tour-ops"><div class="nd-ops-loading">Учитавам податке из Supabase базе…</div></section>';
   const shell = root.querySelector('.nd-tour-ops');
+  async function sendDeferredOrderViber(orderId){
+    try{
+      const orderResult=await client.from('porudzbine').select('id,kupac_id,telefon,punkt_id,ukupna_cena').eq('id',orderId).maybeSingle();
+      if(orderResult.error)throw orderResult.error;if(!orderResult.data)throw new Error('Поруџбина #'+orderId+' није пронађена.');
+      const order=orderResult.data;
+      const customerResult=await client.from('kupci').select('id,ime_prezime,telefon').eq('id',order.kupac_id).maybeSingle();
+      if(customerResult.error)throw customerResult.error;
+      const buyer=customerResult.data||{},raw=String(order.telefon||buyer.telefon||''),digits=raw.replace(/[^0-9]/g,''),phone=digits?(digits.startsWith('00')?digits.slice(2):digits.startsWith('0')?'381'+digits.slice(1):digits.startsWith('381')?digits:'381'+digits):'';
+      if(!phone)throw new Error('За Viber поруку није евидентиран телефон купца.');
+      const lineResult=await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,proizvod,variant_name,package_info,package_count,package_size,package_unit,broj_pakovanja,velicina_pakovanja,kolicina,kolicina_za_isporuku,unit_price,cena_stavke').eq('porudzbina_id',orderId);
+      if(lineResult.error)throw lineResult.error;
+      const lines=lineResult.data||[],pids=[...new Set(lines.map(x=>x.product_id).filter(Boolean))],vids=[...new Set(lines.map(x=>x.variant_id).filter(Boolean))];
+      const [productsResult,variantsResult,deferredResult]=await Promise.all([
+        pids.length?client.from('products').select('id,name').in('id',pids):Promise.resolve({data:[],error:null}),
+        vids.length?client.from('product_variants').select('id,name,size_label,package_value,package_unit,unit').in('id',vids):Promise.resolve({data:[],error:null}),
+        client.from('odlozene_isporuke').select('id,originalna_stavka_id,ciljna_tura_id,odlozena_kolicina,status').eq('porudzbina_id',orderId).in('status',['nova','odlozeno'])
+      ]);
+      if(productsResult.error)throw productsResult.error;if(variantsResult.error)throw variantsResult.error;if(deferredResult.error)throw deferredResult.error;
+      const pm=new Map((productsResult.data||[]).map(x=>[String(x.id),x])),vm=new Map((variantsResult.data||[]).map(x=>[String(x.id),x])),dm=new Map();
+      for(const d of deferredResult.data||[]){const k=String(d.originalna_stavka_id);if(!dm.has(k))dm.set(k,[]);dm.get(k).push(d);}
+      const body=lines.map(line=>{const product=pm.get(String(line.product_id))||{},variant=vm.get(String(line.variant_id))||{},size=Number(line.package_size)||Number(line.velicina_pakovanja)||Number(variant.package_value)||1,unit=line.package_unit||variant.package_unit||variant.unit||line.jedinica||'пак.',count=Math.max(0,Number(line.package_count??line.broj_pakovanja??line.kolicina)||0),deferred=(dm.get(String(line.id))||[]).reduce((sum,d)=>sum+Number(d.odlozena_kolicina||0)/size,0),remaining=Math.max(0,count-deferred),name=product.name||line.proizvod||'Производ',pack=variant.name||line.variant_name||line.package_info||((size?size+' ':'')+unit);
+        return '- '+name+' ('+pack+'): '+remaining.toLocaleString('sr-RS')+' пак. за ову доставу'+(deferred?' · '+deferred.toLocaleString('sr-RS')+' пак. пребачено':'');
+      }).join('\n');
+      const message='Поштовани '+(buyer.ime_prezime||('купче #'+order.kupac_id))+',\n\nСажетак Ваше поруџбине #'+order.id+':\n'+body+'\n\nНаручи домаће';
+      try{await navigator.clipboard.writeText(message)}catch(_){window.prompt('Копирај Viber поруку:',message)}
+      window.location.href='viber://chat?number='+encodeURIComponent(phone);
+    }catch(error){showError(error)}
+  }
   const load = async () => {
     const token = ++loadToken;
     shell.querySelector('[data-ops-error]')?.remove();
@@ -686,7 +714,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         if(disposed || activeTab!=='orders') return;
         const target=shell.querySelector('[data-grouped-orders-root]');
         if(!target) return;
-        groupedOrdersView=mod.mountTourOrdersGroupedView({root:target,client,orders:state.orders,items:state.items,customers:state.customers,points:state.points,products:state.products,variants:state.variants,procurementAllocations:state.procurementAllocations,tourId,tourStops:state.tourStops,deferredDeliveries:state.deferredDeliveries,availableTours:state.availableTours,canManage:canManageOrders,onOpenOrder:async orderId=>{try{const sheet=await orderSheetPromise;await sheet.open(orderId)}catch(error){showError(error)}},onRefresh:()=>load()});
+        groupedOrdersView=mod.mountTourOrdersGroupedView({root:target,client,orders:state.orders,items:state.items,customers:state.customers,points:state.points,products:state.products,variants:state.variants,procurementAllocations:state.procurementAllocations,tourId,tourStops:state.tourStops,deferredDeliveries:state.deferredDeliveries,availableTours:state.availableTours,canManage:canManageOrders,onOpenOrder:async orderId=>{try{const sheet=await orderSheetPromise;await sheet.open(orderId)}catch(error){showError(error)}},onRefresh:()=>load(),onViberOrder:sendDeferredOrderViber});
       }).catch(showError);
     }
     shell.querySelectorAll('[data-delivery-viber-order]').forEach(button=>button.addEventListener('click',async()=>{
