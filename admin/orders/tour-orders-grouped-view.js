@@ -144,8 +144,13 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     return [...demand.values()].map(group => ({...group, shortage: Math.max(0, group.planned - group.confirmed)})).filter(group => group.shortage > 0.000001);
   }
 
+  function shortageCustomers() {
+    const buyers=new Map();
+    for(const line of items){const order=orderMap.get(String(line.porudzbina_id));if(!order||String(order.status||'').toLowerCase()==='otkazana')continue;const original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line);if(current+0.000001>=original)continue;const key=String(order.kupac_id??order.id);if(!buyers.has(key))buyers.set(key,{key,orders:new Map(),lines:[]});const group=buyers.get(key);group.orders.set(String(order.id),order);group.lines.push(line);}
+    return [...buyers.values()];
+  }
   function shortageTabsHtml() {
-    const count = shortageGroups().length;
+    const count = shortageCustomers().length;
     return '<nav class="nd-ops-delivery-tabs nd-go-shortage-tabs" aria-label="Приказ поруџбина и мањкова">' +
       '<button type="button" data-shortage-view="orders" aria-pressed="'+(activeOrdersView==='orders'?'true':'false')+'" class="'+(activeOrdersView==='orders'?'is-active':'')+'">Поруџбине</button>' +
       '<button type="button" data-shortage-view="shortages" aria-pressed="'+(activeOrdersView==='shortages'?'true':'false')+'" class="'+(activeOrdersView==='shortages'?'is-active':'')+'">Мањкови ('+count+')</button></nav>';
@@ -159,9 +164,12 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       '<b>Мањак за решавање: ' + fmt(group.shortage) + ' пак.</b>' +
       '<span>Потребно за испоруку: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></button>'
     ).join('');
+    const buyers=shortageCustomers();
+    const buyerCards=buyers.map(group=>{const first=group.lines[0],order=orderMap.get(String(first.porudzbina_id)),buyer=customerMap.get(String(order?.kupac_id))||{},name=buyer.ime_prezime||('Купац #'+(order?.kupac_id??'—'));const affected=group.lines.map(line=>{const presentation=linePresentation(line),original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),missing=Math.max(0,original-current),pair=String(line.product_id||'unknown')+'::'+String(line.variant_id||'unknown');return '<article class="nd-go-shortage-person"><strong>'+esc(presentation.name)+' · '+esc(presentation.packageText)+'</strong><span class="nd-go-shortage-deficit">'+(current===0?'Није преузето':'Умањено: '+fmt(missing)+' од '+fmt(original)+' пак.')+' · '+(current===0?'0 дин.':'преостало '+fmt(current)+' пак.')+'</span><button type="button" data-open-shortage-pair="'+esc(pair)+'">Измени расподелу</button></article>';}).join('');const phone=String(order?.telefon||buyer.telefon||'').replace(/[^0-9]/g,'');return '<section class="nd-go-shortage-buyer"><header><strong>'+esc(name)+'</strong><small>Поруџбина #'+[...group.orders.keys()].map(esc).join(', ')+'</small></header>'+affected+(phone?'<button type="button" data-shortage-viber-order="'+esc(order.id)+'">Viber · цела поруџбина</button>':'<button type="button" disabled>Нема броја за Viber</button>')+'</section>';}).join('');
     return '<section class="nd-go-shortage-banner nd-go-shortage-tab-content" aria-label="Мањкови">' +
       '<header class="nd-go-shortage-tab-heading"><strong>Мањкови</strong><span>'+(missing.length ? 'Преостало '+fmt(totalMissing)+' паковања у '+missing.length+' ставки.' : 'Нема преосталих мањкова.')+'</span></header>' +
-      (cards ? '<div class="nd-go-shortage-list">' + cards + '</div>' : '<div class="nd-go-empty-state">Све припремљене количине су покривене потврђеном набавком.</div>') +
+      '<h3>Производи са мањком</h3>'+(cards ? '<div class="nd-go-shortage-list">' + cards + '</div>' : '<div class="nd-go-empty-state">Нема производа са мањком набавке.</div>') +
+      '<h3>Купци са мањком ('+buyers.length+')</h3>'+(buyerCards||'<div class="nd-go-empty-state">Нема купаца са умањеним или отказаним ставкама.</div>')+
       '<small>Количине се освежавају према сачуваној припреми за испоруку и потврђеној набавци.</small></section>';
   }
   function shortageResolutionHtml() {
