@@ -6,7 +6,8 @@ export function mountDeferredDeliveriesView({root,tourId,deferredDeliveries=[],o
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt=v=>Number(v||0).toLocaleString('sr-RS',{maximumFractionDigits:3});
   const money=v=>Number.isFinite(v)?v.toLocaleString('sr-RS',{maximumFractionDigits:2})+' дин.':'Цена није евидентирана';
-  const stopMap=new Map(tourStops.map(x=>[String(x.punkt_id),x]));\n  const orderMap=new Map(orders.map(x=>[String(x.id),x])), buyerMap=new Map(customers.map(x=>[String(x.id),x])), pointMap=new Map(points.map(x=>[String(x.id),x])), productMap=new Map(products.map(x=>[String(x.id),x])), variantMap=new Map(variants.map(x=>[String(x.id),x])), tourMap=new Map(availableTours.map(x=>[String(x.id),x]));
+  const stopMap=new Map(tourStops.map(x=>[String(x.punkt_id),x]));
+  const orderMap=new Map(orders.map(x=>[String(x.id),x])), buyerMap=new Map(customers.map(x=>[String(x.id),x])), pointMap=new Map(points.map(x=>[String(x.id),x])), productMap=new Map(products.map(x=>[String(x.id),x])), variantMap=new Map(variants.map(x=>[String(x.id),x])), tourMap=new Map(availableTours.map(x=>[String(x.id),x]));
   const active=deferredDeliveries.filter(d=>String(d.izvorna_tura_id)===String(tourId)&&['nova','odlozeno'].includes(String(d.status)));
   const sourceLines=new Map(items.map(line=>[String(line.id),line]));
   const getProduct=d=>productMap.get(String(sourceLines.get(String(d.originalna_stavka_id))?.product_id))||{};
