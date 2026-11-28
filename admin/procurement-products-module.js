@@ -1,4 +1,4 @@
-/* ADMIN Nabavka · UX rekonstrukcija u postojećem modulu, sa postojećom Supabase šemom */
+/* ADMIN Nabavka · Version: 1.5.50 · UX модул мањкова и расподеле */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q=x=>Math.max(0,Number(x)||0),fmt=x=>q(x).toLocaleString('sr-RS',{maximumFractionDigits:2});
 export async function mountProcurementProductsModule({root,core,tourId,onBack,initialStage='all',initialProductId=null}){
