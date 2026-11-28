@@ -3005,28 +3005,34 @@ body.nd-workspace select:focus-visible{
 }
 
 
-/* ДОСТАВА — СТАВКА ПОРУЏБИНЕ: ПРОИЗВОД | НАРУЧЕНО | УКУПНА КОЛИЧИНА */
+/* ДОСТАВА — СТАВКА: НАЗИВ ЛЕВО | КОЛИЧИНА СРЕДИНА | УНОС И ПОТВРДА ДЕСНО */
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-main{
  display:grid!important;
- grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1fr)!important;
+ grid-template-columns:minmax(0,1fr) minmax(0,.9fr) minmax(0,1.25fr)!important;
  grid-template-rows:auto auto!important;
- align-items:stretch!important;
+ align-items:center!important;
  gap:6px 8px!important;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-product-info{
- grid-column:1!important;grid-row:1!important;display:flex!important;align-items:center!important;min-width:0;
+ grid-column:1!important;grid-row:1!important;display:flex!important;align-items:center!important;min-width:0;text-align:left!important;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-ordered,
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-package{
- grid-row:1!important;display:flex!important;align-items:center!important;justify-content:center!important;
- min-width:0;padding:6px 5px;border:1px solid #dce5dc;border-radius:7px;
- background:#f3f6f3;text-align:center!important;font-size:11px!important;font-weight:800!important;
+ grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;justify-content:center!important;
+ min-width:0;padding:5px 4px;border:1px solid #dce5dc;border-radius:7px;
+ background:#f3f6f3;text-align:center!important;font-size:10px!important;font-weight:800!important;
  line-height:1.2!important;white-space:normal!important;overflow-wrap:anywhere;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-ordered{grid-column:2!important}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-package{grid-column:3!important}
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-action{
- grid-column:1!important;grid-row:2!important;justify-content:flex-start!important;flex-wrap:wrap!important;
+ grid-column:3!important;grid-row:1!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;
+ flex-wrap:nowrap!important;gap:5px!important;min-width:0;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-qty-wrap{flex:0 0 auto!important;min-width:0!important}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-qty-wrap input{
+ width:48px!important;min-width:0!important;min-height:36px!important;height:36px!important;padding:2px!important;text-align:center!important;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-quick{
+ flex:0 0 auto!important;min-width:65px!important;min-height:38px!important;padding:5px 7px!important;white-space:nowrap!important;font-size:10px!important;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-unit-price{
  grid-column:2!important;grid-row:2!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;
@@ -3034,15 +3040,21 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-line-total{
  grid-column:3!important;grid-row:2!important;align-self:stretch!important;
 }
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-compare{
+ grid-column:1/-1!important;grid-row:3!important;
+}
 @media(max-width:767px){
  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-main{
-  grid-template-columns:minmax(0,1.15fr) minmax(0,.8fr) minmax(0,1fr)!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1.2fr)!important;
   grid-template-rows:auto auto!important;gap:5px 4px!important;
  }
  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-product-info{grid-column:1!important;grid-row:1!important}
- .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-ordered{grid-column:2!important;grid-row:1!important}
- .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-package{grid-column:3!important;grid-row:1!important}
- .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-action{grid-column:1!important;grid-row:2!important;gap:3px!important}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-ordered,
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-package{grid-column:2!important;grid-row:1!important}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-action{grid-column:3!important;grid-row:1!important;gap:3px!important}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-qty-wrap input{width:40px!important;font-size:11px!important}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-quick{min-width:56px!important;padding:5px 4px!important;font-size:9px!important}
  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-unit-price{grid-column:2!important;grid-row:2!important;font-size:9px!important}
  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-line-total{grid-column:3!important;grid-row:2!important}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact .nd-ops-delivery-compare{grid-column:1/-1!important}
 }
