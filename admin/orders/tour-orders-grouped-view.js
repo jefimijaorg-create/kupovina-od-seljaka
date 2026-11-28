@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.14
+ * Version: 1.3.15
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -38,6 +38,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   let expandedOrderId = null;
   let orderFilter = 'all';
   let selectedShortagePair = null;
+  let activeOrdersView = 'orders';
 
   const statusOptions = [
     ['nova','Нова — чека потврду'],
@@ -117,7 +118,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       '<footer class="nd-go-order-actions">' + (canManage ? '<button type="button" class="nd-go-action-primary" data-edit-order="' + esc(order.id) + '">Измени поруџбину</button><button type="button" class="nd-go-action-secondary" data-change-status="' + esc(order.id) + '">Промени статус</button><button type="button" class="nd-go-action-secondary" data-copy-order="' + esc(order.id) + '">Копирај</button><button type="button" class="nd-go-action-danger" data-delete-order="' + esc(order.id) + '">Обриши поруџбину</button>' : '') + '</footer>' + statusPanel + '</div>' : '') + '</article>';
   }
 
-  function shortageSummaryHtml() {
+  function shortageGroups() {
     const demand = new Map();
     for (const line of items) {
       const order = orderMap.get(String(line.porudzbina_id));
@@ -139,20 +140,29 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       group.confirmed += Math.max(0, Number(allocation.potvrdjeno_pakovanja) || 0);
       group.rejected += Math.max(0, Number(allocation.odbijeno_pakovanja) || 0);
     }
-    const missing = [...demand.values()].map(group => ({...group, shortage: Math.max(0, group.planned - group.confirmed)})).filter(group => group.shortage > 0.000001);
+    return [...demand.values()].map(group => ({...group, shortage: Math.max(0, group.planned - group.confirmed)})).filter(group => group.shortage > 0.000001);
+  }
+
+  function shortageTabsHtml() {
+    const count = shortageGroups().length;
+    return '<nav class="nd-ops-delivery-tabs nd-go-shortage-tabs" aria-label="Приказ поруџбина и мањкова">' +
+      '<button type="button" data-shortage-view="orders" aria-pressed="'+(activeOrdersView==='orders'?'true':'false')+'" class="'+(activeOrdersView==='orders'?'is-active':'')+'">Поруџбине</button>' +
+      '<button type="button" data-shortage-view="shortages" aria-pressed="'+(activeOrdersView==='shortages'?'true':'false')+'" class="'+(activeOrdersView==='shortages'?'is-active':'')+'">Мањкови ('+count+')</button></nav>';
+  }
+
+  function shortageSummaryHtml() {
+    const missing = shortageGroups();
     const totalMissing = missing.reduce((sum, group) => sum + group.shortage, 0);
     const cards = missing.map(group =>
       '<button type="button" class="nd-go-shortage-chip nd-go-shortage-card" data-open-shortage-pair="'+esc(group.key)+'"><strong>' + esc(group.productName) + ' · ' + esc(group.variantName) + '</strong>' +
       '<b>Мањак за решавање: ' + fmt(group.shortage) + ' пак.</b>' +
       '<span>Потребно за испоруку: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></button>'
     ).join('');
-    return '<section class="nd-go-shortage-banner" aria-label="Преглед мањка у набавци">' +
-      '<div><strong>Мањкови у набавци</strong><div>' +
-      (missing.length ? 'За решавање је остало <b>' + fmt(totalMissing) + ' пак.</b> у ' + missing.length + ' производа/амбалажа.' : 'Нема мањка за решавање — припремљене количине су покривене потврђеном набавком.') +
-      '</div></div>' + (cards ? '<div class="nd-go-shortage-list">' + cards + '</div>' : '') +
-      '<small>Мањак се освежава према сачуваној количини за испоруку и потврђеној набавци. Оригинална поруџбина остаје непромењена.</small></section>';
+    return '<section class="nd-go-shortage-banner nd-go-shortage-tab-content" aria-label="Мањкови">' +
+      '<header class="nd-go-shortage-tab-heading"><strong>Мањкови</strong><span>'+(missing.length ? 'Преостало '+fmt(totalMissing)+' паковања у '+missing.length+' ставки.' : 'Нема преосталих мањкова.')+'</span></header>' +
+      (cards ? '<div class="nd-go-shortage-list">' + cards + '</div>' : '<div class="nd-go-empty-state">Све припремљене количине су покривене потврђеном набавком.</div>') +
+      '<small>Количине се освежавају према сачуваној припреми за испоруку и потврђеној набавци.</small></section>';
   }
-
   function shortageResolutionHtml() {
     if (!selectedShortagePair) return '';
     const totals = new Map();
@@ -206,7 +216,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       const validPointId=/^\d+$/.test(String(key))&&group.point&&String(group.point.id)===String(key);return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div>'+(validPointId?'<label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'"></label>':'<span class="nd-gop-time-unavailable">Време — пункт није повезан</span>')+'</header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th colspan="2">Артикал / амбалажа</th><th>Количина</th><th colspan="2">Цена по пак. → износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="3">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td colspan="2" class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
     }).join('');
 const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
-    rootNode.innerHTML=shortageSummaryHtml()+orderContent+shortageResolutionHtml();
+    rootNode.innerHTML=shortageTabsHtml()+(activeOrdersView==='shortages'?shortageSummaryHtml():orderContent)+shortageResolutionHtml();
 
   }
 
@@ -330,6 +340,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     if(action){
       if(action.hasAttribute('data-viber-phone')){const phone=action.dataset.viberPhone;if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
       if(action.hasAttribute('data-close-shortage-modal')){selectedShortagePair=null;render();return;}
+      if(action.hasAttribute('data-shortage-view')){activeOrdersView=action.dataset.shortageView==='shortages'?'shortages':'orders';selectedShortagePair=null;render();return;}
       if(action.hasAttribute('data-open-shortage-pair')){selectedShortagePair=String(action.dataset.openShortagePair);render();return;}
       
       if(action.hasAttribute('data-shortage-step')){const input=rootNode.querySelector('[data-effective-count="'+CSS.escape(String(action.dataset.shortageLine))+'"]'),line=items.find(row=>String(row.id)===String(action.dataset.shortageLine));if(input&&line){const max=Math.max(0,Number(line.package_count)||0),next=Math.max(0,Math.min(max,Math.round(Number(input.value||0)+Number(action.dataset.shortageStep))));input.value=String(next);}return;}
