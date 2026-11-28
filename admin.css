@@ -2749,160 +2749,222 @@ body.nd-workspace select:focus-visible{
   .nd-tour-ops .nd-vehicle-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
-/* ДОСТАВА — ТРОКОЛОНСКИ ПРИКАЗ, КОМПАКТНА КОЛИЧИНА И ДУГМЕ ПОТВРДЕ ДЕСНО · v5.4.10
-   Колона 1: производ | Колона 2: наручено, амбалажа, цена | Колона 3: количина за преузимање, потврда, износ.
-   Структура колона је у JS модулу; овде је само јединствен стил тог приказа. */
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item[data-delivery-item-card]{
-  display:block;
-  min-width:0;
-  padding:8px 10px;
-  border:1px solid #DCE4DC;
-  border-radius:9px;
-  background:#FFFFFF;
+/* ДОСТАВА — СТАВКА У ТРИ ЗОНЕ (ДОСЛОВНО ПО РЕФЕРЕНТНОМ ПРОТОТИПУ) */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item[data-delivery-item-card] {
+  display: block;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid #d5e0d5;
+  border-radius: 9px;
+  background: #fafcfb;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr);
-  align-items:stretch;
-  gap:8px 12px;
-  min-width:0;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item-head {
+  display: none;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-column{
-  display:flex;
-  min-width:0;
-  flex-direction:column;
-  justify-content:center;
-  gap:5px;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr) minmax(0, 0.65fr) minmax(0, 0.75fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 5px 7px;
+  min-width: 0;
+  margin: 0;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-column-product{
-  padding-right:8px;
-  border-right:1px solid #E5ECE5;
+
+/* 1. ЛЕВО: НАЗИВ ПРОИЗВОДА */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-info {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-info{min-width:0}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{
-  display:block;
-  color:#344238;
-  font-size:15px;
-  font-weight:900;
-  line-height:1.25;
-  overflow-wrap:anywhere;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name {
+  display: block;
+  margin: 0;
+  color: #1f2a22;
+  font-size: 13.5px;
+  font-weight: 850;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered{
-  color:#344238;
-  font-size:12px;
-  font-weight:850;
-  line-height:1.25;
-  font-variant-numeric:tabular-nums;
-  overflow-wrap:anywhere;
+
+/* 2. СРЕДИНА: НАРУЧЕНО И АМБАЛАЖА (САМО ТО, БЕЗ ЦЕНЕ) */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered,
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package {
+  grid-column: 2;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid #dce5dc;
+  border-radius: 6px;
+  background: #f1f5f1;
+  color: #344238;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package,
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{
-  color:#68766C;
-  font-size:10.5px;
-  font-weight:750;
-  line-height:1.25;
-  overflow-wrap:anywhere;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered {
+  grid-row: 1;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  flex-wrap:nowrap;
-  gap:6px;
-  width:100%;
-  min-width:0;
-  margin:0;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package {
+  grid-row: 2;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action>*{
-  flex:0 0 auto;
-  min-width:0;
+
+/* 3. ДЕСНО ГОРЕ: УНОС КОЛИЧИНЕ + ПОТВРДИ У ИСТОМ РЕДУ */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action {
+  grid-column: 3 / 5;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action .nd-ops-delivery-quick{
-  width:auto;
-  max-width:none;
-  margin:0;
-  white-space:nowrap;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0;
+  min-width: 0;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap{
-  display:flex;
-  flex:0 0 auto;
-  align-items:center;
-  gap:4px;
-  width:auto;
-  min-width:0;
-  margin:0;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input {
+  width: 50px;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  padding: 2px;
+  border: 1px solid #b9cbb9;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2a22;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{
-  box-sizing:border-box;width:52px;max-width:52px;min-width:48px;height:36px;min-height:36px;padding:0 2px;
-  border:1px solid #B9CBB9;border-radius:7px;background:#FFFFFF;color:#1B281E;font-size:15px;font-weight:900;
-  text-align:center;font-variant-numeric:tabular-nums;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap small {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #556559;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap small{
-  flex:0 0 auto;
-  color:#68766C;
-  font-size:10px;
-  font-weight:800;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: #285b3c;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{
-  flex:0 0 auto;width:auto;min-width:68px;height:36px;min-height:36px;padding:0 9px;
-  border:1px solid #285B3C;border-radius:7px;background:#285B3C;color:#FFFFFF;
-  font-size:11px;font-weight:850;line-height:1.15;white-space:nowrap;cursor:pointer;
+
+/* 4. ДЕСНО ДОЛЕ: ЦЕНА ПО ПАКОВАЊУ И ЗЕЛЕНИ ИЗНОС СТАВКЕ */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price {
+  grid-column: 3;
+  grid-row: 2;
+  min-width: 0;
+  color: #4a594e;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: right;
+  white-space: nowrap;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-price-row{
-  display:flex;align-items:center;justify-content:flex-end;gap:7px;min-width:0;width:100%;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total {
+  grid-column: 4;
+  grid-row: 2;
+  justify-self: end;
+  min-width: 0;
+  padding: 3px 7px;
+  border: 1px solid #c9dec9;
+  border-radius: 6px;
+  background: #edf5ed;
+  color: #285b3c;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{
-  flex:0 0 auto;max-width:100%;margin:0;padding:3px 7px;border:1px solid #C6DCCB;border-radius:6px;
-  background:#EDF5EF;color:#1D442C;font-size:13.5px;font-weight:900;line-height:1.2;
-  text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total strong {
+  display: inline;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total strong{display:inline;overflow-wrap:normal;}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total.is-muted{border-color:#E3E8E3;background:#F4F6F4;color:#69776C;}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{font-size:10px;font-weight:800;color:#48584C;line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums;}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:4px 8px;
-  margin-top:7px;
-  padding-top:7px;
-  border-top:1px solid #E8EEE8;
-  color:#526357;
-  font-size:10.5px;
-  line-height:1.25;
+
+/* ПОРЕЂЕЊЕ ИСПОД ГЛАВНОГ РЕДА */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare {
+  margin-top: 5px;
+  padding-top: 4px;
+  border-top: 1px dashed #e2eae2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 10px;
+  color: #4a594e;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare span{
-  min-width:0;
-  overflow-wrap:anywhere;
+
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-farms {
+  margin-top: 4px;
+  color: #68766c;
+  font-size: 9.5px;
+  line-height: 1.2;
 }
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-deficit{
-  grid-column:1/-1;
-}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-farms{
-  margin-top:4px;
-  color:#68766C;
-  font-size:10px;
-  line-height:1.25;
-}
-@media(min-width:768px) and (max-width:1024px){
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{grid-template-columns:minmax(0,.9fr) minmax(0,1fr) minmax(0,1.15fr);gap:7px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{font-size:13px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{flex-wrap:nowrap;justify-content:flex-end;gap:5px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{padding:7px 5px;font-size:10px}
-}
-@media(max-width:767px){
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item[data-delivery-item-card]{padding:6px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{grid-template-columns:minmax(0,1.05fr) minmax(0,.92fr) minmax(0,1.38fr);gap:4px 5px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-column-product{padding-right:4px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{font-size:11px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered{font-size:10px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package,
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{font-size:9px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{flex-wrap:nowrap;justify-content:flex-end;gap:4px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{width:42px;max-width:42px;min-width:42px;height:34px;min-height:34px;font-size:15px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{min-width:56px;height:34px;min-height:34px;padding:0 6px;font-size:10px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{font-size:12.5px;padding:2px 5px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{font-size:9.5px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;font-size:9px}
+
+@media (max-width: 767px) {
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item[data-delivery-item-card] {
+    padding: 6px 7px;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.6fr) minmax(0, 0.75fr);
+    gap: 4px 5px;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name {
+    font-size: 12px;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered,
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package {
+    padding: 2px 4px;
+    font-size: 9.5px;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input {
+    width: 44px;
+    height: 34px;
+    min-height: 34px;
+    font-size: 15px;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap small {
+    display: none;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick {
+    height: 34px;
+    min-height: 34px;
+    padding: 0 7px;
+    font-size: 10px;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price {
+    font-size: 9.5px;
+  }
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total {
+    padding: 3px 5px;
+    font-size: 13px;
+  }
 }
 
 
