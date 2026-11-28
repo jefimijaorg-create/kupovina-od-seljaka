@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.58
+ * Version: 1.5.59
  * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
@@ -682,11 +682,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       } catch (error) { statusBusy = false; showError(error); }
     });
     if(activeTab==='orders'){
-      import('./orders/tour-orders-grouped-view.js?v=1.3.22').then(mod=>{
+      import('./orders/tour-orders-grouped-view.js?v=1.3.23').then(mod=>{
         if(disposed || activeTab!=='orders') return;
         const target=shell.querySelector('[data-grouped-orders-root]');
         if(!target) return;
-        groupedOrdersView=mod.mountTourOrdersGroupedView({root:target,client,orders:state.orders,items:state.items,customers:state.customers,points:state.points,products:state.products,variants:state.variants,procurementAllocations:state.procurementAllocations,tourId,tourStops:state.tourStops,canManage:canManageOrders,onOpenOrder:async orderId=>{try{const sheet=await orderSheetPromise;await sheet.open(orderId)}catch(error){showError(error)}},onRefresh:()=>load()});
+        groupedOrdersView=mod.mountTourOrdersGroupedView({root:target,client,orders:state.orders,items:state.items,customers:state.customers,points:state.points,products:state.products,variants:state.variants,procurementAllocations:state.procurementAllocations,tourId,tourStops:state.tourStops,deferredDeliveries:state.deferredDeliveries,availableTours:state.availableTours,canManage:canManageOrders,onOpenOrder:async orderId=>{try{const sheet=await orderSheetPromise;await sheet.open(orderId)}catch(error){showError(error)}},onRefresh:()=>load()});
       }).catch(showError);
     }
     shell.querySelectorAll('[data-delivery-viber-order]').forEach(button=>button.addEventListener('click',async()=>{
