@@ -782,15 +782,23 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           if(feedback)feedback.textContent='Чувам предату количину и проверавам одговор базе…';
           const baseQuantity=Number((packages*line.packageSize).toFixed(6));
           const issueStatus=packages+0.000001>=line.effectivePackages?'izdato':'delimicno_izdato';
-          const result=await client.from('stavke_porudzbine').update({
-            isporucena_kolicina:baseQuantity,stavka_cekirana:true,status_izdavanja:issueStatus
-          }).eq('id',line.item.id).eq('tura_id',tourId)
-            .select('id,isporucena_kolicina,stavka_cekirana,status_izdavanja').maybeSingle();
-          if(result.error)throw result.error;
-          if(!result.data||result.data.stavka_cekirana!==true||result.data.status_izdavanja!==issueStatus||
-            Math.abs(Number(result.data.isporucena_kolicina)-baseQuantity)>0.000001)
-            throw new Error('База није потврдила количину за ставку #'+line.item.id+'.');
-          Object.assign(line.item,result.data);
+          if(line.item.deferred_record_id){
+            if(Math.abs(packages-line.effectivePackages)>0.000001)throw new Error('Пренета ставка се потврђује у целој одложеној количини. Унеси '+packageCountLabel(line.effectivePackages)+'.');
+            const result=await client.from('odlozene_isporuke').update({status:'isporuceno'}).eq('id',line.item.deferred_record_id).eq('status','odlozeno').select('id,status').maybeSingle();
+            if(result.error)throw result.error;
+            if(!result.data||String(result.data.id)!==String(line.item.deferred_record_id)||result.data.status!=='isporuceno')throw new Error('База није потврдила испоруку пренете ставке.');
+            Object.assign(line.item,{isporucena_kolicina:baseQuantity,stavka_cekirana:true,status_izdavanja:'izdato'});
+          }else{
+            const result=await client.from('stavke_porudzbine').update({
+              isporucena_kolicina:baseQuantity,stavka_cekirana:true,status_izdavanja:issueStatus
+            }).eq('id',line.item.id).eq('tura_id',tourId)
+              .select('id,isporucena_kolicina,stavka_cekirana,status_izdavanja').maybeSingle();
+            if(result.error)throw result.error;
+            if(!result.data||result.data.stavka_cekirana!==true||result.data.status_izdavanja!==issueStatus||
+              Math.abs(Number(result.data.isporucena_kolicina)-baseQuantity)>0.000001)
+              throw new Error('База није потврдила количину за ставку #'+line.item.id+'.');
+            Object.assign(line.item,result.data);
+          }
           const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(line.order.id));
           if(orderItems.length&&orderItems.every(item=>item.stavka_cekirana===true)){
             const savedOrder=await client.from('porudzbine').update({
