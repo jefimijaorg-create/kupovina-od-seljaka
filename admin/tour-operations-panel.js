@@ -360,11 +360,6 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         let packages=0,invalid=false;
         if(item.stavka_cekirana===true&&hasNumber(item.isporucena_kolicina)&&Number(item.isporucena_kolicina)>0){
           if(Number.isFinite(size)&&size>0)packages=Number(item.isporucena_kolicina)/size;else invalid=true;
-        }else if(order?.dostava_obradjena!==true){
-          const pickup=(pickupByItem.get(String(item.id))||[]).reduce((sum,row)=>sum+row.quantity,0);
-          const ordered=Math.max(0,Number(item.package_count)||0),requested=Number.isFinite(Number(item.kolicina_za_isporuku))&&item.kolicina_za_isporuku!==null&&item.kolicina_za_isporuku!==''&&Number.isFinite(size)&&size>0?Math.max(0,Number(item.kolicina_za_isporuku)/size):ordered;
-          packages=Math.min(ordered,pickup,requested);
-          if(invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||pickup>ordered+0.000001)invalid=true;
         }
         if(invalid){chargeKnown=false;continue}
         if(packages>0){if(!Number.isFinite(size)||size<=0)chargeKnown=false;else {const price=salePricePerPackage(item);if(price===null)chargeKnown=false;else chargeTotal+=packages*price}}
