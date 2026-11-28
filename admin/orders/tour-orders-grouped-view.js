@@ -1,11 +1,11 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.22
+ * Version: 1.3.23
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
-export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, variants=[], procurementAllocations=[], tourStops=[], canManage, onOpenOrder, onRefresh }) {
+export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, variants=[], procurementAllocations=[], tourStops=[], deferredDeliveries=[], availableTours=[], canManage, onOpenOrder, onRefresh }) {
   if (!root || !client?.from || !Array.isArray(orders) || !Array.isArray(items)) {
     throw new TypeError('Недостају подаци или потврђени ADMIN Supabase клијент.');
   }
@@ -39,6 +39,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   let orderFilter = 'all';
   let selectedShortagePair = null;
   let activeOrdersView = 'orders';
+  let deferredView = null;
   let shortageSavedLineId = null;
 
   const statusOptions = [
@@ -153,7 +154,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const count = shortageCustomers().length;
     return '<nav class="nd-ops-delivery-tabs nd-go-shortage-tabs" aria-label="Приказ поруџбина и мањкова">' +
       '<button type="button" data-shortage-view="orders" aria-pressed="'+(activeOrdersView==='orders'?'true':'false')+'" class="'+(activeOrdersView==='orders'?'is-active':'')+'">Поруџбине</button>' +
-      '<button type="button" data-shortage-view="shortages" aria-pressed="'+(activeOrdersView==='shortages'?'true':'false')+'" class="'+(activeOrdersView==='shortages'?'is-active':'')+'">Мањкови ('+count+')</button></nav>';
+      '<button type="button" data-shortage-view="shortages" aria-pressed="'+(activeOrdersView==='shortages'?'true':'false')+'" class="'+(activeOrdersView==='shortages'?'is-active':'')+'">Мањкови ('+count+')</button>' + '</nav>';
   }
 
   function shortageSummaryHtml() {
@@ -232,9 +233,14 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       }).join('');
       const validPointId=/^\d+$/.test(String(key))&&group.point&&String(group.point.id)===String(key);return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div>'+(validPointId?'<label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'"></label>':'<span class="nd-gop-time-unavailable">Време — пункт није повезан</span>')+'</header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th colspan="2">Артикал / амбалажа</th><th>Количина</th><th colspan="2">Цена по пак. → износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="3">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td colspan="2" class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
     }).join('');
-const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
+const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button><button type="button" data-order-filter="deferred" class="'+(orderFilter==='deferred'?'is-active':'')+'">Пребачено ('+(deferredDeliveries||[]).filter(row=>String(row.izvorna_tura_id)===String(tourId)&&['nova','odlozeno'].includes(String(row.status))).length+')</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
     const toolbarIndex=orderContent.indexOf('<div class="nd-go-list-toolbar">'),orderHeading=toolbarIndex>=0?orderContent.slice(0,toolbarIndex):'',orderBody=toolbarIndex>=0?orderContent.slice(toolbarIndex):orderContent;
-    rootNode.innerHTML=orderHeading+shortageTabsHtml()+(activeOrdersView==='shortages'?shortageSummaryHtml():orderBody)+shortageResolutionHtml();
+    rootNode.innerHTML=orderHeading+shortageTabsHtml()+(activeOrdersView==='shortages'?shortageSummaryHtml():activeOrdersView==='deferred'?'<div data-deferred-deliveries-root></div>':orderBody)+shortageResolutionHtml();
+    if(activeOrdersView==='deferred'){
+      if(deferredView){deferredView.destroy();deferredView=null;}
+      const target=rootNode.querySelector('[data-deferred-deliveries-root]');
+      import('./deferred-deliveries-view.js?v=1.0.0').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
+    }
 
   }
 
@@ -363,7 +369,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     if(action){
       if(action.hasAttribute('data-viber-phone')){const phone=action.dataset.viberPhone;if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
       if(action.hasAttribute('data-close-shortage-modal')){selectedShortagePair=null;render();return;}
-      if(action.hasAttribute('data-shortage-view')){activeOrdersView=action.dataset.shortageView==='shortages'?'shortages':'orders';selectedShortagePair=null;render();return;}
+      if(action.hasAttribute('data-shortage-view')){activeOrdersView=['shortages','deferred'].includes(action.dataset.shortageView)?action.dataset.shortageView:'orders';selectedShortagePair=null;render();return;}
       if(action.hasAttribute('data-open-shortage-pair')){selectedShortagePair=String(action.dataset.openShortagePair);render();return;}
       
       if(action.hasAttribute('data-shortage-step')){const input=rootNode.querySelector('[data-effective-count="'+CSS.escape(String(action.dataset.shortageLine))+'"]'),line=items.find(row=>String(row.id)===String(action.dataset.shortageLine));if(input&&line){const max=Math.max(0,Number(line.package_count)||0),next=Math.max(0,Math.min(max,Math.round(Number(input.value||0)+Number(action.dataset.shortageStep))));input.value=String(next);}return;}
@@ -383,7 +389,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
       if(action.hasAttribute('data-shortage-viber')){const line=items.find(row=>String(row.id)===String(action.dataset.shortageViber)),order=line&&orderMap.get(String(line.porudzbina_id)),buyer=customerMap.get(String(order?.kupac_id))||{},product=productMap.get(String(line?.product_id))||{},rawPhone=String(order?.telefon||buyer.telefon||'').trim(),digits=rawPhone.replace(/[^0-9]/g,''),phone=digits?(digits.startsWith('00')?digits.slice(2):digits.startsWith('0')?'381'+digits.slice(1):digits.startsWith('381')?digits:'381'+digits):'';if(!line||!order||!phone){feedback='За Viber поруку недостаје ставка, купац или телефон.';feedbackError=true;render();return;}const original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),size=packageSize(line),unit=String(line.package_unit||variantMap.get(String(line.variant_id))?.package_unit||variantMap.get(String(line.variant_id))?.unit||'паковања'),orderedText=fmt(original*size)+' '+unit,deliveryText=fmt(current*size)+' '+unit,name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—')),productName=product.name||'производ';const message=current===0?'Поштовани '+name+', нажалост за ову туру немамо на стању производ: '+productName+' ('+orderedText+'). Остатак Ваше поруџбине стиже по договору. Хвала на разумевању — Наручи домаће.':current<original?'Поштовани '+name+', за ову туру можемо да испоручимо смањену количину за производ: '+productName+' — уместо '+orderedText+', шаљемо '+deliveryText+'. Хвала на разумевању — Наручи домаће.':'Поштовани '+name+', количина производа '+productName+' за ову туру је '+deliveryText+'. Хвала на разумевању — Наручи домаће.';try{await navigator.clipboard.writeText(message);}catch(_){window.prompt('Копирај Viber поруку пре отварања разговора:',message);}window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
       if(action.hasAttribute('data-open-order')){if(typeof onOpenOrder==='function')await onOpenOrder(action.dataset.openOrder);return;}
       if(action.hasAttribute('data-toggle-order')){const id=String(action.dataset.toggleOrder);expandedOrderId=expandedOrderId===id?null:id;editingLineId=null;editingOrderId=null;statusOrderId=null;render();return;}
-      if(action.hasAttribute('data-order-filter')){orderFilter=action.dataset.orderFilter;expandedOrderId=null;render();return;}
+      if(action.hasAttribute('data-order-filter')){orderFilter=action.dataset.orderFilter;activeOrdersView=orderFilter==='deferred'?'deferred':'orders';expandedOrderId=null;render();return;}
       if(action.hasAttribute('data-save-effective')){const lineId=String(action.dataset.saveEffective),row=action.closest('[data-shortage-person]'),input=row?.querySelector('[data-effective-count="'+CSS.escape(lineId)+'"]');await saveEffective(lineId,input||null);return;}
       const id=action.dataset.editOrder||action.dataset.saveOrder||action.dataset.changeStatus||action.dataset.saveStatus||action.dataset.editLine||action.dataset.saveLine||action.dataset.copyOrder;
       if(action.hasAttribute('data-edit-order')){editingOrderId=String(action.dataset.editOrder);expandedOrderId=String(action.dataset.editOrder);render();return;}
