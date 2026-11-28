@@ -379,6 +379,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         const orderHtml=orders.map(order=>{
           const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(order.id));
           const rows=orderItems.map(item=>{
+            if(requestedPackagesFor(item)<=0&&Math.max(0,Number(item.isporucena_kolicina)||0)<=0)return '';
             totalLines++;
             const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
             const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
@@ -412,7 +413,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue&&!unavailable&&!checked;
             const deliveryUnitPrice=salePricePerPackage(item);
             const deliveryLineAmount=deliveryUnitPrice!==null&&Number.isFinite(Number(inputValue))?Number(inputValue)*deliveryUnitPrice:null;
-            descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue,isUnavailable:unavailable});
+            descriptors.push({order,item,availablePackages:available,effectivePackages:requestedPackages,packageSize:size,hasDataIssue:dataIssue,isUnavailable:unavailable});
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
             const comparisonHtml=(deficitPackages>0||unavailable||dataIssue)?'<div class="nd-ops-delivery-compare"><span><b>Наручено:</b> '+packageCountLabel(ordered)+' ('+packageAmountLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span><span><b>Преузето:</b> '+packageCountLabel(picked)+' ('+packageAmountLabel(picked,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span>'+(deficitPackages>0?'<strong class="nd-ops-delivery-deficit">Недостаје: '+packageCountLabel(deficitPackages)+' ('+packageAmountLabel(deficitPackages,size,item.package_unit||variant?.package_unit||variant?.unit)+') · не предаје се</strong>':'')+((unavailable||dataIssue)?'<strong class="nd-ops-delivery-deficit">'+(unavailable?'Нема за купца · упитно · не предаје се':'Провери податке · не предаје се')+'</strong>':'')+'</div>':'';
             return '<div class="nd-ops-delivery-item nd-ops-delivery-compact'+(unavailable?' is-unavailable':deliveryDeficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head">'+itemStatusHtml+'</div>'+
@@ -726,12 +727,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           deliveryBusy=true;button.disabled=true;button.textContent='ЧУВАМ ПОТВРДУ…';
           if(feedback)feedback.textContent='Чувам предату количину и проверавам одговор базе…';
           const baseQuantity=Number((packages*line.packageSize).toFixed(6));
+          const issueStatus=packages+0.000001>=line.effectivePackages?'izdato':'delimicno_izdato';
           const result=await client.from('stavke_porudzbine').update({
-            isporucena_kolicina:baseQuantity,stavka_cekirana:true
+            isporucena_kolicina:baseQuantity,stavka_cekirana:true,status_izdavanja:issueStatus
           }).eq('id',line.item.id).eq('tura_id',tourId)
-            .select('id,isporucena_kolicina,stavka_cekirana').maybeSingle();
+            .select('id,isporucena_kolicina,stavka_cekirana,status_izdavanja').maybeSingle();
           if(result.error)throw result.error;
-          if(!result.data||result.data.stavka_cekirana!==true||
+          if(!result.data||result.data.stavka_cekirana!==true||result.data.status_izdavanja!==issueStatus||
             Math.abs(Number(result.data.isporucena_kolicina)-baseQuantity)>0.000001)
             throw new Error('База није потврдила количину за ставку #'+line.item.id+'.');
           Object.assign(line.item,result.data);
