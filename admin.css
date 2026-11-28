@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.4.0
-   Верзија: 5.4.0
+ * Version: 5.4.1
+   Верзија: 5.4.1
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.4.0";
+  --nd-css-version:"5.4.1";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2748,43 +2748,6 @@ body.nd-workspace select:focus-visible{
   .nd-tour-ops .nd-vehicle-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
   .nd-tour-ops .nd-vehicle-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media(max-width:767px){
-}
-@media(max-width:370px){
-}
-@media(max-width:767px){
-}
-@media(max-width:390px){
-}
-
-/* Телефонски портрет — исти смисаони распоред, без хоризонталног скроловања */
-@media (max-width: 767px) {
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact
-  .nd-ops-delivery-main {
-    grid-template-columns: minmax(0, 1fr) minmax(0, .85fr) minmax(0, 1.2fr);
-    gap: 4px;
-  }
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact
-  .nd-ops-delivery-product-name {
-    font-size: 11px;
-  }
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact
-  .nd-ops-delivery-qty-wrap input {
-    width: 38px;
-    font-size: 11px;
-  }
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact
-  .nd-ops-delivery-quick {
-    min-width: 54px;
-    padding: 5px 3px;
-    font-size: 9px;
-  }
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compact
-  .nd-ops-delivery-line-total {
-    padding: 3px;
-  }
-}
-
 /* ДОСТАВА — ЈЕДИНСТВЕНИ GRID СТАВКЕ (ЈЕДИНО МЕСТО ЗА LAYOUT) */
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{
   display:grid;
