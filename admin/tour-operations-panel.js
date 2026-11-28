@@ -385,16 +385,19 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const itemStatusHtml=status?'<span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span>':'';
             const pairPickupTotal=pickupPool.get(productPair(item))?.total||0;const farmLines=partialShortage?'<small>Физички преузето: '+packageCountLabel(pairPickupTotal)+' · наручено: '+packageCountLabel(demandPool.get(productPair(item))||0)+' · није аутоматски додељено купцима.</small>':picked>0?'<small>Преузето од газдинстава — аутоматски збир производа и варијанте: '+packageCountLabel(picked)+'</small>':'<small>Нема евидентираног преузимања овог производа.</small>';
             const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue&&!unavailable&&!checked;
+            const deliveryUnitPrice=salePricePerPackage(item);
+            const deliveryLineAmount=deliveryUnitPrice!==null&&Number.isFinite(Number(inputValue))?Number(inputValue)*deliveryUnitPrice:null;
             descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue,isUnavailable:unavailable});
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
             const comparisonHtml='<div class="nd-ops-delivery-compare"><span><b>Наручено:</b> '+packageCountLabel(ordered)+' ('+packageAmountLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span><span><b>Преузето од газдинства:</b> '+packageCountLabel(picked)+' ('+packageAmountLabel(picked,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span>'+(deficitPackages>0?'<strong class="nd-ops-delivery-deficit">НЕДОСТАЈЕ КУПЦУ: '+packageCountLabel(deficitPackages)+' ('+packageAmountLabel(deficitPackages,size,item.package_unit||variant?.package_unit||variant?.unit)+') · НЕ ПРЕДАЈЕ СЕ</strong>':'<strong class="nd-ops-delivery-picked">Количина покривена преузимањем</strong>')+(unavailable?'<strong class="nd-ops-delivery-deficit">НЕМА ЗА КУПЦА · УПИТНО · НЕ ПРЕДАЈЕ СЕ</strong>':'')+'</div>';
             return '<div class="nd-ops-delivery-item'+(unavailable?' is-unavailable':deliveryDeficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head"><strong>'+
               esc(product?.name||'Производ није доступан')+'</strong>'+itemStatusHtml+'<small>Ставка #'+esc(item.id)+' · Поруџбина #'+esc(item.porudzbina_id)+'</small></div>'+
-              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong><span class="nd-ops-delivery-package">'+packageMeasureLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+'</span>'+comparisonHtml+'<span class="nd-ops-delivery-unit-price">'+(unavailable?'Цена се не обрачунава':money(salePricePerPackage(item))+' / пак.')+'</span>'+(deliveryDeficitPackages>0?'<span class="nd-ops-delivery-deficit">'+(checked?'Предато мање · ':'Недостаје ')+packageCountLabel(deliveryDeficitPackages)+' пак. ('+packageAmountLabel(deliveryDeficitPackages,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span>':'')+'</div>'+
+              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong><span class="nd-ops-delivery-package">'+packageMeasureLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+'</span></div>'+
               '<div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>КОМАДА</small></label>'+
-              '<button type="button" class="nd-ops-delivery-quick'+(checked?' is-complete':'')+'" data-confirm-delivery="'+esc(item.id)+'" '+(editable?'':'disabled')+'>'+(checked?'✓ Готово':'Потврди')+'</button></div></div>'+
-              '<div class="nd-ops-delivery-price-row">'+(unavailable?'НЕ ОБРАЧУНАВА СЕ — СТАВКА УПИТНА':(salePricePerPackage(item)!==null?'Цена по паковању: ':'Цена није доступна: ')+money(salePricePerPackage(item)))+'</div>'+
+              '<button type="button" class="nd-ops-delivery-quick'+(checked?' is-complete':'')+'" data-confirm-delivery="'+esc(item.id)+'" '+(editable?'':'disabled')+'>'+(checked?'✓ Готово':'Потврди')+'</button></div>'+
+              '<div class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice)+' / пак.')+'</div>'+
+              '<div class="nd-ops-delivery-line-total"><small>ИЗНОС СТАВКЕ</small><strong data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div></div>'+comparisonHtml+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div></div>';
           }).join('');
           const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
@@ -481,6 +484,10 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           for(const line of group.lines){
             if(line.isUnavailable)continue;
             const input=card.querySelector('[data-delivery-qty="'+line.item.id+'"]');
+            const lineAmountNode=card.querySelector('[data-delivery-line-amount="'+line.item.id+'"]');
+            const linePrice=salePricePerPackage(line.item);
+            const linePackages=input&&Number.isFinite(Number(input.value))?Number(input.value):line.availablePackages;
+            if(lineAmountNode)lineAmountNode.textContent=line.isUnavailable||linePrice===null||!Number.isFinite(linePackages)||linePackages<0?'—':money(linePackages*linePrice);
             const size=Number(line.item.package_size),packages=line.item.stavka_cekirana===true?
               (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1):input?Number(input.value):line.availablePackages;
             if(line.hasDataIssue||!Number.isFinite(packages)||packages<0){if(line.hasDataIssue)customerKnown=false;continue}
