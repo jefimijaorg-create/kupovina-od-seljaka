@@ -2885,3 +2885,9 @@ body.nd-workspace select:focus-visible{
  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{width:52px}
  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{padding:4px}
 }
+
+
+/* ДОСТАВА — ЈАСАН ИЗНОС СТАВКЕ, БЕЗ СУДАРА ОЗНАКЕ И ВРЕДНОСТИ */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:auto;align-content:center;justify-items:end;gap:3px;white-space:normal;}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total small{display:block;width:100%;text-align:right;white-space:normal;}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total strong{display:block;width:100%;text-align:right;white-space:nowrap;}

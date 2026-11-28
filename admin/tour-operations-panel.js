@@ -5,6 +5,7 @@
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const productPairKey = (row) => String(row.product_id ?? '') + '::' + String(row.variant_id ?? '');
 const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined))];
 const fmtDate = (value) => value ? new Date(value + 'T12:00:00').toLocaleDateString('sr-RS') : 'Datum nije naveden';
 const fmtQty = (count, size, unit) => {
@@ -690,9 +691,9 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           if(line.hasDataIssue)throw new Error('Постоји неусаглашеност у расподели. Ставка није потврђена.');
           if(!Number.isFinite(packages)||packages<0||packages>line.availablePackages+0.000001)
             throw new Error('Унеси количину до наручене количине.');
-          const pair=productPair(line.item),poolLimit=pickupPool.get(pair)?.total||0;
-          const packageSize=Number(line.item.package_size)||Number(variantMap.get(line.item.variant_id)?.package_value)||1;
-          const alreadyDelivered=state.items.filter(row=>productPair(row)===pair).reduce((sum,row)=>sum+(Number(row.isporucena_kolicina)||0)/(Number(row.package_size)||Number(variantMap.get(row.variant_id)?.package_value)||1),0);
+          const pair=productPairKey(line.item),poolLimit=state.procurementAllocations.filter(row=>productPairKey(row)===pair).reduce((sum,row)=>sum+Math.max(0,Number(row.preuzeto_pakovanja)||0),0);
+          const packageSize=Number(line.item.package_size)||Number(state.variants.find(v=>String(v.id)===String(line.item.variant_id))?.package_value)||1;
+          const alreadyDelivered=state.items.filter(row=>productPairKey(row)===pair).reduce((sum,row)=>sum+(Number(row.isporucena_kolicina)||0)/(Number(row.package_size)||Number(state.variants.find(v=>String(v.id)===String(row.variant_id))?.package_value)||1),0);
           const currentDelivered=(Number(line.item.isporucena_kolicina)||0)/packageSize;
           if(alreadyDelivered-currentDelivered+packages>poolLimit+0.000001)
             throw new Error('Недовољно преузете робе. Физички је преузето '+packageCountLabel(poolLimit)+'. Изабери мању количину или другог купца.');
