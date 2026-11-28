@@ -144,13 +144,13 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const cards = missing.map(group =>
       '<div class="nd-go-shortage-chip"><strong>' + esc(group.productName) + ' · ' + esc(group.variantName) + '</strong>' +
       '<b>Мањак за решавање: ' + fmt(group.shortage) + ' пак.</b>' +
-      '<span>За доставу: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></div>'
+      '<span>Наручено: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></div>'
     ).join('');
     return '<section class="nd-go-shortage-banner" aria-label="Преглед мањка у набавци">' +
       '<div><strong>Мањкови у набавци</strong><div>' +
       (missing.length ? 'За решавање је остало <b>' + fmt(totalMissing) + ' пак.</b> у ' + missing.length + ' производа/амбалажа.' : 'Нема мањка за решавање — припремљене количине су покривене потврђеном набавком.') +
       '</div></div>' + (cards ? '<div class="nd-go-shortage-list">' + cards + '</div>' : '') +
-      '<small>Мањак се рачуна из количине припремљене за доставу и потврђене набавке. Када количину купца смањиш или поставиш на 0, приказ се освежава.</small></section>';
+      '<small>Мањак се рачуна из оригиналног броја наручених паковања и потврђене набавке. Корекција купца не мења оригиналну поруџбину.</small></section>';
   }
 
   function shortageResolutionHtml() {
@@ -316,7 +316,6 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
       if(result.error)throw result.error;
       if(!result.data||String(result.data.id)!==String(lineId)||Math.abs(Number(result.data.kolicina_za_isporuku)-quantity)>0.000001||(count===0&&result.data.status_izdavanja!=='ceka_izdavanje'))throw new Error('База није потврдила количину за испоруку и постојећи статус ставке.');
       Object.assign(line,result.data);busy=false;feedback=count===0?'Количина је сачувана као 0 — ставка не иде у доставу.':'Количина за испоруку је сачувана: '+fmt(count)+' пак.';render();
-      if(typeof onRefresh==='function')await onRefresh();
     }catch(error){busy=false;feedback='Измена није сачувана: '+(error.message||String(error));feedbackError=true;render();}
   }
 
