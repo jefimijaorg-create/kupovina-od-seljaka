@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.15
+ * Version: 1.3.16
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -39,6 +39,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   let orderFilter = 'all';
   let selectedShortagePair = null;
   let activeOrdersView = 'orders';
+  let shortageSavedLineId = null;
 
   const statusOptions = [
     ['nova','Нова — чека потврду'],
@@ -171,7 +172,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       if (!order || String(order.status || '').toLowerCase() === 'otkazana') continue;
       const key = String(line.product_id || 'unknown') + '::' + String(line.variant_id || 'unknown');
       if (!totals.has(key)) totals.set(key, { key, ordered: 0, confirmed: 0, rejected: 0, lines: [] });
-      const group = totals.get(key); group.ordered += Math.max(0, Number(line.package_count) || 0); group.lines.push(line);
+      const group = totals.get(key); group.ordered += effectivePackages(line); group.lines.push(line);
     }
     for (const allocation of procurementAllocations || []) {
       const key = String(allocation.product_id || 'unknown') + '::' + String(allocation.variant_id || 'unknown'), group = totals.get(key);
@@ -184,7 +185,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const phoneDigitsForOrder = phone => { let d=String(phone||'').replace(/[^0-9]/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='381'+d.slice(1);else if(!d.startsWith('381')&&d.length===9)d='381'+d;return d?'+'+d:''; };
     const rows=group.lines.filter(line=>{const order=orderMap.get(String(line.porudzbina_id));return order&&String(order.status||'').toLowerCase()!=='otkazana';}).map(line=>{
       const order=orderMap.get(String(line.porudzbina_id))||{},buyer=customerMap.get(String(order.kupac_id))||{},original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),phone=phoneDigitsForOrder(phoneForOrder(order)),name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—'));
-      return '<article class="nd-go-shortage-person" data-shortage-person="'+esc(line.id)+'"><div class="nd-go-shortage-person-name"><strong>'+esc(name)+'</strong><span>Наручио: <b>'+fmt(original)+' пак.</b></span></div><label class="nd-go-shortage-delivery">За испоруку<input type="number" min="0" max="'+esc(original)+'" step="1" inputmode="numeric" data-effective-count="'+esc(line.id)+'" value="'+esc(current)+'"></label><div class="nd-go-shortage-actions">'+(canManage?'<button type="button" data-shortage-zero="'+esc(line.id)+'">0</button><button type="button" data-save-effective="'+esc(line.id)+'">Сачувај</button>':'')+(phone?'<button type="button" class="nd-gop-viber" data-shortage-viber="'+esc(line.id)+'">Viber</button>':'<button type="button" disabled title="Телефон купца није евидентиран">Нема броја</button>')+'</div></article>';
+      return '<article class="nd-go-shortage-person" data-shortage-person="'+esc(line.id)+'"><div class="nd-go-shortage-person-name"><strong>'+esc(name)+'</strong><span>Наручио: <b>'+fmt(original)+' пак.</b></span></div><label class="nd-go-shortage-delivery">За испоруку<input type="number" min="0" max="'+esc(original)+'" step="1" inputmode="numeric" data-effective-count="'+esc(line.id)+'" value="'+esc(current)+'"></label><div class="nd-go-shortage-actions">'+(canManage?'<button type="button" data-shortage-zero="'+esc(line.id)+'">0</button><button type="button" data-save-effective="'+esc(line.id)+'">'+(shortageSavedLineId===String(line.id)?'Сачувано ✓':'Сачувај')+'</button>':'')+(phone?'<button type="button" class="nd-gop-viber" data-shortage-viber="'+esc(line.id)+'">Viber</button>':'<button type="button" disabled title="Телефон купца није евидентиран">Нема броја</button>')+'</div></article>';
     }).join('');
     const pairName=(product.name||'Производ')+' · '+(variant.name||variant.size_label||(group.lines[0]?.package_size?fmt(group.lines[0].package_size)+' '+(group.lines[0]?.package_unit||''):'Амбалажа'));
     return '<div class="nd-go-shortage-modal-backdrop" data-shortage-modal-backdrop><section class="nd-go-shortage-modal" role="dialog" aria-modal="true" aria-label="Расподела мањка"><header><div><span>РАСПОДЕЛА МАЊКА</span><h2>'+esc(pairName)+'</h2><strong class="nd-go-shortage-total">Фали још '+fmt(missing)+' пак.</strong></div><button type="button" data-close-shortage-modal aria-label="Затвори">×</button></header><div class="nd-go-shortage-modal-reasons"><span>Непокривено доделом <b>'+fmt(uncovered)+' пак.</b></span><span>Одбијено од газдинства <b>'+fmt(group.rejected)+' пак.</b></span></div><div class="nd-go-shortage-modal-list">'+(rows||'<p class="nd-go-empty">Нема купаца са овим производом у тури.</p>')+'</div><footer><span>Оригинална поруџбина остаје непромењена.</span><button type="button" data-close-shortage-modal>Затвори</button></footer></section></div>';
@@ -297,10 +298,10 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     }catch(error){busy=false;feedback='Ставка није сачувана: '+(error.message||String(error));feedbackError=true;render();}
   }
 
-  async function saveEffective(lineId) {
+  async function saveEffective(lineId, sourceInput=null) {
     if(busy||!canManage)return;
     const line=items.find(row=>String(row.id)===String(lineId));if(!line)return;
-    const card=rootNode.querySelector('[data-order-card="'+CSS.escape(String(line.porudzbina_id))+'"]'),input=card?.querySelector('[data-effective-count="'+CSS.escape(String(lineId))+'"]')||rootNode.querySelector('[data-effective-count="'+CSS.escape(String(lineId))+'"]');
+    const card=rootNode.querySelector('[data-order-card="'+CSS.escape(String(line.porudzbina_id))+'"]'),input=sourceInput||card?.querySelector('[data-effective-count="'+CSS.escape(String(lineId))+'"]')||rootNode.querySelector('[data-effective-count="'+CSS.escape(String(lineId))+'"]');
     const original=Math.max(0,Number(line.package_count)||0),count=Number(input?.value);
     if(!Number.isInteger(count)||count<0||count>original){feedback='Унеси цео број паковања од 0 до '+fmt(original)+'.';feedbackError=true;render();return;}
     const quantity=Number((count*packageSize(line)).toFixed(6));
@@ -311,8 +312,8 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
       const patch={kolicina_za_isporuku:quantity};if(count===0)patch.status_izdavanja='ceka_izdavanje';const result=await client.from('stavke_porudzbine').update(patch).eq('id',lineId).eq('tura_id',tourId).select('id,kolicina_za_isporuku,status_izdavanja').maybeSingle();
       if(result.error)throw result.error;
       if(!result.data||String(result.data.id)!==String(lineId)||Math.abs(Number(result.data.kolicina_za_isporuku)-quantity)>0.000001||(count===0&&result.data.status_izdavanja!=='ceka_izdavanje'))throw new Error('База није потврдила количину за испоруку и постојећи статус ставке.');
-      Object.assign(line,result.data);busy=false;feedback=count===0?'Количина је сачувана као 0 — ставка не иде у доставу.':'Количина за испоруку је сачувана: '+fmt(count)+' пак.';render();
-    }catch(error){busy=false;feedback='Измена није сачувана: '+(error.message||String(error));feedbackError=true;render();}
+      Object.assign(line,result.data);busy=false;shortageSavedLineId=String(lineId);feedback=count===0?'Количина је сачувана као 0 — ставка не иде у доставу.':'Количина за испоруку је сачувана: '+fmt(count)+' пак.';render();setTimeout(()=>{if(shortageSavedLineId===String(lineId)){shortageSavedLineId=null;render();}},1500);
+    }catch(error){busy=false;feedback='Измена није сачувана: '+(error.message||String(error));feedbackError=true;render();window.alert('Измена количине за испоруку није сачувана. '+(error.message||String(error)));}
   }
 
   function openPointQuickAction(orderId) {
@@ -345,12 +346,12 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
       if(action.hasAttribute('data-open-shortage-pair')){selectedShortagePair=String(action.dataset.openShortagePair);render();return;}
       
       if(action.hasAttribute('data-shortage-step')){const input=rootNode.querySelector('[data-effective-count="'+CSS.escape(String(action.dataset.shortageLine))+'"]'),line=items.find(row=>String(row.id)===String(action.dataset.shortageLine));if(input&&line){const max=Math.max(0,Number(line.package_count)||0),next=Math.max(0,Math.min(max,Math.round(Number(input.value||0)+Number(action.dataset.shortageStep))));input.value=String(next);}return;}
-      if(action.hasAttribute('data-shortage-zero')){const input=rootNode.querySelector('[data-effective-count="'+CSS.escape(String(action.dataset.shortageZero))+'"]');if(input)input.value='0';return;}
+      if(action.hasAttribute('data-shortage-zero')){const lineId=String(action.dataset.shortageZero),row=action.closest('[data-shortage-person]'),input=row?.querySelector('[data-effective-count="'+CSS.escape(lineId)+'"]');if(input){input.value='0';await saveEffective(lineId,input);}return;}
       if(action.hasAttribute('data-shortage-viber')){const line=items.find(row=>String(row.id)===String(action.dataset.shortageViber)),order=line&&orderMap.get(String(line.porudzbina_id)),buyer=customerMap.get(String(order?.kupac_id))||{},product=productMap.get(String(line?.product_id))||{},rawPhone=String(order?.telefon||buyer.telefon||'').trim(),digits=rawPhone.replace(/[^0-9]/g,''),phone=digits?(digits.startsWith('00')?digits.slice(2):digits.startsWith('0')?'381'+digits.slice(1):digits.startsWith('381')?digits:'381'+digits):'';if(!line||!order||!phone){feedback='За Viber поруку недостаје ставка, купац или телефон.';feedbackError=true;render();return;}const original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),size=packageSize(line),unit=String(line.package_unit||variantMap.get(String(line.variant_id))?.package_unit||variantMap.get(String(line.variant_id))?.unit||'паковања'),orderedText=fmt(original*size)+' '+unit,deliveryText=fmt(current*size)+' '+unit,name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—')),productName=product.name||'производ';const message=current===0?'Поштовани '+name+', нажалост за ову туру немамо на стању производ: '+productName+' ('+orderedText+'). Остатак Ваше поруџбине стиже по договору. Хвала на разумевању — Наручи домаће.':current<original?'Поштовани '+name+', за ову туру можемо да испоручимо смањену количину за производ: '+productName+' — уместо '+orderedText+', шаљемо '+deliveryText+'. Хвала на разумевању — Наручи домаће.':'Поштовани '+name+', количина производа '+productName+' за ову туру је '+deliveryText+'. Хвала на разумевању — Наручи домаће.';try{await navigator.clipboard.writeText(message);}catch(_){window.prompt('Копирај Viber поруку пре отварања разговора:',message);}window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
       if(action.hasAttribute('data-open-order')){if(typeof onOpenOrder==='function')await onOpenOrder(action.dataset.openOrder);return;}
       if(action.hasAttribute('data-toggle-order')){const id=String(action.dataset.toggleOrder);expandedOrderId=expandedOrderId===id?null:id;editingLineId=null;editingOrderId=null;statusOrderId=null;render();return;}
       if(action.hasAttribute('data-order-filter')){orderFilter=action.dataset.orderFilter;expandedOrderId=null;render();return;}
-      if(action.hasAttribute('data-save-effective')){await saveEffective(action.dataset.saveEffective);return;}
+      if(action.hasAttribute('data-save-effective')){const lineId=String(action.dataset.saveEffective),row=action.closest('[data-shortage-person]'),input=row?.querySelector('[data-effective-count="'+CSS.escape(lineId)+'"]');await saveEffective(lineId,input||null);return;}
       const id=action.dataset.editOrder||action.dataset.saveOrder||action.dataset.changeStatus||action.dataset.saveStatus||action.dataset.editLine||action.dataset.saveLine||action.dataset.copyOrder;
       if(action.hasAttribute('data-edit-order')){editingOrderId=String(action.dataset.editOrder);expandedOrderId=String(action.dataset.editOrder);render();return;}
       if(action.hasAttribute('data-save-order')){await saveOrder(action.dataset.saveOrder);return;}
