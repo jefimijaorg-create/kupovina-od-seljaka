@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.3.3
+ * Version: 5.3.4
    Верзија: 5.3.3
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.3.3";
+  --nd-css-version:"5.3.4";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2811,3 +2811,18 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .ndp3-package-sheet{max-height:86dvh}
   .nd-workspace .ndp3-package-sheet>header h2{font-size:20px}
 }
+
+
+/* МОДУЛ ДОСТАВА — УПОЗОРЕЊА О ПРЕУЗИМАЊУ КОЈЕ НИЈЕ ПОВЕЗАНО СА КУПЦИМА */
+.nd-workspace .nd-ops-pickup-alerts{display:grid;gap:9px;margin:0 0 12px}
+.nd-workspace .nd-ops-pickup-alert{background:#FFF7E8;border:1px solid #E8A04A;border-left:5px solid #E8A04A;border-radius:12px;padding:12px 14px;color:#344238}
+.nd-workspace .nd-ops-pickup-alert-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.nd-workspace .nd-ops-pickup-alert-head strong{font-size:15px;color:#754A12}
+.nd-workspace .nd-ops-pickup-alert-head span{font-size:13px;font-weight:800}
+.nd-workspace .nd-ops-pickup-alert p{margin:7px 0 0;font-size:14px;line-height:1.45}
+.nd-workspace .nd-ops-pickup-alert details{margin-top:8px;border-top:1px solid #E8D2AE;padding-top:8px}
+.nd-workspace .nd-ops-pickup-alert summary{font-weight:800;font-size:13px;cursor:pointer;min-height:34px;display:flex;align-items:center}
+.nd-workspace .nd-ops-pickup-alert ul{margin:7px 0 0;padding-left:20px;display:grid;gap:6px}
+.nd-workspace .nd-ops-pickup-alert li{font-size:13px;line-height:1.4}
+.nd-workspace .nd-ops-pickup-alert li span{display:block;color:#68766C;margin-top:2px}
+@media(min-width:768px){.nd-workspace .nd-ops-pickup-alert{padding:14px 18px}.nd-workspace .nd-ops-pickup-alert-head strong{font-size:17px}.nd-workspace .nd-ops-pickup-alert p{font-size:15px}}
