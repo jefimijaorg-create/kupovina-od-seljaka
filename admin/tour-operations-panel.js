@@ -418,7 +418,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
               '<div class="nd-ops-delivery-column nd-ops-delivery-column-pickup"><div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>пак.</small></label>'+
               '<button type="button" class="nd-ops-delivery-quick'+(checked?' is-complete':'')+'" data-confirm-delivery="'+esc(item.id)+'" '+(editable?'':'disabled')+'>'+(checked?'✓ Готово':'Потврди')+'</button></div>'+
-              '<div class="nd-ops-delivery-price-row"><span class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice)+' дин./пак.')+'</span><strong class="nd-ops-delivery-line-total" data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div></div></div>'+comparisonHtml+
+              '<div class="nd-ops-delivery-price-row"><span class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice).replace(/\s*дин\.$/,'')+' дин./пак.')+'</span><strong class="nd-ops-delivery-line-total" data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div></div></div>'+comparisonHtml+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div></div>';
           }).join('');
           const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
