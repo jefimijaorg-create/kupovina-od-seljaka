@@ -2748,7 +2748,7 @@ body.nd-workspace select:focus-visible{
   .nd-tour-ops .nd-vehicle-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
   .nd-tour-ops .nd-vehicle-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-/* ДОСТАВА — ЈЕДИНСТВЕНИ GRID СТАВКЕ (ЈЕДИНО МЕСТО ЗА LAYOUT) */
+/* ДОСТАВА — ЈЕДИНИ ПОСТОЈЕЋИ CSS БЛОК ЗА GRID СТАВКЕ. РАСПОРЕД МЕЊАТИ САМО ОВДЕ; НЕ ДОДАВАТИ НОВЕ БЛОКОВЕ. */
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{
   display:grid;
   grid-template-columns:minmax(0,1.25fr) minmax(0,.72fr) minmax(0,.9fr) minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.9fr);
