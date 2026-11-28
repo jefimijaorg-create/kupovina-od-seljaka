@@ -2861,3 +2861,6 @@ body.nd-workspace select:focus-visible{
   .nd-tour-ops .nd-vehicle-pickup-edit{justify-content:flex-start}
   .nd-tour-ops .nd-vehicle-pickup-edit button{min-height:44px}
 }
+
+.nd-tour-ops .nd-vehicle-feedback:empty{display:none}
+.nd-tour-ops .nd-vehicle-feedback:not(:empty){padding:5px 8px;border-radius:6px;background:#fff3df;color:#8a5715;font-size:12px;line-height:1.3}
