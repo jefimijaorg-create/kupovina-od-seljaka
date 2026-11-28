@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.46
+ * Version: 1.5.47
  * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
@@ -327,6 +327,20 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         if(picked<=0)continue;
         if(!hasNumber(row.nabavna_cena))purchaseKnown=false;else purchaseTotal+=picked*Number(row.nabavna_cena);
       }
+      /* Просечна евидентирана набавна цена по производу и варијанти — за информативни збир по купцу. */
+      const farmUnitCostByPair=new Map();
+      for(const row of state.procurementAllocations){
+        const pair=productPair(row),qty=Math.max(0,Number(row.preuzeto_pakovanja)||0);
+        if(qty<=0)continue;
+        if(!farmUnitCostByPair.has(pair))farmUnitCostByPair.set(pair,{qty:0,cost:0,known:true});
+        const cost=farmUnitCostByPair.get(pair);
+        if(!hasNumber(row.nabavna_cena))cost.known=false;
+        else cost.cost+=qty*Number(row.nabavna_cena);
+        cost.qty+=qty;
+      }
+      for(const cost of farmUnitCostByPair.values()){
+        cost.unitCost=cost.known&&cost.qty>0?cost.cost/cost.qty:null;
+      }
       let orderedSaleTotal=0,orderedSaleKnown=true;
       for(const item of state.items){const value=lineSaleValue(item);if(value===null)orderedSaleKnown=false;else orderedSaleTotal+=value}
       const activeOrders=state.orders.filter(order=>order.dostava_obradjena!==true);
@@ -358,6 +372,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const renderCustomerGroup=(pointKey,customerId,orders)=>{
         const customer=customerMap.get(orders[0]?.kupac_id),groupKey=String(pointKey)+':'+String(customerId),descriptors=[];
         let customerOrdered=0,customerOrderedKnown=true,customerCharge=0,customerChargeKnown=true,checkedLines=0,totalLines=0,hasIssue=false,excludedLines=0;
+        let farmDemandPackages=0,farmPickedPackages=0,farmValue=0,farmValueKnown=true,unallocatedPartialPickup=false;
         const orderHtml=orders.map(order=>{
           const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(order.id));
           const rows=orderItems.map(item=>{
@@ -365,6 +380,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
             const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
             const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size||variant?.package_value);
+            farmDemandPackages+=ordered;
+            farmPickedPackages+=picked;
+            if(partialPickupPairs.has(productPair(item)))unallocatedPartialPickup=true;
+            const farmCost=farmUnitCostByPair.get(productPair(item));
+            if(!farmCost||farmCost.unitCost===null)farmValueKnown=false;else farmValue+=ordered*farmCost.unitCost;
             const requestedPackages=Number.isFinite(Number(item.kolicina_za_isporuku))&&item.kolicina_za_isporuku!==null&&item.kolicina_za_isporuku!==''&&Number.isFinite(size)&&size>0?Math.max(0,Number(item.kolicina_za_isporuku)/size):ordered,available=partialPickupPairs.has(productPair(item))?Math.min(ordered,requestedPackages):Math.min(ordered,picked,requestedPackages),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
             const deliveredPackages=Number.isFinite(size)&&size>0?deliveredBase/size:0;
             const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
@@ -417,8 +437,12 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           (phone?'<a class="nd-ops-delivery-customer-phone" href="tel:'+esc(String(phone).replace(/[^0-9+]/g,''))+'">☎ '+esc(phoneDisplay(phone))+'</a>':'')+
           '<small class="nd-ops-delivery-order-refs">'+orders.map(order=>'#'+esc(order.id)).join(' · ')+'</small>'+
           '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
+          '<div class="nd-ops-delivery-customer-totals" aria-label="Укупно по купцу">'+
+          '<div class="nd-ops-delivery-total-farm"><small>ЗА ГАЗДИНСТВО · НАБАВНО</small><strong>'+(farmValueKnown?money(farmValue):'Цена није евидентирана')+'</strong><span>Потребно: '+packageCountLabel(farmDemandPackages)+'</span></div>'+
+          '<div class="nd-ops-delivery-total-picked"><small>ФИЗИЧКИ ПРЕУЗЕТО</small><strong>'+(unallocatedPartialPickup?'Делимично · није распоређено':packageCountLabel(farmPickedPackages))+'</strong><span>Евиденција газдинстава</span></div>'+
+          '<div class="nd-ops-delivery-total-charge"><small>ЗА НАПЛАТУ ОД КУПЦА</small><strong data-customer-charge>'+(excludedLines===totalLines&&totalLines>0?'НЕ ОБРАЧУНАВА СЕ':money(customerChargeKnown?customerCharge:null))+'</strong><span>Само доступне и потврђене ставке</span></div>'+
+          '</div>'+
           orderHtml+
-          '<div class="nd-ops-delivery-customer-footer"><div class="nd-ops-delivery-bill"><strong>ЗА НАПЛАТУ ОД КУПЦА:</strong><b data-customer-charge>'+(excludedLines===totalLines&&totalLines>0?'НЕ ОБРАЧУНАВА СЕ':money(customerChargeKnown?customerCharge:null))+'</b></div></div>'+
           (canReadProducts&&state.tour.status==='processing'?
             '<small class="nd-ops-delivery-feedback" data-delivery-feedback aria-live="polite">Потврђуј ставке појединачно — сваки додир чува стварно предату количину.</small>':
             '<small>Потврда је доступна само у тури која је у обради и за овлашћену ADMIN улогу.</small>')+
