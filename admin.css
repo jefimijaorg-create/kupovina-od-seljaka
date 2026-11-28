@@ -2876,10 +2876,13 @@ body.nd-workspace select:focus-visible{
 /* ДОЊИ ДЕО ДЕСНЕ КОЛОНЕ: ЦЕНА И ЗЕЛЕНИ ИЗНОС */
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-price-row {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 4px 8px;
   width: 100%;
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price {
@@ -2975,8 +2978,9 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:6px;
+  gap:8px;
   margin:8px 0 9px;
+  align-items:stretch;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals>div{
   display:flex;
