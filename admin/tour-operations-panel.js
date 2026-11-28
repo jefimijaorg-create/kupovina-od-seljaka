@@ -522,27 +522,35 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const vehicleIssues=vehicleList.filter(g=>Math.abs(g.ordered-g.delivered)>0.000001||Math.abs(g.delivered-g.picked)>0.000001).length;
       const vehicleQty=value=>Number(value).toLocaleString('sr-RS',{maximumFractionDigits:3});
       const vehicleEditable=canReadProducts&&state.tour.status==='processing';
-      const vehicleRows=vehicleList.map(group=>{
-        const farmRows=group.allocations.map(allocation=>{
-          const farm=farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id);
-          const confirmed=Math.max(0,Number(allocation.potvrdjeno_pakovanja)||0);
-          const picked=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
-          return '<div class="nd-vehicle-pickup-row"><span>'+esc(farm)+' <small>· потврђено '+vehicleQty(confirmed)+' пак.</small></span>'+
-            '<div class="nd-vehicle-pickup-edit"><input type="number" inputmode="decimal" min="0" max="'+confirmed+'" step="0.01" value="'+picked+'" data-vehicle-pickup-input="'+esc(allocation.id)+'" aria-label="Физички преузето од '+esc(farm)+' за '+esc(group.variant)+'" '+(!vehicleEditable||confirmed<=0?'disabled':'')+'>'+
-            '<button type="button" data-vehicle-pickup-save="'+esc(allocation.id)+'" '+(!vehicleEditable||confirmed<=0?'disabled':'')+'>Сачувај</button></div></div>';
+      const vehicleProducts=new Map();
+      vehicleList.forEach(group=>{
+        const productKey=String(group.productId??'');
+        if(!vehicleProducts.has(productKey))vehicleProducts.set(productKey,{productId:group.productId,name:group.name,packages:[]});
+        vehicleProducts.get(productKey).packages.push(group);
+      });
+      const vehicleRows=[...vehicleProducts.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr')).map(product=>{
+        const packageMarkup=product.packages.map(group=>{
+          const farmRows=group.allocations.map(allocation=>{
+            const farm=farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id);
+            const confirmed=Math.max(0,Number(allocation.potvrdjeno_pakovanja)||0);
+            const picked=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
+            return '<div class="nd-vehicle-pickup-row"><span>'+esc(farm)+' <small>· потврђено '+vehicleQty(confirmed)+' пак.</small></span>'+
+              '<div class="nd-vehicle-pickup-edit"><input type="number" inputmode="decimal" min="0" max="'+confirmed+'" step="0.01" value="'+picked+'" data-vehicle-pickup-input="'+esc(allocation.id)+'" aria-label="Физички преузето од '+esc(farm)+' за '+esc(group.variant)+'" '+(!vehicleEditable||confirmed<=0?'disabled':'')+'>'+
+              '<button type="button" data-vehicle-pickup-save="'+esc(allocation.id)+'" '+(!vehicleEditable||confirmed<=0?'disabled':'')+'>Сачувај</button></div></div>';
+          }).join('');
+          const farmMarkup=group.allocations.length?'<div class="nd-vehicle-pickup-list"><div class="nd-vehicle-pickup-title">Физичко преузимање по газдинству</div>'+farmRows+'</div>':'<div class="nd-vehicle-no-allocation">Нема додељеног газдинства за ову амбалажу.</div>';
+          const orderedGap=group.ordered-group.delivered,deliveredGap=group.delivered-group.picked;
+          const status=orderedGap>0.000001?'Мањак од газдинства · '+vehicleQty(orderedGap)+' пак.':deliveredGap>0.000001?'Још није у возилу · '+vehicleQty(deliveredGap)+' пак.':group.picked>group.delivered+0.000001?'Провери вишак преузимања':'Количине су усклађене';
+          const statusClass=orderedGap>0.000001||deliveredGap>0.000001?'is-warning':group.picked>group.delivered+0.000001?'is-error':'is-ok';
+          return '<section class="nd-vehicle-package">'+
+            '<div class="nd-vehicle-package-name">'+esc(group.variant)+'</div>'+
+            '<div class="nd-vehicle-metrics">'+
+            '<div class="nd-vehicle-metric"><small>Наручено</small><strong>'+vehicleQty(group.ordered)+'</strong><span>пак.</span></div>'+
+            '<div class="nd-vehicle-metric"><small>Достављено</small><strong>'+vehicleQty(group.delivered)+'</strong><span>пак.</span></div>'+
+            '<div class="nd-vehicle-metric"><small>Преузето</small><strong>'+vehicleQty(group.picked)+'</strong><span>пак.</span></div></div>'+
+            '<div class="nd-vehicle-status '+statusClass+'">'+esc(status)+'</div>'+farmMarkup+'</section>';
         }).join('');
-        const farmMarkup=group.allocations.length?'<div class="nd-vehicle-pickup-list"><div class="nd-vehicle-pickup-title">Физичко преузимање по газдинству</div>'+farmRows+'</div>':'<div class="nd-vehicle-no-allocation">Нема додељеног газдинства за ову амбалажу.</div>';
-        const orderedGap=group.ordered-group.delivered,deliveredGap=group.delivered-group.picked;
-        const status=orderedGap>0.000001?'Мањак од газдинства · '+vehicleQty(orderedGap)+' пак.':deliveredGap>0.000001?'Још није у возилу · '+vehicleQty(deliveredGap)+' пак.':group.picked>group.delivered+0.000001?'Провери вишак преузимања':'Количине су усклађене';
-        const statusClass=orderedGap>0.000001||deliveredGap>0.000001?'is-warning':group.picked>group.delivered+0.000001?'is-error':'is-ok';
-        return '<article class="nd-vehicle-product"><header class="nd-vehicle-product-head"><strong>'+esc(group.name)+'</strong></header>'+
-          '<div class="nd-vehicle-package">'+
-          '<div class="nd-vehicle-package-name">'+esc(group.variant)+'</div>'+
-          '<div class="nd-vehicle-metrics">'+
-          '<div class="nd-vehicle-metric"><small>Наручено</small><strong>'+vehicleQty(group.ordered)+'</strong><span>пак.</span></div>'+
-          '<div class="nd-vehicle-metric"><small>Достављено</small><strong>'+vehicleQty(group.delivered)+'</strong><span>пак.</span></div>'+
-          '<div class="nd-vehicle-metric"><small>Преузето</small><strong>'+vehicleQty(group.picked)+'</strong><span>пак.</span></div></div>'+
-          '<div class="nd-vehicle-status '+statusClass+'">'+esc(status)+'</div>'+farmMarkup+'</div></article>';
+        return '<article class="nd-vehicle-product"><header class="nd-vehicle-product-head"><strong>'+esc(product.name)+'</strong></header>'+packageMarkup+'</article>';
       }).join('');
       const vehicleHtml='<section class="nd-vehicle-list"><div class="nd-vehicle-feedback" data-vehicle-feedback role="status" aria-live="polite"></div><div class="nd-vehicle-summary">'+
         '<div><small>Наручено</small><strong>'+vehicleQty(vehicleOrdered)+' пак.</strong></div>'+
