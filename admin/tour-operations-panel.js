@@ -1,8 +1,8 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.36
+ * Version: 1.5.37
  * Updated: 2026-11-26
- * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
+ * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const uniq = (values) => [...new Set(values.filter((value) => value !== null && value !== undefined))];
@@ -291,12 +291,18 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         if(!pickupPool.has(pair))pickupPool.set(pair,{total:0,allocations:[]});
         const pool=pickupPool.get(pair);pool.total+=packages;pool.allocations.push(allocation);
       }
+      const partialPickupPairs=new Set();
       for(const [pair,pool] of pickupPool){
-        let remaining=pool.total;
-        const items=state.items.filter(item=>productPair(item)===pair).sort((x,y)=>Number(x.porudzbina_id)-Number(y.porudzbina_id)||Number(x.id)-Number(y.id));
+        const demand=demandPool.get(pair)||0;
+        if(pool.total+0.000001<demand){
+          /* Делимично преузимање: не додељуј робу првим купцима по редоследу. */
+          partialPickupPairs.add(pair);
+          continue;
+        }
+        const items=state.items.filter(item=>productPair(item)===pair);
         for(const item of items){
-          const quantity=Math.min(Math.max(0,Number(item.package_count)||0),remaining);
-          if(quantity>0){pickupByItem.set(String(item.id),[{quantity,allocation:null,pickedAtFarm:pool.total,exceedsPickup:false,autoPool:true}]);remaining=Math.max(0,remaining-quantity)}
+          const quantity=Math.max(0,Number(item.package_count)||0);
+          if(quantity>0)pickupByItem.set(String(item.id),[{quantity,allocation:null,pickedAtFarm:pool.total,exceedsPickup:false,autoPool:true}]);
         }
       }
       const surplusByPair=new Map();
@@ -358,7 +364,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
             const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
             const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size||variant?.package_value);
-            const requestedPackages=Number.isFinite(Number(item.kolicina_za_isporuku))&&item.kolicina_za_isporuku!==null&&item.kolicina_za_isporuku!==''&&Number.isFinite(size)&&size>0?Math.max(0,Number(item.kolicina_za_isporuku)/size):ordered,available=Math.min(ordered,picked,requestedPackages),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
+            const requestedPackages=Number.isFinite(Number(item.kolicina_za_isporuku))&&item.kolicina_za_isporuku!==null&&item.kolicina_za_isporuku!==''&&Number.isFinite(size)&&size>0?Math.max(0,Number(item.kolicina_za_isporuku)/size):ordered,available=partialPickupPairs.has(productPair(item))?Math.min(ordered,requestedPackages):Math.min(ordered,picked,requestedPackages),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
             const deliveredPackages=Number.isFinite(size)&&size>0?deliveredBase/size:0;
             const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
               picked>ordered+0.000001||deliveredPackages>available+0.000001||!Number.isFinite(size)||size<=0;
@@ -369,13 +375,15 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const billablePackages=unavailable?0:(checked?deliveredPackages:available);
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
+            const partialShortage=partialPickupPairs.has(productPair(item));
             const status=unavailable?'НЕПРЕУЗЕТО · УПИТНО':checked?'✓ Готово':dataIssue?'Провери податке':
-              picked+0.000001>=ordered&&ordered>0?'Преузето у целости':
+              partialShortage?'ДЕЛИМИЧНО ПРЕУЗЕТО · ТИ БИРАШ КУПЦА':
+              picked+0.000001>=ordered&&ordered>0?'Роба доступна за доставу':
               picked>0?'Делимично преузето · недостаје '+packageCountLabel(deficitPackages):
               'Није преузето · недостаје '+packageCountLabel(deficitPackages);
-            const statusClass=unavailable?'missing':checked?'complete':dataIssue?'missing':picked+0.000001>=ordered&&ordered>0?'complete':picked>0?'partial':'missing';
+            const statusClass=unavailable?'missing':checked?'complete':dataIssue?'missing':partialShortage?'partial':picked+0.000001>=ordered&&ordered>0?'complete':picked>0?'partial':'missing';
             const itemStatusHtml=status?'<span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span>':'';
-            const farmLines=picked>0?'<small>Преузето од газдинстава — аутоматски збир производа и варијанте: '+packageCountLabel(picked)+'</small>':'<small>Нема евидентираног преузимања овог производа.</small>';
+            const pairPickupTotal=pickupPool.get(productPair(item))?.total||0;const farmLines=partialShortage?'<small>Физички преузето: '+packageCountLabel(pairPickupTotal)+' · наручено: '+packageCountLabel(demandPool.get(productPair(item))||0)+' · није аутоматски додељено купцима.</small>':picked>0?'<small>Преузето од газдинстава — аутоматски збир производа и варијанте: '+packageCountLabel(picked)+'</small>':'<small>Нема евидентираног преузимања овог производа.</small>';
             const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue&&!unavailable&&!checked;
             descriptors.push({order,item,availablePackages:available,packageSize:size,hasDataIssue:dataIssue,isUnavailable:unavailable});
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
@@ -630,7 +638,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         try{
           if(line.hasDataIssue)throw new Error('Постоји неусаглашеност у расподели. Ставка није потврђена.');
           if(!Number.isFinite(packages)||packages<0||packages>line.availablePackages+0.000001)
-            throw new Error('Унеси количину од нуле до стварно преузете количине.');
+            throw new Error('Унеси количину до наручене количине.');
+          const pair=productPair(line.item),poolLimit=pickupPool.get(pair)?.total||0;
+          const packageSize=Number(line.item.package_size)||Number(variantMap.get(line.item.variant_id)?.package_value)||1;
+          const alreadyDelivered=state.items.filter(row=>productPair(row)===pair).reduce((sum,row)=>sum+(Number(row.isporucena_kolicina)||0)/(Number(row.package_size)||Number(variantMap.get(row.variant_id)?.package_value)||1),0);
+          const currentDelivered=(Number(line.item.isporucena_kolicina)||0)/packageSize;
+          if(alreadyDelivered-currentDelivered+packages>poolLimit+0.000001)
+            throw new Error('Недовољно преузете робе. Физички је преузето '+packageCountLabel(poolLimit)+'. Изабери мању количину или другог купца.');
           if(!Number.isFinite(line.packageSize)||line.packageSize<=0)throw new Error('Недостаје величина паковања за ову ставку.');
           deliveryBusy=true;button.disabled=true;button.textContent='ЧУВАМ ПОТВРДУ…';
           if(feedback)feedback.textContent='Чувам предату количину и проверавам одговор базе…';
