@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.10
+ * Version: 1.3.11
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -116,6 +116,42 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       '<footer class="nd-go-order-actions">' + (canManage ? '<button type="button" class="nd-go-action-primary" data-edit-order="' + esc(order.id) + '">Измени поруџбину</button><button type="button" class="nd-go-action-secondary" data-change-status="' + esc(order.id) + '">Промени статус</button><button type="button" class="nd-go-action-secondary" data-copy-order="' + esc(order.id) + '">Копирај</button><button type="button" class="nd-go-action-danger" data-delete-order="' + esc(order.id) + '">Обриши поруџбину</button>' : '') + '</footer>' + statusPanel + '</div>' : '') + '</article>';
   }
 
+  function shortageSummaryHtml() {
+    const demand = new Map();
+    for (const line of items) {
+      const order = orderMap.get(String(line.porudzbina_id));
+      if (!order || String(order.status || '').toLowerCase() === 'otkazana') continue;
+      const product = productMap.get(String(line.product_id)) || {};
+      const variant = variantMap.get(String(line.variant_id)) || {};
+      const key = String(line.product_id || 'unknown') + '::' + String(line.variant_id || line.package_size || 'unknown');
+      if (!demand.has(key)) demand.set(key, {
+        key, productName: product.name || 'Производ није повезан',
+        variantName: variant.name || variant.size_label || (line.package_size ? fmt(line.package_size) + ' ' + (line.package_unit || '') : 'Амбалажа није наведена'),
+        planned: 0, confirmed: 0, rejected: 0
+      });
+      demand.get(key).planned += effectivePackages(line);
+    }
+    for (const allocation of procurementAllocations || []) {
+      const key = String(allocation.product_id || 'unknown') + '::' + String(allocation.variant_id || 'unknown');
+      const group = demand.get(key);
+      if (!group) continue;
+      group.confirmed += Math.max(0, Number(allocation.potvrdjeno_pakovanja) || 0);
+      group.rejected += Math.max(0, Number(allocation.odbijeno_pakovanja) || 0);
+    }
+    const missing = [...demand.values()].map(group => ({...group, shortage: Math.max(0, group.planned - group.confirmed)})).filter(group => group.shortage > 0.000001);
+    const totalMissing = missing.reduce((sum, group) => sum + group.shortage, 0);
+    const cards = missing.map(group =>
+      '<div class="nd-go-shortage-chip"><strong>' + esc(group.productName) + ' · ' + esc(group.variantName) + '</strong>' +
+      '<b>Мањак за решавање: ' + fmt(group.shortage) + ' пак.</b>' +
+      '<span>За доставу: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></div>'
+    ).join('');
+    return '<section class="nd-go-shortage-banner" aria-label="Преглед мањка у набавци">' +
+      '<div><strong>Мањкови у набавци</strong><div>' +
+      (missing.length ? 'За решавање је остало <b>' + fmt(totalMissing) + ' пак.</b> у ' + missing.length + ' производа/амбалажа.' : 'Нема мањка за решавање — припремљене количине су покривене потврђеном набавком.') +
+      '</div></div>' + (cards ? '<div class="nd-go-shortage-list">' + cards + '</div>' : '') +
+      '<small>Мањак се рачуна из количине припремљене за доставу и потврђене набавке. Када количину купца смањиш или поставиш на 0, приказ се освежава.</small></section>';
+  }
+
   function render() {
     const orderedStops=[...(tourStops||[])].sort((a,b)=>{const ta=String(a.vreme||'').slice(0,5),tb=String(b.vreme||'').slice(0,5),ra=Number.isFinite(Number(a.redosled))?Number(a.redosled):999999,rb=Number.isFinite(Number(b.redosled))?Number(b.redosled):999999;if(ta&&tb)return ta.localeCompare(tb)||ra-rb;if(ta)return -1;if(tb)return 1;return ra-rb});const pointOrder=new Map(orderedStops.map((stop,index)=>[String(stop.punkt_id),index]));
     const sorted=[...orders].sort((a,b)=>{const pa=pointOrder.has(String(a.punkt_id))?pointOrder.get(String(a.punkt_id)):999999,pb=pointOrder.has(String(b.punkt_id))?pointOrder.get(String(b.punkt_id)):999999;return pa-pb||Number(a.id)-Number(b.id)});
@@ -142,7 +178,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       }).join('');
       const validPointId=/^\d+$/.test(String(key))&&group.point&&String(group.point.id)===String(key);return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div>'+(validPointId?'<label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'"></label>':'<span class="nd-gop-time-unavailable">Време — пункт није повезан</span>')+'</header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th colspan="2">Артикал / амбалажа</th><th>Количина</th><th colspan="2">Цена по пак. → износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="3">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td colspan="2" class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
     }).join('');
-    rootNode.innerHTML='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
+    rootNode.innerHTML=shortageSummaryHtml()+'<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
 
   }
 
