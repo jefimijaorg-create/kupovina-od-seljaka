@@ -437,8 +437,9 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             /* Ставке са количином 0 остају видљиве ради евиденције мањка/отказа. */
             totalLines++;
             const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
-            const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[],activeDeferred=state.deferredDeliveries.find(row=>String(row.originalna_stavka_id)===String(item.id)&&String(row.izvorna_tura_id)===String(tourId)&&['nova','odlozeno'].includes(String(row.status))),deferredQty=Number(activeDeferred?.odlozena_kolicina)||0,deferredPackages=Number.isFinite(size)&&size>0?deferredQty/size:0,deferredFully=!!activeDeferred&&deferredPackages+0.000001>=ordered;
+            const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
             const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size||variant?.package_value);
+            const activeDeferred=state.deferredDeliveries.find(row=>String(row.originalna_stavka_id)===String(item.id)&&String(row.izvorna_tura_id)===String(tourId)&&['nova','odlozeno'].includes(String(row.status))),deferredQty=Number(activeDeferred?.odlozena_kolicina)||0,deferredPackages=Number.isFinite(size)&&size>0?deferredQty/size:0,deferredFully=!!activeDeferred&&deferredPackages+0.000001>=ordered;
             farmDemandPackages+=ordered;
             farmPickedPackages+=picked;
             if(partialPickupPairs.has(productPair(item))&&invalidProductPairs.has(productPair(item)))unallocatedPartialPickup=true;
