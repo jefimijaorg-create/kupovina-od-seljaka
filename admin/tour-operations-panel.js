@@ -510,10 +510,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const linePrice=salePricePerPackage(line.item);
             const linePackages=input&&Number.isFinite(Number(input.value))?Number(input.value):line.availablePackages;
             if(lineAmountNode)lineAmountNode.textContent=line.isUnavailable||linePrice===null||!Number.isFinite(linePackages)||linePackages<0?'—':money(linePackages*linePrice);
-            const size=Number(line.item.package_size),packages=line.item.stavka_cekirana===true?
-              (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1):input?Number(input.value):line.availablePackages;
+            const size=Number(line.item.package_size||state.variants.find(variant=>String(variant.id)===String(line.item.variant_id))?.package_value);
+            const packages=line.item.stavka_cekirana===true?
+              (Number(line.item.isporucena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1):line.availablePackages;
             if(line.hasDataIssue||!Number.isFinite(packages)||packages<0){if(line.hasDataIssue)customerKnown=false;continue}
-            if(line.item.stavka_cekirana===true&&packages>0){const price=salePricePerPackage(line.item);if(price===null)customerKnown=false;else sum+=packages*price}
+            if(packages>0){const price=salePricePerPackage(line.item);if(price===null)customerKnown=false;else sum+=packages*price}
           }
           const node=card.querySelector('[data-customer-charge]');if(node)node.textContent=group.lines.length>0&&group.lines.every(line=>line.isUnavailable)?'НЕ ОБРАЧУНАВА СЕ':money(customerKnown?sum:null);
         }
