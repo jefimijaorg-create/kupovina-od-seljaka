@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.21
+ * Version: 1.3.22
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -376,7 +376,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
           const deferredForLine=activeDeferred.filter(row=>String(row.originalna_stavka_id)===String(line.id)),deferredPackages=deferredForLine.reduce((sum,row)=>sum+Math.max(0,Number(row.odlozena_kolicina)||0)/(Number.isFinite(size)&&size>0?size:1),0);for(const deferred of deferredForLine){const target=targetTours.get(String(deferred.ciljna_tura_id)),dateText=target?.datum?new Intl.DateTimeFormat('sr-RS',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Europe/Belgrade'}).format(new Date(target.datum+'T12:00:00')):'датум није евидентиран';deferredLines.push('- '+name+' ('+packageText+') — '+fmt(Math.max(0,Number(deferred.odlozena_kolicina)||0))+' '+(unit||'')+' (пребачено за Туру '+String(target?.id??deferred.ciljna_tura_id)+' — '+dateText+')');}const permanentMissing=Math.max(0,missing-deferredPackages);if(permanentMissing>0.000001)notDelivered.push('- '+name+' ('+packageText+') — '+fmt(permanentMissing)+' пак.');
           if(current>0){if(Number.isFinite(price)){const amount=current*price;delivered.push('- '+name+' ('+packageText+') — '+fmt(current)+' ('+fmt(amount)+' din)');total+=amount;}else{delivered.push('- '+name+' ('+packageText+') — '+fmt(current)+' (cena nije evidentirana)');totalKnown=false;}}
         }
-        const deliveryPoint=order.punkt_id?pointMap.get(String(order.punkt_id)):null,deliveryStop=order.punkt_id?(tourStops||[]).find(stop=>String(stop.punkt_id)===String(order.punkt_id)):null,deliverySchedule=deliveryStop?.vreme?String(deliveryStop.vreme):'',deliveryPointLine=delivered.length&&(deliveryPoint?.name||deliverySchedule)?'\nПункт и време доставе: '+(deliveryPoint?.name||'Пункт није наведен')+(deliverySchedule?' — '+deliverySchedule:''):'';
+        const deliveryPoint=order.punkt_id?pointMap.get(String(order.punkt_id)):null,deliveryStop=order.punkt_id?(tourStops||[]).find(stop=>String(stop.punkt_id)===String(order.punkt_id)):null,deliverySchedule=deliveryStop?.vreme?String(deliveryStop.vreme):'',deliveryPointLine=delivered.length&&order.punkt_id?'\nПункт и време доставе: '+(deliveryPoint?.name||'Пункт није наведен')+' — '+(deliverySchedule||'време није наведено'):'';
         const message='Поштовање '+(buyer.ime_prezime||'')+', желим само да Вас обавестим о изменама у Вашој поруџбини за ову туру:'+(notDelivered.length?'\n\nНеће бити преузето:\n'+notDelivered.join('\n'):'')+(deferredLines.length?'\n\nОдложено за следећу туру:\n'+deferredLines.join('\n'):'')+'\n\nБиће преузето:\n'+(delivered.length?delivered.join('\n'):'Нема преосталих ставки за испоруку у овој тури.')+'\n\nУкупно за доставу: '+(delivered.length?(totalKnown?fmt(total)+' дин':'провери цену ставки'):'0 дин')+deliveryPointLine+'\nХвала на разумевању — Наручи домаће.';
         try{await navigator.clipboard.writeText(message);}catch(_){window.prompt('Kopiraj Viber poruku:',message);}window.location.href='viber://chat?number='+encodeURIComponent(phone);return;
       }
