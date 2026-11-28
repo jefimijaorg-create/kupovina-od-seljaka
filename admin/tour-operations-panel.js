@@ -441,7 +441,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
               '<div class="nd-ops-delivery-price-row"><span class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice).replace(/\s*дин\.$/,'')+' дин./пак.')+'</span><strong class="nd-ops-delivery-line-total" data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div>'+(canManageOrders&&!item.deferred_record_id&&!checked&&requestedPackages>0?'<button type="button" class="nd-ops-delivery-quick" data-defer-delivery="'+esc(item.id)+'">Одложи</button>':'')+(state.deferredDeliveries.filter(row=>String(row.izvorna_tura_id)===String(tourId)&&String(row.originalna_stavka_id)===String(item.id)).map(row=>'<small class="nd-ops-delivery-deficit">Одложено → Тура '+esc(row.ciljna_tura_id)+' ('+esc(Number(row.odlozena_kolicina)/Math.max(0.000001,Number(size)) )+' пак.)</small>').join(''))+'</div></div>'+comparisonHtml+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div></div>';
           }).join('');
-          const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
+          const orderSale=orderItems.reduce((sum,item)=>{const price=salePricePerPackage(item),qty=requestedPackagesFor(item);return sum+(price!==null&&Number.isFinite(qty)?Math.max(0,qty)*price:0)},0);
           return '<div class="nd-ops-delivery-order"><div class="nd-ops-delivery-order-head"><strong>Поруџбина #'+esc(order.id)+
             '</strong><span>'+orderItems.length+' '+(orderItems.length===1?'ставка':orderItems.length>=2&&orderItems.length<=4?'ставке':'ставки')+'</span></div>'+
             (order.adresa_dostave?'<small>Адреса: '+esc(order.adresa_dostave)+'</small>':'')+
