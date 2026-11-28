@@ -698,6 +698,47 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       });
       updateDeliveryAmounts();
     }
+    shell.querySelectorAll('[data-defer-delivery]').forEach(button=>{
+      button.addEventListener('click',()=>{
+        if(deliveryBusy||button.disabled)return;
+        const itemId=String(button.dataset.deferDelivery);
+        const group=deliverySaveGroups.get(button.closest('.nd-ops-delivery-customer')?.dataset.deliveryGroup);
+        const line=group?.lines.find(row=>String(row.item.id)===itemId);
+        if(!line){showError(new Error('Ставка није пронађена у активном приказу доставе.'));return;}
+        const order=line.order,customer=state.customers.find(row=>String(row.id)===String(order.kupac_id))||{};
+        const product=state.products.find(row=>String(row.id)===String(line.item.product_id))||{};
+        const variant=state.variants.find(row=>String(row.id)===String(line.item.variant_id))||{};
+        const already=state.deferredDeliveries.filter(row=>String(row.originalna_stavka_id)===itemId).reduce((sum,row)=>sum+Math.max(0,Number(row.odlozena_kolicina)||0),0);
+        const remaining=Math.max(0,Number(line.effectivePackages)||0);
+        const defaultQty=Math.max(1,Math.min(remaining,Math.ceil(Math.max(0,Number(line.orderedPackages||0)-remaining))));
+        const overlay=document.createElement('div');overlay.className='nd-go-shortage-modal-backdrop';
+        overlay.innerHTML='<section class="nd-go-shortage-modal" role="dialog" aria-modal="true" aria-label="Одложена испорука"><header><div><span>ОДЛОЖЕНА ИСПОРУКА</span><h2>'+esc(customer.ime_prezime||('Купац #'+order.kupac_id))+' · ТУРА '+esc(state.tour.naziv||tourId)+'</h2><strong>'+esc(product.name||'Производ')+' · '+esc(variant.name||variant.size_label||((line.item.package_size||'')+' '+(line.item.package_unit||'')))+'</strong></div><button type="button" data-defer-close aria-label="Затвори">×</button></header><div class="nd-go-shortage-modal-list"><p>Наручено '+esc(line.orderedPackages||line.item.package_count)+' паковања. За испоруку остаје '+esc(remaining)+' пак.</p><label>Количина за одлагање <input type="number" min="1" max="'+esc(remaining)+'" step="1" value="'+esc(defaultQty)+'" data-defer-qty></label><label>ИЗАБЕРИ ТУРУ <select data-defer-tour><option value="">Изабери туру</option>'+state.availableTours.map(t=>'<option value="'+esc(t.id)+'">'+esc(t.naziv||('Тура '+t.id))+' · '+esc(t.datum||'')+'</option>').join('')+'</select></label><p data-defer-summary>Остатак за ову туру: '+esc(Math.max(0,remaining-defaultQty))+' пак.</p><small>Оригинална наручена количина остаје непромењена.</small></div><footer><button type="button" data-defer-close>Откажи</button><button type="button" data-defer-save>Одложи '+esc(defaultQty)+' паковања</button></footer></section>';
+        shell.append(overlay);
+        const qty=overlay.querySelector('[data-defer-qty]'),tour=overlay.querySelector('[data-defer-tour]'),summary=overlay.querySelector('[data-defer-summary]'),save=overlay.querySelector('[data-defer-save]');
+        const refresh=()=>{const n=Math.max(0,Math.min(remaining,Math.floor(Number(qty.value)||0)));summary.textContent='Остатак за ову туру: '+(remaining-n).toLocaleString('sr-RS')+' пак.';save.textContent='Одложи '+n.toLocaleString('sr-RS')+' паковања';save.disabled=n<1||!tour.value||n>remaining;};
+        qty.addEventListener('input',refresh);tour.addEventListener('change',refresh);refresh();
+        overlay.querySelectorAll('[data-defer-close]').forEach(x=>x.addEventListener('click',()=>overlay.remove()));
+        save.addEventListener('click',async()=>{
+          const packs=Math.floor(Number(qty.value)),target=state.availableTours.find(row=>String(row.id)===String(tour.value));
+          if(deliveryBusy||!target||!Number.isInteger(packs)||packs<1||packs>remaining)return;
+          const size=Number(line.packageSize);if(!Number.isFinite(size)||size<=0){summary.textContent='Није могуће одложити: недостаје исправна величина паковања.';return;}
+          deliveryBusy=true;save.disabled=true;save.textContent='ЧУВАМ…';
+          let insertedId=null;
+          try{
+            const deferredAmount=Number((packs*size).toFixed(6)),newAmount=Number(((remaining-packs)*size).toFixed(6));
+            const created=await client.from('odlozene_isporuke').insert({originalna_stavka_id:Number(line.item.id),porudzbina_id:Number(order.id),izvorna_tura_id:Number(tourId),ciljna_tura_id:Number(target.id),odlozena_kolicina:deferredAmount,status:'odlozeno'}).select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status').single();
+            if(created.error)throw created.error;if(!created.data)throw new Error('База није потврдила одложену ставку.');
+            insertedId=created.data.id;
+            const updated=await client.from('stavke_porudzbine').update({kolicina_za_isporuku:newAmount,...(packs>=remaining?{status_izdavanja:'ceka_izdavanje'}:{})}).eq('id',line.item.id).eq('tura_id',tourId).select('id,kolicina_za_isporuku,status_izdavanja').single();
+            if(updated.error)throw updated.error;if(!updated.data||Math.abs(Number(updated.data.kolicina_za_isporuku)-newAmount)>0.000001)throw new Error('Измена изворне количине није потврђена.');
+            Object.assign(line.item,updated.data);overlay.remove();await load();
+          }catch(error){
+            if(insertedId!==null){try{await client.from('odlozene_isporuke').delete().eq('id',insertedId).eq('status','odlozeno')}catch(_){ }}
+            summary.textContent='Није сачувано: '+(error.message||String(error));save.disabled=false;save.textContent='Покушај поново';
+          }finally{deliveryBusy=false;}
+        });
+      });
+    });
     shell.querySelectorAll('[data-delivery-item-card]').forEach(itemCard=>{
       const focusQuantity=event=>{
         if(event.type==='click'&&event.target.closest('button,a,input,label'))return;
