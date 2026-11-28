@@ -37,7 +37,6 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   let statusOrderId = null;
   let expandedOrderId = null;
   let orderFilter = 'all';
-  let activeOrdersMode = 'orders';
   let selectedShortagePair = null;
 
   const statusOptions = [
