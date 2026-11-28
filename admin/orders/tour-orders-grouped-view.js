@@ -130,9 +130,9 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       if (!demand.has(key)) demand.set(key, {
         key, productName: product.name || 'Производ није повезан',
         variantName: variant.name || variant.size_label || (line.package_size ? fmt(line.package_size) + ' ' + (line.package_unit || '') : 'Амбалажа није наведена'),
-        planned: 0, confirmed: 0, rejected: 0
+        planned: 0, confirmed: 0, rejected: 0, reduced: 0
       });
-      demand.get(key).planned += effectivePackages(line);
+      demand.get(key).planned += effectivePackages(line); demand.get(key).reduced += Math.max(0,Number(line.package_count||0)-effectivePackages(line));
     }
     for (const allocation of procurementAllocations || []) {
       const key = String(allocation.product_id || 'unknown') + '::' + String(allocation.variant_id || 'unknown');
@@ -141,7 +141,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       group.confirmed += Math.max(0, Number(allocation.potvrdjeno_pakovanja) || 0);
       group.rejected += Math.max(0, Number(allocation.odbijeno_pakovanja) || 0);
     }
-    return [...demand.values()].map(group => ({...group, shortage: Math.max(0, group.planned - group.confirmed)})).filter(group => group.shortage > 0.000001);
+    return [...demand.values()].map(group => ({...group, shortage: Math.max(0, group.planned - group.confirmed)})).filter(group => group.shortage > 0.000001 || group.reduced > 0.000001);
   }
 
   function shortageCustomers() {
@@ -161,7 +161,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const totalMissing = missing.reduce((sum, group) => sum + group.shortage, 0);
     const cards = missing.map(group =>
       '<button type="button" class="nd-go-shortage-chip nd-go-shortage-card" data-open-shortage-pair="'+esc(group.key)+'"><strong>' + esc(group.productName) + ' · ' + esc(group.variantName) + '</strong>' +
-      '<b>Мањак за решавање: ' + fmt(group.shortage) + ' пак.</b>' +
+      '<b>'+(group.shortage>0.000001?'Мањак за решавање: '+fmt(group.shortage)+' пак.':'Количина је умањена купцима: '+fmt(group.reduced)+' пак.')+'</b>' +
       '<span>Потребно за испоруку: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></button>'
     ).join('');
     const buyers=shortageCustomers();
@@ -193,7 +193,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const phoneDigitsForOrder = phone => { let d=String(phone||'').replace(/[^0-9]/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='381'+d.slice(1);else if(!d.startsWith('381')&&d.length===9)d='381'+d;return d?'+'+d:''; };
     const rows=group.lines.filter(line=>{const order=orderMap.get(String(line.porudzbina_id));return order&&String(order.status||'').toLowerCase()!=='otkazana';}).map(line=>{
       const order=orderMap.get(String(line.porudzbina_id))||{},buyer=customerMap.get(String(order.kupac_id))||{},original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),phone=phoneDigitsForOrder(phoneForOrder(order)),name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—'));
-      return '<article class="nd-go-shortage-person" data-shortage-person="'+esc(line.id)+'"><div class="nd-go-shortage-person-name"><strong>'+esc(name)+'</strong><span>Наручио: <b>'+fmt(original)+' пак.</b></span></div><label class="nd-go-shortage-delivery">За испоруку<input type="number" min="0" max="'+esc(original)+'" step="1" inputmode="numeric" data-effective-count="'+esc(line.id)+'" value="'+esc(current)+'"></label><div class="nd-go-shortage-actions">'+(canManage?'<button type="button" data-shortage-zero="'+esc(line.id)+'">0</button><button type="button" data-save-effective="'+esc(line.id)+'">'+(shortageSavedLineId===String(line.id)?'Сачувано ✓':'Сачувај')+'</button>':'')+(phone?'<button type="button" class="nd-gop-viber" data-shortage-viber="'+esc(line.id)+'">Viber</button>':'<button type="button" disabled title="Телефон купца није евидентиран">Нема броја</button>')+'</div></article>';
+      return '<article class="nd-go-shortage-person" data-shortage-person="'+esc(line.id)+'"><div class="nd-go-shortage-person-name"><strong>'+esc(name)+'</strong><span>Наручио: <b>'+fmt(original)+' пак.</b></span></div><label class="nd-go-shortage-delivery">За испоруку<input type="number" min="0" max="'+esc(original)+'" step="1" inputmode="numeric" data-effective-count="'+esc(line.id)+'" value="'+esc(current)+'"></label><div class="nd-go-shortage-actions">'+(canManage?'<button type="button" data-shortage-zero="'+esc(line.id)+'">0</button><button type="button" data-save-effective="'+esc(line.id)+'">'+(shortageSavedLineId===String(line.id)?'Сачувано ✓':'Сачувај')+'</button>':'')+(phone?'<button type="button" class="nd-gop-viber" data-shortage-viber-order="'+esc(order.id)+'">Viber</button>':'<button type="button" disabled title="Телефон купца није евидентиран">Нема броја</button>')+'</div></article>';
     }).join('');
     const pairName=(product.name||'Производ')+' · '+(variant.name||variant.size_label||(group.lines[0]?.package_size?fmt(group.lines[0].package_size)+' '+(group.lines[0]?.package_unit||''):'Амбалажа'));
     return '<div class="nd-go-shortage-modal-backdrop" data-shortage-modal-backdrop><section class="nd-go-shortage-modal" role="dialog" aria-modal="true" aria-label="Расподела мањка"><header><div><span>РАСПОДЕЛА МАЊКА</span><h2>'+esc(pairName)+'</h2><strong class="nd-go-shortage-total">Фали још '+fmt(missing)+' пак.</strong></div><button type="button" data-close-shortage-modal aria-label="Затвори">×</button></header><div class="nd-go-shortage-modal-reasons"><span>Непокривено доделом <b>'+fmt(uncovered)+' пак.</b></span><span>Одбијено од газдинства <b>'+fmt(group.rejected)+' пак.</b></span></div><div class="nd-go-shortage-modal-list">'+(rows||'<p class="nd-go-empty">Нема купаца са овим производом у тури.</p>')+'</div><footer><span>Оригинална поруџбина остаје непромењена.</span><button type="button" data-close-shortage-modal>Затвори</button></footer></section></div>';
