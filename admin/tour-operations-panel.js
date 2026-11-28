@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.55
+ * Version: 1.5.56
  * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
@@ -43,7 +43,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
     const [deferredResult, toursResult] = await Promise.all([
-      client.from('odlozene_isporuke').select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status,created_at').or('izvorna_tura_id.eq.'+tourId+',ciljna_tura_id.eq.'+tourId).in('status',['odlozeno','isporuceno']),
+      client.from('odlozene_isporuke').select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status,created_at').or('izvorna_tura_id.eq.'+tourId+',ciljna_tura_id.eq.'+tourId).in('status',['nova','odlozeno','isporuceno']),
       client.from('ture').select('id,naziv,datum,status').in('status',['open','processing']).neq('id',tourId).gte('datum',new Date().toISOString().slice(0,10)).order('datum',{ascending:true})
     ]);
     state.deferredDeliveries = fail(deferredResult,'Одложене испоруке');
