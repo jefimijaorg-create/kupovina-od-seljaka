@@ -1,6 +1,6 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.3.5
+ * Version: 5.3.7
    Верзија: 5.3.3
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
@@ -8,7 +8,7 @@
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.3.5";
+  --nd-css-version:"5.3.7";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2813,14 +2813,14 @@ body.nd-workspace select:focus-visible{
 }
 
 
-/* МОДУЛ У ВОЗИЛУ — КОМПАКТАН ПРИКАЗ ПО ПРОИЗВОДУ И АМБАЛАЖИ */
+/* МОДУЛ У ВОЗИЛУ — САМО ЕВИДЕНЦИЈА ТРЕНУТНОГ СТАЊА */
+
 .nd-tour-ops-vehicle-only .nd-ops-content{padding:5px 8px 8px;max-width:none}
 .nd-tour-ops .nd-vehicle-list{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;min-width:0}
 .nd-tour-ops .nd-vehicle-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0 0 1px}
 .nd-tour-ops .nd-vehicle-summary>div{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:4px 6px;background:var(--nd-card);border:1px solid var(--nd-line);border-radius:7px}
 .nd-tour-ops .nd-vehicle-summary small{color:var(--nd-muted);font-size:10px;line-height:1.2}
-.nd-tour-ops .nd-vehicle-summary strong{color:var(--nd-ink);font-size:15px;line-height:1.2;font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums}
-.nd-tour-ops .nd-vehicle-summary .has-issues strong{color:#9a601b}
+.nd-tour-ops .nd-vehicle-summary strong{color:var(--nd-ink);font-size:14px;line-height:1.2;font-weight:750;white-space:normal;font-variant-numeric:tabular-nums}
 .nd-tour-ops .nd-vehicle-summary .is-clear strong{color:var(--nd-green)}
 .nd-tour-ops .nd-vehicle-product{min-width:0;overflow:hidden;background:var(--nd-card);border:1px solid var(--nd-line);border-radius:8px}
 .nd-tour-ops .nd-vehicle-product-head{display:flex;align-items:center;gap:6px;min-width:0;padding:5px 8px;background:var(--nd-bg);border-bottom:1px solid var(--nd-line)}
@@ -2828,29 +2828,16 @@ body.nd-workspace select:focus-visible{
 .nd-tour-ops .nd-vehicle-package{min-width:0;padding:5px 7px 6px}
 .nd-tour-ops .nd-vehicle-package+.nd-vehicle-package{border-top:1px solid var(--nd-line)}
 .nd-tour-ops .nd-vehicle-package-name{margin:0 0 4px;padding:0 2px;color:var(--nd-ink);font-size:12px;line-height:1.2;font-weight:700}
-.nd-tour-ops .nd-vehicle-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;min-width:0}
-.nd-tour-ops .nd-vehicle-metric{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:3px;min-width:0;padding:4px 5px;background:var(--nd-bg);border:1px solid var(--nd-line);border-radius:6px}
-.nd-tour-ops .nd-vehicle-metric small{grid-column:1/-1;display:block;min-width:0;color:var(--nd-muted);font-size:10px;line-height:1.1}
+.nd-tour-ops .nd-vehicle-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;min-width:0}
+.nd-tour-ops .nd-vehicle-metric{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;padding:4px;background:var(--nd-bg);border:1px solid var(--nd-line);border-radius:6px}
+.nd-tour-ops .nd-vehicle-metric small{display:block;min-width:0;color:var(--nd-muted);font-size:9px;line-height:1.15;overflow-wrap:anywhere}
 .nd-tour-ops .nd-vehicle-metric strong{color:var(--nd-ink);font-size:15px;line-height:1.15;font-weight:800;font-variant-numeric:tabular-nums}
-.nd-tour-ops .nd-vehicle-metric span{color:var(--nd-muted);font-size:10px}
+.nd-tour-ops .nd-vehicle-metric span{color:var(--nd-muted);font-size:9px;line-height:1.1}
 .nd-tour-ops .nd-vehicle-status{display:inline-flex;align-items:center;max-width:100%;margin:4px 1px 0;padding:3px 6px;border-radius:5px;font-size:10px;line-height:1.2;font-weight:700}
 .nd-tour-ops .nd-vehicle-status.is-ok{color:var(--nd-green-dark);background:var(--nd-soft)}
 .nd-tour-ops .nd-vehicle-status.is-warning{color:var(--nd-ink);background:#fff2de}
 .nd-tour-ops .nd-vehicle-status.is-error{color:#8b3028;background:#fbe9e6}
-.nd-tour-ops .nd-vehicle-pickup-list{min-width:0;margin-top:5px;padding-top:4px;border-top:1px solid var(--nd-line)}
-.nd-tour-ops .nd-vehicle-pickup-title{margin:0 0 3px;color:var(--nd-ink);font-size:10px;line-height:1.2;font-weight:750}
-.nd-tour-ops .nd-vehicle-pickup-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px;min-width:0;padding:3px 0}
-.nd-tour-ops .nd-vehicle-pickup-row+.nd-vehicle-pickup-row{border-top:1px solid var(--nd-line)}
-.nd-tour-ops .nd-vehicle-pickup-row>span{min-width:0;color:var(--nd-ink);font-size:11px;line-height:1.2}
-.nd-tour-ops .nd-vehicle-pickup-row>span small{color:var(--nd-muted);font-size:10px}
-.nd-tour-ops .nd-vehicle-pickup-edit{display:flex;align-items:center;justify-content:flex-end;gap:4px;min-width:0}
-.nd-workspace .nd-ops-content .nd-vehicle-pickup-edit input{box-sizing:border-box;width:64px;min-width:0;max-width:100%;min-height:32px;height:32px;margin:0;padding:4px 5px;font:inherit;font-size:13px;line-height:1.2;text-align:center;font-variant-numeric:tabular-nums}
-.nd-workspace .nd-ops-content .nd-vehicle-pickup-edit button{box-sizing:border-box;min-width:0;min-height:32px;height:32px;margin:0;padding:4px 7px;font:inherit;font-size:11px;line-height:1.2;white-space:nowrap}
-.nd-tour-ops .nd-vehicle-pickup-edit input:disabled,.nd-tour-ops .nd-vehicle-pickup-edit button:disabled{opacity:.55}
-.nd-tour-ops .nd-vehicle-no-allocation{margin:3px 0 0;padding:3px 2px;color:var(--nd-muted);font-size:10px;line-height:1.25}
 .nd-tour-ops .nd-vehicle-note{margin:4px 2px 0;color:var(--nd-muted);font-size:10px;line-height:1.3}
-.nd-tour-ops .nd-vehicle-feedback:empty{display:none}
-.nd-tour-ops .nd-vehicle-feedback:not(:empty){margin:0 0 4px;padding:5px 8px;border-radius:6px;background:#fff2de;color:#8a5715;font-size:12px;line-height:1.3}
 
 /* ТАБЛЕТ — ДВЕ КАРТИЦЕ ОД 600 PX */
 @media (min-width:600px) and (max-width:1100px){
@@ -2861,17 +2848,11 @@ body.nd-workspace select:focus-visible{
   .nd-tour-ops .nd-vehicle-product-head strong{font-size:15px}
   .nd-tour-ops .nd-vehicle-package{padding:4px 6px 5px}
   .nd-tour-ops .nd-vehicle-metrics{gap:3px}
-  .nd-tour-ops .nd-vehicle-metric{padding:4px}
-  .nd-tour-ops .nd-vehicle-metric small{font-size:9px}
+  .nd-tour-ops .nd-vehicle-metric{padding:3px}
+  .nd-tour-ops .nd-vehicle-metric small{font-size:8px}
   .nd-tour-ops .nd-vehicle-metric strong{font-size:14px}
-  .nd-tour-ops .nd-vehicle-pickup-row{gap:4px;padding:2px 0}
-  .nd-workspace .nd-ops-content .nd-vehicle-pickup-edit input{width:58px;min-height:30px;height:30px;padding:3px 4px}
-  .nd-workspace .nd-ops-content .nd-vehicle-pickup-edit button{min-height:30px;height:30px;padding:3px 5px}
 }
 @media (max-width:599px){
   .nd-tour-ops .nd-vehicle-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .nd-tour-ops .nd-vehicle-pickup-row{grid-template-columns:minmax(0,1fr);gap:4px}
-  .nd-tour-ops .nd-vehicle-pickup-edit{justify-content:flex-start}
-  .nd-workspace .nd-ops-content .nd-vehicle-pickup-edit input{width:72px;min-height:36px;height:36px}
-  .nd-workspace .nd-ops-content .nd-vehicle-pickup-edit button{min-height:36px;height:36px}
-}{padding:5px 8px;border-radius:6px;background:#fff3df;color:#8a5715;font-size:12px;line-height:1.3}
+  .nd-tour-ops .nd-vehicle-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
