@@ -151,7 +151,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       '<div><strong>Мањкови у набавци</strong><div>' +
       (missing.length ? 'За решавање је остало <b>' + fmt(totalMissing) + ' пак.</b> у ' + missing.length + ' производа/амбалажа.' : 'Нема мањка за решавање — припремљене количине су покривене потврђеном набавком.') +
       '</div></div>' + (cards ? '<div class="nd-go-shortage-list">' + cards + '</div>' : '') +
-      '<small>Мањак се рачуна из оригиналног броја наручених паковања и потврђене набавке. Корекција купца не мења оригиналну поруџбину.</small></section>';
+      '<small>Мањак се освежава према сачуваној количини за испоруку и потврђеној набавци. Оригинална поруџбина остаје непромењена.</small></section>';
   }
 
   function shortageResolutionHtml() {
@@ -193,7 +193,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
         (isZero ? '<small>Количина 0 — ставка се не предаје нити наплаћује.</small>' : '<small>За испоруку: ' + fmt(current) + ' пак. · укупно ' + fmt(current * size) + ' ' + esc(line.package_unit || variant.package_unit || variant.unit || '') + '</small>') + '</article>';
     }).join('');
     const groups = [...totals.values()].filter(group => relevant.has(group.key)&&(!selectedShortagePair||selectedShortagePair===group.key));
-    const summary = groups.map(group => '<div class="nd-go-shortage-chip"><strong>' + esc(productMap.get(String(group.lines[0]?.product_id))?.name || 'Производ') + '</strong><span>Наручено: ' + fmt(group.ordered) + ' пак. · Потврђено: ' + fmt(group.confirmed) + ' пак. · Мањак: ' + fmt(Math.max(0, group.ordered - group.confirmed)) + ' пак.</span></div>').join('');
+    const summary = groups.map(group => {const required=group.lines.reduce((sum,line)=>sum+effectivePackages(line),0);return '<div class="nd-go-shortage-chip"><strong>' + esc(productMap.get(String(group.lines[0]?.product_id))?.name || 'Производ') + '</strong><span>За испоруку: ' + fmt(required) + ' пак. · Потврђено: ' + fmt(group.confirmed) + ' пак. · Преостали мањак: ' + fmt(Math.max(0, required - group.confirmed)) + ' пак.</span></div>';}).join('');
     return '<section class="nd-go-shortage-banner"><div><strong>Мањкови и корекције за испоруку</strong><p>Оригинална поруџбина остаје непромењена. Овде подешаваш само број паковања који стварно иде купцу.</p></div>' + summary + '<div class="nd-go-shortage-list">' + rows + '</div></section>';
   }
   function render() {
