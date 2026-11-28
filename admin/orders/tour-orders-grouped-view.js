@@ -1,11 +1,11 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.23
+ * Version: 1.3.24
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
  */
-export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, variants=[], procurementAllocations=[], tourStops=[], deferredDeliveries=[], availableTours=[], canManage, onOpenOrder, onRefresh }) {
+export function mountTourOrdersGroupedView({ root, client, tourId, orders, items, customers, points, products, variants=[], procurementAllocations=[], tourStops=[], deferredDeliveries=[], availableTours=[], canManage, onOpenOrder, onRefresh, onViberOrder }) {
   if (!root || !client?.from || !Array.isArray(orders) || !Array.isArray(items)) {
     throw new TypeError('Недостају подаци или потврђени ADMIN Supabase клијент.');
   }
@@ -239,7 +239,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     if(activeOrdersView==='deferred'){
       if(deferredView){deferredView.destroy();deferredView=null;}
       const target=rootNode.querySelector('[data-deferred-deliveries-root]');
-      import('./deferred-deliveries-view.js?v=1.0.1').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,client,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
+      import('./deferred-deliveries-view.js?v=1.0.2').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,client,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops,onViberOrder});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
     }
 
   }
