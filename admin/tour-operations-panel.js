@@ -23,7 +23,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   let activeTab = ['orders','products','delivery','traceability'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
   let deliveryView = 'routes';
   let calculatorExpression='0', calculatorJustEvaluated=false;
-  const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], productOffers:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
+  const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], productOffers:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[], deferredDeliveries:[], availableTours:[] };
   const orderSheetPromise = import('/admin/procurement/procurement-order-sheet.js?v=1.0.2').then(mod => mod.createProcurementOrderSheet({
     client,
     getState: () => ({ orders:state.orders, customers:state.customers, points:state.points, productCatalog:state.products }),
@@ -42,6 +42,12 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     state.tour = result.data;
     const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
+    const [deferredResult, toursResult] = await Promise.all([
+      client.from('odlozene_isporuke').select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status,created_at').eq('izvorna_tura_id',tourId).eq('status','odlozeno'),
+      client.from('ture').select('id,naziv,datum,status').in('status',['open','processing']).neq('id',tourId).gte('datum',new Date().toISOString().slice(0,10)).order('datum',{ascending:true})
+    ]);
+    state.deferredDeliveries = fail(deferredResult,'Одложене испоруке');
+    state.availableTours = fail(toursResult,'Циљне туре');
     const orderIds = uniq(state.items.map(x=>x.porudzbina_id));
     const productIds = uniq(state.items.map(x=>x.product_id));
     const variantIds = uniq(state.items.map(x=>x.variant_id));
@@ -423,7 +429,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
               '<div class="nd-ops-delivery-column nd-ops-delivery-column-pickup"><div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>пак.</small></label>'+
               '<button type="button" class="nd-ops-delivery-quick'+(checked?' is-complete':'')+'" data-confirm-delivery="'+esc(item.id)+'" '+(editable?'':'disabled')+'>'+(checked?'✓ Готово':'Потврди')+'</button></div>'+
-              '<div class="nd-ops-delivery-price-row"><span class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice).replace(/\s*дин\.$/,'')+' дин./пак.')+'</span><strong class="nd-ops-delivery-line-total" data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div></div></div>'+comparisonHtml+
+              '<div class="nd-ops-delivery-price-row"><span class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice).replace(/\s*дин\.$/,'')+' дин./пак.')+'</span><strong class="nd-ops-delivery-line-total" data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div>'+(canManageOrders&&!checked&&requestedPackages>0?'<button type="button" class="nd-ops-delivery-quick" data-defer-delivery="'+esc(item.id)+'">Одложи</button>':'')+(state.deferredDeliveries.filter(row=>String(row.originalna_stavka_id)===String(item.id)).map(row=>'<small class="nd-ops-delivery-deficit">Одложено → Тура '+esc(row.ciljna_tura_id)+' ('+esc(Number(row.odlozena_kolicina)/Math.max(0.000001,Number(size)) )+' пак.)</small>').join(''))+'</div></div>'+comparisonHtml+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div></div>';
           }).join('');
           const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);
