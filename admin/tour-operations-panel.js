@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.44
+ * Version: 1.5.45
  * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
@@ -392,12 +392,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const deficitLabel=deficitPackages>0?packageCountLabel(deficitPackages)+' · '+packageAmountLabel(deficitPackages,size,item.package_unit):'Нема мањка';
             const comparisonHtml='<div class="nd-ops-delivery-compare"><span><b>Наручено:</b> '+packageCountLabel(ordered)+' ('+packageAmountLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span><span><b>Преузето:</b> '+packageCountLabel(picked)+' ('+packageAmountLabel(picked,size,item.package_unit||variant?.package_unit||variant?.unit)+')</span>'+(deficitPackages>0?'<strong class="nd-ops-delivery-deficit">НЕДОСТАЈЕ КУПЦУ: '+packageCountLabel(deficitPackages)+' ('+packageAmountLabel(deficitPackages,size,item.package_unit||variant?.package_unit||variant?.unit)+') · НЕ ПРЕДАЈЕ СЕ</strong>':'<strong class="nd-ops-delivery-picked">Количина покривена преузимањем</strong>')+(unavailable?'<strong class="nd-ops-delivery-deficit">НЕМА ЗА КУПЦА · УПИТНО · НЕ ПРЕДАЈЕ СЕ</strong>':'')+'</div>';
             return '<div class="nd-ops-delivery-item nd-ops-delivery-compact'+(unavailable?' is-unavailable':deliveryDeficitPackages>0?' has-deficit':'')+'" data-delivery-item-card="'+esc(item.id)+'" role="group" tabindex="0" aria-label="Изабери ставку и унеси количину за предају"><div class="nd-ops-delivery-item-head">'+itemStatusHtml+'</div>'+
-              '<div class="nd-ops-delivery-main"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong></div><span class="nd-ops-delivery-ordered">'+packageCountLabel(ordered)+' × '+(Number.isFinite(Number(size))?Number(size).toLocaleString('sr-RS',{maximumFractionDigits:3}):'—')+' '+esc(item.package_unit||variant?.package_unit||variant?.unit||'')+'</span><span class="nd-ops-delivery-package">'+packageAmountLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+'</span>'+
-              '<div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
+              '<div class="nd-ops-delivery-main">'+
+              '<div class="nd-ops-delivery-column nd-ops-delivery-column-product"><div class="nd-ops-delivery-product-info"><strong class="nd-ops-delivery-product-name">'+esc(product?.name||'Производ није доступан')+'</strong></div></div>'+
+              '<div class="nd-ops-delivery-column nd-ops-delivery-column-order"><span class="nd-ops-delivery-ordered">'+packageCountLabel(ordered)+' × '+(Number.isFinite(Number(size))?Number(size).toLocaleString('sr-RS',{maximumFractionDigits:3}):'—')+' '+esc(item.package_unit||variant?.package_unit||variant?.unit||'')+'</span><span class="nd-ops-delivery-package">'+packageAmountLabel(ordered,size,item.package_unit||variant?.package_unit||variant?.unit)+'</span><div class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice)+' дин./пак.')+'</div></div>'+
+              '<div class="nd-ops-delivery-column nd-ops-delivery-column-pickup"><div class="nd-ops-delivery-action"><label class="nd-ops-delivery-qty-wrap"><input type="number" min="0" max="'+String(available)+'" step="0.001" inputmode="decimal" data-delivery-qty="'+esc(item.id)+
               '" value="'+String(inputValue)+'" '+(editable?'':'disabled')+'><small>пак.</small></label>'+
               '<button type="button" class="nd-ops-delivery-quick'+(checked?' is-complete':'')+'" data-confirm-delivery="'+esc(item.id)+'" '+(editable?'':'disabled')+'>'+(checked?'✓ Готово':'Потврди')+'</button></div>'+
-              '<div class="nd-ops-delivery-unit-price">'+(unavailable?'Цена није доступна':money(deliveryUnitPrice)+' дин./пак.')+'</div>'+
-              '<div class="nd-ops-delivery-line-total"><strong data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div></div>'+comparisonHtml+
+              '<div class="nd-ops-delivery-line-total"><strong data-delivery-line-amount="'+esc(item.id)+'">'+(unavailable?'—':money(deliveryLineAmount))+'</strong></div></div></div>'+comparisonHtml+
               '<div class="nd-ops-delivery-farms">'+farmLines+'</div></div>';
           }).join('');
           const orderSale=orderItems.reduce((sum,item)=>sum+(lineSaleValue(item)??0),0);

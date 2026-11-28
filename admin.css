@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
  * Version: 5.4.4
-   Верзија: 5.4.4
+   Верзија: 5.4.6
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.4.4";
+  --nd-css-version:"5.4.6";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2747,4 +2747,163 @@ body.nd-workspace select:focus-visible{
 @media (max-width:599px){
   .nd-tour-ops .nd-vehicle-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
   .nd-tour-ops .nd-vehicle-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* ДОСТАВА — СТРУКТУРНИ ТРОКОЛОНСКИ ПРИКАЗ СТАВКЕ · v5.4.7
+   Колона 1: производ | Колона 2: наручено, амбалажа, цена | Колона 3: количина за преузимање, потврда, износ.
+   Структура колона је у JS модулу; овде је само јединствен стил тог приказа. */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item[data-delivery-item-card]{
+  display:block;
+  min-width:0;
+  padding:8px 10px;
+  border:1px solid #DCE4DC;
+  border-radius:9px;
+  background:#FFFFFF;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr);
+  align-items:stretch;
+  gap:8px 12px;
+  min-width:0;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-column{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-column-product{
+  padding-right:8px;
+  border-right:1px solid #E5ECE5;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-info{min-width:0}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{
+  display:block;
+  color:#344238;
+  font-size:15px;
+  font-weight:900;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered{
+  color:#344238;
+  font-size:12px;
+  font-weight:850;
+  line-height:1.25;
+  font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package,
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{
+  color:#68766C;
+  font-size:10.5px;
+  font-weight:750;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{
+  display:grid;
+  grid-template-columns:minmax(58px,.7fr) minmax(82px,1fr);
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  margin:0;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+  margin:0;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:5px 6px;
+  border:1px solid #C9D8CC;
+  border-radius:7px;
+  background:#FFFFFF;
+  color:#344238;
+  font-size:15px;
+  font-weight:900;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap small{
+  flex:0 0 auto;
+  color:#68766C;
+  font-size:10px;
+  font-weight:800;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{
+  min-width:0;
+  min-height:44px;
+  padding:7px 8px;
+  border:1px solid #285B3C;
+  border-radius:8px;
+  background:#285B3C;
+  color:#FFFFFF;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.15;
+  white-space:normal;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{
+  color:#285B3C;
+  font-size:15px;
+  font-weight:950;
+  line-height:1.2;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total strong{
+  display:block;
+  overflow-wrap:anywhere;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:4px 8px;
+  margin-top:7px;
+  padding-top:7px;
+  border-top:1px solid #E8EEE8;
+  color:#526357;
+  font-size:10.5px;
+  line-height:1.25;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare span{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare .nd-ops-delivery-deficit{
+  grid-column:1/-1;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-farms{
+  margin-top:4px;
+  color:#68766C;
+  font-size:10px;
+  line-height:1.25;
+}
+@media(min-width:768px) and (max-width:1024px){
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{grid-template-columns:minmax(0,.9fr) minmax(0,1fr) minmax(0,1.15fr);gap:7px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{font-size:13px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{grid-template-columns:minmax(48px,.65fr) minmax(70px,1fr);gap:5px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{padding:7px 5px;font-size:10px}
+}
+@media(max-width:767px){
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item[data-delivery-item-card]{padding:6px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{grid-template-columns:minmax(0,.82fr) minmax(0,.95fr) minmax(0,1.15fr);gap:5px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-column-product{padding-right:4px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{font-size:11px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-ordered{font-size:10px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package,
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{font-size:9px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{grid-template-columns:minmax(0,1fr);gap:4px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{min-height:36px;font-size:13px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{min-height:36px;padding:5px 3px;font-size:9px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{font-size:12px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;font-size:9px}
 }
