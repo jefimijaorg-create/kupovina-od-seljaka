@@ -292,15 +292,24 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         if(!pickupPool.has(pair))pickupPool.set(pair,{total:0,allocations:[]});
         const pool=pickupPool.get(pair);pool.total+=packages;pool.allocations.push(allocation);
       }
-      const partialPickupPairs=new Set();
+      const partialPickupPairs=new Set(),requestedPool=new Map();
+      const requestedPackagesFor=item=>{
+        const ordered=Math.max(0,Number(item.package_count)||0),variant=variantMap.get(String(item.variant_id)),size=Number(item.package_size||variant?.package_value);
+        if(item.status_izdavanja==='nepreuzeto')return 0;
+        const raw=item.kolicina_za_isporuku;
+        return raw!==null&&raw!==undefined&&raw!==''&&Number.isFinite(size)&&size>0?Math.min(ordered,Math.max(0,Number(raw)/size)):ordered;
+      };
+      for(const item of state.items){const pair=productPair(item);requestedPool.set(pair,(requestedPool.get(pair)||0)+requestedPackagesFor(item));}
       for(const [pair,pool] of pickupPool){
-        const demand=demandPool.get(pair)||0;
+        const demand=demandPool.get(pair)||0,items=state.items.filter(item=>productPair(item)===pair);
         if(pool.total+0.000001<demand){
-          /* Делимично преузимање: не додељуј робу првим купцима по редоследу. */
           partialPickupPairs.add(pair);
+          const requested=requestedPool.get(pair)||0;
+          /* При мањку, купци се не бирају аутоматски по редоследу: припрема поруџбина одређује количину сваког купца. */
+          if(requested>pool.total+0.000001){invalidProductPairs.add(pair);continue;}
+          for(const item of items){const quantity=requestedPackagesFor(item);if(quantity>0)pickupByItem.set(String(item.id),[{quantity,allocation:null,pickedAtFarm:pool.total,exceedsPickup:false,autoPool:true,preparedOrderQuantity:true}]);}
           continue;
         }
-        const items=state.items.filter(item=>productPair(item)===pair);
         for(const item of items){
           const quantity=Math.max(0,Number(item.package_count)||0);
           if(quantity>0)pickupByItem.set(String(item.id),[{quantity,allocation:null,pickedAtFarm:pool.total,exceedsPickup:false,autoPool:true}]);
@@ -382,7 +391,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const picked=pickupRows.reduce((sum,row)=>sum+row.quantity,0),size=Number(item.package_size||variant?.package_value);
             farmDemandPackages+=ordered;
             farmPickedPackages+=picked;
-            if(partialPickupPairs.has(productPair(item)))unallocatedPartialPickup=true;
+            if(partialPickupPairs.has(productPair(item))&&invalidProductPairs.has(productPair(item)))unallocatedPartialPickup=true;
             const farmCost=farmUnitCostByPair.get(productPair(item));
             if(!farmCost||farmCost.unitCost===null)farmValueKnown=false;else farmValue+=ordered*farmCost.unitCost;
             const requestedPackages=Number.isFinite(Number(item.kolicina_za_isporuku))&&item.kolicina_za_isporuku!==null&&item.kolicina_za_isporuku!==''&&Number.isFinite(size)&&size>0?Math.max(0,Number(item.kolicina_za_isporuku)/size):ordered,available=partialPickupPairs.has(productPair(item))?Math.min(ordered,requestedPackages):Math.min(ordered,picked,requestedPackages),deliveredBase=Math.max(0,Number(item.isporucena_kolicina)||0);
@@ -398,14 +407,14 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
             const partialShortage=partialPickupPairs.has(productPair(item));
             const status=unavailable?'НЕПРЕУЗЕТО · УПИТНО':checked?'✓ Готово':dataIssue?'Провери податке':
-              partialShortage?'ДЕЛИМИЧНО ПРЕУЗЕТО · ТИ БИРАШ КУПЦА':
+              partialShortage?(invalidProductPairs.has(productPair(item))?'КОЛИЧИНЕ ЗА ИСПОРУКУ ПРЕЛАЗЕ ПРЕУЗЕТО':'ПРЕУЗЕТО ПО ПРИПРЕМИ ПОРУЏБИНА'):
               picked+0.000001>=ordered&&ordered>0?'Роба доступна за доставу':
               picked>0?'Делимично преузето · недостаје '+packageCountLabel(deficitPackages):
               'Није преузето · недостаје '+packageCountLabel(deficitPackages);
             const statusClass=unavailable?'missing':checked?'complete':dataIssue?'missing':partialShortage?'partial':picked+0.000001>=ordered&&ordered>0?'complete':picked>0?'partial':'missing';
             const pickupMatchesOrder=Math.abs(ordered-picked)<=0.000001;
             const itemStatusHtml=status&&!(pickupMatchesOrder&&!unavailable&&!dataIssue&&status!=='✓ Готово')?'<span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span>':'';
-            const pairPickupTotal=pickupPool.get(productPair(item))?.total||0;const farmLines=partialShortage?'<small>Физички преузето: '+packageCountLabel(pairPickupTotal)+' · наручено: '+packageCountLabel(demandPool.get(productPair(item))||0)+' · није аутоматски додељено купцима.</small>':(deficitPackages>0||unavailable||dataIssue)?(picked>0?'<small>Преузето од газдинстава: '+packageCountLabel(picked)+'</small>':'<small>Нема евидентираног преузимања овог производа.</small>'):'';
+            const pairPickupTotal=pickupPool.get(productPair(item))?.total||0;const farmLines=partialShortage?'<small>Физички преузето: '+packageCountLabel(pairPickupTotal)+' · наручено: '+packageCountLabel(demandPool.get(productPair(item))||0)+' · припремљено за испоруку: '+packageCountLabel(requestedPool.get(productPair(item))||0)+(invalidProductPairs.has(productPair(item))?' · Умањи количине у „Поруџбинама“ док збир не буде у оквиру преузетог.':' · купчеве количине су узете из припреме поруџбина.')+'</small>':(deficitPackages>0||unavailable||dataIssue)?(picked>0?'<small>Преузето од газдинстава: '+packageCountLabel(picked)+'</small>':'<small>Нема евидентираног преузимања овог производа.</small>'):'';
             const inputValue=checked?deliveredPackages:available,editable=canReadProducts&&state.tour.status==='processing'&&!dataIssue&&!unavailable&&!checked;
             const deliveryUnitPrice=salePricePerPackage(item);
             const deliveryLineAmount=deliveryUnitPrice!==null&&Number.isFinite(Number(inputValue))?Number(inputValue)*deliveryUnitPrice:null;
