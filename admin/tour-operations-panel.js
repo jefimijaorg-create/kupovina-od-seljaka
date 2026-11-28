@@ -437,11 +437,6 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           (phone?'<a class="nd-ops-delivery-customer-phone" href="tel:'+esc(String(phone).replace(/[^0-9+]/g,''))+'">☎ '+esc(phoneDisplay(phone))+'</a>':'')+
           '<small class="nd-ops-delivery-order-refs">'+orders.map(order=>'#'+esc(order.id)).join(' · ')+'</small>'+
           '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
-          '<div class="nd-ops-delivery-customer-totals" aria-label="Укупно по купцу">'+
-          '<div class="nd-ops-delivery-total-farm"><small>ЗА ГАЗДИНСТВО · НАБАВНО</small><strong>'+(farmValueKnown?money(farmValue):'Цена није евидентирана')+'</strong><span>Потребно: '+packageCountLabel(farmDemandPackages)+'</span></div>'+
-          '<div class="nd-ops-delivery-total-picked"><small>ФИЗИЧКИ ПРЕУЗЕТО</small><strong>'+(unallocatedPartialPickup?'Делимично · није распоређено':packageCountLabel(farmPickedPackages))+'</strong><span>Евиденција газдинстава</span></div>'+
-          '<div class="nd-ops-delivery-total-charge"><small>ЗА НАПЛАТУ ОД КУПЦА</small><strong data-customer-charge>'+(excludedLines===totalLines&&totalLines>0?'НЕ ОБРАЧУНАВА СЕ':money(customerChargeKnown?customerCharge:null))+'</strong><span>Само доступне и потврђене ставке</span></div>'+
-          '</div>'+
           orderHtml+
           (canReadProducts&&state.tour.status==='processing'?
             '<small class="nd-ops-delivery-feedback" data-delivery-feedback aria-live="polite">Потврђуј ставке појединачно — сваки додир чува стварно предату количину.</small>':
