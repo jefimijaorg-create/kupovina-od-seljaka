@@ -40,7 +40,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     if (!result.data) throw new Error('Изабрана тура није пронађена или немате дозволу за читање.');
     if (!['open','processing'].includes(result.data.status)) throw new Error('Тура није отворена нити је у обради.');
     state.tour = result.data;
-    const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,status_izdavanja,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
+    const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
     const orderIds = uniq(state.items.map(x=>x.porudzbina_id));
     const productIds = uniq(state.items.map(x=>x.product_id));
@@ -295,7 +295,6 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const partialPickupPairs=new Set(),requestedPool=new Map();
       const requestedPackagesFor=item=>{
         const ordered=Math.max(0,Number(item.package_count)||0),variant=variantMap.get(String(item.variant_id)),size=Number(item.package_size||variant?.package_value);
-        if(item.status_izdavanja==='nepreuzeto')return 0;
         const raw=item.kolicina_za_isporuku;
         return raw!==null&&raw!==undefined&&raw!==''&&Number.isFinite(size)&&size>0?Math.min(ordered,Math.max(0,Number(raw)/size)):ordered;
       };
@@ -398,11 +397,11 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             const deliveredPackages=Number.isFinite(size)&&size>0?deliveredBase/size:0;
             const dataIssue=invalidItemIds.has(String(item.id))||invalidProductPairs.has(productPair(item))||
               picked>ordered+0.000001||deliveredPackages>available+0.000001||!Number.isFinite(size)||size<=0;
-            const checked=item.stavka_cekirana===true,unavailable=item.status_izdavanja==='nepreuzeto'||item.status_stavke==='upitno';
+            const checked=item.stavka_cekirana===true,unavailable=item.status_stavke==='upitno';
             const deficitPackages=Math.max(0,ordered-picked),deliveryDeficitPackages=Math.max(0,ordered-(checked?deliveredPackages:available));
             if(checked&&!unavailable)checkedLines++;if(dataIssue||unavailable)hasIssue=true;if(unavailable)excludedLines++;
             const sale=lineSaleValue(item);if(sale===null)customerOrderedKnown=false;else customerOrdered+=sale;
-            const billablePackages=unavailable?0:(checked?deliveredPackages:available);
+            const billablePackages=checked?deliveredPackages:0;
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
             const partialShortage=partialPickupPairs.has(productPair(item));
@@ -493,7 +492,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       updateDeliveryAmounts=()=>{
         let total=0,known=true;
         for(const item of state.items){
-          if(item.status_izdavanja==='nepreuzeto'||item.status_stavke==='upitno')continue;
+          if(item.status_stavke==='upitno')continue;
           const input=shell.querySelector('[data-delivery-qty="'+item.id+'"]'),size=Number(item.package_size);
           let packages=0,invalid=false;
           if(input){
@@ -656,7 +655,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       } catch (error) { statusBusy = false; showError(error); }
     });
     if(activeTab==='orders'){
-      import('./orders/tour-orders-grouped-view.js?v=1.3.8').then(mod=>{
+      import('./orders/tour-orders-grouped-view.js?v=1.3.9').then(mod=>{
         if(disposed || activeTab!=='orders') return;
         const target=shell.querySelector('[data-grouped-orders-root]');
         if(!target) return;
@@ -716,7 +715,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         const card=button.closest('.nd-ops-delivery-customer'),feedback=card?.querySelector('[data-delivery-feedback]');
         const input=card?.querySelector('[data-delivery-qty="'+itemId+'"]');
         if(!line||!input)return;
-        if(line.item.status_izdavanja==='nepreuzeto'||line.item.status_stavke==='upitno'){if(feedback)feedback.textContent='Ова ставка је означена као НЕПРЕУЗЕТО / УПИТНО и не може да се потврди у достави.';return;}
+        if(line.item.status_stavke==='upitno'){if(feedback)feedback.textContent='Ова ставка је означена као УПИТНО и не може да се потврди у достави.';return;}
         const packages=Number(input.value);
         try{
           if(line.hasDataIssue)throw new Error('Постоји неусаглашеност у расподели. Ставка није потврђена.');
@@ -733,13 +732,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           if(feedback)feedback.textContent='Чувам предату количину и проверавам одговор базе…';
           const baseQuantity=Number((packages*line.packageSize).toFixed(6));
           const result=await client.from('stavke_porudzbine').update({
-            kolicina_za_isporuku:baseQuantity,isporucena_kolicina:baseQuantity,stavka_cekirana:true
+            isporucena_kolicina:baseQuantity,stavka_cekirana:true
           }).eq('id',line.item.id).eq('tura_id',tourId)
-            .select('id,kolicina_za_isporuku,isporucena_kolicina,stavka_cekirana').maybeSingle();
+            .select('id,isporucena_kolicina,stavka_cekirana').maybeSingle();
           if(result.error)throw result.error;
           if(!result.data||result.data.stavka_cekirana!==true||
             Math.abs(Number(result.data.isporucena_kolicina)-baseQuantity)>0.000001||
-            Math.abs(Number(result.data.kolicina_za_isporuku)-baseQuantity)>0.000001)
+            false)
             throw new Error('База није потврдила количину за ставку #'+line.item.id+'.');
           Object.assign(line.item,result.data);
           const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(line.order.id));
