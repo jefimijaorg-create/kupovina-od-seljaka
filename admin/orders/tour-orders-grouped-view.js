@@ -154,7 +154,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const count = shortageCustomers().length;
     return '<nav class="nd-ops-delivery-tabs nd-go-shortage-tabs" aria-label="Приказ поруџбина и мањкова">' +
       '<button type="button" data-shortage-view="orders" aria-pressed="'+(activeOrdersView==='orders'?'true':'false')+'" class="'+(activeOrdersView==='orders'?'is-active':'')+'">Поруџбине</button>' +
-      '<button type="button" data-shortage-view="shortages" aria-pressed="'+(activeOrdersView==='shortages'?'true':'false')+'" class="'+(activeOrdersView==='shortages'?'is-active':'')+'">Мањкови ('+count+')</button></nav>';
+      '<button type="button" data-shortage-view="shortages" aria-pressed="'+(activeOrdersView==='shortages'?'true':'false')+'" class="'+(activeOrdersView==='shortages'?'is-active':'')+'">Мањкови ('+count+')</button>' + '<button type="button" data-shortage-view="deferred" aria-pressed="'+(activeOrdersView==='deferred'?'true':'false')+'" class="'+(activeOrdersView==='deferred'?'is-active':'')+'">Пребачено ('+(deferredDeliveries||[]).filter(row=>String(row.izvorna_tura_id)===String(tourId)&&['nova','odlozeno'].includes(String(row.status))).length+')</button></nav>';
   }
 
   function shortageSummaryHtml() {
@@ -239,7 +239,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     if(activeOrdersView==='deferred'){
       if(deferredView){deferredView.destroy();deferredView=null;}
       const target=rootNode.querySelector('[data-deferred-deliveries-root]');
-      import('./deferred-deliveries-view.js?v=1.0.0').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
+      import('./deferred-deliveries-view.js?v=1.0.0').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
     }
 
   }
