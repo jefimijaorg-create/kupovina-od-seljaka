@@ -124,7 +124,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       if (!order || String(order.status || '').toLowerCase() === 'otkazana') continue;
       const product = productMap.get(String(line.product_id)) || {};
       const variant = variantMap.get(String(line.variant_id)) || {};
-      const key = String(line.product_id || 'unknown') + '::' + String(line.variant_id || line.package_size || 'unknown');
+      const key = String(line.product_id || 'unknown') + '::' + String(line.variant_id || 'unknown');
       if (!demand.has(key)) demand.set(key, {
         key, productName: product.name || 'Производ није повезан',
         variantName: variant.name || variant.size_label || (line.package_size ? fmt(line.package_size) + ' ' + (line.package_unit || '') : 'Амбалажа није наведена'),
@@ -178,7 +178,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     });
     if (!selected.length) return '<section class="nd-go-shortage-banner"><strong>Нема мањка ни коригованих ставки</strong><p>Када набавка буде потврђена са мањком или количина купца буде коригована, ставке ће се појавити овде.</p></section>';
     const phoneForOrder=order=>{const buyer=customerMap.get(String(order.kupac_id))||{};return String(order.telefon||buyer.telefon||'').trim()};
-    const phoneDigitsForOrder=phone=>{let digits=String(phone||'').replace(/\\D/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if(digits.startsWith('0'))digits='381'+digits.slice(1);else if(!digits.startsWith('381')&&digits.length===9)digits='381'+digits;return digits?'+'+digits:''};
+    const phoneDigitsForOrder=phone=>{let digits=String(phone||'').replace(/[^0-9]/g,'');if(digits.startsWith('00'))digits=digits.slice(2);if(digits.startsWith('0'))digits='381'+digits.slice(1);else if(!digits.startsWith('381')&&digits.length===9)digits='381'+digits;return digits?'+'+digits:''};
     const rows = selected.map(line => {
       const order = orderMap.get(String(line.porudzbina_id)) || {}, buyer = customerMap.get(String(order.kupac_id)) || {};
       const product = productMap.get(String(line.product_id)) || {}, variant = variantMap.get(String(line.variant_id)) || {};
