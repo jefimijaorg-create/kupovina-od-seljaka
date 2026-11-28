@@ -61,6 +61,8 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const farmIds = uniq(state.items.map(x=>x.gazdinstvo_id));
     const ordersResult = orderIds.length ? await client.from('porudzbine').select('id,kupac_id,status,procurement_status,telefon,punkt_id,adresa_dostave,dostava_obradjena,dostava_obradjena_at,ukupna_cena,naplaceno,dostavljac').in('id',orderIds) : {data:[],error:null};
     state.orders = fail(ordersResult, 'Поруџбине');
+    const transferredOrderIds=new Set(targetDeferred.map(row=>String(row.porudzbina_id)));
+    state.orders=state.orders.map(order=>transferredOrderIds.has(String(order.id))?{...order,dostava_obradjena:false,dostava_obradjena_at:null}:order);
     const customerIds = uniq(state.orders.map(x=>x.kupac_id));
     const customerResult = customerIds.length ? await client.from('kupci').select('id,ime_prezime,telefon').in('id',customerIds) : {data:[],error:null};
     state.customers = fail(customerResult, 'Купци');
