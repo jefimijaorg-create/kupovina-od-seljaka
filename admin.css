@@ -2749,7 +2749,7 @@ body.nd-workspace select:focus-visible{
   .nd-tour-ops .nd-vehicle-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
-/* ДОСТАВА — СТРУКТУРНИ ТРОКОЛОНСКИ ПРИКАЗ СТАВКЕ · v5.4.7
+/* ДОСТАВА — ТРОКОЛОНСКИ ПРИКАЗ, КОМПАКТНА КОЛИЧИНА И ОДВОЈЕН ИЗНОС · v5.4.8
    Колона 1: производ | Колона 2: наручено, амбалажа, цена | Колона 3: количина за преузимање, потврда, износ.
    Структура колона је у JS модулу; овде је само јединствен стил тог приказа. */
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-item[data-delivery-item-card]{
@@ -2804,24 +2804,29 @@ body.nd-workspace select:focus-visible{
   overflow-wrap:anywhere;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{
-  display:grid;
-  grid-template-columns:minmax(58px,.7fr) minmax(82px,1fr);
+  display:flex;
   align-items:center;
-  gap:7px;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:6px;
   min-width:0;
   margin:0;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap{
   display:flex;
+  flex:0 0 auto;
   align-items:center;
   gap:4px;
+  width:auto;
   min-width:0;
   margin:0;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{
-  width:100%;
-  min-width:0;
-  min-height:44px;
+  box-sizing:border-box;
+  width:68px;
+  max-width:68px;
+  min-width:58px;
+  min-height:42px;
   padding:5px 6px;
   border:1px solid #C9D8CC;
   border-radius:7px;
@@ -2839,9 +2844,11 @@ body.nd-workspace select:focus-visible{
   font-weight:800;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{
-  min-width:0;
-  min-height:44px;
-  padding:7px 8px;
+  flex:0 0 auto;
+  width:auto;
+  min-width:72px;
+  min-height:42px;
+  padding:7px 10px;
   border:1px solid #285B3C;
   border-radius:8px;
   background:#285B3C;
@@ -2849,9 +2856,14 @@ body.nd-workspace select:focus-visible{
   font-size:11px;
   font-weight:900;
   line-height:1.15;
-  white-space:normal;
+  white-space:nowrap;
 }
 .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{
+  align-self:stretch;
+  width:100%;
+  margin-top:2px;
+  padding-top:5px;
+  border-top:1px solid #E8EEE8;
   color:#285B3C;
   font-size:15px;
   font-weight:950;
@@ -2902,8 +2914,8 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package,
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{font-size:9px}
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{grid-template-columns:minmax(0,1fr);gap:4px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{min-height:36px;font-size:13px}
-  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{min-height:36px;padding:5px 3px;font-size:9px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{width:58px;max-width:58px;min-width:54px;min-height:36px;font-size:13px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{min-width:68px;min-height:36px;padding:5px 8px;font-size:10px}
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{font-size:12px}
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;font-size:9px}
 }
