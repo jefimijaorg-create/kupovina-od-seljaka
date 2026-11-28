@@ -239,7 +239,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     if(activeOrdersView==='deferred'){
       if(deferredView){deferredView.destroy();deferredView=null;}
       const target=rootNode.querySelector('[data-deferred-deliveries-root]');
-      import('./deferred-deliveries-view.js?v=1.0.1').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
+      import('./deferred-deliveries-view.js?v=1.0.1').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,client,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
     }
 
   }
