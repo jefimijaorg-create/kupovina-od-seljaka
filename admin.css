@@ -3084,3 +3084,13 @@ body.nd-workspace select:focus-visible{
   font-variant-numeric:tabular-nums;
   white-space:nowrap;
 }
+
+/* Турска набавка: недостатак и одлука о количини по купцу */
+.nd-workspace .nd-go-shortage-banner{display:grid;gap:10px;margin:0 0 16px;padding:14px;border:1px solid #f0c7a9;border-radius:14px;background:#fff8f2;color:#56371e}
+.nd-workspace .nd-go-shortage-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:8px}
+.nd-workspace .nd-go-shortage-chip{display:grid;gap:5px;text-align:left;padding:10px 12px;border:1px solid #e7c6a9;border-radius:10px;background:#fff;color:#543b28;cursor:pointer}
+.nd-workspace .nd-go-shortage-chip.is-active{border-color:#a85b26;box-shadow:0 0 0 2px #f4ddc9}
+.nd-workspace .nd-go-shortage-chip span,.nd-workspace .nd-go-shortage-control small{font-size:12px;color:#735c48}
+.nd-workspace .nd-go-shortage-control{display:grid;gap:8px;margin-top:12px;padding:12px;border:1px solid #dfe7e1;border-radius:10px;background:#f7faf8}
+.nd-workspace .nd-go-shortage-control .nd-go-inline-actions{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:560px){.nd-workspace .nd-go-shortage-control .nd-go-inline-actions>*{flex:1 1 100%}}
