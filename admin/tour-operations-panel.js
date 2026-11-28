@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.54
+ * Version: 1.5.58
  * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
@@ -43,11 +43,23 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
     const [deferredResult, toursResult] = await Promise.all([
-      client.from('odlozene_isporuke').select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status,created_at').or('izvorna_tura_id.eq.'+tourId+',ciljna_tura_id.eq.'+tourId).in('status',['odlozeno','isporuceno']),
+      client.from('odlozene_isporuke').select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status,created_at').or('izvorna_tura_id.eq.'+tourId+',ciljna_tura_id.eq.'+tourId).in('status',['nova','odlozeno','isporuceno']),
       client.from('ture').select('id,naziv,datum,status').in('status',['open','processing']).neq('id',tourId).gte('datum',new Date().toISOString().slice(0,10)).order('datum',{ascending:true})
     ]);
     state.deferredDeliveries = fail(deferredResult,'Одложене испоруке');
     state.availableTours = fail(toursResult,'Циљне туре');
+    // Изворне ставке добијају ознаку активног одлагања за приказ Мањкова/Viber-а;
+    // не додељујемо deferred_record_id изворном реду јер је то ID записа за циљну испоруку.
+    const activeDeferredByItem = new Map();
+    for (const deferred of state.deferredDeliveries) {
+      if (!['nova','odlozeno'].includes(String(deferred.status))) continue;
+      const key=String(deferred.originalna_stavka_id);
+      if (!activeDeferredByItem.has(key)) activeDeferredByItem.set(key,deferred);
+    }
+    state.items=state.items.map(item=>{
+      const deferred=activeDeferredByItem.get(String(item.id));
+      return deferred?{...item,deferred_status:deferred.status,source_tour_id:deferred.izvorna_tura_id}:item;
+    });
     const targetDeferred=state.deferredDeliveries.filter(row=>String(row.ciljna_tura_id)===String(tourId));
     if(targetDeferred.length){
       const originalIds=uniq(targetDeferred.map(row=>row.originalna_stavka_id));
@@ -452,11 +464,15 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         const status=hasIssue?'Провери податке':checkedLines===0?'Чека потврду':checkedLines===totalLines?'Све ставке потврђене':'Делимично потврђено';
         const statusClass=hasIssue?'missing':checkedLines===totalLines?'complete':checkedLines?'partial':'neutral';
         const phone=customer?.telefon||orders[0]?.telefon||'';
+        const customerOrderIds=new Set(orders.map(order=>String(order.id)));
+        const customerHasActiveDeferred=state.deferredDeliveries.some(row=>customerOrderIds.has(String(row.porudzbina_id))&&['nova','odlozeno'].includes(String(row.status)));
+        const customerHasShortage=orders.some(order=>state.items.some(item=>String(item.porudzbina_id)===String(order.id)&&requestedPackagesFor(item)+0.000001<Math.max(0,Number(item.package_count)||0)));
+        const viberAction=(customerHasActiveDeferred||customerHasShortage)&&phone?'<button type="button" class="nd-ops-delivery-viber" data-delivery-viber-order="'+esc(orders[0].id)+'">Viber</button>':'';
         return '<article class="nd-ops-delivery-customer" data-delivery-group="'+esc(groupKey)+'"><div class="nd-ops-delivery-customer-head"><div><strong>'+
           esc(customer?.ime_prezime||('Купац #'+(orders[0]?.kupac_id??'—')))+
           (phone?'<a class="nd-ops-delivery-customer-phone" href="tel:'+esc(String(phone).replace(/[^0-9+]/g,''))+'">☎ '+esc(phoneDisplay(phone))+'</a>':'')+
           '<small class="nd-ops-delivery-order-refs">'+orders.map(order=>'#'+esc(order.id)).join(' · ')+'</small>'+
-          '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
+          '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+viberAction+
           orderHtml+
           '<div class="nd-ops-delivery-customer-charge"><span>ЗА НАПЛАТУ ОД КУПЦА</span><strong data-customer-charge>'+money(customerChargeKnown?customerCharge:null)+'</strong></div>'+
           (canReadProducts&&state.tour.status==='processing'?
@@ -666,13 +682,32 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       } catch (error) { statusBusy = false; showError(error); }
     });
     if(activeTab==='orders'){
-      import('./orders/tour-orders-grouped-view.js?v=1.3.17').then(mod=>{
+      import('./orders/tour-orders-grouped-view.js?v=1.3.22').then(mod=>{
         if(disposed || activeTab!=='orders') return;
         const target=shell.querySelector('[data-grouped-orders-root]');
         if(!target) return;
         groupedOrdersView=mod.mountTourOrdersGroupedView({root:target,client,orders:state.orders,items:state.items,customers:state.customers,points:state.points,products:state.products,variants:state.variants,procurementAllocations:state.procurementAllocations,tourId,tourStops:state.tourStops,canManage:canManageOrders,onOpenOrder:async orderId=>{try{const sheet=await orderSheetPromise;await sheet.open(orderId)}catch(error){showError(error)}},onRefresh:()=>load()});
       }).catch(showError);
     }
+    shell.querySelectorAll('[data-delivery-viber-order]').forEach(button=>button.addEventListener('click',async()=>{
+      const orderId=String(button.dataset.deliveryViberOrder),order=state.orders.find(row=>String(row.id)===orderId);
+      if(!order)return;
+      const buyer=state.customers.find(row=>String(row.id)===String(order.kupac_id))||{};
+      const raw=String(order.telefon||buyer.telefon||''),digits=raw.replace(/[^0-9]/g,''),phone=digits?(digits.startsWith('00')?digits.slice(2):digits.startsWith('0')?'381'+digits.slice(1):digits.startsWith('381')?digits:'381'+digits):'';
+      if(!phone){showError(new Error('За Viber поруку није евидентиран телефон купца.'));return;}
+      const orderLines=state.items.filter(line=>String(line.porudzbina_id)===orderId),activeDeferred=state.deferredDeliveries.filter(row=>String(row.porudzbina_id)===orderId&&['nova','odlozeno'].includes(String(row.status)));
+      const productMap=new Map(state.products.map(row=>[String(row.id),row])),variantMap=new Map(state.variants.map(row=>[String(row.id),row])),targetTours=new Map(state.availableTours.map(row=>[String(row.id),row]));
+      const missing=[],deferredLines=[],delivered=[];let total=0,totalKnown=true;
+      for(const line of orderLines){const product=productMap.get(String(line.product_id)),variant=variantMap.get(String(line.variant_id)),size=Number(line.package_size)||Number(variant?.package_value)||1,unit=line.package_unit||variant?.package_unit||variant?.unit||'пак.',original=Math.max(0,Number(line.package_count)||0),current=Math.max(0,Number(requestedPackagesFor(line))||0),price=salePricePerPackage(line),name=product?.name||'Производ',packageText=(Number.isFinite(size)?fmtQty(1,size,unit).replace(/^1\s*/, ''):unit)||'Амбалажа';
+        const defRows=activeDeferred.filter(row=>String(row.originalna_stavka_id)===String(line.id)),defQty=defRows.reduce((sum,row)=>sum+Math.max(0,Number(row.odlozena_kolicina)||0)/size,0);
+        for(const deferred of defRows){const target=targetTours.get(String(deferred.ciljna_tura_id)),date=target?.datum?new Intl.DateTimeFormat('sr-RS',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Europe/Belgrade'}).format(new Date(target.datum+'T12:00:00')):'датум није евидентиран';deferredLines.push('- '+name+' ('+packageText+') — '+fmtQty(Number(deferred.odlozena_kolicina)/size,1,unit)+' (пребачено за Туру '+String(target?.id??deferred.ciljna_tura_id)+' — '+date+')');}
+        const permanent=Math.max(0,original-current-defQty);if(permanent>0.000001)missing.push('- '+name+' ('+packageText+') — '+fmtQty(permanent,1,'пак.'));
+        if(current>0){if(price!==null&&Number.isFinite(price)){const amount=current*price;delivered.push('- '+name+' ('+packageText+') — '+fmtQty(current,1,'пак.')+' ('+money(amount)+')');total+=amount;}else{delivered.push('- '+name+' ('+packageText+') — '+fmtQty(current,1,'пак.')+' (цена није евидентирана)');totalKnown=false;}}
+      }
+      const point=state.points.find(row=>String(row.id)===String(order.punkt_id)),stop=state.tourStops.find(row=>String(row.punkt_id)===String(order.punkt_id)),pointLine=delivered.length&&order.punkt_id?'\nПункт и време доставе: '+(point?.name||'Пункт није наведен')+' — '+(stop?.vreme||'време није наведено'):'';
+      const message='Поштовање '+(buyer.ime_prezime||'')+', желим само да Вас обавестим о изменама у Вашој поруџбини за ову туру:'+(missing.length?'\n\nНеће бити преузето:\n'+missing.join('\n'):'')+(deferredLines.length?'\n\nОдложено за следећу туру:\n'+deferredLines.join('\n'):'')+'\n\nБиће преузето:\n'+(delivered.length?delivered.join('\n'):'Нема преосталих ставки за испоруку у овој тури.')+'\n\nУкупно за доставу: '+(delivered.length?(totalKnown?money(total):'провери цену ставки'):'0 дин')+pointLine+'\nХвала на разумевању — Наручи домаће.';
+      try{await navigator.clipboard.writeText(message);}catch(_){window.prompt('Копирај Viber поруку:',message);}window.location.href='viber://chat?number='+encodeURIComponent(phone);
+    }));
     shell.querySelectorAll('[data-open-order]').forEach(button=>button.addEventListener('click',async()=>{
       if(button.disabled)return;
       button.disabled=true;
