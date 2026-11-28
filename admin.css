@@ -1,14 +1,14 @@
 /* =========================================================
    НАРУЧИ ДОМАЋЕ ADMIN — НОВИ ВИЗУЕЛНИ СИСТЕМ
- * Version: 5.4.10
-   Верзија: 5.4.10
+ * Version: 5.4.11
+   Верзија: 5.4.11
    Обим: Улаз у туре + приказ поруџбина унутар туре
    Пословна логика, HTML и Supabase остају непромењени.
    ========================================================= */
 
 /* ОСНОВА И СВЕТЛА ПАЛЕТА */
 :root{
-  --nd-css-version:"5.4.10";
+  --nd-css-version:"5.4.11";
   --nd-bg:#F3F5F2;
   --nd-card:#FFFFFF;
   --nd-green:#285B3C;
@@ -2903,4 +2903,69 @@ body.nd-workspace select:focus-visible{
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{font-size:12.5px;padding:2px 5px}
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{font-size:9.5px}
   .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;font-size:9px}
+}
+
+
+/* ДОСТАВА — ИЗДВОЈЕН ЗБИР ПО КУПЦУ · v5.4.11
+   Набавна вредност и стварно преузимање су одвојени од наплате купцу. */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin:8px 0 9px;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals>div{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:3px;
+  min-width:0;
+  padding:7px 8px;
+  border:1px solid #DCE4DC;
+  border-radius:8px;
+  background:#FFFFFF;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals small{
+  color:#68766C;
+  font-size:9px;
+  font-weight:850;
+  line-height:1.2;
+  letter-spacing:.015em;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals strong{
+  color:#344238;
+  font-size:13px;
+  font-weight:900;
+  line-height:1.2;
+  overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals span{
+  color:#68766C;
+  font-size:9px;
+  line-height:1.2;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-total-farm{
+  background:#F3F5F2;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-total-picked{
+  background:#EAF3EC;
+  border-color:#C6DCCB;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-total-picked strong{
+  color:#285B3C;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-total-charge{
+  background:#E6F2EC;
+  border-color:#B7D8C6;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-total-charge strong{
+  color:#1D442C;
+}
+@media(max-width:480px){
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals{gap:4px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals>div{padding:6px 5px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals small{font-size:8px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals strong{font-size:11px}
+  .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-customer-totals span{font-size:8px}
 }
