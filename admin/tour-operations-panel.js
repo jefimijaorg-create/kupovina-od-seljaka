@@ -576,6 +576,32 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     compactOpsHead?.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
     shell.querySelector('[data-report-print]')?.addEventListener('click',()=>window.print());
     shell.querySelectorAll('[data-delivery-view]').forEach(button=>button.addEventListener('click',()=>{deliveryView=button.dataset.deliveryView==='vehicle'?'vehicle':'routes';render();}));
+    shell.querySelectorAll('[data-vehicle-pickup-save]').forEach(button=>button.addEventListener('click',async()=>{
+      if(deliveryBusy||state.tour.status!=='processing'||!canReadProducts)return;
+      const allocation=state.procurementAllocations.find(row=>String(row.id)===String(button.dataset.vehiclePickupSave));
+      const input=shell.querySelector('[data-vehicle-pickup-input="'+button.dataset.vehiclePickupSave+'"]');
+      if(!allocation||!input)return;
+      const raw=input.value,value=Number(raw),confirmed=Math.max(0,Number(allocation.potvrdjeno_pakovanja)||0);
+      if(raw===''||!Number.isFinite(value)||value<0||value>confirmed){
+        input.setCustomValidity('Преузето не може бити веће од потврђене количине газдинства ('+confirmed+' пак.).');
+        input.reportValidity();input.setCustomValidity('');return;
+      }
+      deliveryBusy=true;button.disabled=true;button.textContent='Чувам…';
+      try{
+        const result=await client.from('tura_nabavka_dodele')
+          .update({preuzeto_pakovanja:value,updated_at:new Date().toISOString()})
+          .eq('id',allocation.id).eq('tura_id',tourId)
+          .select('id,preuzeto_pakovanja,potvrdjeno_pakovanja').maybeSingle();
+        if(result.error)throw result.error;
+        if(!result.data||Number(result.data.preuzeto_pakovanja)!==value)throw new Error('База није потврдила физичко преузимање.');
+        Object.assign(allocation,result.data);
+        await load();
+      }catch(error){
+        button.disabled=false;button.textContent='Сачувај';
+        const feedback=shell.querySelector('[data-vehicle-feedback]');
+        if(feedback)feedback.textContent='Преузимање није сачувано: '+(error?.message||'непозната грешка');
+      }finally{deliveryBusy=false;}
+    }));
 
     shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery','traceability'].includes(returnFromReport)?returnFromReport:'orders';render();});
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
