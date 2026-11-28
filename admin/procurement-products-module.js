@@ -1,4 +1,4 @@
-/* ADMIN Nabavka · Version: 1.5.51 · Fix shortage modal click handlers */
+/* ADMIN Nabavka · Version: 1.5.52 · Deferred deliveries included in tour demand */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q=x=>Math.max(0,Number(x)||0),fmt=x=>q(x).toLocaleString('sr-RS',{maximumFractionDigits:2});
 export async function mountProcurementProductsModule({root,core,tourId,onBack,initialStage='all',initialProductId=null}){
