@@ -145,7 +145,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const cards = missing.map(group =>
       '<button type="button" class="nd-go-shortage-chip nd-go-shortage-card" data-open-shortage-pair="'+esc(group.key)+'"><strong>' + esc(group.productName) + ' · ' + esc(group.variantName) + '</strong>' +
       '<b>Мањак за решавање: ' + fmt(group.shortage) + ' пак.</b>' +
-      '<span>Потребно за испоруку: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></button>
+      '<span>Потребно за испоруку: ' + fmt(group.planned) + ' · Потврђено: ' + fmt(group.confirmed) + ' · Одбијено: ' + fmt(group.rejected) + '</span></button>'
     ).join('');
     return '<section class="nd-go-shortage-banner" aria-label="Преглед мањка у набавци">' +
       '<div><strong>Мањкови у набавци</strong><div>' +
