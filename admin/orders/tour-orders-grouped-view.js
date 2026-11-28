@@ -144,6 +144,8 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     }).join('');
     rootNode.innerHTML='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
 
+  }
+
   async function saveOrder(orderId) {
     if (busy || !canManage) return;
     const order = orderMap.get(String(orderId));
