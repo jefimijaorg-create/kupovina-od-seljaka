@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.34
+ * Version: 1.5.35
  * Updated: 2026-11-26
  * Description: Reconciles customer-level delivery quantities from the approved pickup JSON without changing original orders.
  */
@@ -315,6 +315,26 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         }
       }
 
+      /* АЛАРМ: ПРЕУЗЕТА РОБА КОЈА ЈОШ НИЈЕ ПОВЕЗАНА СА КУПЦИМА */
+      const pickupAlerts=[];
+      for(const allocation of state.procurementAllocations){
+        const pickedAtFarm=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
+        if(pickedAtFarm<=0)continue;
+        let entries=allocation.raspodela_kupcima;
+        if(typeof entries==='string'){try{entries=entries.trim()?JSON.parse(entries):[]}catch(_){entries=[]}}
+        if(!Array.isArray(entries))entries=[];
+        const linkedPackages=entries.reduce((sum,entry)=>sum+Math.max(0,Number(entry?.preuzeto_pakovanja)||0),0);
+        if(linkedPackages+0.000001>=pickedAtFarm)continue;
+        const product=productMap.get(allocation.product_id),variant=variantMap.get(allocation.variant_id),farm=farmMap.get(allocation.gazdinstvo_id);
+        const candidates=state.items.filter(item=>String(item.product_id??'')===String(allocation.product_id??'')&&String(item.variant_id??'')===String(allocation.variant_id??''));
+        const candidateHtml=candidates.map(item=>{
+          const order=orderMap.get(item.porudzbina_id),customer=customerMap.get(order?.kupac_id);
+          const farmAssigned=String(item.dodijeljeno_gazdinstvo_id??item.gazdinstvo_id??'')===String(allocation.gazdinstvo_id??'');
+          return '<li><b>'+esc(customer?.ime_prezime||('Купац #'+(order?.kupac_id??'—')))+' · поруџбина #'+esc(item.porudzbina_id)+'</b><span>'+packageCountLabel(item.package_count)+' · у евиденцији купца преузето '+packageCountLabel(item.preuzeta_kolicina||0)+(farmAssigned?' · додељено овом газдинству':' · газдинство није повезано')+'</span></li>';
+        }).join('');
+        pickupAlerts.push('<article class="nd-ops-pickup-alert" role="alert"><div class="nd-ops-pickup-alert-head"><strong>⚠ Преузимање није распоређено по купцима</strong><span>'+esc(farm?.name||('Газдинство #'+allocation.gazdinstvo_id))+'</span></div><p><b>'+esc(product?.name||'Производ')+' · '+esc(variant?.name||variant?.size_label||'варијанта')+':</b> газдинство је означило '+packageCountLabel(pickedAtFarm)+' преузетих, а на ставке купаца је повезано '+packageCountLabel(linkedPackages)+'. Количина није аутоматски додељена.</p>'+(candidateHtml?'<details><summary>Провери могуће купце ('+candidates.length+')</summary><ul>'+candidateHtml+'</ul></details>':'')+'</article>');
+      }
+      const pickupAlertHtml=pickupAlerts.length?'<section class="nd-ops-pickup-alerts" aria-label="Упозорења о преузимању">'+pickupAlerts.join('')+'</section>':'';
       const lineSaleValue=item=>{
         if(hasNumber(item.cena_stavke))return Number(item.cena_stavke);
         if(hasNumber(item.unit_price)&&hasNumber(item.package_count))return Number(item.unit_price)*Number(item.package_count);
@@ -497,7 +517,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           const node=card.querySelector('[data-customer-charge]');if(node)node.textContent=group.lines.length>0&&group.lines.every(line=>line.isUnavailable)?'НЕ ОБРАЧУНАВА СЕ':money(customerKnown?sum:null);
         }
       };
-      body=summary+'<div class="nd-ops-delivery-overview"><strong>'+remainingPoints.length+' преосталих пунктова</strong><span>'+pointWork.filter(row=>row.remaining.length===0).length+' завршених</span></div>'+(pointSections||'')+(unassignedSection||'')+
+      body=pickupAlertHtml+summary+'<div class="nd-ops-delivery-overview"><strong>'+remainingPoints.length+' преосталих пунктова</strong><span>'+pointWork.filter(row=>row.remaining.length===0).length+' завршених</span></div>'+(pointSections||'')+(unassignedSection||'')+
         (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
       /* У ВОЗИЛУ — груписање по производу; варијанте и добављачи остају раздвојени. */
       const vehicleGroups=new Map();
@@ -530,7 +550,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       }).join('');
       const vehicleHtml='<section class="nd-vehicle-list">'+(vehicleRows||'<div class="nd-ops-empty">Нема евидентираних преузетих производа за ову туру.</div>')+'</section>';
       const deliveryTabs='<nav class="nd-ops-delivery-tabs" aria-label="Приказ доставе"><button type="button" data-delivery-view="routes" aria-pressed="'+(deliveryView==='routes'?'true':'false')+'" class="'+(deliveryView==='routes'?'is-active':'')+'">Пунктови и испорука</button><button type="button" data-delivery-view="vehicle" aria-pressed="'+(deliveryView==='vehicle'?'true':'false')+'" class="'+(deliveryView==='vehicle'?'is-active':'')+'">У возилу</button></nav>';
-      if(deliveryView==='vehicle')body=vehicleHtml;
+      if(deliveryView==='vehicle')body=pickupAlertHtml+vehicleHtml;
       body=deliveryTabs+body;
       if(deliveryView!=='vehicle')body+='<button type="button" class="nd-ops-calculator-launch" data-calculator-open>⌗ Калкулатор</button>'+
         '<div class="nd-ops-calculator-overlay" data-calculator-overlay hidden><section class="nd-ops-calculator" role="dialog" aria-modal="true" aria-labelledby="ndCalculatorTitle">'+
