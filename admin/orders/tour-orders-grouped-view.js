@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.19
+ * Version: 1.3.20
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -146,7 +146,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
 
   function shortageCustomers() {
     const buyers=new Map();
-    for(const line of items){const order=orderMap.get(String(line.porudzbina_id));if(!order||String(order.status||'').toLowerCase()==='otkazana')continue;const original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line);if(current+0.000001>=original)continue;const key=String(order.kupac_id??order.id);if(!buyers.has(key))buyers.set(key,{key,orders:new Map(),lines:[]});const group=buyers.get(key);group.orders.set(String(order.id),order);group.lines.push(line);}
+    for(const line of items){const order=orderMap.get(String(line.porudzbina_id));if(!order||String(order.status||'').toLowerCase()==='otkazana')continue;const original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),hasDeferred=Boolean(line.deferred_record_id)||line.deferred_status==='nova'||line.deferred_status==='odlozeno';if(current+0.000001>=original&&!hasDeferred)continue;const key=String(order.kupac_id??order.id);if(!buyers.has(key))buyers.set(key,{key,orders:new Map(),lines:[]});const group=buyers.get(key);group.orders.set(String(order.id),order);group.lines.push(line);}
     return [...buyers.values()];
   }
   function shortageTabsHtml() {
@@ -167,8 +167,8 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const buyers=shortageCustomers();
     const buyerCards=buyers.map(group=>{
       const orders=[...group.orders.values()],orderIds=new Set(orders.map(order=>String(order.id))),first=group.lines[0],firstOrder=orderMap.get(String(first.porudzbina_id)),buyer=customerMap.get(String(firstOrder?.kupac_id))||{},name=buyer.ime_prezime||('Купац #'+(firstOrder?.kupac_id??'—'));
-      const allLines=items.filter(line=>orderIds.has(String(line.porudzbina_id))),affected=allLines.filter(line=>effectivePackages(line)+0.000001<Math.max(0,Number(line.package_count)||0));
-      const affectedHtml=affected.map(line=>{const p=linePresentation(line),original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),missing=Math.max(0,original-current),pair=String(line.product_id||'unknown')+'::'+String(line.variant_id||'unknown');return '<article class="nd-go-shortage-person" style="padding:10px;border-bottom:1px solid #e5e7eb"><strong>'+esc(p.name)+' · '+esc(p.packageText)+'</strong><span class="nd-go-shortage-deficit" style="display:block;color:#c62828;font-weight:700">'+(current===0?'Није преузето':'Умањено: '+fmt(missing)+' од '+fmt(original)+' пак.')+' · '+(current===0?'0 дин.':'преостало '+fmt(current)+' пак.')+'</span><button type="button" data-open-shortage-pair="'+esc(pair)+'">Измени расподелу</button></article>';}).join('');
+      const allLines=items.filter(line=>orderIds.has(String(line.porudzbina_id))),affected=allLines.filter(line=>Boolean(line.deferred_record_id)||line.deferred_status==='nova'||line.deferred_status==='odlozeno'||effectivePackages(line)+0.000001<Math.max(0,Number(line.package_count)||0));
+      const affectedHtml=affected.map(line=>{const p=linePresentation(line),original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),missing=Math.max(0,original-current),pair=String(line.product_id||'unknown')+'::'+String(line.variant_id||'unknown');return '<article class="nd-go-shortage-person" style="padding:10px;border-bottom:1px solid #e5e7eb"><strong>'+esc(p.name)+' · '+esc(p.packageText)+'</strong><span class="nd-go-shortage-deficit" style="display:block;color:#c62828;font-weight:700">'+(line.deferred_record_id||line.deferred_status==='nova'||line.deferred_status==='odlozeno'?'Одложена ставка'+(line.source_tour_id?' · из Туре '+esc(line.source_tour_id):''):(current===0?'Није преузето':'Умањено: '+fmt(missing)+' од '+fmt(original)+' пак.'))+' · '+(current===0?'0 дин.':'преостало '+fmt(current)+' пак.')+'</span><button type="button" data-open-shortage-pair="'+esc(pair)+'">Измени расподелу</button></article>';}).join('');
       let total=0,totalKnown=true;
       const remainingHtml=allLines.filter(line=>effectivePackages(line)>0).map(line=>{const p=linePresentation(line),current=effectivePackages(line),price=Number.isFinite(p.unitPrice)?p.unitPrice:(Number.isFinite(p.lineTotal)&&Number(p.count)>0?p.lineTotal/Number(p.count):null),amount=price===null?null:current*price;if(amount===null)totalKnown=false;else total+=amount;return '<article class="nd-go-shortage-person"><strong>'+esc(p.name)+' · '+esc(p.packageText)+'</strong><span>За испоруку: '+fmt(current)+' пак. · '+(amount===null?'Цена није унета':fmt(amount)+' дин.')+'</span></article>';}).join('');
       const viber=orders.map(order=>{const phone=String(order.telefon||buyer.telefon||'').replace(/[^0-9]/g,'');return phone?'<button type="button" data-shortage-viber-order="'+esc(order.id)+'">Viber · поруџбина #'+esc(order.id)+'</button>':'';}).join('');
