@@ -682,7 +682,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       } catch (error) { statusBusy = false; showError(error); }
     });
     if(activeTab==='orders'){
-      import('./orders/tour-orders-grouped-view.js?v=1.3.21').then(mod=>{
+      import('./orders/tour-orders-grouped-view.js?v=1.3.22').then(mod=>{
         if(disposed || activeTab!=='orders') return;
         const target=shell.querySelector('[data-grouped-orders-root]');
         if(!target) return;
