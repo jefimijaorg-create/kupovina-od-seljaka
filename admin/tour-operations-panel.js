@@ -439,6 +439,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           '<small class="nd-ops-delivery-order-refs">'+orders.map(order=>'#'+esc(order.id)).join(' · ')+'</small>'+
           '</div><span class="nd-ops-delivery-status '+statusClass+'">'+status+'</span></div>'+
           orderHtml+
+          '<div class="nd-ops-delivery-customer-charge"><span>ЗА НАПЛАТУ ОД КУПЦА</span><strong data-customer-charge>'+money(customerChargeKnown?customerCharge:null)+'</strong></div>'+
           (canReadProducts&&state.tour.status==='processing'?
             '<small class="nd-ops-delivery-feedback" data-delivery-feedback aria-live="polite">Потврђуј ставке појединачно — сваки додир чува стварно предату количину.</small>':
             '<small>Потврда је доступна само у тури која је у обради и за овлашћену ADMIN улогу.</small>')+
