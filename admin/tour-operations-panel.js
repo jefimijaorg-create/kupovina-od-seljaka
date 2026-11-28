@@ -392,7 +392,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         const orderHtml=orders.map(order=>{
           const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(order.id));
           const rows=orderItems.map(item=>{
-            if(requestedPackagesFor(item)<=0&&Math.max(0,Number(item.isporucena_kolicina)||0)<=0)return '';
+            /* Ставке са количином 0 остају видљиве ради евиденције мањка/отказа. */
             totalLines++;
             const product=productMap.get(item.product_id),variant=variantMap.get(item.variant_id);
             const ordered=Math.max(0,Number(item.package_count)||0),pickupRows=pickupByItem.get(String(item.id))||[];
