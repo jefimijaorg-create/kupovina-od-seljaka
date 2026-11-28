@@ -37,6 +37,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
   let statusOrderId = null;
   let expandedOrderId = null;
   let orderFilter = 'all';
+  let activeOrdersMode = 'orders';
 
   const statusOptions = [
     ['nova','Нова — чека потврду'],
@@ -129,7 +130,7 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
         variantName: variant.name || variant.size_label || (line.package_size ? fmt(line.package_size) + ' ' + (line.package_unit || '') : 'Амбалажа није наведена'),
         planned: 0, confirmed: 0, rejected: 0
       });
-      demand.get(key).planned += effectivePackages(line);
+      demand.get(key).planned += Math.max(0, Number(line.package_count) || 0);
     }
     for (const allocation of procurementAllocations || []) {
       const key = String(allocation.product_id || 'unknown') + '::' + String(allocation.variant_id || 'unknown');
@@ -152,6 +153,45 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       '<small>Мањак се рачуна из количине припремљене за доставу и потврђене набавке. Када количину купца смањиш или поставиш на 0, приказ се освежава.</small></section>';
   }
 
+  function shortageResolutionHtml() {
+    const totals = new Map();
+    for (const line of items) {
+      const order = orderMap.get(String(line.porudzbina_id));
+      if (!order || String(order.status || '').toLowerCase() === 'otkazana') continue;
+      const key = String(line.product_id || 'unknown') + '::' + String(line.variant_id || 'unknown');
+      if (!totals.has(key)) totals.set(key, { key, ordered: 0, confirmed: 0, lines: [] });
+      const group = totals.get(key);
+      group.ordered += Math.max(0, Number(line.package_count) || 0);
+      group.lines.push(line);
+    }
+    for (const allocation of procurementAllocations || []) {
+      const key = String(allocation.product_id || 'unknown') + '::' + String(allocation.variant_id || 'unknown');
+      const group = totals.get(key);
+      if (group) group.confirmed += Math.max(0, Number(allocation.potvrdjeno_pakovanja) || 0);
+    }
+    const relevant = new Set([...totals.values()].filter(group => group.ordered > group.confirmed + 0.000001).map(group => group.key));
+    const selected = items.filter(line => {
+      const order = orderMap.get(String(line.porudzbina_id));
+      if (!order || String(order.status || '').toLowerCase() === 'otkazana') return false;
+      const raw = line.kolicina_za_isporuku;
+      return relevant.has(String(line.product_id || 'unknown') + '::' + String(line.variant_id || 'unknown')) || (raw !== null && raw !== undefined && raw !== '');
+    });
+    if (!selected.length) return '<section class="nd-go-shortage-banner"><strong>Нема мањка ни коригованих ставки</strong><p>Када набавка буде потврђена са мањком или количина купца буде коригована, ставке ће се појавити овде.</p></section>';
+    const rows = selected.map(line => {
+      const order = orderMap.get(String(line.porudzbina_id)) || {}, buyer = customerMap.get(String(order.kupac_id)) || {};
+      const product = productMap.get(String(line.product_id)) || {}, variant = variantMap.get(String(line.variant_id)) || {};
+      const original = Math.max(0, Number(line.package_count) || 0), current = effectivePackages(line), size = packageSize(line);
+      const phone = phoneDigits(phoneFor(order)), name = buyer.ime_prezime || ('Купац #' + (order.kupac_id ?? '—'));
+      const isZero = current === 0, isAdjusted = line.kolicina_za_isporuku !== null && line.kolicina_za_isporuku !== undefined && line.kolicina_za_isporuku !== '';
+      return '<article class="nd-go-shortage-chip" style="display:grid;gap:10px"><div><strong>' + esc(product.name || 'Производ није повезан') + ' · ' + esc(variant.name || variant.size_label || (line.package_size ? fmt(line.package_size) + ' ' + (line.package_unit || '') : 'Амбалажа')) + '</strong><span style="display:block;margin-top:4px">' + esc(name) + ' · Поруџбина #' + esc(order.id) + '</span><small style="display:block">Оригинално наручено: <b>' + fmt(original) + ' пак.</b> · ' + (isAdjusted ? 'Кориговано за испоруку' : 'Мањак набавке') + '</small></div>' +
+        '<div class="nd-go-shortage-control"><label class="nd-go-edit-count">За испоруку (паковања)<input type="number" min="0" max="' + esc(original) + '" step="1" inputmode="numeric" data-effective-count="' + esc(line.id) + '" value="' + esc(current) + '"></label><div class="nd-go-inline-actions"><button type="button" class="nd-go-action-secondary" data-shortage-step="-1" data-shortage-line="' + esc(line.id) + '">−</button><button type="button" class="nd-go-action-secondary" data-shortage-step="1" data-shortage-line="' + esc(line.id) + '">+</button><button type="button" class="nd-go-action-secondary" data-shortage-zero="' + esc(line.id) + '">0</button><button type="button" class="nd-go-action-primary" data-save-effective="' + esc(line.id) + '">Сачувај</button></div></div>' +
+        '<div class="nd-gop-order-actions"><strong>' + esc(name) + '</strong>' + (phone ? '<button type="button" class="nd-gop-viber" data-shortage-viber="' + esc(line.id) + '">Viber</button>' : '<button type="button" class="nd-gop-viber" disabled title="Телефон купца није евидентиран">Нема броја</button>') + '</div>' +
+        (isZero ? '<small>Количина 0 — ставка се не предаје нити наплаћује.</small>' : '<small>За испоруку: ' + fmt(current) + ' пак. · укупно ' + fmt(current * size) + ' ' + esc(line.package_unit || variant.package_unit || variant.unit || '') + '</small>') + '</article>';
+    }).join('');
+    const groups = [...totals.values()].filter(group => relevant.has(group.key));
+    const summary = groups.map(group => '<div class="nd-go-shortage-chip"><strong>' + esc(productMap.get(String(group.lines[0]?.product_id))?.name || 'Производ') + '</strong><span>Наручено: ' + fmt(group.ordered) + ' пак. · Потврђено: ' + fmt(group.confirmed) + ' пак. · Мањак: ' + fmt(Math.max(0, group.ordered - group.confirmed)) + ' пак.</span></div>').join('');
+    return '<section class="nd-go-shortage-banner"><div><strong>Мањкови и корекције за испоруку</strong><p>Оригинална поруџбина остаје непромењена. Овде подешаваш само број паковања који стварно иде купцу.</p></div>' + summary + '<div class="nd-go-shortage-list">' + rows + '</div></section>';
+  }
   function render() {
     const orderedStops=[...(tourStops||[])].sort((a,b)=>{const ta=String(a.vreme||'').slice(0,5),tb=String(b.vreme||'').slice(0,5),ra=Number.isFinite(Number(a.redosled))?Number(a.redosled):999999,rb=Number.isFinite(Number(b.redosled))?Number(b.redosled):999999;if(ta&&tb)return ta.localeCompare(tb)||ra-rb;if(ta)return -1;if(tb)return 1;return ra-rb});const pointOrder=new Map(orderedStops.map((stop,index)=>[String(stop.punkt_id),index]));
     const sorted=[...orders].sort((a,b)=>{const pa=pointOrder.has(String(a.punkt_id))?pointOrder.get(String(a.punkt_id)):999999,pb=pointOrder.has(String(b.punkt_id))?pointOrder.get(String(b.punkt_id)):999999;return pa-pb||Number(a.id)-Number(b.id)});
@@ -178,7 +218,8 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
       }).join('');
       const validPointId=/^\d+$/.test(String(key))&&group.point&&String(group.point.id)===String(key);return '<section class="nd-gop-point"><header class="nd-gop-point-head"><div><span>ПУНКТ ДОСТАВЕ</span><h3>'+esc(pointName)+'</h3></div>'+(validPointId?'<label>Време <input type="time" value="'+esc(time)+'" data-point-time="'+esc(key)+'"></label>':'<span class="nd-gop-time-unavailable">Време — пункт није повезан</span>')+'</header><div class="nd-gop-table-wrap"><table class="nd-gop-table"><thead><tr><th colspan="2">Артикал / амбалажа</th><th>Количина</th><th colspan="2">Цена по пак. → износ</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="5" class="nd-go-empty">Нема поруџбина за овај пункт.</td></tr>')+'</tbody><tfoot><tr><td colspan="3">УКУПНО ПУНКТ '+esc(pointName.toLocaleUpperCase('sr-RS'))+'</td><td colspan="2" class="nd-gop-amount">'+(pointHasUnknown?'Део цена недостаје':fmtMoney(pointTotal))+'</td></tr></tfoot></table></div></section>';
     }).join('');
-    rootNode.innerHTML=shortageSummaryHtml()+'<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
+const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-heading-copy"><span>АКТИВНА ТУРА</span><h2>Поруџбине по пунктовима</h2><p>Све поруџбине купаца, отворене у једном приказу</p></div><div class="nd-go-metrics"><div><strong>'+orders.length+'</strong><span>Поруџбина</span></div><div><strong>'+totalLines+'</strong><span>Ставки</span></div><div><strong>'+newCount+'</strong><span>За проверу</span></div></div></section>'+(feedback?'<div class="nd-go-feedback '+(feedbackError?'nd-go-error':'')+'" role="status">'+esc(feedback)+'</div>':'')+'<div class="nd-go-list-toolbar"><strong>Пунктови и поруџбине</strong><div class="nd-go-filters" role="group" aria-label="Филтрирај поруџбине"><button type="button" data-order-filter="all" class="'+(orderFilter==='all'?'is-active':'')+'">Све</button><button type="button" data-order-filter="new" class="'+(orderFilter==='new'?'is-active':'')+'">Нове</button><button type="button" data-order-filter="confirmed" class="'+(orderFilter==='confirmed'?'is-active':'')+'">Потврђене</button></div></div>'+(pointSections||'<div class="nd-go-empty-state">Нема поруџбина у активној тури.</div>');
+    rootNode.innerHTML=shortageSummaryHtml()+'<div class="nd-go-list-toolbar"><strong>Тура #'+esc(tourId)+'</strong><div class="nd-go-filters"><button type="button" data-orders-mode="orders" class="'+(activeOrdersMode==='orders'?'is-active':'')+'">Поруџбине</button><button type="button" data-orders-mode="shortage" class="'+(activeOrdersMode==='shortage'?'is-active':'')+'">Мањкови / одбијања</button></div></div>'+(activeOrdersMode==='shortage'?shortageResolutionHtml():orderContent);
 
   }
 
@@ -265,9 +306,11 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const original=Math.max(0,Number(line.package_count)||0),count=Number(input?.value);
     if(!Number.isInteger(count)||count<0||count>original){feedback='Унеси цео број паковања од 0 до '+fmt(original)+'.';feedbackError=true;render();return;}
     const quantity=Number((count*packageSize(line)).toFixed(6));
+    const alreadyDelivered=Math.max(0,Number(line.isporucena_kolicina)||0),size=packageSize(line);
+    if(Number.isFinite(size)&&size>0&&quantity+0.000001<alreadyDelivered){feedback='Количина за испоруку не може бити мања од већ предате количине ('+fmt(alreadyDelivered/size)+' пак.).';feedbackError=true;render();return;}
     busy=true;feedback='Чувам количину за испоруку ставке #'+lineId+'…';feedbackError=false;render();
     try{
-      const result=await client.from('stavke_porudzbine').update({kolicina_za_isporuku:quantity}).eq('id',lineId).eq('tura_id',tourId).select('id,kolicina_za_isporuku').maybeSingle();
+      const patch={kolicina_za_isporuku:quantity};if(count===0)patch.status_izdavanja='ceka_izdavanje';const result=await client.from('stavke_porudzbine').update(patch).eq('id',lineId).eq('tura_id',tourId).select('id,kolicina_za_isporuku,status_izdavanja').maybeSingle();
       if(result.error)throw result.error;
       if(!result.data||String(result.data.id)!==String(lineId)||Math.abs(Number(result.data.kolicina_za_isporuku)-quantity)>0.000001)throw new Error('База није потврдила количину за испоруку.');
       Object.assign(line,result.data);busy=false;feedback=count===0?'Количина је сачувана као 0 — ставка не иде у доставу.':'Количина за испоруку је сачувана: '+fmt(count)+' пак.';render();
@@ -300,6 +343,10 @@ export function mountTourOrdersGroupedView({ root, client, tourId, orders, items
     const action=event.target.closest('button');
     if(action){
       if(action.hasAttribute('data-viber-phone')){const phone=action.dataset.viberPhone;if(phone)window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
+      if(action.hasAttribute('data-orders-mode')){activeOrdersMode=action.dataset.ordersMode==='shortage'?'shortage':'orders';render();return;}
+      if(action.hasAttribute('data-shortage-step')){const input=rootNode.querySelector('[data-effective-count="'+CSS.escape(String(action.dataset.shortageLine))+'"]'),line=items.find(row=>String(row.id)===String(action.dataset.shortageLine));if(input&&line){const max=Math.max(0,Number(line.package_count)||0),next=Math.max(0,Math.min(max,Math.round(Number(input.value||0)+Number(action.dataset.shortageStep))));input.value=String(next);}return;}
+      if(action.hasAttribute('data-shortage-zero')){const input=rootNode.querySelector('[data-effective-count="'+CSS.escape(String(action.dataset.shortageZero))+'"]');if(input)input.value='0';return;}
+      if(action.hasAttribute('data-shortage-viber')){const line=items.find(row=>String(row.id)===String(action.dataset.shortageViber)),order=line&&orderMap.get(String(line.porudzbina_id)),buyer=customerMap.get(String(order?.kupac_id))||{},product=productMap.get(String(line?.product_id))||{},phone=phoneDigits(phoneFor(order||{}));if(!line||!order||!phone){feedback='За Viber поруку недостаје ставка, купац или телефон.';feedbackError=true;render();return;}const original=Math.max(0,Number(line.package_count)||0),current=effectivePackages(line),name=buyer.ime_prezime||('Купац #'+(order.kupac_id??'—')),productName=product.name||'производ';const message=current===0?'Поштовани '+name+', нажалост за ову туру немамо на стању производ: '+productName+' ('+fmt(original)+' паковања). Остатак Ваше поруџбине стиже по договору. Хвала на разумевању — Наручи домаће.':'Поштовани '+name+', за ову туру можемо да испоручимо смањену количину за производ: '+productName+' — уместо '+fmt(original)+' паковања, шаљемо '+fmt(current)+' паковања. Хвала на разумевању — Наручи домаће.';try{await navigator.clipboard.writeText(message);}catch(_){window.prompt('Копирај Viber поруку пре отварања разговора:',message);}window.location.href='viber://chat?number='+encodeURIComponent(phone);return;}
       if(action.hasAttribute('data-open-order')){if(typeof onOpenOrder==='function')await onOpenOrder(action.dataset.openOrder);return;}
       if(action.hasAttribute('data-toggle-order')){const id=String(action.dataset.toggleOrder);expandedOrderId=expandedOrderId===id?null:id;editingLineId=null;editingOrderId=null;statusOrderId=null;render();return;}
       if(action.hasAttribute('data-order-filter')){orderFilter=action.dataset.orderFilter;expandedOrderId=null;render();return;}
