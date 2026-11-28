@@ -405,7 +405,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
             const partialShortage=partialPickupPairs.has(productPair(item));
-            const status=unavailable?'НЕПРЕУЗЕТО · УПИТНО':checked?'✓ Готово':dataIssue?'Провери податке':
+            const status=unavailable?'УПИТНО':checked?'✓ Готово':dataIssue?'Провери податке':
               partialShortage?(invalidProductPairs.has(productPair(item))?'КОЛИЧИНЕ ЗА ИСПОРУКУ ПРЕЛАЗЕ ПРЕУЗЕТО':'ПРЕУЗЕТО ПО ПРИПРЕМИ ПОРУЏБИНА'):
               picked+0.000001>=ordered&&ordered>0?'Роба доступна за доставу':
               picked>0?'Делимично преузето · недостаје '+packageCountLabel(deficitPackages):
@@ -737,8 +737,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             .select('id,isporucena_kolicina,stavka_cekirana').maybeSingle();
           if(result.error)throw result.error;
           if(!result.data||result.data.stavka_cekirana!==true||
-            Math.abs(Number(result.data.isporucena_kolicina)-baseQuantity)>0.000001||
-            false)
+            Math.abs(Number(result.data.isporucena_kolicina)-baseQuantity)>0.000001)
             throw new Error('База није потврдила количину за ставку #'+line.item.id+'.');
           Object.assign(line.item,result.data);
           const orderItems=state.items.filter(item=>String(item.porudzbina_id)===String(line.order.id));
