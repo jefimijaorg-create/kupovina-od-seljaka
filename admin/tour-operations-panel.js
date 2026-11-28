@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.49
+ * Version: 1.5.50
  * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
@@ -20,7 +20,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
   const role = core.getState().role;
   const canReadProducts = ['admin','super_admin'].includes(role);
   const canManageOrders = ['admin','super_admin','operator'].includes(role);
-  let activeTab = ['orders','products','delivery','traceability'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
+  let activeTab = ['orders','products','shortage','delivery','traceability'].includes(initialTab) ? initialTab : 'orders', returnFromReport='orders', disposed = false, loadToken = 0, groupedOrdersView = null, statusBusy = false, deliveryBusy = false, selectedDeliveryPointId = null;
   let deliveryView = 'routes';
   let calculatorExpression='0', calculatorJustEvaluated=false;
   const state = { tour:null, items:[], orders:[], customers:[], products:[], variants:[], productOffers:[], farms:[], itemAllocations:[], procurementAllocations:[], tourStops:[], points:[] };
@@ -117,6 +117,23 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     let deliverySaveGroups = new Map();
     let updateDeliveryAmounts = null;
     if(activeTab==='orders') body='<div data-grouped-orders-root></div>';
+    if(activeTab==='shortage') {
+      const shortageGroups=new Map();
+      state.items.forEach(item=>{
+        const k=productPairKey(item),ordered=Math.max(0,Number(item.package_count)||0);
+        if(!shortageGroups.has(k))shortageGroups.set(k,{product_id:item.product_id,variant_id:item.variant_id,ordered:0});
+        shortageGroups.get(k).ordered+=ordered;
+      });
+      const shortageCards=[...shortageGroups.values()].map(group=>{
+        const confirmed=state.procurementAllocations.filter(row=>productPairKey(row)===productPairKey(group)).reduce((sum,row)=>sum+Math.max(0,Number(row.potvrdjeno_pakovanja)||0),0);
+        return {...group,confirmed,missing:Math.max(0,group.ordered-confirmed)};
+      }).filter(group=>group.missing>0).sort((a,b)=>b.missing-a.missing);
+      body=shortageCards.length?'<div class="nd-ops-shortage-products">'+shortageCards.map(group=>{
+        const product=productMap.get(group.product_id),variant=variantMap.get(group.variant_id);
+        return '<button type="button" class="nd-ops-card nd-ops-shortage-product" data-open-shortage-product="'+esc(group.product_id)+'" data-shortage-variant="'+esc(group.variant_id)+'"><strong>'+esc(product?.name||'Производ')+'</strong><div>'+esc(variant?.name||variant?.size_label||'Паковање')+'</div><div class="nd-ops-qty">Наручено '+group.ordered+' пак. · Потврђено '+group.confirmed+' пак.</div><small class="nd-ops-shortage-count">Фали још '+group.missing+' пак.</small></button>';
+      }).join('')+'</div>':'<div class="nd-ops-empty">Нема мањкова у овој тури.</div>';
+    }
+
     if(activeTab==='products') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за производе и варијанте. Приказ је ограничен постојећим RLS правилима.</div>':state.items.length?state.items.map(item=>{const p=productMap.get(item.product_id),v=variantMap.get(item.variant_id),f=farmMap.get(item.gazdinstvo_id)||farmMap.get(p?.gazdinstvo_id);return '<article class="nd-ops-card" data-open-procurement-product="'+esc(item.product_id||'')+'" role="button" tabindex="0" aria-label="Отвори набавку за '+esc(p?.name||'производ')+'"><strong>'+esc(p?.name||'Назив производа није доступан')+'</strong><div>'+esc(v?.name||v?.size_label||'Варијанта није наведена')+'</div><div class="nd-ops-qty">'+fmtQty(item.package_count,item.package_size,item.package_unit)+'</div><small>'+esc(f?.name||'Газдинство није доступно')+'</small></article>'}).join(''):'<div class="nd-ops-empty">Нема производа за приказ.</div>';
     if(activeTab==='allocations') body=!canReadProducts?'<div class="nd-ops-notice">Ваша ADMIN улога нема SELECT дозволу за табеле расподеле. RLS правила нису мењана.</div>':'<h3>Расподела ставки поруџбина</h3>'+ (state.itemAllocations.map(a=>'<article class="nd-ops-card"><strong>Ставка #'+esc(a.stavka_porudzbine_id)+'</strong><div>'+esc(a.broj_pakovanja)+' паковања</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_stavke_raspodela.</div>')+'<h3>Набавка по производу и газдинству</h3>'+ (state.procurementAllocations.map(a=>'<article class="nd-ops-card"><strong>'+esc(productMap.get(a.product_id)?.name||'Производ није доступан')+'</strong><div>'+esc(a.broj_pakovanja)+' паковања · преузето '+esc(a.preuzeto_pakovanja??0)+'</div><small>'+esc(farmMap.get(a.gazdinstvo_id)?.name||'Газдинство није доступно')+'</small></article>').join('')||'<div class="nd-ops-empty">Нема редова у tura_nabavka_dodele.</div>');
     if(activeTab==='traceability') {
@@ -763,6 +780,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         }
       });
     });
+    shell.querySelectorAll('[data-open-shortage-product]').forEach(card=>card.addEventListener('click',()=>onOpenProcurement?.(card.dataset.openShortageProduct,'shortage',card.dataset.shortageVariant)));
     shell.querySelectorAll('[data-open-procurement-product]').forEach(card=>{
       const open=()=>{const productId=card.dataset.openProcurementProduct;if(productId)onOpenProcurement?.(productId);};
       card.addEventListener('click',open);
