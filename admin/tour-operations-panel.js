@@ -544,7 +544,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           '<div class="nd-vehicle-metric"><small>Преузето</small><strong>'+vehicleQty(group.picked)+'</strong><span>пак.</span></div></div>'+
           '<div class="nd-vehicle-status '+statusClass+'">'+esc(status)+'</div>'+farmMarkup+'</div></article>';
       }).join('');
-      const vehicleHtml='<section class="nd-vehicle-list"><div class="nd-vehicle-summary">'+
+      const vehicleHtml='<section class="nd-vehicle-list"><div class="nd-vehicle-feedback" data-vehicle-feedback role="status" aria-live="polite"></div><div class="nd-vehicle-summary">'+
         '<div><small>Наручено</small><strong>'+vehicleQty(vehicleOrdered)+' пак.</strong></div>'+
         '<div><small>Достављено</small><strong>'+vehicleQty(vehicleDelivered)+' пак.</strong></div>'+
         '<div><small>Преузето</small><strong>'+vehicleQty(vehiclePicked)+' пак.</strong></div>'+
