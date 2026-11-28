@@ -60,7 +60,7 @@ async function loadTours(){
 async function openDelivery(tourId){
   $('deliveryTourPicker').hidden=true;$('deliveryRoot').hidden=false;$('deliveryRoot').innerHTML='<div class="nd-loading">Отварам доставу…</div>';
   try{
-    const mod=await import('/admin/tour-operations-panel.js?v=1.5.33');
+    const mod=await import('/admin/tour-operations-panel.js?v=1.5.49');
     deliveryPanel=await mod.mountTourOperations({root:$('deliveryRoot'),core,tourId:String(tourId),initialTab:'delivery',onBack:showPicker,onOpenProcurement:null});
   }catch(error){$('deliveryRoot').textContent='Достава није доступна: '+(error.message||String(error));}
 }
