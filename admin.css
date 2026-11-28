@@ -2887,7 +2887,41 @@ body.nd-workspace select:focus-visible{
 }
 
 
-/* ДОСТАВА — ЈАСАН ИЗНОС СТАВКЕ, БЕЗ СУДАРА ОЗНАКЕ И ВРЕДНОСТИ */
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:auto;align-content:center;justify-items:end;gap:3px;white-space:normal;}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total small{display:block;width:100%;text-align:right;white-space:normal;}
-.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total strong{display:block;width:100%;text-align:right;white-space:nowrap;}
+/* ДОСТАВА — НИЖА ХОРИЗОНТАЛНА ЛИНИЈА СТАВКЕ */
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{
+ display:grid;
+ grid-template-columns:minmax(112px,1.15fr) minmax(105px,.95fr) minmax(132px,auto) minmax(78px,.72fr) minmax(94px,.82fr);
+ align-items:center;gap:6px;min-width:0;margin-top:3px;
+}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-info{display:block;min-width:0;grid-column:auto}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{display:block;font-size:12px;line-height:1.15;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package{display:block;min-width:0;max-width:100%;font-size:10px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{grid-column:auto;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:5px;min-width:0;margin:0}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{width:58px;min-height:40px;padding:3px}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{min-height:40px;padding:6px 9px;white-space:nowrap}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{min-width:0;font-size:10px;line-height:1.2;overflow-wrap:anywhere}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;min-width:0;padding:4px 6px;align-content:center;justify-items:end;white-space:normal}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total small{display:block;width:100%;font-size:8px;line-height:1.1;text-align:right;white-space:normal}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total strong{display:block;width:100%;font-size:12px;line-height:1.15;text-align:right;white-space:nowrap}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:3px;font-size:9px;line-height:1.2}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare>strong{flex:1 1 100%}
+.nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-price-row{display:none}
+@media(max-width:767px){
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{grid-template-columns:minmax(0,1fr) minmax(58px,auto) minmax(75px,.85fr) minmax(84px,1fr);gap:5px}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-info{grid-column:1/3;grid-row:1;display:flex;align-items:baseline;gap:8px}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-name{flex:1 1 auto;min-width:0}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package{flex:0 1 42%;min-width:0}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-action{grid-column:1/3;grid-row:2}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-unit-price{grid-column:3;grid-row:2;align-self:center}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{grid-column:4;grid-row:2}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-compare{grid-column:1/-1}
+}
+@media(max-width:390px){
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-main{grid-template-columns:minmax(0,1fr) minmax(54px,auto) minmax(70px,.8fr) minmax(78px,.9fr);gap:4px}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-product-info{gap:5px}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-package{flex-basis:38%;font-size:9px}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-qty-wrap input{width:52px}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-quick{padding:5px 7px;font-size:10px}
+ .nd-workspace .nd-tour-ops-delivery .nd-ops-delivery-line-total{padding:3px}
+}
