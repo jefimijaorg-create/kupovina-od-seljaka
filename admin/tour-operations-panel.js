@@ -1,7 +1,7 @@
 /*
  * NARUČI DOMAĆE — TOUR OPERATIONS PANEL
- * Version: 1.5.38
- * Updated: 2026-11-26
+ * Version: 1.5.43
+ * Updated: 2026-11-28
  * Description: Full pickup auto-covers ordered customer items; partial pickup is not assigned by order sequence and is capped by physical pickup.
  */
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -493,14 +493,13 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
         (activeOrders.length===0?'<div class="nd-ops-empty">Све поруџбине су завршене. Нема активних испорука.</div>':'');
       /* У ВОЗИЛУ — целокупно стање по активној тури, производу и амбалажи */
       const vehicleGroups=new Map();
-      const vehicleKey=row=>String(row.product_id??'')+'::'+String(row.variant_id??'');
       const ensureVehicleGroup=(productId,variantId)=>{
         const key=String(productId??'')+'::'+String(variantId??'');
         if(!vehicleGroups.has(key)){
           const product=productMap.get(productId),variant=variantMap.get(variantId);
           vehicleGroups.set(key,{key,productId,variantId,name:product?.name||'Производ није доступан',
             variant:variant?.name||variant?.size_label||'Амбалажа није наведена',
-            ordered:0,delivered:0,picked:0,allocations:[]});
+            ordered:0,requested:0,delivered:0,picked:0});
         }
         return vehicleGroups.get(key);
       };
@@ -510,18 +509,18 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       }
       for(const allocation of state.procurementAllocations){
         const group=ensureVehicleGroup(allocation.product_id,allocation.variant_id);
+        const requested=Math.max(0,Number(allocation.broj_pakovanja)||0);
         const confirmed=Math.max(0,Number(allocation.potvrdjeno_pakovanja)||0);
+        group.requested+=allocation.naruceno===true?requested:0;
         group.delivered+=allocation.naruceno===true?confirmed:0;
         group.picked+=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
-        group.allocations.push(allocation);
       }
       const vehicleList=[...vehicleGroups.values()].sort((a,b)=>(a.name+' '+a.variant).localeCompare(b.name+' '+b.variant,'sr'));
       const vehicleOrdered=vehicleList.reduce((sum,g)=>sum+g.ordered,0);
+      const vehicleRequested=vehicleList.reduce((sum,g)=>sum+g.requested,0);
       const vehicleDelivered=vehicleList.reduce((sum,g)=>sum+g.delivered,0);
       const vehiclePicked=vehicleList.reduce((sum,g)=>sum+g.picked,0);
-      const vehicleIssues=vehicleList.filter(g=>Math.abs(g.ordered-g.delivered)>0.000001||Math.abs(g.delivered-g.picked)>0.000001).length;
       const vehicleQty=value=>Number(value).toLocaleString('sr-RS',{maximumFractionDigits:3});
-      const vehicleEditable=canReadProducts&&state.tour.status==='processing';
       const vehicleProducts=new Map();
       vehicleList.forEach(group=>{
         const productKey=String(group.productId??'');
@@ -530,35 +529,37 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       });
       const vehicleRows=[...vehicleProducts.values()].sort((a,b)=>a.name.localeCompare(b.name,'sr')).map(product=>{
         const packageMarkup=product.packages.map(group=>{
-          const farmRows=group.allocations.map(allocation=>{
-            const farm=farmMap.get(allocation.gazdinstvo_id)?.name||('Газдинство #'+allocation.gazdinstvo_id);
-            const confirmed=Math.max(0,Number(allocation.potvrdjeno_pakovanja)||0);
-            const picked=Math.max(0,Number(allocation.preuzeto_pakovanja)||0);
-            return '<div class="nd-vehicle-pickup-row"><span>'+esc(farm)+' <small>· потврђено '+vehicleQty(confirmed)+' пак.</small></span>'+
-              '<div class="nd-vehicle-pickup-edit"><input type="number" inputmode="decimal" min="0" max="'+confirmed+'" step="0.01" value="'+picked+'" data-vehicle-pickup-input="'+esc(allocation.id)+'" aria-label="Физички преузето од '+esc(farm)+' за '+esc(group.variant)+'" '+(!vehicleEditable||confirmed<=0?'disabled':'')+'>'+
-              '<button type="button" data-vehicle-pickup-save="'+esc(allocation.id)+'" '+(!vehicleEditable||confirmed<=0?'disabled':'')+'>Сачувај</button></div></div>';
-          }).join('');
-          const farmMarkup=group.allocations.length?'<div class="nd-vehicle-pickup-list"><div class="nd-vehicle-pickup-title">Физичко преузимање по газдинству</div>'+farmRows+'</div>':'<div class="nd-vehicle-no-allocation">Нема додељеног газдинства за ову амбалажу.</div>';
-          const orderedGap=group.ordered-group.delivered,deliveredGap=group.delivered-group.picked;
-          const status=orderedGap>0.000001?'Мањак од газдинства · '+vehicleQty(orderedGap)+' пак.':deliveredGap>0.000001?'Још није у возилу · '+vehicleQty(deliveredGap)+' пак.':group.picked>group.delivered+0.000001?'Провери вишак преузимања':'Количине су усклађене';
-          const statusClass=orderedGap>0.000001||deliveredGap>0.000001?'is-warning':group.picked>group.delivered+0.000001?'is-error':'is-ok';
+          const requestedGap=Math.max(0,group.ordered-group.requested);
+          const confirmationGap=Math.max(0,group.requested-group.delivered);
+          const vehicleGap=Math.max(0,group.delivered-group.picked);
+          const status=group.picked>group.delivered+0.000001
+            ?'Провери вишак преузимања · '+vehicleQty(group.picked-group.delivered)+' пак.'
+            :requestedGap>0.000001
+              ?'Није требовано од газдинства · '+vehicleQty(requestedGap)+' пак.'
+              :confirmationGap>0.000001
+                ?'Чека се потврда · '+vehicleQty(confirmationGap)+' пак.'
+                :vehicleGap>0.000001
+                  ?'Потврђено, није у возилу · '+vehicleQty(vehicleGap)+' пак.'
+                  :'Количине су усклађене';
+          const statusClass=group.picked>group.delivered+0.000001?'is-error':requestedGap>0.000001||confirmationGap>0.000001||vehicleGap>0.000001?'is-warning':'is-ok';
           return '<section class="nd-vehicle-package">'+
             '<div class="nd-vehicle-package-name">'+esc(group.variant)+'</div>'+
             '<div class="nd-vehicle-metrics">'+
-            '<div class="nd-vehicle-metric"><small>Наручено</small><strong>'+vehicleQty(group.ordered)+'</strong><span>пак.</span></div>'+
-            '<div class="nd-vehicle-metric"><small>Достављено</small><strong>'+vehicleQty(group.delivered)+'</strong><span>пак.</span></div>'+
-            '<div class="nd-vehicle-metric"><small>Преузето</small><strong>'+vehicleQty(group.picked)+'</strong><span>пак.</span></div></div>'+
-            '<div class="nd-vehicle-status '+statusClass+'">'+esc(status)+'</div>'+farmMarkup+'</section>';
+            '<div class="nd-vehicle-metric"><small>Купци наручили</small><strong>'+vehicleQty(group.ordered)+'</strong><span>пак.</span></div>'+
+            '<div class="nd-vehicle-metric"><small>Газдинствима тражено</small><strong>'+vehicleQty(group.requested)+'</strong><span>пак.</span></div>'+
+            '<div class="nd-vehicle-metric"><small>Газдинства потврдила</small><strong>'+vehicleQty(group.delivered)+'</strong><span>пак.</span></div>'+
+            '<div class="nd-vehicle-metric"><small>Физички преузето</small><strong>'+vehicleQty(group.picked)+'</strong><span>пак.</span></div></div>'+
+            '<div class="nd-vehicle-status '+statusClass+'">'+esc(status)+'</div></section>';
         }).join('');
         return '<article class="nd-vehicle-product"><header class="nd-vehicle-product-head"><strong>'+esc(product.name)+'</strong></header>'+packageMarkup+'</article>';
       }).join('');
-      const vehicleHtml='<section class="nd-vehicle-list"><div class="nd-vehicle-feedback" data-vehicle-feedback role="status" aria-live="polite"></div><div class="nd-vehicle-summary">'+
-        '<div><small>Наручено</small><strong>'+vehicleQty(vehicleOrdered)+' пак.</strong></div>'+
-        '<div><small>Достављено</small><strong>'+vehicleQty(vehicleDelivered)+' пак.</strong></div>'+
-        '<div><small>Преузето</small><strong>'+vehicleQty(vehiclePicked)+' пак.</strong></div>'+
-        '<div class="'+(vehicleIssues?'has-issues':'is-clear')+'"><small>Неслагања</small><strong>'+vehicleIssues+'</strong></div></div>'+
+      const vehicleHtml='<section class="nd-vehicle-list"><div class="nd-vehicle-summary">'+
+        '<div><small>Купци наручили</small><strong>'+vehicleQty(vehicleOrdered)+' пак.</strong></div>'+
+        '<div><small>Газдинствима тражено</small><strong>'+vehicleQty(vehicleRequested)+' пак.</strong></div>'+
+        '<div><small>Газдинства потврдила</small><strong>'+vehicleQty(vehicleDelivered)+' пак.</strong></div>'+
+        '<div class="is-clear"><small>Физички преузето · у возилу</small><strong>'+vehicleQty(vehiclePicked)+' пак.</strong></div></div>'+
         (vehicleRows||'<div class="nd-ops-empty">У активној тури нема ставки производа.</div>')+
-        '<p class="nd-vehicle-note">„Достављено“ приказује количину потврђену од газдинства. „Преузето“ се мења само ручним уписом и чува се по газдинству.</p></section>';
+        '<p class="nd-vehicle-note">Приказ је само евиденција тренутног стања робе у возилу. Количине се овде не уносе и не мењају.</p></section>';
       const deliveryTabs='<nav class="nd-ops-delivery-tabs" aria-label="Приказ доставе"><button type="button" data-delivery-view="routes" aria-pressed="'+(deliveryView==='routes'?'true':'false')+'" class="'+(deliveryView==='routes'?'is-active':'')+'">Пунктови и испорука</button><button type="button" data-delivery-view="vehicle" aria-pressed="'+(deliveryView==='vehicle'?'true':'false')+'" class="'+(deliveryView==='vehicle'?'is-active':'')+'">У возилу</button></nav>';
       if(deliveryView==='vehicle')body=pickupAlertHtml+vehicleHtml;
       body=deliveryTabs+body;
@@ -584,33 +585,6 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     compactOpsHead?.querySelector('[data-open-report]')?.addEventListener('click',()=>{if(activeTab==='report')return;returnFromReport=activeTab;activeTab='report';render();});
     shell.querySelector('[data-report-print]')?.addEventListener('click',()=>window.print());
     shell.querySelectorAll('[data-delivery-view]').forEach(button=>button.addEventListener('click',()=>{deliveryView=button.dataset.deliveryView==='vehicle'?'vehicle':'routes';render();}));
-    shell.querySelectorAll('[data-vehicle-pickup-save]').forEach(button=>button.addEventListener('click',async()=>{
-      if(deliveryBusy||state.tour.status!=='processing'||!canReadProducts)return;
-      const allocation=state.procurementAllocations.find(row=>String(row.id)===String(button.dataset.vehiclePickupSave));
-      const input=shell.querySelector('[data-vehicle-pickup-input="'+button.dataset.vehiclePickupSave+'"]');
-      if(!allocation||!input)return;
-      const raw=input.value,value=Number(raw),confirmed=Math.max(0,Number(allocation.potvrdjeno_pakovanja)||0);
-      if(raw===''||!Number.isFinite(value)||value<0||value>confirmed){
-        input.setCustomValidity('Преузето не може бити веће од потврђене количине газдинства ('+confirmed+' пак.).');
-        input.reportValidity();input.setCustomValidity('');return;
-      }
-      deliveryBusy=true;button.disabled=true;button.textContent='Чувам…';
-      try{
-        const result=await client.from('tura_nabavka_dodele')
-          .update({preuzeto_pakovanja:value,updated_at:new Date().toISOString()})
-          .eq('id',allocation.id).eq('tura_id',tourId)
-          .select('id,preuzeto_pakovanja,potvrdjeno_pakovanja').maybeSingle();
-        if(result.error)throw result.error;
-        if(!result.data||Number(result.data.preuzeto_pakovanja)!==value)throw new Error('База није потврдила физичко преузимање.');
-        Object.assign(allocation,result.data);
-        await load();
-      }catch(error){
-        button.disabled=false;button.textContent='Сачувај';
-        const feedback=shell.querySelector('[data-vehicle-feedback]');
-        if(feedback)feedback.textContent='Преузимање није сачувано: '+(error?.message||'непозната грешка');
-      }finally{deliveryBusy=false;}
-    }));
-
     shell.querySelector('[data-report-back]')?.addEventListener('click',()=>{activeTab=['orders','products','delivery','traceability'].includes(returnFromReport)?returnFromReport:'orders';render();});
     const calcOverlay=shell.querySelector('[data-calculator-overlay]'),calcDisplay=shell.querySelector('[data-calculator-display]'),calcCaption=shell.querySelector('[data-calculator-expression]');
     const updateCalc=()=>{if(calcDisplay)calcDisplay.textContent=calculatorExpression.replace(/\./g,',')||'0';};
