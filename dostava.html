@@ -739,8 +739,8 @@ function renderManifest(){
  const shownRows=os.flatMap(o=>o.rs.filter(r=>view==='delivered'?n(r.isporucena_kolicina)>0:(n(r.preuzeta_kolicina)<=0||n(r.preuzeta_kolicina)>n(r.isporucena_kolicina))));
  const deliveredRows=allOrders.flatMap(o=>o.rs).filter(r=>n(r.isporucena_kolicina)>0);
  const totalDelivered=deliveredRows.reduce((sum,r)=>sum+manifestUnitPrice(r)*n(r.isporucena_kolicina),0);
- const selectedAmount=rows.filter(r=>Boolean(r.stavka_cekirana)&&n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)).reduce((sum,r)=>{const remaining=Math.max(0,n(r.preuzeta_kolicina)-n(r.isporucena_kolicina));return sum+remaining*manifestUnitPrice(r)},0);
- const selectedCount=rows.filter(r=>Boolean(r.stavka_cekirana)&&n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)).length;
+ const selectedAmount=rows.filter(r=>Boolean(r.stavka_cekirana)&&n(r.kolicina_za_isporuku??r.kolicina??r.total_quantity)>n(r.isporucena_kolicina)&&n(r.preuzeta_kolicina)>n(r.isporucena_kolicina)).reduce((sum,r)=>{const remaining=Math.max(0,Math.min(n(r.preuzeta_kolicina)-n(r.isporucena_kolicina),n(r.kolicina_za_isporuku??r.kolicina??r.total_quantity)-n(r.isporucena_kolicina)));return sum+remaining*manifestUnitPrice(r)},0);
+ const selectedCount=rows.filter(r=>Boolean(r.stavka_cekirana)&&Math.max(0,Math.min(n(r.preuzeta_kolicina)-n(r.isporucena_kolicina),n(r.kolicina_za_isporuku??r.kolicina??r.total_quantity)-n(r.isporucena_kolicina)))>0).length;
  const summary='<div class="stats"><div class="stat"><b>'+os.length+'</b><span>'+(view==='delivered'?'поруџбина са предатим ставкама':'поруџбина за предају')+'</span></div><div class="stat"><b>'+shownRows.length+'</b><span>'+(view==='delivered'?'предатих ставки':'ставки за предају')+'</span></div><div class="stat"><b>'+totalDelivered.toLocaleString('sr-RS')+' дин.</b><span>УКУПНО ПРЕДАТО КУПЦИМА</span></div></div>';
  const cardsByPoint=new Map();os.forEach(o=>{const key=o.m?.punkt_id?String(o.m.punkt_id):'none';if(!cardsByPoint.has(key))cardsByPoint.set(key,[]);cardsByPoint.get(key).push(o)});
  const cards=[...cardsByPoint.entries()].sort((a,b)=>{const pa=stopOrder.get(a[0])||{i:9999},pb=stopOrder.get(b[0])||{i:9999};return pa.i-pb.i||a[0].localeCompare(b[0],undefined,{numeric:true})}).map(([pointId,pointOrders],pointIndex)=>{
@@ -797,7 +797,7 @@ function renderManifest(){
   root.querySelectorAll('[data-deliver-item].delivery-item-selected').forEach(card=>{
    const row=rows.find(x=>String(x.id)===String(card.dataset.deliverItem));
    if(!row)return;
-   const qty=Math.max(0,n(row.preuzeta_kolicina)-n(row.isporucena_kolicina));
+   const limit=Math.max(0,q(row)),delivered=Math.max(0,n(row.isporucena_kolicina)),qty=Math.max(0,Math.min(n(row.preuzeta_kolicina)-delivered,limit-delivered));
    if(qty<=0)return;
    total+=qty*manifestUnitPrice(row);count++;
   });
@@ -824,17 +824,18 @@ function renderManifest(){
  const confirmDelivery=document.getElementById('confirmSelectedDelivery');
  if(confirmDelivery)confirmDelivery.onclick=async()=>{
   const selected=[...root.querySelectorAll('[data-deliver-item].delivery-item-selected')].map(card=>({card,row:rows.find(r=>String(r.id)===String(card.dataset.deliverItem))}));
-  const valid=selected.filter(x=>x.row&&n(x.row.preuzeta_kolicina)>n(x.row.isporucena_kolicina));
+  const valid=selected.filter(x=>x.row&&Math.max(0,Math.min(n(x.row.preuzeta_kolicina)-n(x.row.isporucena_kolicina),n(x.row.kolicina_za_isporuku??x.row.kolicina??x.row.total_quantity)-n(x.row.isporucena_kolicina)))>0);
   if(!valid.length){alert('Прво додиром изабери бар једну ставку за предају.');return}
-  const total=valid.reduce((sum,x)=>sum+(n(x.row.preuzeta_kolicina)-n(x.row.isporucena_kolicina))*manifestUnitPrice(x.row),0);
+  const total=valid.reduce((sum,x)=>sum+Math.max(0,Math.min(n(x.row.preuzeta_kolicina)-n(x.row.isporucena_kolicina),n(x.row.kolicina_za_isporuku??x.row.kolicina??x.row.total_quantity)-n(x.row.isporucena_kolicina)))*manifestUnitPrice(x.row),0);
   if(!confirm('Потврдити предају '+valid.length+' изабраних ставки у укупном износу од '+total.toLocaleString('sr-RS')+' дин.?'))return;
   confirmDelivery.disabled=true;confirmDelivery.textContent='ЧУВАМ ПРЕДАЈУ…';
   let saved=0;
   try{
    for(const item of valid){
-    const row=item.row,picked=n(row.preuzeta_kolicina),delivered=n(row.isporucena_kolicina),qty=Math.max(0,picked-delivered),remaining=qty;
-    if(!Number.isFinite(qty)||qty<=0||qty>remaining)throw new Error('Количина за ставку „'+row.proizvod+'“ више није доступна за предају.');
-    await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({isporucena_kolicina:delivered+qty,stavka_cekirana:false})});
+    const row=item.row,picked=n(row.preuzeta_kolicina),delivered=n(row.isporucena_kolicina),limit=Math.max(0,q(row)),qty=Math.max(0,Math.min(picked-delivered,limit-delivered));
+    if(!Number.isFinite(qty)||qty<=0||delivered+qty>limit+0.000001)throw new Error('Количина за ставку „'+row.proizvod+'“ прелази усклађену количину за доставу.');
+    const nextDelivered=delivered+qty,status=nextDelivered+0.000001>=limit?'izdato':'delimicno_izdato';
+    await api('stavke_porudzbine?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({isporucena_kolicina:nextDelivered,status_izdavanja:status,stavka_cekirana:false})});
     saved++;
    }
    await reload();show('manifest');window.manifestView='pending';renderManifest();
