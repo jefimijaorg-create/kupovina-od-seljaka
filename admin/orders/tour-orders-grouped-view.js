@@ -1,6 +1,6 @@
 /*
  * NARUČI DOMAĆE — GROUPED TOUR ORDERS
- * Version: 1.3.24
+ * Version: 1.3.25
  * Updated: 2026-11-28
  * Description: Order shortage banner, per-line delivery quantity protection, and existing buyer order operations.
  * Data source: Existing authenticated ADMIN Supabase client and existing order/item/product records.
@@ -239,7 +239,7 @@ const orderContent='<section class="nd-go-workspace-head"><div class="nd-go-head
     if(activeOrdersView==='deferred'){
       if(deferredView){deferredView.destroy();deferredView=null;}
       const target=rootNode.querySelector('[data-deferred-deliveries-root]');
-      import('./deferred-deliveries-view.js?v=1.0.2').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,client,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops,onViberOrder});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
+      import('./deferred-deliveries-view.js?v=1.0.3').then(mod=>{if(!target||!rootNode.contains(target)||activeOrdersView!=='deferred')return;deferredView=mod.mountDeferredDeliveriesView({root:target,client,tourId,deferredDeliveries,orders,items,customers,points,products,variants,availableTours,tourStops,onViberOrder});}).catch(error=>{if(target)target.textContent='Пребачене испоруке нису учитане: '+(error.message||String(error));});
     }
 
   }
