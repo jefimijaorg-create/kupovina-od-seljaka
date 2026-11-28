@@ -3094,3 +3094,11 @@ body.nd-workspace select:focus-visible{
 .nd-workspace .nd-go-shortage-control{display:grid;gap:8px;margin-top:12px;padding:12px;border:1px solid #dfe7e1;border-radius:10px;background:#f7faf8}
 .nd-workspace .nd-go-shortage-control .nd-go-inline-actions{display:flex;flex-wrap:wrap;gap:8px}
 @media(max-width:560px){.nd-workspace .nd-go-shortage-control .nd-go-inline-actions>*{flex:1 1 100%}}
+
+/* Поруџбине — раздвојени разлози мањка у активном фокусу */
+.nd-workspace .nd-go-shortage-reasons{display:grid;gap:9px;margin:0 0 14px;padding:12px;border:1px solid #e7c6a9;border-radius:12px;background:#fffaf5;color:#543b28}
+.nd-workspace .nd-go-shortage-reasons>div{display:grid;gap:3px;padding:8px;border-radius:8px;background:#fff}
+.nd-workspace .nd-go-shortage-reasons>div>span{font-size:13px;font-weight:800}
+.nd-workspace .nd-go-shortage-reasons small{font-size:11px;color:#735c48}
+.nd-workspace .nd-go-shortage-reasons p{margin:0;font-size:13px}
+.nd-workspace .nd-gop-shortage-edit td{padding:0 8px 9px;border-bottom:1px solid #e5ebe5}
