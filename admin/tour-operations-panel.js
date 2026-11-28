@@ -43,7 +43,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
     const itemResult = await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana').eq('tura_id', tourId);
     state.items = fail(itemResult, 'Ставке поруџбина');
     const [deferredResult, toursResult] = await Promise.all([
-      client.from('odlozene_isporuke').select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status,created_at').or('izvorna_tura_id.eq.'+tourId+',ciljna_tura_id.eq.'+tourId).eq('status','odlozeno'),
+      client.from('odlozene_isporuke').select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status,created_at').or('izvorna_tura_id.eq.'+tourId+',ciljna_tura_id.eq.'+tourId).in('status',['odlozeno','isporuceno']),
       client.from('ture').select('id,naziv,datum,status').in('status',['open','processing']).neq('id',tourId).gte('datum',new Date().toISOString().slice(0,10)).order('datum',{ascending:true})
     ]);
     state.deferredDeliveries = fail(deferredResult,'Одложене испоруке');
@@ -53,7 +53,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       const originalIds=uniq(targetDeferred.map(row=>row.originalna_stavka_id));
       const originalResult=await client.from('stavke_porudzbine').select('id,porudzbina_id,product_id,variant_id,gazdinstvo_id,status,status_stavke,package_count,package_size,package_unit,unit_price,cena_stavke,preuzeta_kolicina,isporucena_kolicina,kolicina_za_isporuku,stavka_cekirana,tura_id').in('id',originalIds);
       const originals=fail(originalResult,'Изворне ставке одложених испорука'),originalMap=new Map(originals.map(row=>[String(row.id),row]));
-      for(const deferred of targetDeferred){const original=originalMap.get(String(deferred.originalna_stavka_id));if(!original)continue;const size=Number(original.package_size)||1,packages=Number(deferred.odlozena_kolicina)/size;if(!Number.isFinite(packages)||packages<=0)continue;state.items.push({...original,id:'deferred:'+deferred.id,tura_id:Number(tourId),package_count:packages,kolicina_za_isporuku:Number(deferred.odlozena_kolicina),cena_stavke:null,isporucena_kolicina:0,stavka_cekirana:false,deferred_record_id:deferred.id,source_tour_id:deferred.izvorna_tura_id});}
+      for(const deferred of targetDeferred){const original=originalMap.get(String(deferred.originalna_stavka_id));if(!original)continue;const size=Number(original.package_size)||1,packages=Number(deferred.odlozena_kolicina)/size;if(!Number.isFinite(packages)||packages<=0)continue;state.items.push({...original,id:'deferred:'+deferred.id,tura_id:Number(tourId),package_count:packages,kolicina_za_isporuku:Number(deferred.odlozena_kolicina),cena_stavke:null,isporucena_kolicina:deferred.status==='isporuceno'?Number(deferred.odlozena_kolicina):0,stavka_cekirana:deferred.status==='isporuceno',status_izdavanja:deferred.status==='isporuceno'?'izdato':'ceka_izdavanje',deferred_record_id:deferred.id,source_tour_id:deferred.izvorna_tura_id});}
     }
     const orderIds = uniq(state.items.map(x=>x.porudzbina_id));
     const productIds = uniq(state.items.map(x=>x.product_id));
@@ -732,7 +732,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
           deliveryBusy=true;save.disabled=true;save.textContent='ЧУВАМ…';
           let insertedId=null;
           try{
-            const deferredAmount=Number((packs*size).toFixed(6)),newAmount=Number(((remaining-packs)*size).toFixed(6));
+            const deferredAmount=Number((packs*size).toFixed(6)),newAmount=Number(((remaining-packs)*size).toFixed(6)),alreadyDelivered=Math.max(0,Number(line.item.isporucena_kolicina)||0)/size;if(remaining-packs+0.000001<alreadyDelivered){summary.textContent='Количина за доставу не може бити мања од већ предате количине ('+packageCountLabel(alreadyDelivered)+' пак.).';save.disabled=false;save.textContent='Исправи количину';return;}
             const created=await client.from('odlozene_isporuke').insert({originalna_stavka_id:Number(line.item.id),porudzbina_id:Number(order.id),izvorna_tura_id:Number(tourId),ciljna_tura_id:Number(target.id),odlozena_kolicina:deferredAmount,status:'odlozeno'}).select('id,originalna_stavka_id,porudzbina_id,izvorna_tura_id,ciljna_tura_id,odlozena_kolicina,status').single();
             if(created.error)throw created.error;if(!created.data)throw new Error('База није потврдила одложену ставку.');
             insertedId=created.data.id;
