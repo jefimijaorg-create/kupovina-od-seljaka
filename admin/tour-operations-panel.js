@@ -416,7 +416,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
             if(dataIssue)customerChargeKnown=false;
             if(billablePackages>0){const price=salePricePerPackage(item);if(price===null||!Number.isFinite(size)||size<=0)customerChargeKnown=false;else customerCharge+=billablePackages*price}
             const partialShortage=partialPickupPairs.has(productPair(item));
-            const status=unavailable?'УПИТНО':checked?'✓ Готово':dataIssue?'Провери податке':
+            const status=unavailable?'УПИТНО':checked?'✓ Готово':requestedPackages<=0&&deliveredPackages<=0&&!item.deferred_record_id?'Није могло бити преузето':dataIssue?'Провери податке':
               partialShortage?(invalidProductPairs.has(productPair(item))?'КОЛИЧИНЕ ЗА ИСПОРУКУ ПРЕЛАЗЕ ПРЕУЗЕТО':'ПРЕУЗЕТО ПО ПРИПРЕМИ ПОРУЏБИНА'):
               picked+0.000001>=ordered&&ordered>0?'Роба доступна за доставу':
               picked>0?'Делимично преузето · недостаје '+packageCountLabel(deficitPackages):
