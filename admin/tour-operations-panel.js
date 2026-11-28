@@ -67,7 +67,7 @@ export async function mountTourOperations({ root, core, tourId, onBack, onOpenPr
       });
     }
     if (canReadProducts) {
-      const procurementResult = await client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,raspodela_kupcima,preuzeto_pakovanja,naruceno,potvrdjeno_pakovanja').eq('tura_id',tourId);
+      const procurementResult = await client.from('tura_nabavka_dodele').select('id,tura_id,product_id,variant_id,gazdinstvo_id,broj_pakovanja,nabavna_cena,raspodela_kupcima,preuzeto_pakovanja,naruceno,potvrdjeno_pakovanja,odbijeno_pakovanja').eq('tura_id',tourId);
       const procurementRows = fail(procurementResult,'Набавка');
       const allProductIds = uniq([...productIds,...procurementRows.map(x=>x.product_id)]);
       const allVariantIds = uniq([...variantIds,...procurementRows.map(x=>x.variant_id)]);
